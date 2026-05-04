@@ -21,6 +21,7 @@ from .ranking.scorer import rank_warnings
 from .paper.cases import generate_case_studies
 from .paper.tables import generate_paper_tables
 from .replay import run_pilot_replay
+from .toolchain import bootstrap_toolchain, check_toolchain
 
 
 Command = Callable[[argparse.Namespace, Config], int]
@@ -49,6 +50,18 @@ def cmd_env_check(args: argparse.Namespace, cfg: Config) -> int:
     path = write_environment(cfg, metadata)
     metadata["written_to"] = str(path)
     print(json.dumps(metadata, indent=2, sort_keys=True))
+    return 0
+
+
+def cmd_toolchain_check(args: argparse.Namespace, cfg: Config) -> int:
+    result = check_toolchain(cfg, run_rustavailable=args.run_rustavailable)
+    print(json.dumps(result, indent=2, sort_keys=True))
+    return 0
+
+
+def cmd_toolchain_bootstrap(args: argparse.Namespace, cfg: Config) -> int:
+    result = bootstrap_toolchain(cfg, install_bindgen=args.install_bindgen, install_rust_src=args.install_rust_src)
+    print(json.dumps(result, indent=2, sort_keys=True))
     return 0
 
 
@@ -167,6 +180,16 @@ def build_parser() -> argparse.ArgumentParser:
     env = sub.add_parser("env", help="Environment commands.")
     env_sub = env.add_subparsers(dest="env_command", required=True)
     _set(env_sub.add_parser("check", help="Capture reproducible environment metadata."), cmd_env_check)
+
+    toolchain = sub.add_parser("toolchain", help="Rust-for-Linux toolchain commands.")
+    toolchain_sub = toolchain.add_subparsers(dest="toolchain_command", required=True)
+    toolchain_check = toolchain_sub.add_parser("check", help="Check Rust-for-Linux build requirements.")
+    toolchain_check.add_argument("--run-rustavailable", action="store_true", help="Run `make LLVM=1 rustavailable` in the Linux tree.")
+    _set(toolchain_check, cmd_toolchain_check)
+    bootstrap = toolchain_sub.add_parser("bootstrap", help="Install supported missing user-space tools.")
+    bootstrap.add_argument("--install-bindgen", action="store_true", help="Install bindgen-cli through Cargo when bindgen is missing.")
+    bootstrap.add_argument("--install-rust-src", action="store_true", help="Install rust-src through rustup.")
+    _set(bootstrap, cmd_toolchain_bootstrap)
 
     kernel = sub.add_parser("kernel", help="Linux preparation commands.")
     kernel_sub = kernel.add_subparsers(dest="kernel_command", required=True)
