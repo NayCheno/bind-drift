@@ -1,0 +1,91 @@
+from __future__ import annotations
+
+import argparse
+import json
+from pathlib import Path
+from typing import Any, Callable
+
+from . import __version__
+from .config import Config
+
+
+Command = Callable[[argparse.Namespace, Config], int]
+
+
+def _config(args: argparse.Namespace) -> Config:
+    return Config.from_args(
+        repo_root=args.repo_root,
+        linux_tree=args.linux_tree,
+        state_dir=args.state_dir,
+        data_dir=args.data_dir,
+    )
+
+
+def _not_implemented(name: str) -> Command:
+    def command(args: argparse.Namespace, cfg: Config) -> int:
+        cfg.ensure_dirs()
+        print(json.dumps({"command": name, "status": "not_implemented"}, indent=2))
+        return 0
+
+    return command
+
+
+def _add_common(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--repo-root", default=".", help="Repository root that owns the BindDrift artifact.")
+    parser.add_argument("--linux-tree", default="vendor/linux", help="Linux source tree relative to repo root.")
+    parser.add_argument("--state-dir", default=".binddrift", help="Mutable BindDrift state directory.")
+    parser.add_argument("--data-dir", default="data", help="Artifact data output directory.")
+
+
+def _set(parser: argparse.ArgumentParser, func: Command) -> None:
+    parser.set_defaults(func=func)
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(prog="binddrift", description="BindDrift research artifact CLI.")
+    parser.add_argument("--version", action="version", version=f"binddrift {__version__}")
+    _add_common(parser)
+    sub = parser.add_subparsers(dest="command", required=True)
+
+    env = sub.add_parser("env", help="Environment commands.")
+    env_sub = env.add_subparsers(dest="env_command", required=True)
+    _set(env_sub.add_parser("check", help="Capture reproducible environment metadata."), _not_implemented("env check"))
+
+    kernel = sub.add_parser("kernel", help="Linux preparation commands.")
+    kernel_sub = kernel.add_subparsers(dest="kernel_command", required=True)
+    _set(kernel_sub.add_parser("prepare", help="Prepare an out-of-tree kernel build directory."), _not_implemented("kernel prepare"))
+
+    extract = sub.add_parser("extract", help="Extractor commands.")
+    extract_sub = extract.add_subparsers(dest="extract_command", required=True)
+    for name in ("bindings", "rust", "c", "commits"):
+        _set(extract_sub.add_parser(name, help=f"Extract {name} facts."), _not_implemented(f"extract {name}"))
+
+    graph = sub.add_parser("graph", help="Dependency graph commands.")
+    graph_sub = graph.add_subparsers(dest="graph_command", required=True)
+    _set(graph_sub.add_parser("build", help="Build the C-to-Rust graph."), _not_implemented("graph build"))
+    query = graph_sub.add_parser("query", help="Query the dependency graph.")
+    query.add_argument("--symbol", help="C or binding symbol to query.")
+    query.add_argument("--api", help="Rust safe API to query.")
+    _set(query, _not_implemented("graph query"))
+
+    detect = sub.add_parser("detect", help="Drift detector commands.")
+    detect_sub = detect.add_subparsers(dest="detect_command", required=True)
+    for name in ("tier1", "tier2", "all"):
+        _set(detect_sub.add_parser(name, help=f"Run {name} detectors."), _not_implemented(f"detect {name}"))
+
+    _set(sub.add_parser("rank", help="Rank warnings."), _not_implemented("rank"))
+    _set(sub.add_parser("replay", help="Run a pilot replay."), _not_implemented("replay"))
+    _set(sub.add_parser("eval", help="Generate evaluation tables."), _not_implemented("eval"))
+
+    paper = sub.add_parser("paper", help="Paper artifact commands.")
+    paper_sub = paper.add_subparsers(dest="paper_command", required=True)
+    _set(paper_sub.add_parser("tables", help="Generate paper tables."), _not_implemented("paper tables"))
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = build_parser()
+    args = parser.parse_args(argv)
+    cfg = _config(args)
+    func: Command = args.func
+    return func(args, cfg)
