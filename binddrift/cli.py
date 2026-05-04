@@ -18,6 +18,7 @@ from .extractors.rust_usage import extract_rust_usage
 from .kernel import prepare_kernel_build
 from .graph.builder import build_graph, query_graph
 from .ranking.scorer import rank_warnings
+from .paper.cases import generate_case_studies
 
 
 Command = Callable[[argparse.Namespace, Config], int]
@@ -126,6 +127,12 @@ def cmd_eval(args: argparse.Namespace, cfg: Config) -> int:
     return 0
 
 
+def cmd_paper_cases(args: argparse.Namespace, cfg: Config) -> int:
+    result = generate_case_studies(cfg)
+    print(json.dumps(result, indent=2, sort_keys=True))
+    return 0
+
+
 def _add_common(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--repo-root", default=".", help="Repository root that owns the BindDrift artifact.")
     parser.add_argument("--linux-tree", default="vendor/linux", help="Linux source tree relative to repo root.")
@@ -210,6 +217,7 @@ def build_parser() -> argparse.ArgumentParser:
     paper = sub.add_parser("paper", help="Paper artifact commands.")
     paper_sub = paper.add_subparsers(dest="paper_command", required=True)
     _set(paper_sub.add_parser("tables", help="Generate paper tables."), _not_implemented("paper tables"))
+    _set(paper_sub.add_parser("cases", help="Generate case study skeletons."), cmd_paper_cases)
     return parser
 
 
