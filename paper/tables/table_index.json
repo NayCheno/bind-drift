@@ -1,0 +1,10 @@
+{
+  "baselines_ablations": {
+    "available": true,
+    "path": "/home/nya/workspace/bind-drift/paper/tables/baselines_ablations.json"
+  },
+  "evaluation_summary": {
+    "available": true,
+    "path": "/home/nya/workspace/bind-drift/paper/tables/evaluation_summary.json"
+  }
+}
