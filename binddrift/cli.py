@@ -16,6 +16,7 @@ from .extractors.c_api import extract_c_api
 from .extractors.rust_usage import extract_rust_usage
 from .kernel import prepare_kernel_build
 from .graph.builder import build_graph, query_graph
+from .ranking.scorer import rank_warnings
 
 
 Command = Callable[[argparse.Namespace, Config], int]
@@ -112,6 +113,12 @@ def cmd_detect_all(args: argparse.Namespace, cfg: Config) -> int:
     return 0
 
 
+def cmd_rank(args: argparse.Namespace, cfg: Config) -> int:
+    result = rank_warnings(cfg)
+    print(json.dumps(result, indent=2, sort_keys=True))
+    return 0
+
+
 def _add_common(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--repo-root", default=".", help="Repository root that owns the BindDrift artifact.")
     parser.add_argument("--linux-tree", default="vendor/linux", help="Linux source tree relative to repo root.")
@@ -186,7 +193,7 @@ def build_parser() -> argparse.ArgumentParser:
     all_detectors.add_argument("--new", help="New version id.")
     _set(all_detectors, cmd_detect_all)
 
-    _set(sub.add_parser("rank", help="Rank warnings."), _not_implemented("rank"))
+    _set(sub.add_parser("rank", help="Rank warnings."), cmd_rank)
     _set(sub.add_parser("replay", help="Run a pilot replay."), _not_implemented("replay"))
     _set(sub.add_parser("eval", help="Generate evaluation tables."), _not_implemented("eval"))
 
