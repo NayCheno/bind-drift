@@ -13,6 +13,7 @@ from .extractors.bindgen import extract_bindings
 from .extractors.c_api import extract_c_api
 from .extractors.rust_usage import extract_rust_usage
 from .kernel import prepare_kernel_build
+from .graph.builder import build_graph, query_graph
 
 
 Command = Callable[[argparse.Namespace, Config], int]
@@ -78,6 +79,18 @@ def cmd_extract_c(args: argparse.Namespace, cfg: Config) -> int:
     return 0
 
 
+def cmd_graph_build(args: argparse.Namespace, cfg: Config) -> int:
+    summary = build_graph(cfg, version_id=args.version_id)
+    print(json.dumps(summary, indent=2, sort_keys=True))
+    return 0
+
+
+def cmd_graph_query(args: argparse.Namespace, cfg: Config) -> int:
+    result = query_graph(cfg, symbol=args.symbol, api=args.api, version_id=args.version_id)
+    print(json.dumps(result, indent=2, sort_keys=True))
+    return 0
+
+
 def _add_common(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--repo-root", default=".", help="Repository root that owns the BindDrift artifact.")
     parser.add_argument("--linux-tree", default="vendor/linux", help="Linux source tree relative to repo root.")
@@ -127,11 +140,14 @@ def build_parser() -> argparse.ArgumentParser:
 
     graph = sub.add_parser("graph", help="Dependency graph commands.")
     graph_sub = graph.add_subparsers(dest="graph_command", required=True)
-    _set(graph_sub.add_parser("build", help="Build the C-to-Rust graph."), _not_implemented("graph build"))
+    graph_build = graph_sub.add_parser("build", help="Build the C-to-Rust graph.")
+    graph_build.add_argument("--version-id", help="Version id to graph.")
+    _set(graph_build, cmd_graph_build)
     query = graph_sub.add_parser("query", help="Query the dependency graph.")
     query.add_argument("--symbol", help="C or binding symbol to query.")
     query.add_argument("--api", help="Rust safe API to query.")
-    _set(query, _not_implemented("graph query"))
+    query.add_argument("--version-id", help="Version id to query.")
+    _set(query, cmd_graph_query)
 
     detect = sub.add_parser("detect", help="Drift detector commands.")
     detect_sub = detect.add_subparsers(dest="detect_command", required=True)

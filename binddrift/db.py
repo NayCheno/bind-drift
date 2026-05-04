@@ -176,6 +176,24 @@ def initialize(conn: sqlite3.Connection) -> None:
             confidence REAL NOT NULL,
             PRIMARY KEY(version_id, c_symbol, indicator_type, evidence_file, evidence_line)
         );
+
+        CREATE TABLE IF NOT EXISTS graph_nodes (
+            version_id TEXT NOT NULL,
+            node_id TEXT NOT NULL,
+            node_type TEXT NOT NULL,
+            label TEXT NOT NULL,
+            properties TEXT NOT NULL,
+            PRIMARY KEY(version_id, node_id)
+        );
+
+        CREATE TABLE IF NOT EXISTS graph_edges (
+            version_id TEXT NOT NULL,
+            src TEXT NOT NULL,
+            dst TEXT NOT NULL,
+            edge_type TEXT NOT NULL,
+            properties TEXT NOT NULL,
+            PRIMARY KEY(version_id, src, dst, edge_type)
+        );
         """
     )
     conn.commit()
