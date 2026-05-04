@@ -135,6 +135,28 @@ def initialize(conn: sqlite3.Connection) -> None:
             PRIMARY KEY(version_id, rust_file, line)
         );
 
+        CREATE TABLE IF NOT EXISTS rust_lifetime_facts (
+            version_id TEXT NOT NULL,
+            rust_file TEXT NOT NULL,
+            line INTEGER NOT NULL,
+            fact_type TEXT NOT NULL,
+            rust_type TEXT,
+            uses_bindings TEXT NOT NULL,
+            evidence_text TEXT NOT NULL,
+            PRIMARY KEY(version_id, rust_file, line, fact_type, rust_type)
+        );
+
+        CREATE TABLE IF NOT EXISTS rust_error_mappings (
+            version_id TEXT NOT NULL,
+            rust_file TEXT NOT NULL,
+            line INTEGER NOT NULL,
+            mapping_type TEXT NOT NULL,
+            text TEXT NOT NULL,
+            nearby_binding_symbol TEXT,
+            nearby_api TEXT,
+            PRIMARY KEY(version_id, rust_file, line, mapping_type)
+        );
+
         CREATE TABLE IF NOT EXISTS c_functions (
             version_id TEXT NOT NULL,
             c_symbol TEXT NOT NULL,

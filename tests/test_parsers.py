@@ -2,6 +2,7 @@ from pathlib import Path
 
 from binddrift.config import Config
 from binddrift.extractors.bindgen import _parse_file
+from binddrift.extractors.rust_usage import _parse_file as _parse_rust_file
 from binddrift.ranking.scorer import score_warning
 
 
@@ -53,3 +54,34 @@ const _: () = {
     assert facts.structs[0]["rust_type"] == "device"
     assert len(facts.structs[0]["fields"]) > 0
     assert len(facts.layouts) == 2
+
+
+def test_rust_usage_parser_finds_lifetime_and_error_mapping(tmp_path: Path):
+    rust = tmp_path / "device.rs"
+    rust.write_text(
+        """
+pub struct Device;
+impl Drop for Device {
+    fn drop(&mut self) {
+        unsafe { bindings::put_device(self.as_ptr()) };
+    }
+}
+impl Device {
+    pub fn get(&self) -> Result<Option<Self>> {
+        // SAFETY: C returns NULL on failure.
+        let ptr = unsafe { bindings::get_device(self.as_ptr()) };
+        NonNull::new(ptr).map(|_| Device).ok_or(EINVAL)
+    }
+}
+""",
+        encoding="utf-8",
+    )
+
+    uses, apis, comments, lifetime_facts, error_mappings = _parse_rust_file(rust, "v-test")
+
+    assert {use["binding_symbol"] for use in uses} == {"put_device", "get_device"}
+    assert all(use["enclosing_unsafe_block"] == 1 for use in uses)
+    assert any(api["api_name"] == "Device::get" for api in apis)
+    assert any(fact["fact_type"] == "IMPL_DROP" for fact in lifetime_facts)
+    assert any(mapping["mapping_type"] == "NONNULL_MAPPING" for mapping in error_mappings)
+    assert comments[0]["nearby_binding_symbol"] == "get_device"
