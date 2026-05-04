@@ -12,6 +12,11 @@ license = { text = "MIT" }
 authors = [{ name = "BindDrift Authors" }]
 dependencies = []
 
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+]
+
 [project.scripts]
 binddrift = "binddrift.cli:main"
 
