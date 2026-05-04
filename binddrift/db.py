@@ -99,6 +99,41 @@ def initialize(conn: sqlite3.Connection) -> None:
             line INTEGER NOT NULL,
             PRIMARY KEY(version_id, rust_type, field_name, source_file, line)
         );
+
+        CREATE TABLE IF NOT EXISTS rust_binding_uses (
+            version_id TEXT NOT NULL,
+            rust_file TEXT NOT NULL,
+            line INTEGER NOT NULL,
+            binding_symbol TEXT NOT NULL,
+            enclosing_unsafe_block INTEGER NOT NULL,
+            enclosing_function TEXT,
+            enclosing_impl TEXT,
+            enclosing_type TEXT,
+            PRIMARY KEY(version_id, rust_file, line, binding_symbol)
+        );
+
+        CREATE TABLE IF NOT EXISTS rust_safe_apis (
+            version_id TEXT NOT NULL,
+            rust_file TEXT NOT NULL,
+            api_name TEXT NOT NULL,
+            receiver_type TEXT,
+            visibility TEXT,
+            return_type TEXT,
+            params TEXT NOT NULL,
+            uses_bindings TEXT NOT NULL,
+            line INTEGER NOT NULL,
+            PRIMARY KEY(version_id, rust_file, api_name, line)
+        );
+
+        CREATE TABLE IF NOT EXISTS rust_safety_comments (
+            version_id TEXT NOT NULL,
+            rust_file TEXT NOT NULL,
+            line INTEGER NOT NULL,
+            text TEXT NOT NULL,
+            nearby_binding_symbol TEXT,
+            nearby_api TEXT,
+            PRIMARY KEY(version_id, rust_file, line)
+        );
         """
     )
     conn.commit()
