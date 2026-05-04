@@ -7,13 +7,13 @@ from pathlib import Path
 from typing import Any
 
 from binddrift.config import Config
-from binddrift.db import connect, initialize
+from binddrift.db import connect, initialize, upsert_many
 from binddrift.gitutil import git_output
 from binddrift.warnings import read_warnings
 from .baselines import generate_baselines
 
 
-BUILD_ERROR_RE = re.compile(r"(bindings::[A-Za-z_][A-Za-z0-9_]*|missing field|mismatched types|layout)")
+BUILD_ERROR_RE = re.compile(r"(bindings::(?P<binding>[A-Za-z_][A-Za-z0-9_]*)|missing field|mismatched types|layout)")
 
 
 def parse_build_log(path: Path) -> list[dict[str, Any]]:
@@ -21,8 +21,8 @@ def parse_build_log(path: Path) -> list[dict[str, Any]]:
         return []
     findings = []
     for idx, line in enumerate(path.read_text(encoding="utf-8", errors="replace").splitlines(), start=1):
-        if BUILD_ERROR_RE.search(line):
-            findings.append({"line": idx, "text": line[:1000]})
+        if match := BUILD_ERROR_RE.search(line):
+            findings.append({"line": idx, "symbol": match.groupdict().get("binding"), "text": line[:1000]})
     return findings
 
 
@@ -36,8 +36,57 @@ def mine_wrapper_fixes(cfg: Config, limit: int = 200) -> list[dict[str, Any]]:
         commit, date, subject = parts
         lowered = subject.lower()
         likely = any(word in lowered for word in ("fix", "api", "binding", "wrapper", "error", "refcount", "null"))
-        rows.append({"commit": commit, "date": date, "subject": subject, "likely_wrapper_fix": likely})
+        changed_files = git_output(cfg.linux_tree, ["show", "--name-only", "--format=", commit]).splitlines()
+        diff = git_output(cfg.linux_tree, ["show", "--format=", "--unified=0", commit, "--", "rust/kernel", "rust/helpers", "rust/bindings"])
+        matched_symbols = sorted(set(re.findall(r"bindings::([A-Za-z_][A-Za-z0-9_]*)|rust_helper_([A-Za-z_][A-Za-z0-9_]*)", diff)))
+        flattened_symbols = sorted({item for pair in matched_symbols for item in pair if item})
+        rows.append(
+            {
+                "commit": commit,
+                "date": date,
+                "subject": subject,
+                "changed_files": changed_files,
+                "matched_symbols": flattened_symbols,
+                "likely_wrapper_fix": likely,
+            }
+        )
     return rows
+
+
+def persist_ground_truth(cfg: Config, build_log: Path | None, build_findings: list[dict[str, Any]], wrapper_fixes: list[dict[str, Any]]) -> dict[str, int]:
+    conn = connect(cfg.database)
+    initialize(conn)
+    if build_log:
+        upsert_many(
+            conn,
+            "build_breakage_events",
+            [
+                {
+                    "event_id": f"{build_log}:{item['line']}",
+                    "build_log": str(build_log),
+                    "line": item["line"],
+                    "symbol": item.get("symbol"),
+                    "text": item["text"],
+                }
+                for item in build_findings
+            ],
+        )
+    upsert_many(
+        conn,
+        "wrapper_fix_events",
+        [
+            {
+                "commit_id": item["commit"],
+                "date": item["date"],
+                "subject": item["subject"],
+                "changed_files": json.dumps(item["changed_files"], sort_keys=True),
+                "likely_wrapper_fix": int(item["likely_wrapper_fix"]),
+                "matched_symbols": json.dumps(item["matched_symbols"], sort_keys=True),
+            }
+            for item in wrapper_fixes
+        ],
+    )
+    return {"build_breakage_events": len(build_findings), "wrapper_fix_events": len(wrapper_fixes)}
 
 
 def generate_manual_review(cfg: Config, warnings: list[dict[str, Any]], top_k: int = 50) -> Path:
@@ -69,11 +118,13 @@ def run_evaluation(cfg: Config, build_log: Path | None = None, top_k: int = 50) 
     warnings = read_warnings(cfg.warnings_jsonl)
     build_findings = parse_build_log(build_log) if build_log else []
     wrapper_fixes = mine_wrapper_fixes(cfg)
+    persisted = persist_ground_truth(cfg, build_log, build_findings, wrapper_fixes)
     review_path = generate_manual_review(cfg, warnings, top_k=top_k)
     table = {
         "warnings": len(warnings),
         "build_breakage_findings": len(build_findings),
         "wrapper_fix_candidates": sum(1 for row in wrapper_fixes if row["likely_wrapper_fix"]),
+        "ground_truth_rows": persisted,
         "precision_at_k": None,
         "recall": None,
         "note": "Precision and recall require labeled ground truth in data/manual_review.csv.",

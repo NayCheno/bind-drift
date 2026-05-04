@@ -1,5 +1,9 @@
 {
   "build_breakage_findings": 0,
+  "ground_truth_rows": {
+    "build_breakage_events": 0,
+    "wrapper_fix_events": 200
+  },
   "note": "Precision and recall require labeled ground truth in data/manual_review.csv.",
   "precision_at_k": null,
   "recall": null,

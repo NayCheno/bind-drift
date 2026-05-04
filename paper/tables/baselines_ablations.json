@@ -1,8 +1,8 @@
 {
   "counts": {
     "binding_functions": 0,
-    "c_functions": 190,
-    "graph_edges": 6146,
+    "c_functions": 675,
+    "graph_edges": 8397,
     "rust_binding_uses": 1934,
     "warnings": 0
   },
@@ -16,7 +16,7 @@
       "variant": "BindgenOnly"
     },
     {
-      "candidate_count": 190,
+      "candidate_count": 675,
       "kind": "baseline",
       "note": "Requires labeled replay ground truth.",
       "precision_at_k": null,
@@ -56,7 +56,7 @@
       "variant": "Tier1Only"
     },
     {
-      "candidate_count": 190,
+      "candidate_count": 675,
       "kind": "ablation",
       "note": "Requires labeled replay ground truth.",
       "precision_at_k": null,

@@ -236,6 +236,23 @@ def initialize(conn: sqlite3.Connection) -> None:
             new_value TEXT,
             evidence TEXT NOT NULL
         );
+
+        CREATE TABLE IF NOT EXISTS build_breakage_events (
+            event_id TEXT PRIMARY KEY,
+            build_log TEXT NOT NULL,
+            line INTEGER NOT NULL,
+            symbol TEXT,
+            text TEXT NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS wrapper_fix_events (
+            commit_id TEXT PRIMARY KEY,
+            date TEXT,
+            subject TEXT NOT NULL,
+            changed_files TEXT NOT NULL,
+            likely_wrapper_fix INTEGER NOT NULL,
+            matched_symbols TEXT NOT NULL
+        );
         """
     )
     conn.commit()
