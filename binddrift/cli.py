@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import argparse
 import json
-from pathlib import Path
-from typing import Any, Callable
+from typing import Callable
 
 from . import __version__
 from .config import Config
+from .environment import capture_environment, write_environment
 
 
 Command = Callable[[argparse.Namespace, Config], int]
@@ -30,6 +30,14 @@ def _not_implemented(name: str) -> Command:
     return command
 
 
+def cmd_env_check(args: argparse.Namespace, cfg: Config) -> int:
+    metadata = capture_environment(cfg)
+    path = write_environment(cfg, metadata)
+    metadata["written_to"] = str(path)
+    print(json.dumps(metadata, indent=2, sort_keys=True))
+    return 0
+
+
 def _add_common(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--repo-root", default=".", help="Repository root that owns the BindDrift artifact.")
     parser.add_argument("--linux-tree", default="vendor/linux", help="Linux source tree relative to repo root.")
@@ -49,7 +57,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     env = sub.add_parser("env", help="Environment commands.")
     env_sub = env.add_subparsers(dest="env_command", required=True)
-    _set(env_sub.add_parser("check", help="Capture reproducible environment metadata."), _not_implemented("env check"))
+    _set(env_sub.add_parser("check", help="Capture reproducible environment metadata."), cmd_env_check)
 
     kernel = sub.add_parser("kernel", help="Linux preparation commands.")
     kernel_sub = kernel.add_subparsers(dest="kernel_command", required=True)
