@@ -11,6 +11,7 @@ from .dataset import extract_dataset
 from .detectors.tier1 import run_tier1
 from .detectors.tier2 import run_tier2
 from .environment import capture_environment, write_environment
+from .evaluation.evaluator import run_evaluation
 from .extractors.bindgen import extract_bindings
 from .extractors.c_api import extract_c_api
 from .extractors.rust_usage import extract_rust_usage
@@ -119,6 +120,12 @@ def cmd_rank(args: argparse.Namespace, cfg: Config) -> int:
     return 0
 
 
+def cmd_eval(args: argparse.Namespace, cfg: Config) -> int:
+    result = run_evaluation(cfg, build_log=Path(args.build_log).resolve() if args.build_log else None, top_k=args.top_k)
+    print(json.dumps(result, indent=2, sort_keys=True))
+    return 0
+
+
 def _add_common(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--repo-root", default=".", help="Repository root that owns the BindDrift artifact.")
     parser.add_argument("--linux-tree", default="vendor/linux", help="Linux source tree relative to repo root.")
@@ -195,7 +202,10 @@ def build_parser() -> argparse.ArgumentParser:
 
     _set(sub.add_parser("rank", help="Rank warnings."), cmd_rank)
     _set(sub.add_parser("replay", help="Run a pilot replay."), _not_implemented("replay"))
-    _set(sub.add_parser("eval", help="Generate evaluation tables."), _not_implemented("eval"))
+    eval_parser = sub.add_parser("eval", help="Generate evaluation tables.")
+    eval_parser.add_argument("--build-log", help="Optional Rust-enabled build log to parse.")
+    eval_parser.add_argument("--top-k", type=int, default=50, help="Number of warnings to include in manual review CSV.")
+    _set(eval_parser, cmd_eval)
 
     paper = sub.add_parser("paper", help="Paper artifact commands.")
     paper_sub = paper.add_subparsers(dest="paper_command", required=True)

@@ -1,0 +1,8 @@
+{
+  "build_breakage_findings": 0,
+  "note": "Precision and recall require labeled ground truth in data/manual_review.csv.",
+  "precision_at_k": null,
+  "recall": null,
+  "warnings": 0,
+  "wrapper_fix_candidates": 24
+}
