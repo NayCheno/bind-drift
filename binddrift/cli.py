@@ -22,6 +22,7 @@ from .paper.cases import generate_case_studies
 from .paper.tables import generate_paper_tables
 from .replay import run_pilot_replay
 from .toolchain import bootstrap_toolchain, check_toolchain
+from .versions import ensure_worktree, select_versions
 
 
 Command = Callable[[argparse.Namespace, Config], int]
@@ -68,6 +69,18 @@ def cmd_toolchain_bootstrap(args: argparse.Namespace, cfg: Config) -> int:
 def cmd_extract_commits(args: argparse.Namespace, cfg: Config) -> int:
     summary = extract_dataset(cfg, limit=args.limit, fetch=args.fetch_tags)
     print(json.dumps(summary, indent=2, sort_keys=True))
+    return 0
+
+
+def cmd_dataset_versions(args: argparse.Namespace, cfg: Config) -> int:
+    result = select_versions(cfg, start=args.start, include_head=not args.no_head, fetch=args.fetch_tags, limit=args.limit)
+    print(json.dumps(result, indent=2, sort_keys=True))
+    return 0
+
+
+def cmd_dataset_worktree(args: argparse.Namespace, cfg: Config) -> int:
+    result = ensure_worktree(cfg, args.ref)
+    print(json.dumps(result, indent=2, sort_keys=True))
     return 0
 
 
@@ -190,6 +203,18 @@ def build_parser() -> argparse.ArgumentParser:
     bootstrap.add_argument("--install-bindgen", action="store_true", help="Install bindgen-cli through Cargo when bindgen is missing.")
     bootstrap.add_argument("--install-rust-src", action="store_true", help="Install rust-src through rustup.")
     _set(bootstrap, cmd_toolchain_bootstrap)
+
+    dataset = sub.add_parser("dataset", help="Linux version dataset commands.")
+    dataset_sub = dataset.add_subparsers(dest="dataset_command", required=True)
+    versions = dataset_sub.add_parser("versions", help="Select Rust-era Linux release versions for replay.")
+    versions.add_argument("--start", default="v6.1", help="First release tag to include.")
+    versions.add_argument("--limit", type=int, help="Keep only the last N release tags before HEAD.")
+    versions.add_argument("--fetch-tags", action="store_true", help="Fetch tags in the Linux source tree before selection.")
+    versions.add_argument("--no-head", action="store_true", help="Do not append the current HEAD pseudo-version.")
+    _set(versions, cmd_dataset_versions)
+    worktree = dataset_sub.add_parser("worktree", help="Create or reuse a managed replay worktree for a ref.")
+    worktree.add_argument("ref", help="Git tag, commit, branch, or HEAD:<short> pseudo-ref.")
+    _set(worktree, cmd_dataset_worktree)
 
     kernel = sub.add_parser("kernel", help="Linux preparation commands.")
     kernel_sub = kernel.add_subparsers(dest="kernel_command", required=True)

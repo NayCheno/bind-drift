@@ -10,6 +10,7 @@ class Config:
     linux_tree: Path
     state_dir: Path
     build_root: Path
+    worktree_root: Path
     data_dir: Path
     database: Path
     warnings_jsonl: Path
@@ -32,6 +33,7 @@ class Config:
             linux_tree=linux,
             state_dir=state,
             build_root=state / "build",
+            worktree_root=state / "worktrees",
             data_dir=data,
             database=state / "binddrift.sqlite3",
             warnings_jsonl=data / "warnings.jsonl",
@@ -39,5 +41,5 @@ class Config:
         )
 
     def ensure_dirs(self) -> None:
-        for path in (self.state_dir, self.build_root, self.data_dir):
+        for path in (self.state_dir, self.build_root, self.worktree_root, self.data_dir):
             path.mkdir(parents=True, exist_ok=True)
