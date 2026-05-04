@@ -194,6 +194,15 @@ def initialize(conn: sqlite3.Connection) -> None:
             properties TEXT NOT NULL,
             PRIMARY KEY(version_id, src, dst, edge_type)
         );
+
+        CREATE TABLE IF NOT EXISTS extraction_errors (
+            version_id TEXT NOT NULL,
+            stage TEXT NOT NULL,
+            source TEXT NOT NULL,
+            message TEXT NOT NULL,
+            severity TEXT NOT NULL,
+            PRIMARY KEY(version_id, stage, source, message)
+        );
         """
     )
     conn.commit()

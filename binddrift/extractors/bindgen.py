@@ -11,16 +11,15 @@ from binddrift.db import connect, initialize, upsert_many
 from binddrift.kernel import default_version_id
 
 
-FUNCTION_RE = re.compile(
-    r"pub\s+fn\s+(?P<name>[A-Za-z_][A-Za-z0-9_]*)\s*\((?P<params>[^)]*)\)\s*(?:->\s*(?P<ret>[^;{]+))?[;{]"
-)
 EXTERN_FUNCTION_RE = re.compile(
-    r"pub\s+fn\s+(?P<name>[A-Za-z_][A-Za-z0-9_]*)\s*\((?P<params>[^)]*)\)\s*(?:->\s*(?P<ret>[^;]+))?;"
+    r"pub\s+fn\s+(?P<name>[A-Za-z_][A-Za-z0-9_]*)\s*\((?P<params>.*?)\)\s*(?:->\s*(?P<ret>[^;]+))?;",
+    re.DOTALL,
 )
 STRUCT_RE = re.compile(r"pub\s+struct\s+(?P<name>[A-Za-z_][A-Za-z0-9_]*)\s*\{")
 FIELD_RE = re.compile(r"pub\s+(?P<name>[A-Za-z_][A-Za-z0-9_]*):\s*(?P<ty>[^,]+),?")
 CONST_RE = re.compile(
-    r"pub\s+const\s+(?P<name>[A-Za-z_][A-Za-z0-9_]*):\s*(?P<ty>[^=]+)=\s*(?P<value>[^;]+);"
+    r"pub\s+const\s+(?P<name>[A-Za-z_][A-Za-z0-9_]*):\s*(?P<ty>[^=]+)=\s*(?P<value>[^;]+);",
+    re.DOTALL,
 )
 LAYOUT_SIZE_RE = re.compile(r"assert_eq!\s*\(\s*::core::mem::size_of::<(?P<ty>[^>]+)>\(\)\s*,\s*(?P<size>\d+)")
 LAYOUT_ALIGN_RE = re.compile(r"assert_eq!\s*\(\s*::core::mem::align_of::<(?P<ty>[^>]+)>\(\)\s*,\s*(?P<align>\d+)")
@@ -39,9 +38,33 @@ class BindingFacts:
     missing_files: list[str]
 
 
+def _line_for_offset(text: str, offset: int) -> int:
+    return text.count("\n", 0, offset) + 1
+
+
+def _split_top_level(value: str) -> list[str]:
+    parts: list[str] = []
+    start = 0
+    depth = 0
+    pairs = {"(": ")", "<": ">", "[": "]"}
+    closers = set(pairs.values())
+    for idx, char in enumerate(value):
+        if char in pairs:
+            depth += 1
+        elif char in closers and depth:
+            depth -= 1
+        elif char == "," and depth == 0:
+            parts.append(value[start:idx].strip())
+            start = idx + 1
+    tail = value[start:].strip()
+    if tail:
+        parts.append(tail)
+    return parts
+
+
 def _parse_params(params: str) -> list[dict[str, str]]:
     out = []
-    for raw in [part.strip() for part in params.split(",") if part.strip()]:
+    for raw in _split_top_level(" ".join(params.split())):
         if ":" in raw:
             name, ty = raw.split(":", 1)
             out.append({"name": name.strip(), "type": ty.strip()})
@@ -51,47 +74,50 @@ def _parse_params(params: str) -> list[dict[str, str]]:
 
 
 def _parse_file(path: Path, version_id: str) -> BindingFacts:
-    lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+    text = path.read_text(encoding="utf-8", errors="replace")
+    lines = text.splitlines()
     functions: list[dict[str, Any]] = []
     structs: list[dict[str, Any]] = []
     consts: list[dict[str, Any]] = []
     layouts: list[dict[str, Any]] = []
+    for match in EXTERN_FUNCTION_RE.finditer(text):
+        name = match.group("name")
+        functions.append(
+            {
+                "version_id": version_id,
+                "rust_symbol": name,
+                "c_symbol": name,
+                "params": json.dumps(_parse_params(match.group("params")), sort_keys=True),
+                "return_type": " ".join((match.group("ret") or "()").split()),
+                "is_unsafe": 1,
+                "source_file": str(path),
+                "line": _line_for_offset(text, match.start()),
+            }
+        )
+    for match in CONST_RE.finditer(text):
+        name = match.group("name")
+        consts.append(
+            {
+                "version_id": version_id,
+                "rust_name": name,
+                "c_name": name,
+                "value": " ".join(match.group("value").split()),
+                "source_file": str(path),
+                "line": _line_for_offset(text, match.start()),
+            }
+        )
     i = 0
     while i < len(lines):
         line = lines[i]
-        if match := EXTERN_FUNCTION_RE.search(line):
-            name = match.group("name")
-            functions.append(
-                {
-                    "version_id": version_id,
-                    "rust_symbol": name,
-                    "c_symbol": name,
-                    "params": json.dumps(_parse_params(match.group("params")), sort_keys=True),
-                    "return_type": (match.group("ret") or "()").strip(),
-                    "is_unsafe": 1,
-                    "source_file": str(path),
-                    "line": i + 1,
-                }
-            )
-        if match := CONST_RE.search(line):
-            name = match.group("name")
-            consts.append(
-                {
-                    "version_id": version_id,
-                    "rust_name": name,
-                    "c_name": name,
-                    "value": match.group("value").strip(),
-                    "source_file": str(path),
-                    "line": i + 1,
-                }
-            )
         if match := STRUCT_RE.search(line):
             name = match.group("name")
             fields: list[dict[str, str]] = []
             j = i + 1
-            while j < len(lines) and "}" not in lines[j]:
+            depth = line.count("{") - line.count("}")
+            while j < len(lines) and depth > 0:
                 if field := FIELD_RE.search(lines[j].strip()):
                     fields.append({"name": field.group("name"), "type": field.group("ty").strip()})
+                depth += lines[j].count("{") - lines[j].count("}")
                 j += 1
             structs.append(
                 {
@@ -173,6 +199,20 @@ def extract_bindings(cfg: Config, objtree: Path | None = None, version_id: str |
     upsert_many(conn, "binding_structs", facts.structs)
     upsert_many(conn, "binding_consts", facts.consts)
     upsert_many(conn, "layout_facts", facts.layouts)
+    upsert_many(
+        conn,
+        "extraction_errors",
+        [
+            {
+                "version_id": vid,
+                "stage": "bindings",
+                "source": path,
+                "message": "generated binding file is missing",
+                "severity": "warning",
+            }
+            for path in facts.missing_files
+        ],
+    )
     return {
         "database": str(cfg.database),
         "version_id": vid,
