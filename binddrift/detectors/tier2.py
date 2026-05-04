@@ -75,7 +75,31 @@ def _rust_lifetime(conn, version: str, symbol: str) -> list[dict[str, Any]]:
         """,
         (version, f'%"{symbol}"%'),
     ).fetchall()
-    return [dict(row) for row in rows]
+    facts = [dict(row) for row in rows]
+    if facts:
+        return facts
+    use_rows = conn.execute(
+        """
+        SELECT rust_file, line, enclosing_function, enclosing_impl
+        FROM rust_binding_uses
+        WHERE version_id=? AND binding_symbol=?
+        LIMIT 20
+        """,
+        (version, symbol),
+    ).fetchall()
+    for row in use_rows:
+        function = (row["enclosing_function"] or "").lower()
+        if any(needle in function for needle in ("drop", "clone", "inc_ref", "dec_ref", "get", "put", "new", "free", "release")):
+            facts.append(
+                {
+                    "rust_file": row["rust_file"],
+                    "line": row["line"],
+                    "fact_type": "LIFETIME_NAMING_PATTERN",
+                    "rust_type": row["enclosing_impl"],
+                    "evidence_text": row["enclosing_function"],
+                }
+            )
+    return facts
 
 
 def _indicators(conn, version: str) -> dict[str, set[str]]:

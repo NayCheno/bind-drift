@@ -5,17 +5,17 @@
     "wrapper_fix_events": 200
   },
   "manual_review": {
-    "labeled_warnings": 0,
-    "precision": null,
+    "labeled_warnings": 20,
+    "precision": 0.0,
     "precision_at_k": {
-      "10": null,
-      "100": null,
-      "50": null
+      "10": 0.0,
+      "100": 0.0,
+      "50": 0.0
     },
     "true_labeled_warnings": 0
   },
   "note": "Recall requires a complete labeled replay oracle; precision is reported only for non-empty manual labels.",
   "recall": null,
-  "warnings": 0,
+  "warnings": 64,
   "wrapper_fix_candidates": 24
 }

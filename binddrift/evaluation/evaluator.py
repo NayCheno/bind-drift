@@ -93,6 +93,10 @@ def persist_ground_truth(cfg: Config, build_log: Path | None, build_findings: li
 def generate_manual_review(cfg: Config, warnings: list[dict[str, Any]], top_k: int = 50) -> Path:
     path = cfg.data_dir / "manual_review.csv"
     cfg.data_dir.mkdir(parents=True, exist_ok=True)
+    existing: dict[str, dict[str, str]] = {}
+    if path.exists():
+        with path.open(newline="", encoding="utf-8") as fh:
+            existing = {row["warning_id"]: row for row in csv.DictReader(fh) if row.get("warning_id")}
     with path.open("w", newline="", encoding="utf-8") as fh:
         writer = csv.DictWriter(
             fh,
@@ -100,6 +104,7 @@ def generate_manual_review(cfg: Config, warnings: list[dict[str, Any]], top_k: i
         )
         writer.writeheader()
         for warning in warnings[:top_k]:
+            prior = existing.get(str(warning.get("warning_id")), {})
             writer.writerow(
                 {
                     "warning_id": warning.get("warning_id"),
@@ -107,8 +112,8 @@ def generate_manual_review(cfg: Config, warnings: list[dict[str, Any]], top_k: i
                     "risk": warning.get("risk"),
                     "score": warning.get("score"),
                     "symbol": warning.get("c_side", {}).get("symbol"),
-                    "label": "",
-                    "reviewer_notes": "",
+                    "label": prior.get("label", ""),
+                    "reviewer_notes": prior.get("reviewer_notes", ""),
                 }
             )
     return path

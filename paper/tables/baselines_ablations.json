@@ -1,10 +1,10 @@
 {
   "counts": {
     "binding_functions": 0,
-    "c_functions": 675,
-    "graph_edges": 8397,
+    "c_functions": 62668,
+    "graph_edges": 17021,
     "rust_binding_uses": 1934,
-    "warnings": 0
+    "warnings": 64
   },
   "variants": [
     {
@@ -12,21 +12,21 @@
       "kind": "baseline",
       "note": "Precision values are populated only when manual labels are present.",
       "precision_at_k": {
-        "10": null,
-        "100": null,
-        "50": null
+        "10": 0.0,
+        "100": 0.0,
+        "50": 0.0
       },
       "recall": null,
       "variant": "BindgenOnly"
     },
     {
-      "candidate_count": 675,
+      "candidate_count": 62668,
       "kind": "baseline",
       "note": "Precision values are populated only when manual labels are present.",
       "precision_at_k": {
-        "10": null,
-        "100": null,
-        "50": null
+        "10": 0.0,
+        "100": 0.0,
+        "50": 0.0
       },
       "recall": null,
       "variant": "CSignatureDiff"
@@ -36,9 +36,9 @@
       "kind": "baseline",
       "note": "Precision values are populated only when manual labels are present.",
       "precision_at_k": {
-        "10": null,
-        "100": null,
-        "50": null
+        "10": 0.0,
+        "100": 0.0,
+        "50": 0.0
       },
       "recall": null,
       "variant": "BuildOnly"
@@ -48,93 +48,93 @@
       "kind": "baseline",
       "note": "Precision values are populated only when manual labels are present.",
       "precision_at_k": {
-        "10": null,
-        "100": null,
-        "50": null
+        "10": 0.0,
+        "100": 0.0,
+        "50": 0.0
       },
       "recall": null,
       "variant": "GrepUsage"
     },
     {
-      "candidate_count": 0,
+      "candidate_count": 64,
       "kind": "baseline",
       "note": "Precision values are populated only when manual labels are present.",
       "precision_at_k": {
-        "10": null,
-        "100": null,
-        "50": null
+        "10": 0.0,
+        "100": 0.0,
+        "50": 0.0
       },
       "recall": null,
       "variant": "NoRanking"
     },
     {
-      "candidate_count": 0,
+      "candidate_count": 64,
       "kind": "baseline",
       "note": "Precision values are populated only when manual labels are present.",
       "precision_at_k": {
-        "10": null,
-        "100": null,
-        "50": null
+        "10": 0.0,
+        "100": 0.0,
+        "50": 0.0
       },
       "recall": null,
       "variant": "Tier1Only"
     },
     {
-      "candidate_count": 675,
+      "candidate_count": 62668,
       "kind": "ablation",
       "note": "Precision values are populated only when manual labels are present.",
       "precision_at_k": {
-        "10": null,
-        "100": null,
-        "50": null
+        "10": 0.0,
+        "100": 0.0,
+        "50": 0.0
       },
       "recall": null,
       "variant": "NoGraph"
     },
     {
-      "candidate_count": 0,
+      "candidate_count": 64,
       "kind": "ablation",
       "note": "Precision values are populated only when manual labels are present.",
       "precision_at_k": {
-        "10": null,
-        "100": null,
-        "50": null
+        "10": 0.0,
+        "100": 0.0,
+        "50": 0.0
       },
       "recall": null,
       "variant": "NoTier2"
     },
     {
-      "candidate_count": 0,
+      "candidate_count": 64,
       "kind": "ablation",
       "note": "Precision values are populated only when manual labels are present.",
       "precision_at_k": {
-        "10": null,
-        "100": null,
-        "50": null
+        "10": 0.0,
+        "100": 0.0,
+        "50": 0.0
       },
       "recall": null,
       "variant": "NoRanking"
     },
     {
-      "candidate_count": 0,
+      "candidate_count": 64,
       "kind": "ablation",
       "note": "Precision values are populated only when manual labels are present.",
       "precision_at_k": {
-        "10": null,
-        "100": null,
-        "50": null
+        "10": 0.0,
+        "100": 0.0,
+        "50": 0.0
       },
       "recall": null,
       "variant": "NoSafetyComment"
     },
     {
-      "candidate_count": 0,
+      "candidate_count": 64,
       "kind": "ablation",
       "note": "Precision values are populated only when manual labels are present.",
       "precision_at_k": {
-        "10": null,
-        "100": null,
-        "50": null
+        "10": 0.0,
+        "100": 0.0,
+        "50": 0.0
       },
       "recall": null,
       "variant": "NoCommitText"
