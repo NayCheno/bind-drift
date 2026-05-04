@@ -10,6 +10,7 @@ from binddrift.config import Config
 from binddrift.db import connect, initialize
 from binddrift.gitutil import git_output
 from binddrift.warnings import read_warnings
+from .baselines import generate_baselines
 
 
 BUILD_ERROR_RE = re.compile(r"(bindings::[A-Za-z_][A-Za-z0-9_]*|missing field|mismatched types|layout)")
@@ -80,8 +81,10 @@ def run_evaluation(cfg: Config, build_log: Path | None = None, top_k: int = 50) 
     tables_dir = cfg.repo_root / "paper/tables"
     tables_dir.mkdir(parents=True, exist_ok=True)
     (tables_dir / "evaluation_summary.json").write_text(json.dumps(table, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    baselines = generate_baselines(cfg)
     return {
         "summary": table,
+        "baselines": baselines,
         "manual_review": str(review_path),
         "evaluation_table": str(tables_dir / "evaluation_summary.json"),
     }
