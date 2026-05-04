@@ -2,60 +2,179 @@
 
 ## Abstract
 
-Rust-for-Linux safe abstractions depend on Linux C APIs whose signatures, layouts, and behavioral contracts evolve over time. BindDrift detects cross-language API and contract drift by connecting C symbols, generated Rust bindings, unsafe Rust call sites, and public safe abstractions. The prototype emits explainable, ranked warnings rather than claiming full soundness proofs.
+Rust-for-Linux safe abstractions rely on Linux C APIs whose signatures, layouts,
+and behavioral contracts evolve outside Rust's type system. BindDrift is a
+static-analysis and empirical-replay artifact for detecting cross-language API
+and contract drift from Linux C declarations and helpers to generated Rust
+bindings, unsafe Rust call sites, and public safe abstractions. BindDrift builds
+a C-to-Rust dependency graph, detects objective API drift and indicator-based
+contract drift, and ranks warnings for maintainer review. The current artifact
+run on the provided Linux tree extracted 62,668 C function facts, 240,694 macro
+facts, 13,410 C struct facts, 1,934 Rust binding uses, 20,356 safety comments,
+and 17,021 graph edges. Because generated bindgen outputs were unavailable in
+this environment, the current replay reports 64 single-version semantic review
+warnings rather than confirmed historical drift bugs. The paper claim is
+therefore warning and prioritization, not soundness proof or bug confirmation.
 
 ## 1. Introduction
 
-Rust-for-Linux reduces direct exposure to unsafe C APIs by placing reviewed Rust abstractions between drivers and kernel C functionality. This boundary is only stable if the underlying C API and contract remain compatible with the Rust wrapper's assumptions. Linux C changes can alter signatures, layouts, error conventions, ownership transfer, refcounting, and sleepability without necessarily changing the Rust safe API.
+Rust-for-Linux reduces direct exposure to kernel C APIs by routing most driver
+code through Rust abstractions. This architecture improves local safety, but it
+also creates a cross-language maintenance problem: a safe Rust API can remain
+unchanged while the underlying C API changes its failure convention, refcount
+contract, allocation/free pairing, or sleepability constraints.
 
-BindDrift studies this as a software evolution problem: C-side API drift can propagate through bindgen output and unsafe Rust wrappers into safe abstractions. The key claim is warning and prioritization, not automated proof of Rust abstraction soundness.
+BindDrift frames this as a software evolution problem. The relevant dependency
+chain is:
 
-## 2. Background
+```text
+Linux C function/type/macro/helper
+-> bindgen-generated Rust binding or Rust helper
+-> unsafe Rust call site
+-> public safe abstraction
+```
 
-Rust-for-Linux separates generated bindings from hand-written abstractions. Bindgen exposes selected C declarations to Rust, while helpers wrap inline functions and complex macros that bindgen cannot expose directly. Safe abstractions are expected to encapsulate unsafe calls and document safety requirements.
+The key observation is that Rust type checking sees only part of this chain.
+Type-visible signature or layout changes can break builds, but semantic changes
+such as `NULL` versus `ERR_PTR`, owned versus borrowed references, or new
+blocking behavior may still require human review.
 
-This structure creates a natural dependency chain from C symbols to generated bindings, unsafe call sites, and public safe Rust APIs. BindDrift makes that chain explicit.
+## 2. Background And Scope
 
-## 3. Motivating Examples
+Rust-for-Linux separates generated bindings from hand-written abstractions.
+Bindings expose selected C declarations to Rust. Helpers expose C inline
+functions and complex macros that bindgen cannot directly represent. Safe
+abstractions then encapsulate unsafe calls and document the invariants callers
+must rely on.
 
-The final paper will include cases for signature drift, layout drift, helper drift, nullability drift, ownership/refcount drift, and sleepability drift. Case skeletons are generated under the paper case-study workflow and are filled from replay warnings plus manual review.
+BindDrift targets Linux mainline, x86_64, Rust-enabled builds when the local
+toolchain can produce them, and the `rust/bindings`, `rust/helpers`, and
+`rust/kernel` surfaces. It does not prove Rust safe abstraction soundness. Tier
+2 warnings are review targets and are explicitly marked as indicator-based.
 
-## 4. Problem Definition
+## 3. Design
 
-BindDrift defines cross-language API and contract drift as a change in a Linux C API surface or behavioral indicator that reaches Rust-for-Linux bindings or safe abstractions. The prototype classifies drift into Tier 1 objective drift and Tier 2 indicator-based contract drift.
+BindDrift has five stages.
 
-Tier 1 includes function signatures, struct fields, layout facts, constants, and helper wrappers. Tier 2 includes nullability, error codes, ownership/refcounting, allocation/free pairing, and sleepability.
+First, it captures environment metadata: kernel commit, config hash, tool
+versions, and kernel Rust availability. In this run, `bindgen-cli` and
+`rust-src` were installed successfully, and `make LLVM=1 rustavailable` passed.
+Full binding builds were still blocked by missing privileged system packages
+(`flex`/`bison`) in the container, so generated binding facts are recorded as
+missing rather than fabricated.
 
-## 5. Design
+Second, extractors collect C facts, Rust facts, and generated binding facts when
+available. C extraction records functions, structs, macros, and behavior
+indicators such as `NULL_RETURN`, `ERR_PTR_RETURN`, `ERROR_CODE`,
+`REFCOUNT_GET`, `REFCOUNT_PUT`, `ALLOC`, `FREE`, and `MAY_SLEEP`. Rust
+extraction records binding uses, unsafe scopes, public APIs, safety comments,
+Drop/Clone/lifetime patterns, and Option/Result/error mappings.
 
-BindDrift has four stages: extraction, graph construction, detection, and ranking.
+Third, BindDrift builds a C-to-Rust dependency graph. Nodes include C functions,
+C structs, macros, behavior indicators, Rust bindings, unsafe call sites, safe
+APIs, safety comments, error mappings, and lifetime facts. Edges capture
+generation, binding calls, safe API exposure, contract comments, error mapping,
+and lifetime relevance.
 
-The extractors collect version metadata, generated binding facts, Rust wrapper usage, C API declarations, and behavior indicators. The graph builder links C functions and macros to Rust bindings, unsafe call sites, safety comments, and public safe APIs. Detectors compare facts across versions or generate indicator-based warnings for contract risks. The ranker scores warnings by drift severity, Rust exposure, unsafe proximity, contract relevance, helper involvement, historical confidence, and build-breakage likelihood.
+Fourth, detectors produce warnings. Tier 1 detectors compare two versions for
+signature, field, layout, macro/constant, and helper drift. Tier 2 detectors
+compare C behavior indicators and require Rust-side evidence before emitting
+nullability, error, ownership/refcount, allocation/free, or sleepability
+warnings.
 
-## 6. Implementation
+Fifth, the ranker scores warnings by drift severity, Rust exposure, unsafe
+proximity, safe API relevance, helper involvement, confidence, build-breakage
+likelihood, and evidence-chain richness.
 
-The artifact is a Python command-line tool backed by SQLite and JSONL. It treats the Linux tree as an input and stores mutable experiment state outside the source tree. Generated Rust bindings are read from the kernel object tree because they are build artifacts.
+## 4. Implementation
 
-## 7. Evaluation
+The artifact is a Python command-line tool backed by SQLite and JSONL reports.
+It treats `vendor/linux` as an input repository and uses managed worktrees under
+`.binddrift` for historical replay. The CLI supports toolchain checks, version
+selection, kernel object-tree preparation, binding extraction, Rust extraction,
+C extraction, graph construction, detection, ranking, evaluation, and paper
+artifact generation.
 
-The evaluation plan measures drift prevalence, build-breakage prediction, wrapper-fix prediction, semantic warning quality, baselines, and ablations. The current pilot pipeline generates the evaluation table schema and wrapper-fix candidates. Full precision and recall require a replay dataset and manual labels.
+The schema stores version metadata, commits, binding facts, Rust facts, C facts,
+graph nodes and edges, extraction diagnostics, drift events, build-breakage
+events, wrapper-fix candidates, manual labels, and generated table provenance.
 
-## 8. Case Studies
+## 5. Evaluation
 
-Each case study records the C-side change, Rust dependency, compiler catchability, BindDrift warning, evidence, impact, and general lesson. The paper will include at least five cases, with at least two semantic cases that are not fully caught by compilation.
+The current artifact run is an honest pilot on the provided checkout rather
+than a complete historical replay. The Linux fork available in this workspace
+does not expose release tags after fetching, so version selection falls back to
+the current `HEAD` pseudo-version. Kernel Rust availability succeeds, but
+binding generation is blocked by missing system parser tools that require
+privileged package installation.
 
-## 9. Discussion
+Despite those constraints, the current single-version analysis produced:
 
-BindDrift is intentionally conservative. Tier 2 warnings are stale-contract review targets, not confirmed bugs. This framing makes the prototype useful for prioritization while avoiding unsound claims about fully proving Rust abstraction correctness.
+- 62,668 C function facts
+- 240,694 macro facts
+- 13,410 C struct facts
+- 8,624 C behavior indicators
+- 1,934 Rust binding uses
+- 722 Rust safe APIs
+- 20,356 Rust safety comments
+- 1,014 Rust lifetime facts
+- 786 Rust error mapping facts
+- 17,021 graph edges
+- 64 ranked warnings
+- 200 wrapper-fix candidate commits, 24 marked likely by keyword heuristic
 
-## 10. Threats To Validity
+Manual review was performed as a single-review pilot over the top 20 warnings.
+All 20 are labeled `UNCLEAR` because this run lacks an older extracted version
+and therefore cannot confirm historical drift. This is an important result: the
+tool can produce useful contract-review candidates from current evidence, but
+the paper must not report them as confirmed drift bugs.
 
-Toolchain differences can produce false drift, so the artifact records compiler and bindgen versions. Regex-based fallback parsing is incomplete, so important results require sampling or AST-backed validation. Manual review is subjective, so the intended evaluation uses explicit labels and reviewer notes. The initial scope focuses on Linux mainline, Rust-for-Linux, and x86_64.
+## 6. Case Studies
 
-## 11. Related Work
+The artifact includes five warning-backed case studies:
 
-The final version will compare BindDrift with API evolution, binding generation, cross-language static analysis, Rust-for-Linux empirical studies, and kernel bug-finding work.
+- `rb_first`: `NULL_RETURN` evidence reaches Rust rbtree cursor and iterator
+  code.
+- `auxiliary_device_uninit`: free/release and refcount-put evidence reaches the
+  Rust auxiliary device drop path.
+- `dma_alloc_attrs`: `NULL_RETURN` evidence reaches Rust DMA allocation
+  wrappers.
+- `kunit_get_current_test`: `NULL_RETURN` evidence reaches Rust KUnit helpers.
+- `auxiliary_device_uninit` allocation/free pairing: release behavior reaches
+  Rust cleanup code.
 
-## 12. Conclusion
+Each case is classified as a review target rather than a confirmed bug. This
+matches the artifact's claim boundary and avoids overstating single-version
+indicator evidence.
 
-BindDrift turns Rust-for-Linux cross-language dependencies into an explicit graph and uses that graph to detect and rank API and contract drift. The artifact supports reproducible replay and manual review while keeping the paper claim to warning quality and prioritization.
+## 7. Threats To Validity
+
+Internal validity threats include regex parser incompleteness, missing generated
+binding outputs, and toolchain/config differences. BindDrift mitigates these by
+recording extraction diagnostics, environment metadata, and config hashes.
+
+Construct validity threats include the ambiguity of semantic drift labels and
+the fact that warnings are not bugs. The manual review guide separates
+`TRUE_SEMANTIC_DRIFT`, `BENIGN_DRIFT`, `FALSE_POSITIVE`, and `UNCLEAR`. In this
+run, all reviewed warnings are `UNCLEAR` because historical comparison was not
+available.
+
+External validity threats include focusing on Linux/Rust-for-Linux and x86_64.
+Future work should evaluate additional architectures, rust-next branches, and
+complete release-tag histories once full binding generation is available.
+
+## 8. Related Work
+
+BindDrift is related to API evolution, cross-language binding generation,
+software maintenance mining, static bug finding for systems software, and
+Rust-for-Linux empirical studies. Its distinguishing focus is the
+cross-language path from evolving C APIs through generated bindings and unsafe
+Rust wrappers into safe abstraction contracts.
+
+## 9. Conclusion
+
+BindDrift makes Rust-for-Linux cross-language dependencies explicit and ranks
+API/contract drift warnings for review. The current artifact implements the full
+pipeline and reports measured pilot results while preserving the central claim
+boundary: BindDrift prioritizes evidence-backed review targets; it does not
+prove soundness or claim every warning is a bug.
