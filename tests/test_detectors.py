@@ -77,3 +77,56 @@ def test_tier1_detects_signature_layout_const_and_helper(tmp_path: Path):
 
     assert result["warnings"] >= 4
     assert {"SignatureDrift", "LayoutDrift", "MacroConstDrift", "HelperDrift"} <= warning_types
+
+
+def test_tier2_requires_rust_contract_evidence(tmp_path: Path):
+    cfg = Config.from_args(repo_root=tmp_path)
+    conn = connect(cfg.database)
+    initialize(conn)
+    upsert_many(
+        conn,
+        "c_behavior_indicators",
+        [
+            {"version_id": "old", "c_symbol": "foo_get", "indicator_type": "NULL_RETURN", "evidence_file": "foo.c", "evidence_line": 1, "evidence_text": "return NULL;", "confidence": 0.7},
+            {"version_id": "new", "c_symbol": "foo_get", "indicator_type": "ERR_PTR_RETURN", "evidence_file": "foo.c", "evidence_line": 1, "evidence_text": "return ERR_PTR(-ENOMEM);", "confidence": 0.8},
+        ],
+    )
+    upsert_many(
+        conn,
+        "rust_binding_uses",
+        [
+            {
+                "version_id": "new",
+                "rust_file": "device.rs",
+                "line": 10,
+                "binding_symbol": "foo_get",
+                "enclosing_unsafe_block": 1,
+                "enclosing_function": "Device::get",
+                "enclosing_impl": "Device",
+                "enclosing_type": "Device",
+            }
+        ],
+    )
+    upsert_many(
+        conn,
+        "rust_error_mappings",
+        [
+            {
+                "version_id": "new",
+                "rust_file": "device.rs",
+                "line": 11,
+                "mapping_type": "NONNULL_MAPPING",
+                "text": "NonNull::new(ptr)",
+                "nearby_binding_symbol": "foo_get",
+                "nearby_api": "Device::get",
+            }
+        ],
+    )
+
+    result = run_tier2(cfg, old="old", new="new")
+    warnings = read_warnings(cfg.warnings_jsonl)
+
+    assert result["new_warnings"] == 1
+    assert warnings[0]["type"] == "NullabilityDrift"
+    assert warnings[0]["indicator_based"] is True
+    assert warnings[0]["evidence_chain"]
