@@ -20,6 +20,7 @@ from .graph.builder import build_graph, query_graph
 from .ranking.scorer import rank_warnings
 from .paper.cases import generate_case_studies
 from .paper.tables import generate_paper_tables
+from .replay import run_pilot_replay
 
 
 Command = Callable[[argparse.Namespace, Config], int]
@@ -128,6 +129,12 @@ def cmd_eval(args: argparse.Namespace, cfg: Config) -> int:
     return 0
 
 
+def cmd_replay(args: argparse.Namespace, cfg: Config) -> int:
+    result = run_pilot_replay(cfg, commit_limit=args.commit_limit, c_max_files=args.c_max_files)
+    print(json.dumps(result, indent=2, sort_keys=True))
+    return 0
+
+
 def cmd_paper_cases(args: argparse.Namespace, cfg: Config) -> int:
     result = generate_case_studies(cfg)
     print(json.dumps(result, indent=2, sort_keys=True))
@@ -215,7 +222,10 @@ def build_parser() -> argparse.ArgumentParser:
     _set(all_detectors, cmd_detect_all)
 
     _set(sub.add_parser("rank", help="Rank warnings."), cmd_rank)
-    _set(sub.add_parser("replay", help="Run a pilot replay."), _not_implemented("replay"))
+    replay = sub.add_parser("replay", help="Run a pilot replay.")
+    replay.add_argument("--commit-limit", type=int, default=50, help="Number of commits to import.")
+    replay.add_argument("--c-max-files", type=int, default=50, help="Number of C files to scan in the pilot.")
+    _set(replay, cmd_replay)
     eval_parser = sub.add_parser("eval", help="Generate evaluation tables.")
     eval_parser.add_argument("--build-log", help="Optional Rust-enabled build log to parse.")
     eval_parser.add_argument("--top-k", type=int, default=50, help="Number of warnings to include in manual review CSV.")

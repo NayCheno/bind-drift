@@ -1,6 +1,6 @@
 {
   "arch": "x86_64",
-  "captured_at": "2026-05-04T19:28:10.963523+00:00",
+  "captured_at": "2026-05-04T19:44:33.295496+00:00",
   "config_hash": null,
   "config_path": "/home/nya/workspace/bind-drift/vendor/linux/.config",
   "generated_bindings_note": "Rust-for-Linux generated bindings are expected under OBJTREE/rust/bindings, not the source tree.",
