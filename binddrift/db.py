@@ -134,6 +134,48 @@ def initialize(conn: sqlite3.Connection) -> None:
             nearby_api TEXT,
             PRIMARY KEY(version_id, rust_file, line)
         );
+
+        CREATE TABLE IF NOT EXISTS c_functions (
+            version_id TEXT NOT NULL,
+            c_symbol TEXT NOT NULL,
+            return_type TEXT,
+            params TEXT NOT NULL,
+            header_file TEXT NOT NULL,
+            definition_file TEXT NOT NULL,
+            line INTEGER NOT NULL,
+            PRIMARY KEY(version_id, c_symbol, header_file, definition_file, line)
+        );
+
+        CREATE TABLE IF NOT EXISTS c_structs (
+            version_id TEXT NOT NULL,
+            c_type TEXT NOT NULL,
+            fields TEXT NOT NULL,
+            size INTEGER,
+            align INTEGER,
+            header_file TEXT NOT NULL,
+            line INTEGER NOT NULL,
+            PRIMARY KEY(version_id, c_type, header_file, line)
+        );
+
+        CREATE TABLE IF NOT EXISTS c_macros (
+            version_id TEXT NOT NULL,
+            name TEXT NOT NULL,
+            value TEXT,
+            source_file TEXT NOT NULL,
+            line INTEGER NOT NULL,
+            PRIMARY KEY(version_id, name, source_file, line)
+        );
+
+        CREATE TABLE IF NOT EXISTS c_behavior_indicators (
+            version_id TEXT NOT NULL,
+            c_symbol TEXT NOT NULL,
+            indicator_type TEXT NOT NULL,
+            evidence_file TEXT NOT NULL,
+            evidence_line INTEGER NOT NULL,
+            evidence_text TEXT NOT NULL,
+            confidence REAL NOT NULL,
+            PRIMARY KEY(version_id, c_symbol, indicator_type, evidence_file, evidence_line)
+        );
         """
     )
     conn.commit()

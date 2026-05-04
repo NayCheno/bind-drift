@@ -10,6 +10,7 @@ from .config import Config
 from .dataset import extract_dataset
 from .environment import capture_environment, write_environment
 from .extractors.bindgen import extract_bindings
+from .extractors.c_api import extract_c_api
 from .extractors.rust_usage import extract_rust_usage
 from .kernel import prepare_kernel_build
 
@@ -71,6 +72,12 @@ def cmd_extract_rust(args: argparse.Namespace, cfg: Config) -> int:
     return 0
 
 
+def cmd_extract_c(args: argparse.Namespace, cfg: Config) -> int:
+    summary = extract_c_api(cfg, roots=args.root or None, version_id=args.version_id, max_files=args.max_files)
+    print(json.dumps(summary, indent=2, sort_keys=True))
+    return 0
+
+
 def _add_common(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--repo-root", default=".", help="Repository root that owns the BindDrift artifact.")
     parser.add_argument("--linux-tree", default="vendor/linux", help="Linux source tree relative to repo root.")
@@ -108,7 +115,11 @@ def build_parser() -> argparse.ArgumentParser:
     rust = extract_sub.add_parser("rust", help="Extract Rust wrapper usage facts.")
     rust.add_argument("--version-id", help="Version id for extracted facts.")
     _set(rust, cmd_extract_rust)
-    _set(extract_sub.add_parser("c", help="Extract c facts."), _not_implemented("extract c"))
+    c_api = extract_sub.add_parser("c", help="Extract C API facts and behavior indicators.")
+    c_api.add_argument("--root", action="append", help="Linux-relative path to scan; may be repeated.")
+    c_api.add_argument("--version-id", help="Version id for extracted facts.")
+    c_api.add_argument("--max-files", type=int, help="Limit scanned files for fast pilot runs.")
+    _set(c_api, cmd_extract_c)
     commits = extract_sub.add_parser("commits", help="Extract version and commit metadata.")
     commits.add_argument("--limit", type=int, default=200, help="Number of commits to import from the selected ref.")
     commits.add_argument("--fetch-tags", action="store_true", help="Fetch tags in the Linux source tree before extraction.")
