@@ -52,6 +52,7 @@ def score_warning(warning: dict[str, Any]) -> float:
     helper = 1.0 if "Helper" in drift_type or "helper" in json.dumps(warning).lower() else 0.0
     historical = float(warning.get("confidence", 0.5))
     build = 1.0 if drift_type in {"SignatureDrift", "LayoutDrift", "FieldDrift"} else 0.0
+    evidence = min(1.0, len(warning.get("evidence_chain") or []) / 5)
     return round(
         2.0 * severity
         + 2.0 * exposure
@@ -59,7 +60,8 @@ def score_warning(warning: dict[str, Any]) -> float:
         + 1.5 * contract
         + 1.0 * helper
         + 1.0 * historical
-        + 1.0 * build,
+        + 1.0 * build
+        + evidence,
         3,
     )
 
@@ -67,6 +69,7 @@ def score_warning(warning: dict[str, Any]) -> float:
 def rank_warnings(cfg: Config) -> dict[str, Any]:
     warnings = read_warnings(cfg.warnings_jsonl)
     for warning in warnings:
+        warning.setdefault("evidence_chain", [])
         warning["score"] = score_warning(warning)
         if warning.get("score", 0) >= 10:
             warning["risk"] = "High"
@@ -97,6 +100,49 @@ def _markdown(warnings: list[dict[str, Any]]) -> str:
                 f"- Explanation: {warning.get('explanation', '')}",
                 f"- Suggested action: {warning.get('suggested_action', '')}",
                 "",
+                "### C Evidence",
+                "",
+                _format_c_side(warning),
+                "",
+                "### Rust Evidence",
+                "",
+                _format_rust_side(warning),
+                "",
             ]
         )
     return "\n".join(lines)
+
+
+def _format_c_side(warning: dict[str, Any]) -> str:
+    c_side = warning.get("c_side", {})
+    evidence = c_side.get("evidence") or []
+    lines = [
+        f"- Old: `{c_side.get('old', c_side.get('old_indicators', 'n/a'))}`",
+        f"- New: `{c_side.get('new', c_side.get('new_indicators', 'n/a'))}`",
+    ]
+    for item in evidence[:5]:
+        if isinstance(item, dict):
+            lines.append(f"- {item.get('evidence_file')}:{item.get('evidence_line')} `{item.get('evidence_text', '')}`")
+    return "\n".join(lines)
+
+
+def _format_rust_side(warning: dict[str, Any]) -> str:
+    rust_side = warning.get("rust_side", {})
+    uses = rust_side.get("uses") or []
+    exposure = rust_side.get("exposure") or {}
+    lines: list[str] = []
+    if isinstance(exposure, dict) and exposure.get("edge_count") is not None:
+        lines.append(f"- Graph edges: `{exposure.get('edge_count')}`")
+    for use in uses[:5]:
+        if isinstance(use, dict):
+            lines.append(
+                f"- {use.get('rust_file')}:{use.get('line')} `{use.get('enclosing_function')}` "
+                f"unsafe={use.get('enclosing_unsafe_block')}"
+            )
+    for item in (rust_side.get("safety_comments") or [])[:3]:
+        if isinstance(item, dict):
+            lines.append(f"- {item.get('rust_file')}:{item.get('line')} `{item.get('text', '')}`")
+    for item in (rust_side.get("lifetime_facts") or [])[:3]:
+        if isinstance(item, dict):
+            lines.append(f"- {item.get('rust_file')}:{item.get('line')} `{item.get('fact_type')}`")
+    return "\n".join(lines) if lines else "- No Rust exposure evidence recorded."

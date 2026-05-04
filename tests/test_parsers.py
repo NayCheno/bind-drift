@@ -4,7 +4,7 @@ from binddrift.config import Config
 from binddrift.extractors.c_api import _parse_file as _parse_c_file
 from binddrift.extractors.bindgen import _parse_file
 from binddrift.extractors.rust_usage import _parse_file as _parse_rust_file
-from binddrift.ranking.scorer import score_warning
+from binddrift.ranking.scorer import _markdown, score_warning
 
 
 def test_config_defaults(tmp_path: Path):
@@ -20,6 +20,26 @@ def test_score_contract_warning():
         "rust_side": {"uses": [{"enclosing_unsafe_block": 1}, {"enclosing_unsafe_block": 0}]},
     }
     assert score_warning(warning) > 10
+
+
+def test_markdown_report_includes_evidence_sections():
+    report = _markdown(
+        [
+            {
+                "warning_id": "W-000001",
+                "type": "NullabilityDrift",
+                "risk": "High",
+                "score": 11,
+                "c_side": {"symbol": "foo_get", "evidence": [{"evidence_file": "foo.c", "evidence_line": 1, "evidence_text": "return ERR_PTR(-ENOMEM);"}]},
+                "rust_side": {"uses": [{"rust_file": "device.rs", "line": 2, "enclosing_function": "Device::get", "enclosing_unsafe_block": 1}]},
+                "explanation": "Changed.",
+                "suggested_action": "Review.",
+            }
+        ]
+    )
+    assert "### C Evidence" in report
+    assert "### Rust Evidence" in report
+    assert "foo.c:1" in report
 
 
 def test_bindgen_parser_handles_multiline_generated_items(tmp_path: Path):
