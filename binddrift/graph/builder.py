@@ -41,11 +41,37 @@ def build_graph(cfg: Config, version_id: str | None = None) -> dict[str, Any]:
 
     for row in conn.execute("SELECT DISTINCT c_symbol FROM c_functions WHERE version_id=?", (vid,)):
         add_node(_node("CFunction", row["c_symbol"]))
+    for row in conn.execute("SELECT DISTINCT c_type FROM c_structs WHERE version_id=?", (vid,)):
+        add_node(_node("CStruct", row["c_type"]))
     for row in conn.execute("SELECT DISTINCT name FROM c_macros WHERE version_id=?", (vid,)):
         add_node(_node("CMacro", row["name"]))
+    for row in conn.execute("SELECT * FROM c_behavior_indicators WHERE version_id=?", (vid,)):
+        c = add_node(_node("CFunction", row["c_symbol"]))
+        indicator = add_node(
+            _node(
+                "CBehaviorIndicator",
+                f"{row['c_symbol']}:{row['indicator_type']}:{row['evidence_file']}:{row['evidence_line']}",
+                {
+                    "indicator_type": row["indicator_type"],
+                    "file": row["evidence_file"],
+                    "line": row["evidence_line"],
+                    "text": row["evidence_text"],
+                    "confidence": row["confidence"],
+                },
+            )
+        )
+        add_edge(_edge(c, indicator, "HAS_C_INDICATOR"))
     for row in conn.execute("SELECT DISTINCT rust_symbol, c_symbol FROM binding_functions WHERE version_id=?", (vid,)):
         c = add_node(_node("CFunction", row["c_symbol"]))
         b = add_node(_node("RustBindingFunction", row["rust_symbol"]))
+        add_edge(_edge(c, b, "GENERATED_FROM"))
+    for row in conn.execute("SELECT DISTINCT rust_type, c_type FROM binding_structs WHERE version_id=?", (vid,)):
+        c = add_node(_node("CStruct", row["c_type"]))
+        b = add_node(_node("RustBindingStruct", row["rust_type"]))
+        add_edge(_edge(c, b, "GENERATED_FROM"))
+    for row in conn.execute("SELECT DISTINCT rust_name, c_name FROM binding_consts WHERE version_id=?", (vid,)):
+        c = add_node(_node("CMacro", row["c_name"]))
+        b = add_node(_node("RustBindingConst", row["rust_name"]))
         add_edge(_edge(c, b, "GENERATED_FROM"))
     for row in conn.execute("SELECT * FROM rust_binding_uses WHERE version_id=?", (vid,)):
         binding = add_node(_node("RustBindingFunction", row["binding_symbol"]))
@@ -71,6 +97,34 @@ def build_graph(cfg: Config, version_id: str | None = None) -> dict[str, Any]:
         comment = add_node(_node("RustSafetyComment", f"{row['rust_file']}:{row['line']}", {"text": row["text"]}))
         binding = add_node(_node("RustBindingFunction", row["nearby_binding_symbol"]))
         add_edge(_edge(binding, comment, "HAS_SAFETY_COMMENT"))
+    for row in conn.execute("SELECT * FROM rust_error_mappings WHERE version_id=?", (vid,)):
+        mapping = add_node(
+            _node(
+                "RustErrorMapping",
+                f"{row['rust_file']}:{row['line']}:{row['mapping_type']}",
+                {"mapping_type": row["mapping_type"], "text": row["text"], "api": row["nearby_api"]},
+            )
+        )
+        if row["nearby_binding_symbol"]:
+            binding = add_node(_node("RustBindingFunction", row["nearby_binding_symbol"]))
+            add_edge(_edge(binding, mapping, "HAS_ERROR_MAPPING"))
+        if row["nearby_api"]:
+            api = add_node(_node("RustSafeAPI", row["nearby_api"]))
+            add_edge(_edge(mapping, api, "EXPLAINS_SAFE_API"))
+    for row in conn.execute("SELECT * FROM rust_lifetime_facts WHERE version_id=?", (vid,)):
+        fact = add_node(
+            _node(
+                "RustLifetimeFact",
+                f"{row['rust_file']}:{row['line']}:{row['fact_type']}",
+                {"fact_type": row["fact_type"], "type": row["rust_type"], "text": row["evidence_text"]},
+            )
+        )
+        if row["rust_type"]:
+            rust_type = add_node(_node("RustType", row["rust_type"]))
+            add_edge(_edge(rust_type, fact, "HAS_LIFETIME_FACT"))
+        for symbol in json.loads(row["uses_bindings"]):
+            binding = add_node(_node("RustBindingFunction", symbol))
+            add_edge(_edge(binding, fact, "AFFECTS_LIFETIME"))
 
     upsert_many(conn, "graph_nodes", list(nodes.values()))
     upsert_many(conn, "graph_edges", list(edges.values()))
@@ -95,4 +149,47 @@ def query_graph(cfg: Config, symbol: str | None = None, api: str | None = None, 
         "query": target,
         "nodes": nodes,
         "edges": [dict(row) for row in edge_rows],
+    }
+
+
+def evidence_chain(cfg: Config, symbol: str, version_id: str | None = None) -> dict[str, Any]:
+    vid = version_id or default_version_id(cfg)
+    conn = connect(cfg.database)
+    initialize(conn)
+    return {
+        "version_id": vid,
+        "symbol": symbol,
+        "c_functions": [
+            dict(row)
+            for row in conn.execute("SELECT * FROM c_functions WHERE version_id=? AND c_symbol=? LIMIT 20", (vid, symbol))
+        ],
+        "c_indicators": [
+            dict(row)
+            for row in conn.execute(
+                "SELECT * FROM c_behavior_indicators WHERE version_id=? AND c_symbol=? ORDER BY evidence_line LIMIT 50",
+                (vid, symbol),
+            )
+        ],
+        "rust_uses": [
+            dict(row)
+            for row in conn.execute(
+                "SELECT * FROM rust_binding_uses WHERE version_id=? AND binding_symbol=? ORDER BY rust_file, line LIMIT 50",
+                (vid, symbol),
+            )
+        ],
+        "rust_error_mappings": [
+            dict(row)
+            for row in conn.execute(
+                "SELECT * FROM rust_error_mappings WHERE version_id=? AND nearby_binding_symbol=? ORDER BY rust_file, line LIMIT 50",
+                (vid, symbol),
+            )
+        ],
+        "rust_safety_comments": [
+            dict(row)
+            for row in conn.execute(
+                "SELECT * FROM rust_safety_comments WHERE version_id=? AND nearby_binding_symbol=? ORDER BY rust_file, line LIMIT 50",
+                (vid, symbol),
+            )
+        ],
+        "graph": query_graph(cfg, symbol=symbol, version_id=vid),
     }

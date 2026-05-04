@@ -16,7 +16,7 @@ from .extractors.bindgen import extract_bindings
 from .extractors.c_api import extract_c_api
 from .extractors.rust_usage import extract_rust_usage
 from .kernel import build_kernel_bindings, prepare_kernel_build
-from .graph.builder import build_graph, query_graph
+from .graph.builder import build_graph, evidence_chain, query_graph
 from .ranking.scorer import rank_warnings
 from .paper.cases import generate_case_studies
 from .paper.tables import generate_paper_tables
@@ -126,6 +126,12 @@ def cmd_graph_build(args: argparse.Namespace, cfg: Config) -> int:
 
 def cmd_graph_query(args: argparse.Namespace, cfg: Config) -> int:
     result = query_graph(cfg, symbol=args.symbol, api=args.api, version_id=args.version_id)
+    print(json.dumps(result, indent=2, sort_keys=True))
+    return 0
+
+
+def cmd_graph_evidence(args: argparse.Namespace, cfg: Config) -> int:
+    result = evidence_chain(cfg, symbol=args.symbol, version_id=args.version_id)
     print(json.dumps(result, indent=2, sort_keys=True))
     return 0
 
@@ -263,6 +269,10 @@ def build_parser() -> argparse.ArgumentParser:
     query.add_argument("--api", help="Rust safe API to query.")
     query.add_argument("--version-id", help="Version id to query.")
     _set(query, cmd_graph_query)
+    evidence = graph_sub.add_parser("evidence", help="Materialize a C-to-Rust evidence chain for a symbol.")
+    evidence.add_argument("symbol", help="C or binding symbol to explain.")
+    evidence.add_argument("--version-id", help="Version id to query.")
+    _set(evidence, cmd_graph_evidence)
 
     detect = sub.add_parser("detect", help="Drift detector commands.")
     detect_sub = detect.add_subparsers(dest="detect_command", required=True)
