@@ -9,17 +9,15 @@ This guide is for an artifact evaluator or future maintainer. After reading it, 
 Run the commands from the repository root:
 
 ```bash
-python -m binddrift env check
-python -m binddrift extract commits --limit 50
-python -m binddrift kernel prepare
-python -m binddrift extract bindings
-python -m binddrift extract rust
-python -m binddrift extract c --root rust/helpers --max-files 50
-python -m binddrift graph build
-python -m binddrift detect all
-python -m binddrift rank
-python -m binddrift eval
-python -m binddrift paper cases
+uv run binddrift toolchain check --run-rustavailable
+uv run binddrift dataset versions --fetch-tags
+uv run binddrift extract commits --limit 200
+uv run binddrift extract all --max-files 5000
+uv run binddrift graph build
+uv run binddrift detect all
+uv run binddrift rank
+uv run binddrift eval all
+uv run binddrift paper build
 ```
 
 The pilot does not require a full kernel build. If generated bindings are absent, the binding extractor reports the missing object-tree files and continues. This is expected for a fresh checkout without a Rust-enabled kernel build.
@@ -29,16 +27,17 @@ The pilot does not require a full kernel build. If generated bindings are absent
 Generated Rust bindings are build artifacts. To extract them, first prepare the kernel object tree and run the Rust availability check:
 
 ```bash
-python -m binddrift kernel prepare --run-make
+uv run binddrift kernel prepare --run-make --configure
+uv run binddrift kernel build-bindings --configure
 ```
 
 After the Linux build system has produced generated bindings, rerun:
 
 ```bash
-python -m binddrift extract bindings
-python -m binddrift graph build
-python -m binddrift detect all
-python -m binddrift rank
+uv run binddrift extract bindings
+uv run binddrift graph build
+uv run binddrift detect all
+uv run binddrift rank
 ```
 
 ## Expected Outputs

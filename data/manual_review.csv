@@ -4,18 +4,18 @@ W-000031,NullabilityDrift,High,14.0,dma_alloc_attrs,UNCLEAR,Single-version NULL-
 W-000003,AllocationFreePairingDrift,High,13.7,auxiliary_device_uninit,UNCLEAR,Single-version free/release evidence reaches Rust auxiliary drop path; review target but not confirmed drift.
 W-000004,OwnershipRefcountDrift,High,13.7,auxiliary_device_uninit,UNCLEAR,Single-version put_device evidence reaches Rust auxiliary drop path; review target but not confirmed drift.
 W-000039,NullabilityDrift,High,13.7,kunit_get_current_test,UNCLEAR,Single-version NULL-return evidence reaches Rust KUnit wrapper; no older version comparison.
-W-000040,NullabilityDrift,High,13.7,lock_vma_under_rcu,UNCLEAR,Single-version NULL-return evidence reaches Rust mm wrapper; no older version comparison.
-W-000051,NullabilityDrift,High,13.7,pwmchip_alloc,UNCLEAR,Single-version ERR_PTR evidence reaches Rust PWM allocation wrapper; no older version comparison.
-W-000054,NullabilityDrift,High,13.7,rb_last,UNCLEAR,Single-version NULL-return evidence reaches Rust rbtree wrapper; no historical baseline in this run.
-W-000016,NullabilityDrift,High,13.3,debugfs_create_dir,UNCLEAR,Single-version ERR_PTR evidence reaches Rust debugfs wrapper; no older version comparison.
-W-000011,OwnershipRefcountDrift,High,13.2,clk_put,UNCLEAR,Single-version put evidence reaches Rust clock wrapper; no older version comparison.
-W-000013,NullabilityDrift,High,13.2,cpufreq_cpu_get,UNCLEAR,Single-version NULL-return evidence reaches Rust cpufreq wrapper; no older version comparison.
-W-000014,OwnershipRefcountDrift,High,13.2,cpufreq_cpu_put,UNCLEAR,Single-version put evidence reaches Rust cpufreq wrapper; no older version comparison.
-W-000030,NullabilityDrift,High,13.2,devm_platform_ioremap_resource,UNCLEAR,Single-version ERR_PTR evidence reaches Rust platform wrapper; no older version comparison.
-W-000056,OwnershipRefcountDrift,High,13.2,refcount_dec,UNCLEAR,Single-version refcount decrement evidence reaches Rust refcount wrapper; no older version comparison.
-W-000057,OwnershipRefcountDrift,High,13.2,refcount_dec_and_test,UNCLEAR,Single-version refcount decrement evidence reaches Rust refcount wrapper; no older version comparison.
-W-000058,OwnershipRefcountDrift,High,13.2,refcount_inc,UNCLEAR,Single-version refcount increment evidence reaches Rust refcount wrapper; no older version comparison.
-W-000059,NullabilityDrift,High,13.2,regulator_get,UNCLEAR,Single-version NULL-return evidence reaches Rust regulator wrapper; no older version comparison.
-W-000002,NullabilityDrift,High,13.0,acpi_match_device,UNCLEAR,Single-version NULL-return evidence reaches Rust ACPI wrapper; no older version comparison.
-W-000005,NullabilityDrift,High,13.0,clk_get,UNCLEAR,Single-version NULL-return evidence reaches Rust clock wrapper; no older version comparison.
-W-000007,NullabilityDrift,High,13.0,clk_get_optional,UNCLEAR,Single-version ERR_PTR/NULL evidence reaches Rust clock wrapper; no older version comparison.
+W-000040,NullabilityDrift,High,13.7,lock_vma_under_rcu,,
+W-000051,NullabilityDrift,High,13.7,pwmchip_alloc,,
+W-000054,NullabilityDrift,High,13.7,rb_last,,
+W-000016,NullabilityDrift,High,13.3,debugfs_create_dir,,
+W-000011,OwnershipRefcountDrift,High,13.2,clk_put,,
+W-000013,NullabilityDrift,High,13.2,cpufreq_cpu_get,,
+W-000014,OwnershipRefcountDrift,High,13.2,cpufreq_cpu_put,,
+W-000030,NullabilityDrift,High,13.2,devm_platform_ioremap_resource,,
+W-000056,OwnershipRefcountDrift,High,13.2,refcount_dec,,
+W-000057,OwnershipRefcountDrift,High,13.2,refcount_dec_and_test,,
+W-000058,OwnershipRefcountDrift,High,13.2,refcount_inc,,
+W-000059,NullabilityDrift,High,13.2,regulator_get,,
+W-000002,NullabilityDrift,High,13.0,acpi_match_device,,
+W-000005,NullabilityDrift,High,13.0,clk_get,,
+W-000007,NullabilityDrift,High,13.0,clk_get_optional,,

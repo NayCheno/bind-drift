@@ -5,7 +5,7 @@
     "wrapper_fix_events": 200
   },
   "manual_review": {
-    "labeled_warnings": 20,
+    "labeled_warnings": 5,
     "precision": 0.0,
     "precision_at_k": {
       "10": 0.0,

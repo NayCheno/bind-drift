@@ -118,6 +118,16 @@ def cmd_extract_c(args: argparse.Namespace, cfg: Config) -> int:
     return 0
 
 
+def cmd_extract_all(args: argparse.Namespace, cfg: Config) -> int:
+    result = {
+        "bindings": extract_bindings(cfg, version_id=args.version_id),
+        "rust": extract_rust_usage(cfg, version_id=args.version_id),
+        "c": extract_c_api(cfg, roots=args.root or ["include", "rust/helpers"], version_id=args.version_id, max_files=args.max_files),
+    }
+    print(json.dumps(result, indent=2, sort_keys=True))
+    return 0
+
+
 def cmd_graph_build(args: argparse.Namespace, cfg: Config) -> int:
     summary = build_graph(cfg, version_id=args.version_id)
     print(json.dumps(summary, indent=2, sort_keys=True))
@@ -181,6 +191,12 @@ def cmd_paper_cases(args: argparse.Namespace, cfg: Config) -> int:
 
 def cmd_paper_tables(args: argparse.Namespace, cfg: Config) -> int:
     result = generate_paper_tables(cfg)
+    print(json.dumps(result, indent=2, sort_keys=True))
+    return 0
+
+
+def cmd_paper_build(args: argparse.Namespace, cfg: Config) -> int:
+    result = {"cases": generate_case_studies(cfg), "tables": generate_paper_tables(cfg)}
     print(json.dumps(result, indent=2, sort_keys=True))
     return 0
 
@@ -254,6 +270,11 @@ def build_parser() -> argparse.ArgumentParser:
     c_api.add_argument("--version-id", help="Version id for extracted facts.")
     c_api.add_argument("--max-files", type=int, help="Limit scanned files for fast pilot runs.")
     _set(c_api, cmd_extract_c)
+    extract_all = extract_sub.add_parser("all", help="Run binding, Rust, and C extractors.")
+    extract_all.add_argument("--version-id", help="Version id for extracted facts.")
+    extract_all.add_argument("--root", action="append", help="Linux-relative C path to scan; may be repeated.")
+    extract_all.add_argument("--max-files", type=int, help="Limit scanned C files for fast pilot runs.")
+    _set(extract_all, cmd_extract_all)
     commits = extract_sub.add_parser("commits", help="Extract version and commit metadata.")
     commits.add_argument("--limit", type=int, default=200, help="Number of commits to import from the selected ref.")
     commits.add_argument("--fetch-tags", action="store_true", help="Fetch tags in the Linux source tree before extraction.")
@@ -292,10 +313,12 @@ def build_parser() -> argparse.ArgumentParser:
 
     _set(sub.add_parser("rank", help="Rank warnings."), cmd_rank)
     replay = sub.add_parser("replay", help="Run a pilot replay.")
+    replay.add_argument("replay_command", nargs="?", choices=["run"], help="Optional explicit replay subcommand.")
     replay.add_argument("--commit-limit", type=int, default=50, help="Number of commits to import.")
     replay.add_argument("--c-max-files", type=int, default=50, help="Number of C files to scan in the pilot.")
     _set(replay, cmd_replay)
     eval_parser = sub.add_parser("eval", help="Generate evaluation tables.")
+    eval_parser.add_argument("eval_command", nargs="?", choices=["all"], help="Optional explicit evaluation subcommand.")
     eval_parser.add_argument("--build-log", help="Optional Rust-enabled build log to parse.")
     eval_parser.add_argument("--top-k", type=int, default=50, help="Number of warnings to include in manual review CSV.")
     _set(eval_parser, cmd_eval)
@@ -304,6 +327,7 @@ def build_parser() -> argparse.ArgumentParser:
     paper_sub = paper.add_subparsers(dest="paper_command", required=True)
     _set(paper_sub.add_parser("tables", help="Generate paper tables."), cmd_paper_tables)
     _set(paper_sub.add_parser("cases", help="Generate case study skeletons."), cmd_paper_cases)
+    _set(paper_sub.add_parser("build", help="Generate paper cases and table index."), cmd_paper_build)
     return parser
 
 

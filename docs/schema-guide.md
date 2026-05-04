@@ -16,6 +16,10 @@ This guide is for maintainers extending extractors, detectors, or evaluation scr
 
 `graph_nodes` and `graph_edges` store the C-to-Rust dependency graph. Edges use names such as `GENERATED_FROM`, `CALLS_BINDING`, `EXPOSES_SAFE_API`, and `HAS_SAFETY_COMMENT`.
 
+`rust_lifetime_facts` and `rust_error_mappings` store Rust-side ownership/refcount and error-convention evidence used by Tier 2 detectors.
+
+`extraction_errors` records missing generated files or extractor diagnostics. `drift_events` stores detector output in relational form. `build_breakage_events` and `wrapper_fix_events` store ground-truth mining artifacts.
+
 ## Warning Records
 
 Warnings are JSON objects with these stable fields:

@@ -9,17 +9,17 @@ The artifact treats `vendor/linux` as an input Linux source tree. BindDrift code
 ```bash
 uv run pytest
 uv run binddrift --help
-uv run binddrift env check
-uv run binddrift extract commits --limit 50
-uv run binddrift extract rust
-uv run binddrift extract c --root rust/helpers --max-files 50
+uv run binddrift toolchain check --run-rustavailable
+uv run binddrift dataset versions --fetch-tags
+uv run binddrift extract all --max-files 5000
 uv run binddrift graph build
 uv run binddrift detect all
 uv run binddrift rank
-uv run binddrift eval
+uv run binddrift eval all
+uv run binddrift paper build
 ```
 
-The prototype is implemented as a staged command-line workflow. The pilot pipeline is intentionally lightweight: it proves the artifact wiring on the local Linux tree without requiring a full Rust-enabled kernel build.
+The prototype is implemented as a staged command-line workflow. The pilot pipeline records missing generated bindings or build prerequisites as artifact data rather than treating them as successful extraction.
 
 ## Documentation
 
