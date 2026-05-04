@@ -6,5 +6,25 @@
   "evaluation_summary": {
     "available": true,
     "path": "/home/nya/workspace/bind-drift/paper/tables/evaluation_summary.json"
+  },
+  "fact_counts": {
+    "available": true,
+    "path": "/home/nya/workspace/bind-drift/paper/tables/fact_counts.json"
+  },
+  "manual_review_summary": {
+    "available": true,
+    "path": "/home/nya/workspace/bind-drift/paper/tables/manual_review_summary.json"
+  },
+  "replay_summary": {
+    "available": true,
+    "path": "/home/nya/workspace/bind-drift/paper/tables/replay_summary.json"
+  },
+  "runtime_scalability": {
+    "available": true,
+    "path": "/home/nya/workspace/bind-drift/paper/tables/runtime_scalability.json"
+  },
+  "toolchain_matrix": {
+    "available": true,
+    "path": "/home/nya/workspace/bind-drift/data/toolchain_matrix.json"
   }
 }

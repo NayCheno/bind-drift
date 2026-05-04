@@ -8,6 +8,7 @@ from typing import Any
 
 from .config import Config
 from .environment import capture_environment
+from .toolchain_matrix import execute_bootstrap_commands, load_toolchain_matrix
 
 
 REQUIRED_TOOLS = ("make", "clang", "rustc", "rustfmt", "bindgen")
@@ -64,7 +65,13 @@ def check_toolchain(cfg: Config, run_rustavailable: bool = False) -> dict[str, A
     return result
 
 
-def bootstrap_toolchain(cfg: Config, install_bindgen: bool = False, install_rust_src: bool = False) -> dict[str, Any]:
+def bootstrap_toolchain(
+    cfg: Config,
+    install_bindgen: bool = False,
+    install_rust_src: bool = False,
+    install_matrix: bool = False,
+    matrix_file: Path | None = None,
+) -> dict[str, Any]:
     cfg.ensure_dirs()
     before = check_toolchain(cfg, run_rustavailable=False)
     actions: list[dict[str, Any]] = []
@@ -72,6 +79,10 @@ def bootstrap_toolchain(cfg: Config, install_bindgen: bool = False, install_rust
         actions.append(_run(["cargo", "install", "--locked", "bindgen-cli"], timeout=1800))
     if install_rust_src:
         actions.append(_run(["rustup", "component", "add", "rust-src"], timeout=600))
+    if install_matrix:
+        matrix_path = matrix_file or cfg.data_dir / "toolchain_matrix.json"
+        matrix = load_toolchain_matrix(matrix_path)
+        actions.extend(execute_bootstrap_commands(matrix.get("bootstrap_commands", [])))
     after = check_toolchain(cfg, run_rustavailable=False)
     return {
         "before": before,

@@ -10,6 +10,7 @@ Run the commands from the repository root:
 
 ```bash
 uv run binddrift toolchain check --run-rustavailable
+uv run binddrift toolchain matrix --start v6.1
 uv run binddrift dataset versions --fetch-tags
 uv run binddrift extract commits --limit 200
 uv run binddrift extract all --max-files 5000
@@ -21,6 +22,35 @@ uv run binddrift paper build
 ```
 
 The pilot does not require a full kernel build. If generated bindings are absent, the binding extractor reports the missing object-tree files and continues. This is expected for a fresh checkout without a Rust-enabled kernel build.
+
+## Versioned Rust Toolchains
+
+Rust-for-Linux release tags do not all use the same Rust and bindgen versions.
+Before historical replay, generate the matrix:
+
+```bash
+uv run binddrift toolchain matrix --start v6.1 --fetch-tags
+```
+
+The command reads each selected kernel version's minimum-tool script and writes
+`data/toolchain_matrix.json`. The file contains the exact Make variables used by
+replay: `RUSTC`, `HOSTRUSTC`, `RUSTDOC`, `RUSTFMT`, `CLIPPY_DRIVER`,
+`RUST_LIB_SRC`, and `BINDGEN`. It also records environment variables such as
+`LIBCLANG_PATH` and `LLVM_CONFIG_PATH`, plus compatibility issues that would
+make a version invalid for binding-built replay on the current host. To install
+the missing Rust toolchains and per-version bindgen binaries:
+
+```bash
+uv run binddrift toolchain bootstrap --install-matrix
+```
+
+Do not use the host's current stable Rust compiler for the main replay unless
+the matrix says it matches the checked-out kernel version. Newer Rust releases
+or mismatched libclang versions can break older kernel Rust build rules, which
+would contaminate the experiment with toolchain noise. In the current host
+environment, `v6.1` through `v6.5` require bindgen `0.56.0` and are marked
+incompatible with LLVM/libclang 18 because bindgen `0.56.0` is known to fail
+with LLVM 16+ anonymous C item names.
 
 ## Full Binding Extraction
 
@@ -40,12 +70,61 @@ uv run binddrift detect all
 uv run binddrift rank
 ```
 
+## Multi-Version Replay
+
+The CCF-B-strength experiment should use a Linux mirror with official release
+tags and the kernel build dependencies needed for Rust bindings (`flex`,
+`bison`, `bc`, `pahole`, OpenSSL headers, libelf headers, and the Rust-for-Linux
+toolchain). Run:
+
+```bash
+uv run binddrift replay versions \
+  --start v6.6 \
+  --include-head \
+  --fetch-tags \
+  --build-bindings \
+  --configure \
+  --toolchain auto \
+  --jobs 1
+```
+
+This creates one replay run under `data/replay/<run_id>/`. Use `v6.6` as the
+main reproducible start point on LLVM 18 hosts; use the `v6.1` matrix entries as
+documented exclusions unless libclang 15 or older is available. Each adjacent
+version pair writes its own `warnings.jsonl`, `warnings.md`, `manual_review.csv`,
+and evaluation tables, while the SQLite database records `replay_runs`,
+`replay_pairs`, pair-scoped drift events, build oracle rows, and wrapper-fix
+oracle rows. Failed pairs are recorded with an error instead of being silently
+skipped.
+
+After replay completes, generate the aggregate review sheet and paper tables:
+
+```bash
+uv run binddrift --data-dir data/replay/<run_id> eval all --top-k 100 --run-id <run_id>
+uv run binddrift paper build
+```
+
+For the arm64 external-validity slice, repeat a small run over the latest six
+release tags:
+
+```bash
+uv run binddrift replay versions \
+  --start v6.1 \
+  --limit 6 \
+  --no-include-head \
+  --build-bindings \
+  --configure \
+  --toolchain auto \
+  --arch arm64
+```
+
 ## Expected Outputs
 
 - Environment metadata captures Linux commit, host architecture, tool versions, and config hash.
+- Toolchain matrix metadata captures per-version Rust, rust-src, bindgen, and injected Make variables.
 - The SQLite database stores version, commit, binding, Rust usage, C API, indicator, and graph facts.
 - Ranked warnings are written as JSONL and as a Markdown report.
-- Evaluation tables and case skeletons are generated for paper integration.
+- Evaluation tables include replay, fact-count, manual-review, runtime/scalability, baseline, ablation, and case-study outputs for paper integration.
 
 ## Interpreting Empty Warnings
 

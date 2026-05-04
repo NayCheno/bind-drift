@@ -1,21 +1,107 @@
 {
   "build_breakage_findings": 0,
+  "build_breakage_prediction": {
+    "f1": null,
+    "matched_symbols": 0,
+    "mrr": null,
+    "oracle_symbols": 0,
+    "precision": null,
+    "precision_at_k": {
+      "10": null,
+      "100": null,
+      "50": null
+    },
+    "recall": null
+  },
   "ground_truth_rows": {
     "build_breakage_events": 0,
     "wrapper_fix_events": 200
   },
   "manual_review": {
-    "labeled_warnings": 20,
-    "precision": 0.0,
+    "label_distribution": {},
+    "labeled_warnings": 0,
+    "per_type": {
+      "AllocationFreePairingDrift": {
+        "labeled_warnings": 0,
+        "precision": null,
+        "true_labeled_warnings": 0,
+        "warnings": 1
+      },
+      "ErrorDrift": {
+        "labeled_warnings": 0,
+        "precision": null,
+        "true_labeled_warnings": 0,
+        "warnings": 10
+      },
+      "FieldDrift": {
+        "labeled_warnings": 0,
+        "precision": null,
+        "true_labeled_warnings": 0,
+        "warnings": 1294
+      },
+      "MacroConstDrift": {
+        "labeled_warnings": 0,
+        "precision": null,
+        "true_labeled_warnings": 0,
+        "warnings": 2896
+      },
+      "NullabilityDrift": {
+        "labeled_warnings": 0,
+        "precision": null,
+        "true_labeled_warnings": 0,
+        "warnings": 21
+      },
+      "OwnershipRefcountDrift": {
+        "labeled_warnings": 0,
+        "precision": null,
+        "true_labeled_warnings": 0,
+        "warnings": 6
+      },
+      "SignatureDrift": {
+        "labeled_warnings": 0,
+        "precision": null,
+        "true_labeled_warnings": 0,
+        "warnings": 12743
+      },
+      "SleepabilityDrift": {
+        "labeled_warnings": 0,
+        "precision": null,
+        "true_labeled_warnings": 0,
+        "warnings": 2
+      }
+    },
+    "precision": null,
+    "precision_at_k": {
+      "10": null,
+      "100": null,
+      "50": null
+    },
+    "true_labeled_warnings": 0,
+    "unclear_warnings": 0
+  },
+  "manual_review_agreement": {
+    "agreement_rate": null,
+    "agreements": 0,
+    "double_labeled": 0
+  },
+  "note": "Build and wrapper-fix recall are symbol-level replay-oracle estimates; semantic precision comes from manual labels.",
+  "recall": {
+    "build_breakage": null,
+    "wrapper_fix": 0.5172
+  },
+  "warnings": 16973,
+  "wrapper_fix_candidates": 24,
+  "wrapper_fix_prediction": {
+    "f1": 0.0021,
+    "matched_symbols": 15,
+    "mrr": 0.0001,
+    "oracle_symbols": 29,
+    "precision": 0.0011,
     "precision_at_k": {
       "10": 0.0,
       "100": 0.0,
       "50": 0.0
     },
-    "true_labeled_warnings": 0
-  },
-  "note": "Recall requires a complete labeled replay oracle; precision is reported only for non-empty manual labels.",
-  "recall": null,
-  "warnings": 64,
-  "wrapper_fix_candidates": 24
+    "recall": 0.5172
+  }
 }

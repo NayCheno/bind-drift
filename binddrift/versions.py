@@ -64,6 +64,7 @@ def select_versions(
         "database": str(cfg.database),
         "version_file": str(path),
         "versions": len(rows),
+        "version_rows": rows,
         "refs": refs,
         "fetch": fetch_result,
     }
@@ -71,8 +72,9 @@ def select_versions(
 
 def version_row(repo: Path, ref: str) -> dict[str, Any]:
     git_ref = ref.split(":", 1)[0] if ref.startswith("HEAD:") else ref
-    commit = git_output(repo, ["rev-parse", git_ref], default=git_ref)
-    date = git_output(repo, ["show", "-s", "--format=%cI", git_ref], default="")
+    peeled_ref = f"{git_ref}^{{commit}}"
+    commit = git_output(repo, ["rev-parse", peeled_ref], default=git_output(repo, ["rev-parse", git_ref], default=git_ref))
+    date = git_output(repo, ["show", "-s", "--format=%cI", peeled_ref], default="")
     tag = ref if RELEASE_RE.match(ref) else None
     return {
         "version_id": sanitize_ref(ref),

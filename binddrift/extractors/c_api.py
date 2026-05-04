@@ -19,6 +19,7 @@ FUNC_RE = re.compile(
 STRUCT_RE = re.compile(r"^\s*struct\s+(?P<name>[A-Za-z_][A-Za-z0-9_]*)\s*\{")
 FIELD_RE = re.compile(r"^\s*(?P<ty>[A-Za-z_][A-Za-z0-9_\s\*\[\]]+)\s+(?P<name>[A-Za-z_][A-Za-z0-9_]*)(?:\[[^]]+\])?;")
 MACRO_RE = re.compile(r"^\s*#\s*define\s+(?P<name>[A-Za-z_][A-Za-z0-9_]*)(?:\([^)]*\))?\s*(?P<value>.*)$")
+INCLUDE_RE = re.compile(r"^\s*#\s*include\s+[<\"](?P<path>[^>\"]+)[>\"]")
 CONTROL_NAMES = {"if", "for", "while", "switch", "return", "sizeof"}
 
 INDICATORS: dict[str, list[str]] = {
@@ -44,6 +45,48 @@ def _paths(cfg: Config, roots: list[str]) -> list[Path]:
         elif base.exists():
             files.extend(path for path in base.rglob("*") if path.suffix in {".h", ".c"})
     return sorted(set(files))
+
+
+def _relative_to_tree(cfg: Config, path: Path) -> str:
+    return str(path.resolve().relative_to(cfg.linux_tree.resolve()))
+
+
+def _resolve_include(cfg: Config, including_file: Path, include: str) -> Path | None:
+    candidates = []
+    if include.startswith("."):
+        candidates.append((including_file.parent / include).resolve())
+    candidates.extend(
+        [
+            cfg.linux_tree / "include" / include,
+            cfg.linux_tree / include,
+            (including_file.parent / include).resolve(),
+        ]
+    )
+    for candidate in candidates:
+        if candidate.exists() and candidate.is_file() and cfg.linux_tree.resolve() in candidate.resolve().parents:
+            return candidate.resolve()
+    return None
+
+
+def binding_closure_roots(cfg: Config, include_helpers: bool = True) -> list[str]:
+    """Return C files exposed to Rust through bindings_helper.h and helpers.
+
+    The intent is a bounded Rust-facing C surface, not a recursive preprocessor
+    expansion of the whole kernel. We scan direct includes from the binding
+    helper plus Rust helper sources.
+    """
+
+    helper = cfg.linux_tree / "rust/bindings/bindings_helper.h"
+    roots: set[str] = set()
+    if helper.exists():
+        for raw in helper.read_text(encoding="utf-8", errors="replace").splitlines():
+            if match := INCLUDE_RE.match(raw):
+                resolved = _resolve_include(cfg, helper, match.group("path"))
+                if resolved:
+                    roots.add(_relative_to_tree(cfg, resolved))
+    if include_helpers and (cfg.linux_tree / "rust/helpers").exists():
+        roots.add("rust/helpers")
+    return sorted(roots)
 
 
 def _line_for_offset(text: str, offset: int) -> int:
@@ -162,7 +205,7 @@ def _parse_file(path: Path, version_id: str) -> tuple[list[dict[str, Any]], list
 def extract_c_api(cfg: Config, roots: list[str] | None = None, version_id: str | None = None, max_files: int | None = None) -> dict[str, Any]:
     cfg.ensure_dirs()
     vid = version_id or default_version_id(cfg)
-    selected_roots = roots or ["include", "rust/helpers"]
+    selected_roots = roots or binding_closure_roots(cfg)
     files = _paths(cfg, selected_roots)
     if max_files:
         files = files[:max_files]
@@ -186,6 +229,7 @@ def extract_c_api(cfg: Config, roots: list[str] | None = None, version_id: str |
         "database": str(cfg.database),
         "version_id": vid,
         "roots": selected_roots,
+        "root_strategy": "explicit" if roots else "bindings_closure",
         "files": len(files),
         "c_functions": len(all_functions),
         "c_structs": len(all_structs),

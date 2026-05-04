@@ -138,7 +138,9 @@ def _drift_type(indicator: str, old_set: set[str], new_set: set[str]) -> str | N
 
 def _event(warning: dict[str, Any]) -> dict[str, Any]:
     return {
-        "event_id": warning["warning_id"],
+        "event_id": f"{warning.get('pair_id')}:{warning['warning_id']}" if warning.get("pair_id") else warning["warning_id"],
+        "run_id": warning.get("run_id"),
+        "pair_id": warning.get("pair_id"),
         "old_version": warning["c_side"].get("old_version"),
         "new_version": warning["c_side"]["new_version"],
         "drift_type": warning["type"],
@@ -150,6 +152,17 @@ def _event(warning: dict[str, Any]) -> dict[str, Any]:
 
 
 def run_tier2(cfg: Config, old: str | None = None, new: str | None = None, append: bool = False) -> dict[str, Any]:
+    return run_tier2_with_context(cfg, old=old, new=new, append=append)
+
+
+def run_tier2_with_context(
+    cfg: Config,
+    old: str | None = None,
+    new: str | None = None,
+    append: bool = False,
+    run_id: str | None = None,
+    pair_id: str | None = None,
+) -> dict[str, Any]:
     conn = connect(cfg.database)
     initialize(conn)
     selected_new = new or default_version_id(cfg)
@@ -182,6 +195,10 @@ def run_tier2(cfg: Config, old: str | None = None, new: str | None = None, appen
             warnings.append(
                 {
                     "warning_id": warning_id(idx),
+                    "run_id": run_id,
+                    "pair_id": pair_id,
+                    "old_version": selected_old,
+                    "new_version": selected_new,
                     "type": drift_type,
                     "risk": RISK_MAP[drift_type],
                     "score": 0.0,

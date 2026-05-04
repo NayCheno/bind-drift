@@ -78,6 +78,8 @@ def rank_warnings(cfg: Config) -> dict[str, Any]:
         else:
             warning["risk"] = warning.get("risk", "Low")
     warnings.sort(key=lambda item: item.get("score", 0), reverse=True)
+    for idx, warning in enumerate(warnings, start=1):
+        warning["rank"] = idx
     write_warnings(cfg, warnings)
     cfg.report_md.write_text(_markdown(warnings), encoding="utf-8")
     return {"warnings": len(warnings), "warning_file": str(cfg.warnings_jsonl), "report": str(cfg.report_md)}

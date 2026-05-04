@@ -4,7 +4,7 @@ import sqlite3
 from pathlib import Path
 
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 
 def connect(path: Path) -> sqlite3.Connection:
@@ -228,6 +228,8 @@ def initialize(conn: sqlite3.Connection) -> None:
 
         CREATE TABLE IF NOT EXISTS drift_events (
             event_id TEXT PRIMARY KEY,
+            run_id TEXT,
+            pair_id TEXT,
             old_version TEXT,
             new_version TEXT NOT NULL,
             drift_type TEXT NOT NULL,
@@ -239,6 +241,8 @@ def initialize(conn: sqlite3.Connection) -> None:
 
         CREATE TABLE IF NOT EXISTS build_breakage_events (
             event_id TEXT PRIMARY KEY,
+            run_id TEXT,
+            pair_id TEXT,
             build_log TEXT NOT NULL,
             line INTEGER NOT NULL,
             symbol TEXT,
@@ -253,9 +257,72 @@ def initialize(conn: sqlite3.Connection) -> None:
             likely_wrapper_fix INTEGER NOT NULL,
             matched_symbols TEXT NOT NULL
         );
+
+        CREATE TABLE IF NOT EXISTS replay_runs (
+            run_id TEXT PRIMARY KEY,
+            started_at TEXT NOT NULL,
+            completed_at TEXT,
+            status TEXT NOT NULL,
+            start_ref TEXT,
+            include_head INTEGER NOT NULL,
+            build_bindings INTEGER NOT NULL,
+            configure INTEGER NOT NULL,
+            jobs INTEGER NOT NULL,
+            arch TEXT NOT NULL,
+            c_roots TEXT NOT NULL,
+            max_files INTEGER,
+            refs TEXT NOT NULL,
+            summary TEXT NOT NULL,
+            error TEXT
+        );
+
+        CREATE TABLE IF NOT EXISTS replay_pairs (
+            pair_id TEXT PRIMARY KEY,
+            run_id TEXT NOT NULL,
+            pair_index INTEGER NOT NULL,
+            old_ref TEXT NOT NULL,
+            new_ref TEXT NOT NULL,
+            old_version TEXT NOT NULL,
+            new_version TEXT NOT NULL,
+            old_commit TEXT,
+            new_commit TEXT,
+            started_at TEXT NOT NULL,
+            completed_at TEXT,
+            status TEXT NOT NULL,
+            warning_count INTEGER NOT NULL DEFAULT 0,
+            build_status TEXT,
+            extraction_summary TEXT NOT NULL,
+            evaluation_summary TEXT NOT NULL,
+            warnings_jsonl TEXT,
+            report_md TEXT,
+            error TEXT
+        );
         """
     )
+    _ensure_columns(
+        conn,
+        "drift_events",
+        {
+            "run_id": "TEXT",
+            "pair_id": "TEXT",
+        },
+    )
+    _ensure_columns(
+        conn,
+        "build_breakage_events",
+        {
+            "run_id": "TEXT",
+            "pair_id": "TEXT",
+        },
+    )
     conn.commit()
+
+
+def _ensure_columns(conn: sqlite3.Connection, table: str, columns: dict[str, str]) -> None:
+    existing = {row["name"] for row in conn.execute(f"PRAGMA table_info({table})")}
+    for name, ddl in columns.items():
+        if name not in existing:
+            conn.execute(f"ALTER TABLE {table} ADD COLUMN {name} {ddl}")
 
 
 def upsert_many(conn: sqlite3.Connection, table: str, rows: list[dict[str, object]]) -> None:

@@ -1,17 +1,9 @@
 {
   "linux_commit": "6d35786de28116ecf78797a62b84e6bf3c45aa5a",
-  "linux_describe": "6d35786de281",
+  "linux_describe": "v7.1-rc2-5-g6d35786de281",
   "missing": [],
   "recommendations": [],
-  "rustavailable": {
-    "command": [
-      "make",
-      "LLVM=1",
-      "rustavailable"
-    ],
-    "output": "Rust is available!\n",
-    "returncode": 0
-  },
+  "rustavailable": null,
   "status": "ok",
   "tools": {
     "bindgen": {

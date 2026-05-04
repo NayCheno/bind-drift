@@ -3,14 +3,27 @@ from __future__ import annotations
 from pathlib import Path
 
 from binddrift.config import Config
+from binddrift.db import connect, initialize
+from binddrift.evaluation.metrics import load_manual_labels
 from binddrift.warnings import read_warnings
 
 
-CASE_TYPES = ["SignatureDrift", "LayoutDrift", "HelperDrift", "NullabilityDrift", "OwnershipRefcountDrift"]
+CASE_TYPES = [
+    "SignatureDrift",
+    "LayoutDrift",
+    "HelperDrift",
+    "NullabilityDrift",
+    "ErrorDrift",
+    "OwnershipRefcountDrift",
+    "AllocationFreePairingDrift",
+    "SleepabilityDrift",
+]
 
 
 def generate_case_studies(cfg: Config) -> dict[str, object]:
-    warnings = read_warnings(cfg.warnings_jsonl)
+    warning_source = _case_warning_source(cfg)
+    warnings = read_warnings(warning_source)
+    labels = load_manual_labels(cfg.data_dir / "manual_review.csv")
     cases_dir = cfg.repo_root / "paper/cases"
     cases_dir.mkdir(parents=True, exist_ok=True)
     created = []
@@ -19,9 +32,24 @@ def generate_case_studies(cfg: Config) -> dict[str, object]:
         case_type = warning.get("type", "Warning")
         symbol = warning.get("c_side", {}).get("symbol", "unknown")
         path = cases_dir / f"case-{idx:02d}-{case_type.lower()}-{symbol.lower()}.md"
-        path.write_text(_case_template(case_type, warning), encoding="utf-8")
+        path.write_text(_case_template(case_type, warning, labels.get(str(warning.get("warning_id")))), encoding="utf-8")
         created.append(str(path))
-    return {"cases": len(created), "files": created}
+    return {"cases": len(created), "files": created, "warning_source": str(warning_source)}
+
+
+def _case_warning_source(cfg: Config) -> Path:
+    conn = connect(cfg.database)
+    initialize(conn)
+    for row in conn.execute("SELECT summary FROM replay_runs WHERE status IN ('completed', 'completed_with_failures') ORDER BY started_at DESC"):
+        try:
+            import json
+
+            aggregate = json.loads(row["summary"] or "{}").get("aggregate_warnings")
+        except json.JSONDecodeError:
+            aggregate = None
+        if aggregate and Path(aggregate).exists():
+            return Path(aggregate)
+    return cfg.warnings_jsonl
 
 
 def _select_cases(warnings: list[dict]) -> list[dict]:
@@ -34,15 +62,15 @@ def _select_cases(warnings: list[dict]) -> list[dict]:
                 used_ids.add(warning["warning_id"])
                 break
     for warning in warnings:
-        if len(selected) >= 5:
+        if len(selected) >= 8:
             break
         if warning.get("warning_id") not in used_ids:
             selected.append(warning)
             used_ids.add(warning["warning_id"])
-    return selected[:5]
+    return selected[:8]
 
 
-def _case_template(case_type: str, warning: dict) -> str:
+def _case_template(case_type: str, warning: dict, oracle_label: str | None = None) -> str:
     c_side = warning.get("c_side", {})
     rust_side = warning.get("rust_side", {})
     symbol = c_side.get("symbol", "unknown")
@@ -85,6 +113,8 @@ This case is treated as a contract-review target. The type checker can validate 
 - C symbol: `{symbol}`
 - Risk: `{warning.get("risk", "Unknown")}`
 - Score: `{warning.get("score", 0)}`
+- Oracle label: `{oracle_label or "UNLABELED"}`
+- Replay pair: `{warning.get("pair_id") or "n/a"}`
 
 ## Evidence
 

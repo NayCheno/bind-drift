@@ -8,13 +8,15 @@ static-analysis and empirical-replay artifact for detecting cross-language API
 and contract drift from Linux C declarations and helpers to generated Rust
 bindings, unsafe Rust call sites, and public safe abstractions. BindDrift builds
 a C-to-Rust dependency graph, detects objective API drift and indicator-based
-contract drift, and ranks warnings for maintainer review. The current artifact
-run on the provided Linux tree extracted 62,668 C function facts, 240,694 macro
-facts, 13,410 C struct facts, 1,934 Rust binding uses, 20,356 safety comments,
-and 17,021 graph edges. Because generated bindgen outputs were unavailable in
-this environment, the current replay reports 64 single-version semantic review
-warnings rather than confirmed historical drift bugs. The paper claim is
-therefore warning and prioritization, not soundness proof or bug confirmation.
+contract drift, and ranks warnings for maintainer review. The artifact now
+records a per-version Rust-for-Linux toolchain matrix before replay, so older
+kernel releases are built with their required Rust compiler and bindgen versions
+instead of the host's current stable toolchain. On the current LLVM 18 host,
+BindDrift marks `v6.1` through `v6.5` as binding-build incompatible because
+their required bindgen `0.56.0` is known to fail with LLVM 16+ anonymous C item
+names; the main replay therefore uses the reproducible `v6.6` through `v7.0`
+plus `HEAD` window. The paper claim is evidence-backed warning prioritization,
+not soundness proof or automatic bug confirmation.
 
 ## 1. Introduction
 
@@ -57,18 +59,23 @@ toolchain can produce them, and the `rust/bindings`, `rust/helpers`, and
 BindDrift has five stages.
 
 First, it captures environment metadata: kernel commit, config hash, tool
-versions, and kernel Rust availability. In this run, `bindgen-cli` and
-`rust-src` were installed successfully, and `make LLVM=1 rustavailable` passed.
-Full binding builds were still blocked by missing privileged system packages
-(`flex`/`bison`) in the container, so generated binding facts are recorded as
-missing rather than fabricated.
+versions, and kernel Rust availability. For historical replay, BindDrift parses
+each selected kernel release's minimum-tool script and writes a toolchain matrix
+containing the Rust compiler, rust-src path, rustfmt, clippy-driver, and bindgen
+binary used for that release. The matrix also records `LIBCLANG_PATH`,
+`LLVM_CONFIG_PATH`, libclang probe output, and blocking compatibility issues.
+This avoids a known validity threat: newer Rust compilers or mismatched
+libclang versions can break older kernel Rust build rules even when the
+kernel's own minimum supported Rust version is lower.
 
 Second, extractors collect C facts, Rust facts, and generated binding facts when
-available. C extraction records functions, structs, macros, and behavior
-indicators such as `NULL_RETURN`, `ERR_PTR_RETURN`, `ERROR_CODE`,
-`REFCOUNT_GET`, `REFCOUNT_PUT`, `ALLOC`, `FREE`, and `MAY_SLEEP`. Rust
-extraction records binding uses, unsafe scopes, public APIs, safety comments,
-Drop/Clone/lifetime patterns, and Option/Result/error mappings.
+available. C extraction defaults to the Rust-facing C surface: direct includes
+from the kernel binding helper plus Rust helper sources. It records functions,
+structs, macros, and behavior indicators such as `NULL_RETURN`,
+`ERR_PTR_RETURN`, `ERROR_CODE`, `REFCOUNT_GET`, `REFCOUNT_PUT`, `ALLOC`,
+`FREE`, and `MAY_SLEEP`. Rust extraction records binding uses, unsafe scopes,
+public APIs, safety comments, Drop/Clone/lifetime patterns, and Option/Result
+or error mappings.
 
 Third, BindDrift builds a C-to-Rust dependency graph. Nodes include C functions,
 C structs, macros, behavior indicators, Rust bindings, unsafe call sites, safe
@@ -101,33 +108,34 @@ events, wrapper-fix candidates, manual labels, and generated table provenance.
 
 ## 5. Evaluation
 
-The current artifact run is an honest pilot on the provided checkout rather
-than a complete historical replay. The Linux fork available in this workspace
-does not expose release tags after fetching, so version selection falls back to
-the current `HEAD` pseudo-version. Kernel Rust availability succeeds, but
-binding generation is blocked by missing system parser tools that require
-privileged package installation.
+The CCF-B-strength evaluation is organized around one main release-tag replay
+and one small external-validity slice.
 
-Despite those constraints, the current single-version analysis produced:
+The main experiment replays adjacent Linux mainline releases from `v6.6` through
+`v7.0` plus the checked-out `HEAD` on x86_64. The earlier `v6.1` through `v6.5`
+tags are retained in the toolchain matrix as documented exclusions on this host:
+they require bindgen `0.56.0`, which fails with LLVM/libclang 16+ anonymous C
+item names. Each included version is configured with a Rust-enabled kernel
+config, built with the versioned Rust and bindgen tools from the matrix, and
+required to produce generated binding snapshots before drift detection. The
+current main replay completed 15 adjacent pairs, produced 16,973 ranked
+warnings, and stores pair-level build status, binding hashes, extraction
+summaries, wrapper-fix oracle rows, review CSVs, and evaluation tables under a
+replay run directory.
 
-- 62,668 C function facts
-- 240,694 macro facts
-- 13,410 C struct facts
-- 8,624 C behavior indicators
-- 1,934 Rust binding uses
-- 722 Rust safe APIs
-- 20,356 Rust safety comments
-- 1,014 Rust lifetime facts
-- 786 Rust error mapping facts
-- 17,021 graph edges
-- 64 ranked warnings
-- 200 wrapper-fix candidate commits, 24 marked likely by keyword heuristic
+Manual semantic evaluation uses the top 100 ranked warnings plus 100
+stratified-by-type warnings. Two reviewers label warnings independently, then an
+adjudicator records the final label. The artifact reports precision at k,
+symbol-level build/wrapper-fix recall, label distribution, and reviewer
+agreement. The aggregate review sheet has been generated for the main replay;
+until two independent reviewers and an adjudicator complete it, warning rows
+remain review targets rather than confirmed bugs.
 
-Manual review was performed as a single-review pilot over the top 20 warnings.
-All 20 are labeled `UNCLEAR` because this run lacks an older extracted version
-and therefore cannot confirm historical drift. This is an important result: the
-tool can produce useful contract-review candidates from current evidence, but
-the paper must not report them as confirmed drift bugs.
+Baselines compare BindDrift against bindgen-only drift, C signature drift,
+build-only evidence, grep-based Rust usage, no ranking, and Tier-1-only
+detection. Ablations remove the graph, Tier 2 detectors, ranking, safety
+comments, commit text, or behavior indicators. The paper tables are generated
+from artifact outputs, not hand-entered numbers.
 
 ## 6. Case Studies
 

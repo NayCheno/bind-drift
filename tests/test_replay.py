@@ -1,0 +1,202 @@
+import json
+import subprocess
+from pathlib import Path
+
+from binddrift import replay as replay_module
+from binddrift.config import Config
+from binddrift.db import connect, initialize
+from binddrift.replay import ReplayStageError, mark_stale_replay_runs, run_version_replay
+from binddrift.warnings import read_warnings
+
+
+def _git(repo: Path, *args: str) -> None:
+    subprocess.run(["git", "-C", str(repo), *args], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+
+
+def _write_linux_snapshot(repo: Path, return_line: str) -> None:
+    (repo / "include/linux").mkdir(parents=True, exist_ok=True)
+    (repo / "rust/kernel").mkdir(parents=True, exist_ok=True)
+    (repo / "scripts").mkdir(parents=True, exist_ok=True)
+    (repo / "scripts/min-tool-version.sh").write_text(
+        """
+case "$1" in
+rustc)
+	echo 1.78.0
+	;;
+bindgen)
+	echo 0.65.1
+	;;
+esac
+""",
+        encoding="utf-8",
+    )
+    (repo / "include/linux/foo.h").write_text(
+        f"""
+static inline void *foo_get(void)
+{{
+    {return_line}
+}}
+""",
+        encoding="utf-8",
+    )
+    (repo / "rust/kernel/device.rs").write_text(
+        """
+pub struct Device;
+impl Device {
+    pub fn get(&self) -> Option<()> {
+        // SAFETY: current wrapper treats the pointer as nullable.
+        let ptr = unsafe { bindings::foo_get() };
+        core::ptr::NonNull::new(ptr).map(|_| ())
+    }
+}
+""",
+        encoding="utf-8",
+    )
+
+
+def _make_tagged_linux_repo(root: Path) -> Path:
+    repo = root / "vendor/linux"
+    repo.mkdir(parents=True)
+    subprocess.run(["git", "-C", str(repo), "init"], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    _git(repo, "config", "user.email", "binddrift@example.com")
+    _git(repo, "config", "user.name", "BindDrift Test")
+    _write_linux_snapshot(repo, "return NULL;")
+    _git(repo, "add", ".")
+    _git(repo, "commit", "-m", "linux v6.1 fixture")
+    _git(repo, "tag", "v6.1")
+    _write_linux_snapshot(repo, "return ERR_PTR(-ENOMEM);")
+    _git(repo, "add", ".")
+    _git(repo, "commit", "-m", "linux v6.2 fixture")
+    _git(repo, "tag", "v6.2")
+    return repo
+
+
+def test_version_replay_records_pair_outputs(tmp_path: Path):
+    _make_tagged_linux_repo(tmp_path)
+    cfg = Config.from_args(repo_root=tmp_path)
+
+    summary = run_version_replay(
+        cfg,
+        start="v6.1",
+        include_head=False,
+        roots=["include"],
+        build_bindings=False,
+        configure=False,
+        max_files=10,
+    )
+
+    assert summary["pairs"] == 1
+    assert summary["completed_pairs"] == 1
+    assert summary["warnings"] >= 1
+    aggregate = Path(summary["aggregate_warnings"])
+    assert aggregate.exists()
+    warnings = read_warnings(aggregate)
+    assert warnings[0]["run_id"] == summary["run_id"]
+    assert warnings[0]["pair_id"]
+    assert warnings[0]["old_version"] == "v6.1"
+    assert warnings[0]["new_version"] == "v6.2"
+
+    conn = connect(cfg.database)
+    initialize(conn)
+    pair = conn.execute("SELECT * FROM replay_pairs").fetchone()
+    assert pair["status"] == "completed"
+    assert pair["warning_count"] == len(warnings)
+    extraction = json.loads(pair["extraction_summary"])
+    assert extraction["tier2"]["new_warnings"] >= 1
+    assert extraction["old"]["toolchain"]["required"]["rustc"] == "1.78.0"
+    assert (tmp_path / "data/toolchain_matrix.json").exists()
+
+
+def test_mark_stale_replay_runs_closes_interrupted_rows(tmp_path: Path):
+    cfg = Config.from_args(repo_root=tmp_path)
+    conn = connect(cfg.database)
+    initialize(conn)
+    conn.execute(
+        """
+        INSERT INTO replay_runs(run_id, started_at, status, include_head, build_bindings, configure, jobs, arch, c_roots, refs, summary)
+        VALUES('old-run', '2026-05-04T00:00:00+00:00', 'running', 0, 1, 1, 1, 'x86_64', '[]', '[]', '{}')
+        """
+    )
+    conn.execute(
+        """
+        INSERT INTO replay_pairs(pair_id, run_id, pair_index, old_ref, new_ref, old_version, new_version, started_at, status, extraction_summary, evaluation_summary)
+        VALUES('old-pair', 'old-run', 1, 'v6.1', 'v6.2', 'v6.1', 'v6.2', '2026-05-04T00:00:00+00:00', 'running', '{}', '{}')
+        """
+    )
+    conn.commit()
+
+    stale = mark_stale_replay_runs(cfg)
+
+    assert stale == {"runs": 1, "pairs": 1}
+    assert conn.execute("SELECT status FROM replay_runs WHERE run_id='old-run'").fetchone()["status"] == "stale"
+    assert conn.execute("SELECT status FROM replay_pairs WHERE pair_id='old-pair'").fetchone()["status"] == "stale"
+
+
+def test_version_replay_records_classified_stage_failure(monkeypatch, tmp_path: Path):
+    _make_tagged_linux_repo(tmp_path)
+    cfg = Config.from_args(repo_root=tmp_path)
+
+    def fail_extract(*args, **kwargs):
+        raise ReplayStageError("generated bindings missing for v6.1", "failed_missing_bindings", "bindings_missing")
+
+    monkeypatch.setattr(replay_module, "_extract_version", fail_extract)
+
+    summary = run_version_replay(
+        cfg,
+        start="v6.1",
+        include_head=False,
+        build_bindings=True,
+        configure=True,
+    )
+
+    assert summary["completed_pairs"] == 0
+    assert summary["failed_pairs"] == 1
+    conn = connect(cfg.database)
+    initialize(conn)
+    pair = conn.execute("SELECT status, build_status, error FROM replay_pairs").fetchone()
+    assert pair["status"] == "failed_missing_bindings"
+    assert pair["build_status"] == "bindings_missing"
+    assert "generated bindings missing" in pair["error"]
+
+
+def test_version_replay_blocks_known_incompatible_toolchain(monkeypatch, tmp_path: Path):
+    _make_tagged_linux_repo(tmp_path)
+    cfg = Config.from_args(repo_root=tmp_path)
+
+    def incompatible_matrix(cfg, refs, version_rows):
+        return {
+            "entries": [
+                {
+                    "version_id": row["version_id"],
+                    "required": {"rustc": "1.62.0", "bindgen": "0.56.0"},
+                    "missing": [],
+                    "compatibility_issues": [
+                        {
+                            "kind": "bindgen_0_56_llvm16_anonymous_ident",
+                            "severity": "blocking",
+                            "detail": "bindgen 0.56.0 is incompatible with LLVM 18",
+                        }
+                    ],
+                }
+                for row in version_rows
+            ]
+        }
+
+    monkeypatch.setattr(replay_module, "write_toolchain_matrix", incompatible_matrix)
+
+    summary = run_version_replay(
+        cfg,
+        start="v6.1",
+        include_head=False,
+        build_bindings=True,
+        configure=True,
+    )
+
+    assert summary["completed_pairs"] == 0
+    assert summary["failed_pairs"] == 1
+    conn = connect(cfg.database)
+    initialize(conn)
+    pair = conn.execute("SELECT status, build_status, error FROM replay_pairs").fetchone()
+    assert pair["status"] == "failed_toolchain"
+    assert pair["build_status"] == "toolchain_incompatible"
+    assert "bindgen 0.56.0 is incompatible" in pair["error"]

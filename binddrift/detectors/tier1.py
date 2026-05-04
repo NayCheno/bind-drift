@@ -66,7 +66,9 @@ def _make_warning(idx: int, drift_type: str, symbol: str, old: Any, new: Any, ex
 
 def _event(warning: dict[str, Any], old_version: str | None, new_version: str) -> dict[str, Any]:
     return {
-        "event_id": warning["warning_id"],
+        "event_id": f"{warning.get('pair_id')}:{warning['warning_id']}" if warning.get("pair_id") else warning["warning_id"],
+        "run_id": warning.get("run_id"),
+        "pair_id": warning.get("pair_id"),
         "old_version": old_version,
         "new_version": new_version,
         "drift_type": warning["type"],
@@ -91,6 +93,16 @@ def _add_warning(
 
 
 def run_tier1(cfg: Config, old: str | None = None, new: str | None = None) -> dict[str, Any]:
+    return run_tier1_with_context(cfg, old=old, new=new)
+
+
+def run_tier1_with_context(
+    cfg: Config,
+    old: str | None = None,
+    new: str | None = None,
+    run_id: str | None = None,
+    pair_id: str | None = None,
+) -> dict[str, Any]:
     conn = connect(cfg.database)
     initialize(conn)
     versions = _available_versions(conn)
@@ -221,6 +233,14 @@ def run_tier1(cfg: Config, old: str | None = None, new: str | None = None) -> di
                 sorted(new_indicators[symbol]),
                 _graph_exposure(conn, selected_new, symbol),
             )
+
+    for warning in warnings:
+        warning["run_id"] = run_id
+        warning["pair_id"] = pair_id
+        warning["old_version"] = selected_old
+        warning["new_version"] = selected_new
+        warning.setdefault("c_side", {})["old_version"] = selected_old
+        warning.setdefault("c_side", {})["new_version"] = selected_new
 
     write_warnings(cfg, warnings)
     upsert_many(conn, "drift_events", [_event(warning, selected_old, selected_new) for warning in warnings])

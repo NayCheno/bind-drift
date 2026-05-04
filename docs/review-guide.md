@@ -17,7 +17,19 @@ Use one label per warning:
 
 ## Review Procedure
 
-Start with the ranked Markdown report, then record labels in the generated review CSV. Inspect the C evidence, Rust call site, safe API exposure, and any nearby safety comments. For semantic warnings, do not require proof of a concrete bug; judge whether the warning is a valid stale-contract review target.
+Start with the ranked Markdown report, then record labels in the generated
+review CSV. The CCF-B-strength workflow uses two independent reviewers:
+
+1. Reviewer 1 fills `reviewer1_label` and `reviewer1_notes`.
+2. Reviewer 2 fills `reviewer2_label` and `reviewer2_notes` without looking at reviewer 1's notes.
+3. The adjudicator fills `adjudicated_label` and `adjudication_notes`.
+
+Inspect the C evidence, Rust call site, safe API exposure, generated binding
+facts when available, build-breakage rows, wrapper-fix candidates, and nearby
+safety comments. For semantic warnings, do not require proof of a concrete bug;
+judge whether the warning is a valid stale-contract review target. The legacy
+`label` column remains for compatibility; evaluation prefers
+`adjudicated_label` when it is present.
 
 ## Reviewer Notes
 

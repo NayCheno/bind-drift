@@ -1,0 +1,396 @@
+{
+  "by_version": [
+    {
+      "binding_functions": 0,
+      "c_functions": 0,
+      "graph_edges": 0,
+      "rust_binding_uses": 0,
+      "version_id": "v6.1"
+    },
+    {
+      "binding_functions": 0,
+      "c_functions": 0,
+      "graph_edges": 0,
+      "rust_binding_uses": 0,
+      "version_id": "v6.2"
+    },
+    {
+      "binding_functions": 0,
+      "c_functions": 0,
+      "graph_edges": 0,
+      "rust_binding_uses": 0,
+      "version_id": "v6.3"
+    },
+    {
+      "binding_functions": 0,
+      "c_functions": 0,
+      "graph_edges": 0,
+      "rust_binding_uses": 0,
+      "version_id": "v6.4"
+    },
+    {
+      "binding_functions": 0,
+      "c_functions": 0,
+      "graph_edges": 0,
+      "rust_binding_uses": 0,
+      "version_id": "v6.5"
+    },
+    {
+      "binding_functions": 3853,
+      "c_functions": 4394,
+      "graph_edges": 11177,
+      "rust_binding_uses": 90,
+      "version_id": "v6.6"
+    },
+    {
+      "binding_functions": 5760,
+      "c_functions": 4519,
+      "graph_edges": 14033,
+      "rust_binding_uses": 113,
+      "version_id": "v6.7"
+    },
+    {
+      "binding_functions": 4612,
+      "c_functions": 806,
+      "graph_edges": 18659,
+      "rust_binding_uses": 167,
+      "version_id": "v6.8"
+    },
+    {
+      "binding_functions": 10493,
+      "c_functions": 5017,
+      "graph_edges": 21379,
+      "rust_binding_uses": 169,
+      "version_id": "v6.9"
+    },
+    {
+      "binding_functions": 10402,
+      "c_functions": 5038,
+      "graph_edges": 21457,
+      "rust_binding_uses": 176,
+      "version_id": "v6.10"
+    },
+    {
+      "binding_functions": 11035,
+      "c_functions": 5465,
+      "graph_edges": 23358,
+      "rust_binding_uses": 269,
+      "version_id": "v6.11"
+    },
+    {
+      "binding_functions": 11081,
+      "c_functions": 5511,
+      "graph_edges": 23779,
+      "rust_binding_uses": 312,
+      "version_id": "v6.12"
+    },
+    {
+      "binding_functions": 11293,
+      "c_functions": 6985,
+      "graph_edges": 25146,
+      "rust_binding_uses": 432,
+      "version_id": "v6.13"
+    },
+    {
+      "binding_functions": 12428,
+      "c_functions": 7807,
+      "graph_edges": 30269,
+      "rust_binding_uses": 502,
+      "version_id": "v6.14"
+    },
+    {
+      "binding_functions": 12451,
+      "c_functions": 8193,
+      "graph_edges": 30870,
+      "rust_binding_uses": 573,
+      "version_id": "v6.15"
+    },
+    {
+      "binding_functions": 13265,
+      "c_functions": 9085,
+      "graph_edges": 34804,
+      "rust_binding_uses": 994,
+      "version_id": "v6.16"
+    },
+    {
+      "binding_functions": 14870,
+      "c_functions": 9778,
+      "graph_edges": 38928,
+      "rust_binding_uses": 1128,
+      "version_id": "v6.17"
+    },
+    {
+      "binding_functions": 15309,
+      "c_functions": 11250,
+      "graph_edges": 41156,
+      "rust_binding_uses": 1726,
+      "version_id": "v6.18"
+    },
+    {
+      "binding_functions": 16620,
+      "c_functions": 11903,
+      "graph_edges": 43503,
+      "rust_binding_uses": 1862,
+      "version_id": "v6.19"
+    },
+    {
+      "binding_functions": 16880,
+      "c_functions": 12097,
+      "graph_edges": 44149,
+      "rust_binding_uses": 1877,
+      "version_id": "v7.0"
+    },
+    {
+      "binding_functions": 17037,
+      "c_functions": 12213,
+      "graph_edges": 44634,
+      "rust_binding_uses": 1934,
+      "version_id": "HEAD_6d35786de281"
+    },
+    {
+      "binding_functions": 0,
+      "c_functions": 62668,
+      "graph_edges": 17021,
+      "rust_binding_uses": 1934,
+      "version_id": "6d35786de281"
+    }
+  ],
+  "counts": {
+    "binding_consts": 516825,
+    "binding_functions": 187389,
+    "binding_structs": 62632,
+    "build_breakage_events": 0,
+    "c_behavior_indicators": 25619,
+    "c_functions": 182729,
+    "c_macros": 473904,
+    "c_structs": 31459,
+    "drift_events": 31188,
+    "graph_edges": 484322,
+    "layout_facts": 0,
+    "rust_binding_uses": 14258,
+    "rust_error_mappings": 6425,
+    "rust_lifetime_facts": 9265,
+    "rust_safe_apis": 6119,
+    "rust_safety_comments": 172428,
+    "versions": 22,
+    "wrapper_fix_events": 1506
+  },
+  "main_by_version": [
+    {
+      "binding_functions": 3853,
+      "c_functions": 4394,
+      "graph_edges": 11177,
+      "rust_binding_uses": 90,
+      "version_id": "v6.6"
+    },
+    {
+      "binding_functions": 5760,
+      "c_functions": 4519,
+      "graph_edges": 14033,
+      "rust_binding_uses": 113,
+      "version_id": "v6.7"
+    },
+    {
+      "binding_functions": 4612,
+      "c_functions": 806,
+      "graph_edges": 18659,
+      "rust_binding_uses": 167,
+      "version_id": "v6.8"
+    },
+    {
+      "binding_functions": 10493,
+      "c_functions": 5017,
+      "graph_edges": 21379,
+      "rust_binding_uses": 169,
+      "version_id": "v6.9"
+    },
+    {
+      "binding_functions": 10402,
+      "c_functions": 5038,
+      "graph_edges": 21457,
+      "rust_binding_uses": 176,
+      "version_id": "v6.10"
+    },
+    {
+      "binding_functions": 11035,
+      "c_functions": 5465,
+      "graph_edges": 23358,
+      "rust_binding_uses": 269,
+      "version_id": "v6.11"
+    },
+    {
+      "binding_functions": 11081,
+      "c_functions": 5511,
+      "graph_edges": 23779,
+      "rust_binding_uses": 312,
+      "version_id": "v6.12"
+    },
+    {
+      "binding_functions": 11293,
+      "c_functions": 6985,
+      "graph_edges": 25146,
+      "rust_binding_uses": 432,
+      "version_id": "v6.13"
+    },
+    {
+      "binding_functions": 12428,
+      "c_functions": 7807,
+      "graph_edges": 30269,
+      "rust_binding_uses": 502,
+      "version_id": "v6.14"
+    },
+    {
+      "binding_functions": 12451,
+      "c_functions": 8193,
+      "graph_edges": 30870,
+      "rust_binding_uses": 573,
+      "version_id": "v6.15"
+    },
+    {
+      "binding_functions": 13265,
+      "c_functions": 9085,
+      "graph_edges": 34804,
+      "rust_binding_uses": 994,
+      "version_id": "v6.16"
+    },
+    {
+      "binding_functions": 14870,
+      "c_functions": 9778,
+      "graph_edges": 38928,
+      "rust_binding_uses": 1128,
+      "version_id": "v6.17"
+    },
+    {
+      "binding_functions": 15309,
+      "c_functions": 11250,
+      "graph_edges": 41156,
+      "rust_binding_uses": 1726,
+      "version_id": "v6.18"
+    },
+    {
+      "binding_functions": 16620,
+      "c_functions": 11903,
+      "graph_edges": 43503,
+      "rust_binding_uses": 1862,
+      "version_id": "v6.19"
+    },
+    {
+      "binding_functions": 16880,
+      "c_functions": 12097,
+      "graph_edges": 44149,
+      "rust_binding_uses": 1877,
+      "version_id": "v7.0"
+    },
+    {
+      "binding_functions": 17037,
+      "c_functions": 12213,
+      "graph_edges": 44634,
+      "rust_binding_uses": 1934,
+      "version_id": "HEAD_6d35786de281"
+    }
+  ],
+  "main_evidence_gate": {
+    "eligible_run_ids": [
+      "replay-20260504T224640Z"
+    ],
+    "excluded_runs": [
+      {
+        "reasons": [
+          "missing_replay_dir",
+          "missing_aggregate_warnings"
+        ],
+        "run_id": "replay-20260504T220545Z"
+      },
+      {
+        "reasons": [
+          "missing_replay_dir",
+          "missing_aggregate_warnings"
+        ],
+        "run_id": "replay-20260504T220238Z"
+      },
+      {
+        "reasons": [
+          "status:failed",
+          "missing_replay_dir",
+          "no_completed_pairs"
+        ],
+        "run_id": "replay-20260504T214049Z"
+      },
+      {
+        "reasons": [
+          "status:failed",
+          "missing_replay_dir",
+          "no_completed_pairs"
+        ],
+        "run_id": "replay-20260504T213940Z"
+      },
+      {
+        "reasons": [
+          "status:failed",
+          "missing_replay_dir",
+          "no_completed_pairs"
+        ],
+        "run_id": "replay-20260504T213828Z"
+      },
+      {
+        "reasons": [
+          "status:failed",
+          "missing_replay_dir",
+          "no_completed_pairs"
+        ],
+        "run_id": "replay-20260504T213525Z"
+      },
+      {
+        "reasons": [
+          "status:failed",
+          "missing_replay_dir",
+          "no_completed_pairs"
+        ],
+        "run_id": "replay-20260504T210923Z"
+      },
+      {
+        "reasons": [
+          "status:failed",
+          "missing_replay_dir",
+          "no_completed_pairs"
+        ],
+        "run_id": "replay-20260504T210739Z"
+      },
+      {
+        "reasons": [
+          "status:failed",
+          "missing_replay_dir",
+          "no_completed_pairs"
+        ],
+        "run_id": "replay-20260504T210634Z"
+      },
+      {
+        "reasons": [
+          "status:stale",
+          "missing_replay_dir",
+          "no_completed_pairs"
+        ],
+        "run_id": "replay-20260504T210428Z"
+      }
+    ],
+    "usable": true,
+    "version_ids": [
+      "HEAD_6d35786de281",
+      "v6.10",
+      "v6.11",
+      "v6.12",
+      "v6.13",
+      "v6.14",
+      "v6.15",
+      "v6.16",
+      "v6.17",
+      "v6.18",
+      "v6.19",
+      "v6.6",
+      "v6.7",
+      "v6.8",
+      "v6.9",
+      "v7.0"
+    ]
+  }
+}

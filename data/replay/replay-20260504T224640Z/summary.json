@@ -1,0 +1,15 @@
+{
+  "aggregate_warnings": "/home/nya/workspace/bind-drift/data/replay/replay-20260504T224640Z/warnings.jsonl",
+  "completed_pairs": 15,
+  "duration_seconds": 740.731,
+  "failed_pairs": 0,
+  "pairs": 15,
+  "run_dir": "/home/nya/workspace/bind-drift/data/replay/replay-20260504T224640Z",
+  "run_id": "replay-20260504T224640Z",
+  "stale_previous": {
+    "pairs": 0,
+    "runs": 0
+  },
+  "versions": 16,
+  "warnings": 16973
+}
