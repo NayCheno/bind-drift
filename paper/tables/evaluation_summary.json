@@ -4,8 +4,17 @@
     "build_breakage_events": 0,
     "wrapper_fix_events": 200
   },
-  "note": "Precision and recall require labeled ground truth in data/manual_review.csv.",
-  "precision_at_k": null,
+  "manual_review": {
+    "labeled_warnings": 0,
+    "precision": null,
+    "precision_at_k": {
+      "10": null,
+      "100": null,
+      "50": null
+    },
+    "true_labeled_warnings": 0
+  },
+  "note": "Recall requires a complete labeled replay oracle; precision is reported only for non-empty manual labels.",
   "recall": null,
   "warnings": 0,
   "wrapper_fix_candidates": 24

@@ -10,88 +10,132 @@
     {
       "candidate_count": 0,
       "kind": "baseline",
-      "note": "Requires labeled replay ground truth.",
-      "precision_at_k": null,
+      "note": "Precision values are populated only when manual labels are present.",
+      "precision_at_k": {
+        "10": null,
+        "100": null,
+        "50": null
+      },
       "recall": null,
       "variant": "BindgenOnly"
     },
     {
       "candidate_count": 675,
       "kind": "baseline",
-      "note": "Requires labeled replay ground truth.",
-      "precision_at_k": null,
+      "note": "Precision values are populated only when manual labels are present.",
+      "precision_at_k": {
+        "10": null,
+        "100": null,
+        "50": null
+      },
       "recall": null,
       "variant": "CSignatureDiff"
     },
     {
       "candidate_count": 0,
       "kind": "baseline",
-      "note": "Requires labeled replay ground truth.",
-      "precision_at_k": null,
+      "note": "Precision values are populated only when manual labels are present.",
+      "precision_at_k": {
+        "10": null,
+        "100": null,
+        "50": null
+      },
       "recall": null,
       "variant": "BuildOnly"
     },
     {
       "candidate_count": 1934,
       "kind": "baseline",
-      "note": "Requires labeled replay ground truth.",
-      "precision_at_k": null,
+      "note": "Precision values are populated only when manual labels are present.",
+      "precision_at_k": {
+        "10": null,
+        "100": null,
+        "50": null
+      },
       "recall": null,
       "variant": "GrepUsage"
     },
     {
       "candidate_count": 0,
       "kind": "baseline",
-      "note": "Requires labeled replay ground truth.",
-      "precision_at_k": null,
+      "note": "Precision values are populated only when manual labels are present.",
+      "precision_at_k": {
+        "10": null,
+        "100": null,
+        "50": null
+      },
       "recall": null,
       "variant": "NoRanking"
     },
     {
       "candidate_count": 0,
       "kind": "baseline",
-      "note": "Requires labeled replay ground truth.",
-      "precision_at_k": null,
+      "note": "Precision values are populated only when manual labels are present.",
+      "precision_at_k": {
+        "10": null,
+        "100": null,
+        "50": null
+      },
       "recall": null,
       "variant": "Tier1Only"
     },
     {
       "candidate_count": 675,
       "kind": "ablation",
-      "note": "Requires labeled replay ground truth.",
-      "precision_at_k": null,
+      "note": "Precision values are populated only when manual labels are present.",
+      "precision_at_k": {
+        "10": null,
+        "100": null,
+        "50": null
+      },
       "recall": null,
       "variant": "NoGraph"
     },
     {
       "candidate_count": 0,
       "kind": "ablation",
-      "note": "Requires labeled replay ground truth.",
-      "precision_at_k": null,
+      "note": "Precision values are populated only when manual labels are present.",
+      "precision_at_k": {
+        "10": null,
+        "100": null,
+        "50": null
+      },
       "recall": null,
       "variant": "NoTier2"
     },
     {
       "candidate_count": 0,
       "kind": "ablation",
-      "note": "Requires labeled replay ground truth.",
-      "precision_at_k": null,
+      "note": "Precision values are populated only when manual labels are present.",
+      "precision_at_k": {
+        "10": null,
+        "100": null,
+        "50": null
+      },
       "recall": null,
       "variant": "NoRanking"
     },
     {
       "candidate_count": 0,
       "kind": "ablation",
-      "note": "Requires labeled replay ground truth.",
-      "precision_at_k": null,
+      "note": "Precision values are populated only when manual labels are present.",
+      "precision_at_k": {
+        "10": null,
+        "100": null,
+        "50": null
+      },
       "recall": null,
       "variant": "NoSafetyComment"
     },
     {
       "candidate_count": 0,
       "kind": "ablation",
-      "note": "Requires labeled replay ground truth.",
-      "precision_at_k": null,
+      "note": "Precision values are populated only when manual labels are present.",
+      "precision_at_k": {
+        "10": null,
+        "100": null,
+        "50": null
+      },
       "recall": null,
       "variant": "NoCommitText"
     }

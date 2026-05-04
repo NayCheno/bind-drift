@@ -6,6 +6,7 @@ from typing import Any
 from binddrift.config import Config
 from binddrift.db import connect, initialize
 from binddrift.warnings import read_warnings
+from .metrics import labeled_summary, load_manual_labels
 
 
 BASELINES = ["BindgenOnly", "CSignatureDiff", "BuildOnly", "GrepUsage", "NoRanking", "Tier1Only"]
@@ -16,6 +17,8 @@ def generate_baselines(cfg: Config) -> dict[str, Any]:
     conn = connect(cfg.database)
     initialize(conn)
     warnings = read_warnings(cfg.warnings_jsonl)
+    labels = load_manual_labels(cfg.data_dir / "manual_review.csv")
+    metrics = labeled_summary(warnings, labels)
     counts = {
         "binding_functions": conn.execute("SELECT COUNT(*) AS n FROM binding_functions").fetchone()["n"],
         "c_functions": conn.execute("SELECT COUNT(*) AS n FROM c_functions").fetchone()["n"],
@@ -30,9 +33,9 @@ def generate_baselines(cfg: Config) -> dict[str, Any]:
                 "variant": name,
                 "kind": "baseline",
                 "candidate_count": _candidate_count(name, counts),
-                "precision_at_k": None,
+                "precision_at_k": metrics["precision_at_k"],
                 "recall": None,
-                "note": "Requires labeled replay ground truth.",
+                "note": "Precision values are populated only when manual labels are present.",
             }
         )
     for name in ABLATIONS:
@@ -41,9 +44,9 @@ def generate_baselines(cfg: Config) -> dict[str, Any]:
                 "variant": name,
                 "kind": "ablation",
                 "candidate_count": _candidate_count(name, counts),
-                "precision_at_k": None,
+                "precision_at_k": metrics["precision_at_k"],
                 "recall": None,
-                "note": "Requires labeled replay ground truth.",
+                "note": "Precision values are populated only when manual labels are present.",
             }
         )
     path = cfg.repo_root / "paper/tables/baselines_ablations.json"

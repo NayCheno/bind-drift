@@ -11,6 +11,7 @@ from binddrift.db import connect, initialize, upsert_many
 from binddrift.gitutil import git_output
 from binddrift.warnings import read_warnings
 from .baselines import generate_baselines
+from .metrics import labeled_summary, load_manual_labels
 
 
 BUILD_ERROR_RE = re.compile(r"(bindings::(?P<binding>[A-Za-z_][A-Za-z0-9_]*)|missing field|mismatched types|layout)")
@@ -120,14 +121,16 @@ def run_evaluation(cfg: Config, build_log: Path | None = None, top_k: int = 50) 
     wrapper_fixes = mine_wrapper_fixes(cfg)
     persisted = persist_ground_truth(cfg, build_log, build_findings, wrapper_fixes)
     review_path = generate_manual_review(cfg, warnings, top_k=top_k)
+    labels = load_manual_labels(review_path)
+    metrics = labeled_summary(warnings, labels)
     table = {
         "warnings": len(warnings),
         "build_breakage_findings": len(build_findings),
         "wrapper_fix_candidates": sum(1 for row in wrapper_fixes if row["likely_wrapper_fix"]),
         "ground_truth_rows": persisted,
-        "precision_at_k": None,
+        "manual_review": metrics,
         "recall": None,
-        "note": "Precision and recall require labeled ground truth in data/manual_review.csv.",
+        "note": "Recall requires a complete labeled replay oracle; precision is reported only for non-empty manual labels.",
     }
     tables_dir = cfg.repo_root / "paper/tables"
     tables_dir.mkdir(parents=True, exist_ok=True)
