@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from binddrift.config import Config
+from binddrift.extractors.c_api import _parse_file as _parse_c_file
 from binddrift.extractors.bindgen import _parse_file
 from binddrift.extractors.rust_usage import _parse_file as _parse_rust_file
 from binddrift.ranking.scorer import score_warning
@@ -85,3 +86,36 @@ impl Device {
     assert any(fact["fact_type"] == "IMPL_DROP" for fact in lifetime_facts)
     assert any(mapping["mapping_type"] == "NONNULL_MAPPING" for mapping in error_mappings)
     assert comments[0]["nearby_binding_symbol"] == "get_device"
+
+
+def test_c_parser_handles_multiline_function_and_indicators(tmp_path: Path):
+    source = tmp_path / "helpers.c"
+    source.write_text(
+        """
+#define FOO_FLAG 8
+struct foo {
+    int count;
+    void *ptr;
+};
+static inline struct foo *
+foo_get(struct foo *foo,
+        int flags)
+{
+    if (!foo)
+        return ERR_PTR(-ENOMEM);
+    kref_get(&foo->count);
+    might_sleep();
+    return foo;
+}
+""",
+        encoding="utf-8",
+    )
+
+    functions, structs, macros, indicators = _parse_c_file(source, "v-test")
+
+    assert functions[0]["c_symbol"] == "foo_get"
+    assert "int flags" in functions[0]["params"]
+    assert structs[0]["c_type"] == "foo"
+    assert macros[0]["name"] == "FOO_FLAG"
+    indicator_types = {item["indicator_type"] for item in indicators if item["c_symbol"] == "foo_get"}
+    assert {"ERR_PTR_RETURN", "ERROR_CODE", "REFCOUNT_GET", "MAY_SLEEP"} <= indicator_types

@@ -11,12 +11,15 @@ from binddrift.kernel import default_version_id
 
 
 FUNC_RE = re.compile(
-    r"^(?P<ret>(?:static\s+)?(?:inline\s+)?(?:const\s+)?[A-Za-z_][A-Za-z0-9_\s\*\d]*?)\s+"
-    r"(?P<name>[A-Za-z_][A-Za-z0-9_]*)\s*\((?P<params>[^;{}]*)\)\s*(?P<end>[;{])"
+    r"^\s*(?P<ret>(?:(?:static|extern|inline|const|struct|enum|unsigned|signed|long|short|void|int|char|bool|"
+    r"[A-Za-z_][A-Za-z0-9_]*)[\s\*]+)+?)"
+    r"(?P<name>[A-Za-z_][A-Za-z0-9_]*)\s*\((?P<params>[^;{}]*)\)\s*(?P<end>[;{])",
+    re.DOTALL | re.MULTILINE,
 )
 STRUCT_RE = re.compile(r"^\s*struct\s+(?P<name>[A-Za-z_][A-Za-z0-9_]*)\s*\{")
 FIELD_RE = re.compile(r"^\s*(?P<ty>[A-Za-z_][A-Za-z0-9_\s\*\[\]]+)\s+(?P<name>[A-Za-z_][A-Za-z0-9_]*)(?:\[[^]]+\])?;")
 MACRO_RE = re.compile(r"^\s*#\s*define\s+(?P<name>[A-Za-z_][A-Za-z0-9_]*)(?:\([^)]*\))?\s*(?P<value>.*)$")
+CONTROL_NAMES = {"if", "for", "while", "switch", "return", "sizeof"}
 
 INDICATORS: dict[str, list[str]] = {
     "NULL_RETURN": ["return NULL"],
@@ -43,8 +46,30 @@ def _paths(cfg: Config, roots: list[str]) -> list[Path]:
     return sorted(set(files))
 
 
+def _line_for_offset(text: str, offset: int) -> int:
+    return text.count("\n", 0, offset) + 1
+
+
+def _split_top_level(value: str) -> list[str]:
+    parts: list[str] = []
+    depth = 0
+    start = 0
+    for idx, char in enumerate(value):
+        if char in "([{":
+            depth += 1
+        elif char in ")]}" and depth:
+            depth -= 1
+        elif char == "," and depth == 0:
+            parts.append(value[start:idx].strip())
+            start = idx + 1
+    tail = value[start:].strip()
+    if tail and tail != "void":
+        parts.append(tail)
+    return parts
+
+
 def _parse_params(params: str) -> list[str]:
-    return [part.strip() for part in params.split(",") if part.strip()]
+    return [" ".join(part.split()) for part in _split_top_level(params)]
 
 
 def _parse_file(path: Path, version_id: str) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
@@ -55,25 +80,36 @@ def _parse_file(path: Path, version_id: str) -> tuple[list[dict[str, Any]], list
     macros: list[dict[str, Any]] = []
     indicators: list[dict[str, Any]] = []
     current_function: tuple[str, int] | None = None
+    body_start_by_line: dict[int, str] = {}
+
+    for match in FUNC_RE.finditer(text):
+        name = match.group("name")
+        if name in CONTROL_NAMES:
+            continue
+        start_line = _line_for_offset(text, match.start())
+        row = {
+            "version_id": version_id,
+            "c_symbol": name,
+            "return_type": " ".join(match.group("ret").split()),
+            "params": json.dumps(_parse_params(match.group("params")), sort_keys=True),
+            "header_file": str(path) if path.suffix == ".h" else "",
+            "definition_file": str(path) if path.suffix == ".c" or match.group("end") == "{" else "",
+            "line": start_line,
+        }
+        functions.append(row)
+        if match.group("end") == "{":
+            body_start_by_line[_line_for_offset(text, match.end() - 1)] = name
 
     for idx, raw in enumerate(lines, start=1):
         line = raw.strip()
         if not line or line.startswith("*"):
             continue
-        if match := FUNC_RE.match(line):
+        if idx in body_start_by_line:
+            current_function = (body_start_by_line[idx], 0)
+        if match := FUNC_RE.match(raw):
             name = match.group("name")
-            row = {
-                "version_id": version_id,
-                "c_symbol": name,
-                "return_type": " ".join(match.group("ret").split()),
-                "params": json.dumps(_parse_params(match.group("params")), sort_keys=True),
-                "header_file": str(path) if path.suffix == ".h" else "",
-                "definition_file": str(path) if path.suffix == ".c" or match.group("end") == "{" else "",
-                "line": idx,
-            }
-            functions.append(row)
-            if match.group("end") == "{":
-                current_function = (name, 1)
+            if name not in CONTROL_NAMES and match.group("end") == "{":
+                current_function = (name, 0)
         if match := MACRO_RE.match(raw):
             macros.append(
                 {
