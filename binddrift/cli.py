@@ -6,6 +6,7 @@ from typing import Callable
 
 from . import __version__
 from .config import Config
+from .dataset import extract_dataset
 from .environment import capture_environment, write_environment
 
 
@@ -38,6 +39,12 @@ def cmd_env_check(args: argparse.Namespace, cfg: Config) -> int:
     return 0
 
 
+def cmd_extract_commits(args: argparse.Namespace, cfg: Config) -> int:
+    summary = extract_dataset(cfg, limit=args.limit, fetch=args.fetch_tags)
+    print(json.dumps(summary, indent=2, sort_keys=True))
+    return 0
+
+
 def _add_common(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--repo-root", default=".", help="Repository root that owns the BindDrift artifact.")
     parser.add_argument("--linux-tree", default="vendor/linux", help="Linux source tree relative to repo root.")
@@ -65,8 +72,12 @@ def build_parser() -> argparse.ArgumentParser:
 
     extract = sub.add_parser("extract", help="Extractor commands.")
     extract_sub = extract.add_subparsers(dest="extract_command", required=True)
-    for name in ("bindings", "rust", "c", "commits"):
+    for name in ("bindings", "rust", "c"):
         _set(extract_sub.add_parser(name, help=f"Extract {name} facts."), _not_implemented(f"extract {name}"))
+    commits = extract_sub.add_parser("commits", help="Extract version and commit metadata.")
+    commits.add_argument("--limit", type=int, default=200, help="Number of commits to import from the selected ref.")
+    commits.add_argument("--fetch-tags", action="store_true", help="Fetch tags in the Linux source tree before extraction.")
+    _set(commits, cmd_extract_commits)
 
     graph = sub.add_parser("graph", help="Dependency graph commands.")
     graph_sub = graph.add_subparsers(dest="graph_command", required=True)
