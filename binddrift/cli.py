@@ -8,6 +8,7 @@ from typing import Callable
 from . import __version__
 from .config import Config
 from .dataset import extract_dataset
+from .detectors.tier1 import run_tier1
 from .environment import capture_environment, write_environment
 from .extractors.bindgen import extract_bindings
 from .extractors.c_api import extract_c_api
@@ -91,6 +92,12 @@ def cmd_graph_query(args: argparse.Namespace, cfg: Config) -> int:
     return 0
 
 
+def cmd_detect_tier1(args: argparse.Namespace, cfg: Config) -> int:
+    result = run_tier1(cfg, old=args.old, new=args.new)
+    print(json.dumps(result, indent=2, sort_keys=True))
+    return 0
+
+
 def _add_common(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--repo-root", default=".", help="Repository root that owns the BindDrift artifact.")
     parser.add_argument("--linux-tree", default="vendor/linux", help="Linux source tree relative to repo root.")
@@ -151,7 +158,11 @@ def build_parser() -> argparse.ArgumentParser:
 
     detect = sub.add_parser("detect", help="Drift detector commands.")
     detect_sub = detect.add_subparsers(dest="detect_command", required=True)
-    for name in ("tier1", "tier2", "all"):
+    tier1 = detect_sub.add_parser("tier1", help="Run Tier 1 objective drift detectors.")
+    tier1.add_argument("--old", help="Old version id.")
+    tier1.add_argument("--new", help="New version id.")
+    _set(tier1, cmd_detect_tier1)
+    for name in ("tier2", "all"):
         _set(detect_sub.add_parser(name, help=f"Run {name} detectors."), _not_implemented(f"detect {name}"))
 
     _set(sub.add_parser("rank", help="Rank warnings."), _not_implemented("rank"))
