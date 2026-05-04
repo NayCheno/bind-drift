@@ -9,6 +9,7 @@ from . import __version__
 from .config import Config
 from .dataset import extract_dataset
 from .detectors.tier1 import run_tier1
+from .detectors.tier2 import run_tier2
 from .environment import capture_environment, write_environment
 from .extractors.bindgen import extract_bindings
 from .extractors.c_api import extract_c_api
@@ -98,6 +99,19 @@ def cmd_detect_tier1(args: argparse.Namespace, cfg: Config) -> int:
     return 0
 
 
+def cmd_detect_tier2(args: argparse.Namespace, cfg: Config) -> int:
+    result = run_tier2(cfg, old=args.old, new=args.new, append=args.append)
+    print(json.dumps(result, indent=2, sort_keys=True))
+    return 0
+
+
+def cmd_detect_all(args: argparse.Namespace, cfg: Config) -> int:
+    tier1 = run_tier1(cfg, old=args.old, new=args.new)
+    tier2 = run_tier2(cfg, old=args.old, new=args.new, append=True)
+    print(json.dumps({"tier1": tier1, "tier2": tier2}, indent=2, sort_keys=True))
+    return 0
+
+
 def _add_common(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--repo-root", default=".", help="Repository root that owns the BindDrift artifact.")
     parser.add_argument("--linux-tree", default="vendor/linux", help="Linux source tree relative to repo root.")
@@ -162,8 +176,15 @@ def build_parser() -> argparse.ArgumentParser:
     tier1.add_argument("--old", help="Old version id.")
     tier1.add_argument("--new", help="New version id.")
     _set(tier1, cmd_detect_tier1)
-    for name in ("tier2", "all"):
-        _set(detect_sub.add_parser(name, help=f"Run {name} detectors."), _not_implemented(f"detect {name}"))
+    tier2 = detect_sub.add_parser("tier2", help="Run Tier 2 indicator-based contract detectors.")
+    tier2.add_argument("--old", help="Old version id.")
+    tier2.add_argument("--new", help="New version id.")
+    tier2.add_argument("--append", action="store_true", help="Append to existing warnings instead of replacing them.")
+    _set(tier2, cmd_detect_tier2)
+    all_detectors = detect_sub.add_parser("all", help="Run all detectors.")
+    all_detectors.add_argument("--old", help="Old version id.")
+    all_detectors.add_argument("--new", help="New version id.")
+    _set(all_detectors, cmd_detect_all)
 
     _set(sub.add_parser("rank", help="Rank warnings."), _not_implemented("rank"))
     _set(sub.add_parser("replay", help="Run a pilot replay."), _not_implemented("replay"))
