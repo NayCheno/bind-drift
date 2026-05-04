@@ -225,6 +225,17 @@ def initialize(conn: sqlite3.Connection) -> None:
             severity TEXT NOT NULL,
             PRIMARY KEY(version_id, stage, source, message)
         );
+
+        CREATE TABLE IF NOT EXISTS drift_events (
+            event_id TEXT PRIMARY KEY,
+            old_version TEXT,
+            new_version TEXT NOT NULL,
+            drift_type TEXT NOT NULL,
+            symbol TEXT NOT NULL,
+            old_value TEXT,
+            new_value TEXT,
+            evidence TEXT NOT NULL
+        );
         """
     )
     conn.commit()

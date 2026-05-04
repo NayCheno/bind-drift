@@ -1,0 +1,79 @@
+import json
+from pathlib import Path
+
+from binddrift.config import Config
+from binddrift.db import connect, initialize, upsert_many
+from binddrift.detectors.tier1 import run_tier1
+from binddrift.detectors.tier2 import run_tier2
+from binddrift.warnings import read_warnings
+
+
+def test_tier1_detects_signature_layout_const_and_helper(tmp_path: Path):
+    cfg = Config.from_args(repo_root=tmp_path)
+    conn = connect(cfg.database)
+    initialize(conn)
+    upsert_many(
+        conn,
+        "binding_functions",
+        [
+            {
+                "version_id": "old",
+                "rust_symbol": "foo_get",
+                "c_symbol": "foo_get",
+                "params": json.dumps([{"name": "x", "type": "i32"}]),
+                "return_type": "i32",
+                "is_unsafe": 1,
+                "source_file": "old.rs",
+                "line": 1,
+            },
+            {
+                "version_id": "new",
+                "rust_symbol": "foo_get",
+                "c_symbol": "foo_get",
+                "params": json.dumps([{"name": "x", "type": "u32"}]),
+                "return_type": "i32",
+                "is_unsafe": 1,
+                "source_file": "new.rs",
+                "line": 1,
+            },
+        ],
+    )
+    upsert_many(
+        conn,
+        "layout_facts",
+        [
+            {"version_id": "old", "rust_type": "foo", "field_name": "", "size": 8, "align": 4, "offset": None, "source_file": "old.rs", "line": 2},
+            {"version_id": "new", "rust_type": "foo", "field_name": "", "size": 16, "align": 4, "offset": None, "source_file": "new.rs", "line": 2},
+        ],
+    )
+    upsert_many(
+        conn,
+        "c_macros",
+        [
+            {"version_id": "old", "name": "FOO_FLAG", "value": "1", "source_file": "old.h", "line": 1},
+            {"version_id": "new", "name": "FOO_FLAG", "value": "2", "source_file": "new.h", "line": 1},
+        ],
+    )
+    upsert_many(
+        conn,
+        "c_functions",
+        [
+            {"version_id": "old", "c_symbol": "rust_helper_foo", "return_type": "void", "params": "[]", "header_file": "", "definition_file": "rust/helpers/foo.c", "line": 1},
+            {"version_id": "new", "c_symbol": "rust_helper_foo", "return_type": "void", "params": "[]", "header_file": "", "definition_file": "rust/helpers/foo.c", "line": 1},
+        ],
+    )
+    upsert_many(
+        conn,
+        "c_behavior_indicators",
+        [
+            {"version_id": "old", "c_symbol": "rust_helper_foo", "indicator_type": "NULL_RETURN", "evidence_file": "foo.c", "evidence_line": 1, "evidence_text": "return NULL;", "confidence": 0.7},
+            {"version_id": "new", "c_symbol": "rust_helper_foo", "indicator_type": "ERR_PTR_RETURN", "evidence_file": "foo.c", "evidence_line": 1, "evidence_text": "return ERR_PTR(-ENOMEM);", "confidence": 0.7},
+        ],
+    )
+
+    result = run_tier1(cfg, old="old", new="new")
+    warnings = read_warnings(cfg.warnings_jsonl)
+    warning_types = {warning["type"] for warning in warnings}
+
+    assert result["warnings"] >= 4
+    assert {"SignatureDrift", "LayoutDrift", "MacroConstDrift", "HelperDrift"} <= warning_types
