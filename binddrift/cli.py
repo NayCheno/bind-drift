@@ -2,12 +2,15 @@ from __future__ import annotations
 
 import argparse
 import json
+from pathlib import Path
 from typing import Callable
 
 from . import __version__
 from .config import Config
 from .dataset import extract_dataset
 from .environment import capture_environment, write_environment
+from .extractors.bindgen import extract_bindings
+from .kernel import prepare_kernel_build
 
 
 Command = Callable[[argparse.Namespace, Config], int]
@@ -45,6 +48,22 @@ def cmd_extract_commits(args: argparse.Namespace, cfg: Config) -> int:
     return 0
 
 
+def cmd_kernel_prepare(args: argparse.Namespace, cfg: Config) -> int:
+    manifest = prepare_kernel_build(cfg, version_id=args.version_id, run_make=args.run_make)
+    print(json.dumps(manifest, indent=2, sort_keys=True))
+    return 0
+
+
+def cmd_extract_bindings(args: argparse.Namespace, cfg: Config) -> int:
+    summary = extract_bindings(
+        cfg,
+        objtree=Path(args.objtree).resolve() if args.objtree else None,
+        version_id=args.version_id,
+    )
+    print(json.dumps(summary, indent=2, sort_keys=True))
+    return 0
+
+
 def _add_common(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--repo-root", default=".", help="Repository root that owns the BindDrift artifact.")
     parser.add_argument("--linux-tree", default="vendor/linux", help="Linux source tree relative to repo root.")
@@ -68,11 +87,18 @@ def build_parser() -> argparse.ArgumentParser:
 
     kernel = sub.add_parser("kernel", help="Linux preparation commands.")
     kernel_sub = kernel.add_subparsers(dest="kernel_command", required=True)
-    _set(kernel_sub.add_parser("prepare", help="Prepare an out-of-tree kernel build directory."), _not_implemented("kernel prepare"))
+    prepare = kernel_sub.add_parser("prepare", help="Prepare an out-of-tree kernel build directory.")
+    prepare.add_argument("--version-id", help="Version id for the object tree; defaults to git describe.")
+    prepare.add_argument("--run-make", action="store_true", help="Run `make O=<objtree> LLVM=1 rustavailable` after creating the object tree.")
+    _set(prepare, cmd_kernel_prepare)
 
     extract = sub.add_parser("extract", help="Extractor commands.")
     extract_sub = extract.add_subparsers(dest="extract_command", required=True)
-    for name in ("bindings", "rust", "c"):
+    bindings = extract_sub.add_parser("bindings", help="Extract bindgen-generated Rust facts.")
+    bindings.add_argument("--objtree", help="Kernel object tree that contains rust/bindings/*_generated.rs.")
+    bindings.add_argument("--version-id", help="Version id for extracted facts.")
+    _set(bindings, cmd_extract_bindings)
+    for name in ("rust", "c"):
         _set(extract_sub.add_parser(name, help=f"Extract {name} facts."), _not_implemented(f"extract {name}"))
     commits = extract_sub.add_parser("commits", help="Extract version and commit metadata.")
     commits.add_argument("--limit", type=int, default=200, help="Number of commits to import from the selected ref.")

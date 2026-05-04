@@ -53,6 +53,52 @@ def initialize(conn: sqlite3.Connection) -> None:
             is_rust_related INTEGER NOT NULL,
             is_c_api_related INTEGER NOT NULL
         );
+
+        CREATE TABLE IF NOT EXISTS binding_functions (
+            version_id TEXT NOT NULL,
+            rust_symbol TEXT NOT NULL,
+            c_symbol TEXT NOT NULL,
+            params TEXT NOT NULL,
+            return_type TEXT,
+            is_unsafe INTEGER NOT NULL,
+            source_file TEXT NOT NULL,
+            line INTEGER NOT NULL,
+            PRIMARY KEY(version_id, rust_symbol, source_file, line)
+        );
+
+        CREATE TABLE IF NOT EXISTS binding_structs (
+            version_id TEXT NOT NULL,
+            rust_type TEXT NOT NULL,
+            c_type TEXT NOT NULL,
+            fields TEXT NOT NULL,
+            size INTEGER,
+            align INTEGER,
+            source_file TEXT NOT NULL,
+            line INTEGER NOT NULL,
+            PRIMARY KEY(version_id, rust_type, source_file, line)
+        );
+
+        CREATE TABLE IF NOT EXISTS binding_consts (
+            version_id TEXT NOT NULL,
+            rust_name TEXT NOT NULL,
+            c_name TEXT NOT NULL,
+            value TEXT,
+            source_file TEXT NOT NULL,
+            line INTEGER NOT NULL,
+            PRIMARY KEY(version_id, rust_name, source_file, line)
+        );
+
+        CREATE TABLE IF NOT EXISTS layout_facts (
+            version_id TEXT NOT NULL,
+            rust_type TEXT NOT NULL,
+            field_name TEXT NOT NULL,
+            size INTEGER,
+            align INTEGER,
+            offset INTEGER,
+            source_file TEXT NOT NULL,
+            line INTEGER NOT NULL,
+            PRIMARY KEY(version_id, rust_type, field_name, source_file, line)
+        );
         """
     )
     conn.commit()
