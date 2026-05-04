@@ -15,7 +15,7 @@ from .evaluation.evaluator import run_evaluation
 from .extractors.bindgen import extract_bindings
 from .extractors.c_api import extract_c_api
 from .extractors.rust_usage import extract_rust_usage
-from .kernel import prepare_kernel_build
+from .kernel import build_kernel_bindings, prepare_kernel_build
 from .graph.builder import build_graph, query_graph
 from .ranking.scorer import rank_warnings
 from .paper.cases import generate_case_studies
@@ -85,7 +85,13 @@ def cmd_dataset_worktree(args: argparse.Namespace, cfg: Config) -> int:
 
 
 def cmd_kernel_prepare(args: argparse.Namespace, cfg: Config) -> int:
-    manifest = prepare_kernel_build(cfg, version_id=args.version_id, run_make=args.run_make)
+    manifest = prepare_kernel_build(cfg, version_id=args.version_id, run_make=args.run_make, configure=args.configure)
+    print(json.dumps(manifest, indent=2, sort_keys=True))
+    return 0
+
+
+def cmd_kernel_build_bindings(args: argparse.Namespace, cfg: Config) -> int:
+    manifest = build_kernel_bindings(cfg, version_id=args.version_id, configure=args.configure)
     print(json.dumps(manifest, indent=2, sort_keys=True))
     return 0
 
@@ -221,7 +227,12 @@ def build_parser() -> argparse.ArgumentParser:
     prepare = kernel_sub.add_parser("prepare", help="Prepare an out-of-tree kernel build directory.")
     prepare.add_argument("--version-id", help="Version id for the object tree; defaults to git describe.")
     prepare.add_argument("--run-make", action="store_true", help="Run `make O=<objtree> LLVM=1 rustavailable` after creating the object tree.")
+    prepare.add_argument("--configure", action="store_true", help="Generate an x86_64 Rust-enabled kernel config in the object tree.")
     _set(prepare, cmd_kernel_prepare)
+    build_bindings = kernel_sub.add_parser("build-bindings", help="Build generated Rust binding snapshots in the object tree.")
+    build_bindings.add_argument("--version-id", help="Version id for the object tree; defaults to git describe.")
+    build_bindings.add_argument("--configure", action="store_true", help="Generate config before building binding outputs.")
+    _set(build_bindings, cmd_kernel_build_bindings)
 
     extract = sub.add_parser("extract", help="Extractor commands.")
     extract_sub = extract.add_subparsers(dest="extract_command", required=True)
