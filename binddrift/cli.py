@@ -12,6 +12,7 @@ from .detectors.tier1 import run_tier1, run_tier1_with_context
 from .detectors.tier2 import run_tier2, run_tier2_with_context
 from .environment import capture_environment, write_environment
 from .evaluation.evaluator import run_evaluation
+from .evaluation.diagnostics import diagnose_false_positives
 from .extractors.bindgen import extract_bindings
 from .extractors.c_api import extract_c_api
 from .extractors.rust_usage import extract_rust_usage
@@ -192,6 +193,17 @@ def cmd_eval(args: argparse.Namespace, cfg: Config) -> int:
         top_k=args.top_k,
         run_id=args.run_id,
         pair_id=args.pair_id,
+    )
+    print(json.dumps(result, indent=2, sort_keys=True))
+    return 0
+
+
+def cmd_eval_diagnose_false_positives(args: argparse.Namespace, cfg: Config) -> int:
+    output_dir = Path(args.output_dir).resolve() if args.output_dir else cfg.data_dir / "manual"
+    result = diagnose_false_positives(
+        manual_review=Path(args.manual_review).resolve(),
+        warnings_jsonl=Path(args.warnings).resolve(),
+        output_dir=output_dir,
     )
     print(json.dumps(result, indent=2, sort_keys=True))
     return 0
@@ -384,12 +396,23 @@ def build_parser() -> argparse.ArgumentParser:
     replay.add_argument("--toolchain", choices=["auto", "off"], default="auto", help="Use the per-version Rust-for-Linux toolchain matrix during version replay.")
     _set(replay, cmd_replay)
     eval_parser = sub.add_parser("eval", help="Generate evaluation tables.")
-    eval_parser.add_argument("eval_command", nargs="?", choices=["all"], help="Optional explicit evaluation subcommand.")
+    eval_sub = eval_parser.add_subparsers(dest="eval_command")
     eval_parser.add_argument("--build-log", help="Optional Rust-enabled build log to parse.")
     eval_parser.add_argument("--top-k", type=int, default=100, help="Number of top warnings to include before stratified manual review sampling.")
     eval_parser.add_argument("--run-id", help="Replay run id associated with the evaluation oracle rows.")
     eval_parser.add_argument("--pair-id", help="Replay pair id associated with the evaluation oracle rows.")
     _set(eval_parser, cmd_eval)
+    eval_all = eval_sub.add_parser("all", help="Generate all evaluation tables.")
+    eval_all.add_argument("--build-log", help="Optional Rust-enabled build log to parse.")
+    eval_all.add_argument("--top-k", type=int, default=100, help="Number of top warnings to include before stratified manual review sampling.")
+    eval_all.add_argument("--run-id", help="Replay run id associated with the evaluation oracle rows.")
+    eval_all.add_argument("--pair-id", help="Replay pair id associated with the evaluation oracle rows.")
+    _set(eval_all, cmd_eval)
+    diagnose = eval_sub.add_parser("diagnose-false-positives", help="Convert manual labels into hard negatives and diagnosis counts.")
+    diagnose.add_argument("--manual-review", required=True, help="Manual review CSV with labels.")
+    diagnose.add_argument("--warnings", required=True, help="Warnings JSONL used by the manual review CSV.")
+    diagnose.add_argument("--output-dir", help="Directory for hard_negatives.csv and true_positives.csv; defaults to data/manual.")
+    _set(diagnose, cmd_eval_diagnose_false_positives)
 
     paper = sub.add_parser("paper", help="Paper artifact commands.")
     paper_sub = paper.add_subparsers(dest="paper_command", required=True)
