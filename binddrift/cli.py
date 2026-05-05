@@ -26,7 +26,7 @@ from .paper.cases import generate_case_studies
 from .paper.tables import generate_paper_tables
 from .replay import run_pilot_replay, run_version_replay
 from .run_manifest import aggregate_pair_jsonl, canonical_run_dir, write_run_manifest
-from .warnings import read_warnings, write_warnings
+from .warnings import read_warnings, split_main_and_single_version, write_jsonl, write_warnings
 from .toolchain import bootstrap_toolchain, check_toolchain
 from .toolchain_matrix import write_toolchain_matrix
 from .versions import ensure_worktree, select_versions
@@ -215,8 +215,11 @@ def cmd_eval_manifest(args: argparse.Namespace, cfg: Config) -> int:
     drift_facts = run_dir / "drift_facts.jsonl"
     if args.refresh or not drift_facts.exists():
         aggregate_pair_jsonl(run_dir, "drift_facts.jsonl", drift_facts)
-    warnings = read_warnings(run_cfg.warnings_jsonl)
-    write_warnings(run_cfg, warnings)
+    existing_single_version = read_warnings(run_dir / "single_version_review_targets.jsonl")
+    warnings = read_warnings(run_cfg.warnings_jsonl) + existing_single_version
+    main_warnings, single_version = split_main_and_single_version(warnings)
+    write_warnings(run_cfg, main_warnings)
+    write_jsonl(run_dir / "single_version_review_targets.jsonl", single_version)
     warnings = read_warnings(run_cfg.warnings_jsonl)
     review = run_dir / "manual_review.csv"
     if args.refresh_review or not review.exists():

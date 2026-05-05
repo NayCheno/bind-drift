@@ -181,6 +181,7 @@ def _write_runtime_scalability(cfg: Config, path: Path, manifest: dict[str, Any]
                     "drift_facts": manifest["drift_fact_count"],
                     "promoted_warnings": manifest["promoted_warning_count"],
                     "paper_topk": manifest["paper_topk"],
+                    "single_version_review_targets": manifest.get("single_version_review_targets", 0),
                 }
             )
         else:

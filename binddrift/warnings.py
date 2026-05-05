@@ -10,12 +10,7 @@ from .config import Config
 
 def write_warnings(cfg: Config, warnings: list[dict[str, Any]]) -> Path:
     cfg.ensure_dirs()
-    with cfg.warnings_jsonl.open("w", encoding="utf-8") as fh:
-        for warning in warnings:
-            row = dict(warning)
-            ensure_warning_uid(row)
-            fh.write(json.dumps(row, sort_keys=True) + "\n")
-    return cfg.warnings_jsonl
+    return write_jsonl(cfg.warnings_jsonl, warnings)
 
 
 def write_drift_facts(cfg: Config, facts: list[dict[str, Any]]) -> Path:
@@ -30,6 +25,42 @@ def read_warnings(path: Path) -> list[dict[str, Any]]:
     if not path.exists():
         return []
     return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+
+
+def eligible_for_main_warning(warning: dict[str, Any]) -> bool:
+    old_version = warning.get("old_version") or (warning.get("c_side") or {}).get("old_version")
+    new_version = warning.get("new_version") or (warning.get("c_side") or {}).get("new_version")
+    return bool(
+        old_version
+        and new_version
+        and old_version != new_version
+        and warning.get("pair_id")
+        and warning.get("promotion_status") == "promoted"
+    )
+
+
+def split_main_and_single_version(warnings: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    main: list[dict[str, Any]] = []
+    single_version: list[dict[str, Any]] = []
+    for warning in warnings:
+        if eligible_for_main_warning(warning):
+            main.append(warning)
+        else:
+            old_version = warning.get("old_version") or (warning.get("c_side") or {}).get("old_version")
+            pair_id = warning.get("pair_id")
+            if old_version is None or not pair_id:
+                single_version.append(warning)
+    return main, single_version
+
+
+def write_jsonl(path: Path, rows: list[dict[str, Any]]) -> Path:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8") as fh:
+        for row in rows:
+            item = dict(row)
+            ensure_warning_uid(item)
+            fh.write(json.dumps(item, sort_keys=True) + "\n")
+    return path
 
 
 def warning_id(index: int) -> str:

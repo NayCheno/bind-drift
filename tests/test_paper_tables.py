@@ -255,11 +255,13 @@ def test_manual_review_summary_prefers_canonical_latest_run(tmp_path: Path):
             "old_version": "v6.1",
             "new_version": "v6.2",
             "type": "SignatureDrift",
+            "promotion_status": "promoted",
             "c_side": {"symbol": "foo", "old": "a", "new": "b"},
         }
         warning["warning_uid"] = make_warning_uid(warning)
         (run_dir / "warnings.jsonl").write_text(json.dumps(warning, sort_keys=True) + "\n", encoding="utf-8")
         (run_dir / "drift_facts.jsonl").write_text('{"fact_id":"F-1"}\n', encoding="utf-8")
+        (run_dir / "single_version_review_targets.jsonl").write_text("", encoding="utf-8")
         (run_dir / "manual_review.csv").write_text(
             "warning_uid,warning_id,pair_id,reviewer1_label,reviewer2_label,adjudicated_label,label\n"
             f"{warning['warning_uid']},W-1,{run_id}-pair,,,TRUE_WRAPPER_FIX,\n",
@@ -403,5 +405,6 @@ def test_manual_review_summary_rejects_stale_review_rows_without_warnings(tmp_pa
     )
 
     (run_dir / "drift_facts.jsonl").write_text("", encoding="utf-8")
+    (run_dir / "single_version_review_targets.jsonl").write_text("", encoding="utf-8")
     with pytest.raises(ArtifactConsistencyError, match="empty"):
         write_run_manifest(cfg)

@@ -10,7 +10,7 @@ from binddrift.config import Config
 from binddrift.db import connect, initialize, upsert_many
 from binddrift.gitutil import git_output
 from binddrift.run_manifest import canonical_run_dir, manifest_exists, validate_run_manifest
-from binddrift.warnings import ensure_warning_uid, read_warnings
+from binddrift.warnings import ensure_warning_uid, read_warnings, split_main_and_single_version
 from .baselines import generate_baselines
 from .metrics import labeled_summary, load_manual_labels, manual_review_agreement, oracle_summary, warning_key, warning_label_key
 
@@ -242,7 +242,12 @@ def run_evaluation(
         warnings_path = Path(manifest["resolved_paths"]["warnings"])
         review_path = Path(manifest["resolved_paths"]["manual_review"])
         run_id = str(manifest["run_id"])
-    warnings = read_warnings(warnings_path)
+    warnings, single_version_targets = split_main_and_single_version(read_warnings(warnings_path))
+    single_version_target_count = (
+        int(manifest.get("single_version_review_targets", 0))
+        if manifest
+        else len(single_version_targets)
+    )
     build_findings = parse_build_log(build_log) if build_log else []
     wrapper_fixes = mine_wrapper_fixes(cfg)
     persisted = persist_ground_truth(cfg, build_log, build_findings, wrapper_fixes, run_id=run_id, pair_id=pair_id)
@@ -255,6 +260,8 @@ def run_evaluation(
     wrapper_metrics = oracle_summary(warnings, _wrapper_symbols(wrapper_fixes))
     table = {
         "warnings": len(warnings),
+        "promoted_replay_warnings": len(warnings),
+        "single_version_review_targets": single_version_target_count,
         "build_breakage_findings": len(build_findings),
         "wrapper_fix_candidates": sum(1 for row in wrapper_fixes if row["likely_wrapper_fix"]),
         "ground_truth_rows": persisted,

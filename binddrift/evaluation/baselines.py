@@ -5,7 +5,7 @@ from typing import Any
 
 from binddrift.config import Config
 from binddrift.db import connect, initialize
-from binddrift.warnings import read_warnings
+from binddrift.warnings import read_warnings, split_main_and_single_version
 from .metrics import labeled_summary, load_manual_labels, oracle_summary
 
 
@@ -24,7 +24,7 @@ def generate_baselines(
 ) -> dict[str, Any]:
     conn = connect(cfg.database)
     initialize(conn)
-    warnings = read_warnings(warnings_path or cfg.warnings_jsonl)
+    warnings, _single_version_targets = split_main_and_single_version(read_warnings(warnings_path or cfg.warnings_jsonl))
     labels = load_manual_labels(review_path or (cfg.data_dir / "manual_review.csv"), uid_only=uid_only_labels)
     build_symbols = _build_symbols(conn, warnings)
     wrapper_symbols: set[str] = set()

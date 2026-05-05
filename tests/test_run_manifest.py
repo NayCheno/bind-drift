@@ -27,6 +27,7 @@ def _write_latest_run(tmp_path: Path) -> Config:
     warning["warning_uid"] = make_warning_uid(warning)
     (run_dir / "warnings.jsonl").write_text(json.dumps(warning, sort_keys=True) + "\n", encoding="utf-8")
     (run_dir / "drift_facts.jsonl").write_text('{"fact_id":"F-1"}\n', encoding="utf-8")
+    (run_dir / "single_version_review_targets.jsonl").write_text("", encoding="utf-8")
     (run_dir / "manual_review.csv").write_text(
         "warning_uid,warning_id,pair_id,reviewer1_label,reviewer2_label,adjudicated_label,label\n"
         f"{warning['warning_uid']},W-1,latest-p001,,,TRUE_WRAPPER_FIX,\n",
@@ -60,6 +61,7 @@ def test_run_manifest_rejects_empty_warning_file(tmp_path: Path):
     run_dir.mkdir(parents=True)
     (run_dir / "warnings.jsonl").write_text("", encoding="utf-8")
     (run_dir / "drift_facts.jsonl").write_text("", encoding="utf-8")
+    (run_dir / "single_version_review_targets.jsonl").write_text("", encoding="utf-8")
     (run_dir / "manual_review.csv").write_text(
         "warning_id,pair_id,reviewer1_label,reviewer2_label,adjudicated_label,label\n",
         encoding="utf-8",
@@ -69,13 +71,42 @@ def test_run_manifest_rejects_empty_warning_file(tmp_path: Path):
         write_run_manifest(cfg)
 
 
+def test_run_manifest_requires_single_version_target_file(tmp_path: Path):
+    cfg = _write_latest_run(tmp_path)
+    (tmp_path / "data/replay/latest/single_version_review_targets.jsonl").unlink()
+
+    with pytest.raises(ArtifactConsistencyError, match="single-version"):
+        write_run_manifest(cfg)
+
+
+def test_run_manifest_rejects_single_version_warning_in_main_file(tmp_path: Path):
+    cfg = Config.from_args(repo_root=tmp_path)
+    run_dir = tmp_path / "data/replay/latest"
+    run_dir.mkdir(parents=True)
+    (run_dir / "warnings.jsonl").write_text(
+        '{"warning_id":"W-1","run_id":"latest","new_version":"v6.2","promotion_status":"promoted","c_side":{"symbol":"foo"}}\n',
+        encoding="utf-8",
+    )
+    (run_dir / "drift_facts.jsonl").write_text('{"fact_id":"F-1"}\n', encoding="utf-8")
+    (run_dir / "manual_review.csv").write_text(
+        "warning_id,pair_id,reviewer1_label,reviewer2_label,adjudicated_label,label\n"
+        "W-1,,,,,\n",
+        encoding="utf-8",
+    )
+    (run_dir / "single_version_review_targets.jsonl").write_text("", encoding="utf-8")
+
+    with pytest.raises(ArtifactConsistencyError, match="non-main"):
+        write_run_manifest(cfg)
+
+
 def test_eval_manifest_cli_generates_review_and_manifest(tmp_path: Path):
     cfg = Config.from_args(repo_root=tmp_path)
     run_dir = tmp_path / "data/replay/latest"
     pair_dir = run_dir / "latest-p001"
     pair_dir.mkdir(parents=True)
     (run_dir / "warnings.jsonl").write_text(
-        '{"warning_id":"W-1","pair_id":"latest-p001","promotion_status":"promoted","c_side":{"symbol":"foo"}}\n',
+        '{"warning_id":"W-1","run_id":"latest","pair_id":"latest-p001","old_version":"v6.1","new_version":"v6.2","type":"SignatureDrift","promotion_status":"promoted","c_side":{"symbol":"foo","old":"a","new":"b"}}\n'
+        '{"warning_id":"W-2","run_id":"latest","new_version":"v6.2","type":"SignatureDrift","promotion_status":"promoted","c_side":{"symbol":"bar","new":"b"}}\n',
         encoding="utf-8",
     )
     (pair_dir / "drift_facts.jsonl").write_text('{"fact_id":"F-1"}\n', encoding="utf-8")
@@ -85,7 +116,50 @@ def test_eval_manifest_cli_generates_review_and_manifest(tmp_path: Path):
     assert code == 0
     assert (run_dir / "run_manifest.json").exists()
     assert (run_dir / "manual_review.csv").exists()
-    assert validate_run_manifest(cfg)["drift_fact_count"] == 1
+    validated = validate_run_manifest(cfg)
+    assert validated["drift_fact_count"] == 1
+    assert validated["warning_count"] == 1
+    assert validated["single_version_review_targets"] == 1
+
+    code = main(["--repo-root", str(tmp_path), "eval", "manifest"])
+
+    assert code == 0
+    assert validate_run_manifest(cfg)["single_version_review_targets"] == 1
+
+
+def test_eval_uses_manifest_single_version_count(tmp_path: Path, capsys):
+    cfg = Config.from_args(repo_root=tmp_path)
+    run_dir = tmp_path / "data/replay/latest"
+    run_dir.mkdir(parents=True)
+    warning = {
+        "warning_id": "W-1",
+        "run_id": "latest",
+        "pair_id": "latest-p001",
+        "old_version": "v6.1",
+        "new_version": "v6.2",
+        "type": "SignatureDrift",
+        "promotion_status": "promoted",
+        "c_side": {"symbol": "foo", "old": "a", "new": "b"},
+    }
+    warning["warning_uid"] = make_warning_uid(warning)
+    (run_dir / "warnings.jsonl").write_text(json.dumps(warning, sort_keys=True) + "\n", encoding="utf-8")
+    (run_dir / "single_version_review_targets.jsonl").write_text(
+        '{"warning_id":"W-2","run_id":"latest","new_version":"v6.2","promotion_status":"promoted","c_side":{"symbol":"bar"}}\n',
+        encoding="utf-8",
+    )
+    (run_dir / "drift_facts.jsonl").write_text('{"fact_id":"F-1"}\n', encoding="utf-8")
+    (run_dir / "manual_review.csv").write_text(
+        "warning_uid,warning_id,pair_id,reviewer1_label,reviewer2_label,adjudicated_label,label\n"
+        f"{warning['warning_uid']},W-1,latest-p001,,,,\n",
+        encoding="utf-8",
+    )
+    write_run_manifest(cfg)
+
+    code = main(["--repo-root", str(tmp_path), "eval", "all"])
+    captured = capsys.readouterr()
+
+    assert code == 0
+    assert '"single_version_review_targets": 1' in captured.out
 
 
 def test_paper_tables_fail_on_stale_evaluation_summary(tmp_path: Path):

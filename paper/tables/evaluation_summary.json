@@ -55,11 +55,13 @@
     "double_labeled": 0
   },
   "note": "Build and wrapper-fix recall are symbol-level replay-oracle estimates; semantic precision comes from manual labels.",
+  "promoted_replay_warnings": 331,
   "recall": {
     "build_breakage": null,
     "wrapper_fix": 0.5172
   },
   "run_manifest": "/home/nya/workspace/bind-drift/data/replay/latest/run_manifest.json",
+  "single_version_review_targets": 0,
   "warnings": 331,
   "wrapper_fix_candidates": 24,
   "wrapper_fix_prediction": {

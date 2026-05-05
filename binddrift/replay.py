@@ -27,7 +27,7 @@ from binddrift.ranking.scorer import rank_warnings
 from binddrift.run_manifest import aggregate_pair_jsonl, write_run_manifest
 from binddrift.toolchain_matrix import write_toolchain_matrix
 from binddrift.versions import ensure_worktree, sanitize_ref, select_versions
-from binddrift.warnings import read_warnings
+from binddrift.warnings import read_warnings, split_main_and_single_version, write_jsonl
 
 
 REPLAY_RUN_ID = "latest"
@@ -469,9 +469,12 @@ def run_version_replay(
     failed = sum(1 for pair in pairs if pair["status"] != "completed")
     drift_fact_count = aggregate_pair_jsonl(run_dir, "drift_facts.jsonl", aggregate_drift_facts)
     aggregate_ranking = rank_warnings(_cfg_for_replay_run(cfg, run_dir))
+    main_warnings, single_version_targets = split_main_and_single_version(read_warnings(aggregate_warnings))
+    write_jsonl(aggregate_warnings, main_warnings)
+    write_jsonl(run_dir / "single_version_review_targets.jsonl", single_version_targets)
     aggregate_review = generate_manual_review(
         _cfg_for_replay_run(cfg, run_dir),
-        read_warnings(aggregate_warnings),
+        main_warnings,
         top_k=100,
     )
     should_write_manifest = bool(completed and failed == 0 and aggregate_ranking["warnings"] > 0)
@@ -482,6 +485,8 @@ def run_version_replay(
         "completed_pairs": completed,
         "failed_pairs": failed,
         "warnings": sum(pair["warning_count"] for pair in pairs),
+        "promoted_replay_warnings": len(main_warnings),
+        "single_version_review_targets": len(single_version_targets),
         "ranking": aggregate_ranking,
         "duration_seconds": round(time.time() - started, 3),
         "aggregate_warnings": str(aggregate_warnings),

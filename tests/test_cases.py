@@ -10,10 +10,15 @@ from binddrift.warnings import write_warnings
 def test_case_studies_only_use_true_labels_with_strong_evidence(tmp_path: Path):
     cfg = Config.from_args(repo_root=tmp_path)
     warnings = [
-        {
-            "warning_id": "W-000001",
-            "type": "NullabilityDrift",
-            "risk": "High",
+            {
+                "warning_id": "W-000001",
+                "run_id": "latest",
+                "pair_id": "latest-p001",
+                "old_version": "old",
+                "new_version": "new",
+                "type": "NullabilityDrift",
+                "promotion_status": "promoted",
+                "risk": "High",
             "score": 12.0,
             "c_evidence_level": "c_behavior_indicator",
             "c_side": {
@@ -99,8 +104,12 @@ def test_case_studies_use_replay_adjacent_review_and_structured_diff(tmp_path: P
     run_dir.mkdir(parents=True)
     warning = {
         "warning_id": "W-000010",
+        "run_id": "latest",
         "pair_id": "latest-p001",
+        "old_version": "old",
+        "new_version": "new",
         "type": "SignatureDrift",
+        "promotion_status": "promoted",
         "risk": "High",
         "score": 12.0,
         "c_evidence_level": "c_source_diff",

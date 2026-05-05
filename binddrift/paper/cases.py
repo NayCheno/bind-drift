@@ -6,7 +6,7 @@ from pathlib import Path
 from binddrift.config import Config
 from binddrift.db import connect, initialize
 from binddrift.evaluation.metrics import TRUE_LABELS, label_for_warning, warning_label_key, warning_key
-from binddrift.warnings import read_warnings
+from binddrift.warnings import eligible_for_main_warning, read_warnings
 
 
 CASE_TYPES = [
@@ -85,7 +85,7 @@ def _select_cases(warnings: list[dict], labels: dict[str, str]) -> list[dict]:
 
 
 def _case_is_valid(warning: dict, label: str | None) -> bool:
-    return bool(label in TRUE_LABELS and _has_c_evidence(warning) and _has_rust_impact(warning))
+    return bool(label in TRUE_LABELS and eligible_for_main_warning(warning) and _has_c_evidence(warning) and _has_rust_impact(warning))
 
 
 def _load_adjudicated_labels(path: Path) -> dict[str, str]:

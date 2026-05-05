@@ -127,6 +127,7 @@
       "paper_topk": 331,
       "promoted_warnings": 331,
       "run_id": "latest",
+      "single_version_review_targets": 0,
       "status": "completed",
       "versions": 21
     },
