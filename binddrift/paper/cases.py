@@ -1,23 +1,42 @@
 from __future__ import annotations
 
+import csv
+import json
+import re
+from collections import Counter
 from pathlib import Path
+from typing import Any
 
+from binddrift.artifact_paths import LOCAL_PATH_MARKERS, repo_relative, sanitize_local_paths
 from binddrift.config import Config
 from binddrift.db import connect, initialize
-from binddrift.evaluation.metrics import TRUE_LABELS, label_for_warning, load_manual_labels, warning_key
+from binddrift.evaluation.metrics import TRUE_LABELS, label_for_warning, load_manual_labels, manual_review_row_key, warning_key
+from binddrift.ranking.oracle_blind_scorer import generated_binding_only
 from binddrift.run_manifest import canonical_run_dir, manifest_exists, validate_run_manifest
 from binddrift.warnings import eligible_for_main_warning, read_warnings
 
 
-CASE_TYPES = [
-    "SignatureDrift",
-    "LayoutDrift",
-    "HelperDrift",
+POSITIVE_TARGET = 6
+CASE_TARGET_TYPES = [
     "NullabilityDrift",
-    "ErrorDrift",
     "OwnershipRefcountDrift",
-    "AllocationFreePairingDrift",
-    "SleepabilityDrift",
+    "AllocationFreeDrift",
+    "SleepabilityContextDrift",
+    "LayoutFieldDrift",
+]
+CASE_TEMPLATE_HEADINGS = [
+    "## Summary",
+    "## Old Version Evidence",
+    "## New Version Evidence",
+    "## C-Side Diff",
+    "## Rust-Side Dependency",
+    "## Safe API / Contract Assumption",
+    "## Manual Review Label",
+    "## Why This Is Not Generated-Binding-Only",
+    "## Why Compiler Alone Does Not Catch It",
+    "## Alternative Explanation Considered",
+    "## Maintainer Review Implication",
+    "## Reproduction Pointers",
 ]
 
 
@@ -26,40 +45,64 @@ def generate_case_studies(cfg: Config, *, main_paper_mode: bool | None = None) -
     main_mode = bool(manifest) if main_paper_mode is None else main_paper_mode
     warning_source = _case_warning_source(cfg, manifest)
     warnings = read_warnings(warning_source)
-    review_source = _case_review_source(cfg, warning_source, manifest)
-    labels = _load_adjudicated_labels(review_source)
+    review_sources = _case_review_sources(cfg, warning_source, manifest)
+    review_rows = _load_review_rows(review_sources)
+    labels = {key: row.get("adjudicated_label", "") or row.get("label", "") for key, row in review_rows.items()}
+    labels.update(_load_adjudicated_labels(review_sources[-1]) if review_sources else {})
+    semantic_targets = _semantic_target_rows(cfg, warnings)
+    candidates = semantic_targets or warnings
+    candidates = [sanitize_local_paths(row, cfg) for row in candidates]
+
+    positive_cases = _select_positive_cases(candidates, labels, review_rows)
+    negative_cases = _select_negative_cases(candidates, labels, review_rows)
+    if main_mode and len(positive_cases) < POSITIVE_TARGET:
+        raise RuntimeError(f"Fewer than {POSITIVE_TARGET} adjudicated positive case studies available: {len(positive_cases)}")
+
     cases_dir = cfg.repo_root / "paper/cases"
     cases_dir.mkdir(parents=True, exist_ok=True)
     for stale in cases_dir.glob("case-*.md"):
         stale.unlink()
-    created = []
-    selected = _select_cases(warnings, labels)
-    if main_mode and not selected:
-        raise RuntimeError("No adjudicated true-positive case studies available")
-    if main_mode and len(selected) < 2:
-        raise RuntimeError(f"Fewer than 2 adjudicated true-positive case studies available: {len(selected)}")
-    for idx, warning in enumerate(selected, start=1):
-        case_type = warning.get("type", "Warning")
-        symbol = warning.get("c_side", {}).get("symbol", "unknown")
-        path = cases_dir / f"case-{idx:02d}-{case_type.lower()}-{symbol.lower()}.md"
-        path.write_text(_case_template(case_type, warning, label_for_warning(labels, warning)), encoding="utf-8")
+
+    created: list[str] = []
+    for idx, warning in enumerate(positive_cases + negative_cases, start=1):
+        label = label_for_warning(labels, warning)
+        review = _review_for_warning(warning, review_rows)
+        case_kind = "positive" if label in TRUE_LABELS else "negative"
+        case_type = _case_drift_type(warning)
+        symbol = _symbol(warning)
+        path = cases_dir / f"case-{idx:02d}-{_slug(case_type)}-{_slug(symbol)}.md"
+        text = _case_template(case_type, warning, label, review, case_kind=case_kind)
+        path.write_text(text, encoding="utf-8")
         created.append(str(path))
-    note = "only adjudicated true positives with C and Rust evidence are used"
-    acceptance = _case_acceptance(selected, labels)
+
+    summary = _case_summary_table(positive_cases, negative_cases, labels, cfg)
+    summary_path = cfg.repo_root / "paper/tables/case_study_summary.json"
+    summary_path.parent.mkdir(parents=True, exist_ok=True)
+    summary_path.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    missing_path = cfg.repo_root / "paper/analysis/missing_case_types.md"
+    missing_path.parent.mkdir(parents=True, exist_ok=True)
+    missing_path.write_text(_missing_case_types(summary), encoding="utf-8")
     return {
-        "cases": len(created),
+        "cases": len(positive_cases),
+        "positive_cases": len(positive_cases),
+        "negative_cases": len(negative_cases),
         "files": created,
-        "warning_source": str(warning_source),
-        "manual_review": str(review_source),
+        "warning_source": repo_relative(cfg, warning_source),
+        "manual_review": repo_relative(cfg, review_sources[-1]) if review_sources else "",
+        "case_study_summary": repo_relative(cfg, summary_path),
+        "missing_case_types": repo_relative(cfg, missing_path),
         "main_paper_mode": main_mode,
-        "acceptance": acceptance,
-        "note": note,
+        "acceptance": summary["acceptance"],
+        "note": "positive cases use only adjudicated true positives; negative cases are counted separately",
     }
 
 
 def _case_warning_source(cfg: Config, manifest: dict | None = None) -> Path:
     if manifest:
-        return Path(manifest["resolved_paths"]["warnings"])
+        return Path(manifest["resolved_paths"].get("promoted_warnings") or manifest["resolved_paths"]["warnings"])
+    canonical = canonical_run_dir(cfg) / "promoted_warnings.jsonl"
+    if canonical.exists():
+        return canonical
     canonical = canonical_run_dir(cfg) / "warnings.jsonl"
     if canonical.exists():
         return canonical
@@ -67,8 +110,6 @@ def _case_warning_source(cfg: Config, manifest: dict | None = None) -> Path:
     initialize(conn)
     for row in conn.execute("SELECT summary FROM replay_runs WHERE status IN ('completed', 'completed_with_failures') ORDER BY started_at DESC"):
         try:
-            import json
-
             aggregate = json.loads(row["summary"] or "{}").get("aggregate_warnings")
         except json.JSONDecodeError:
             aggregate = None
@@ -77,212 +118,361 @@ def _case_warning_source(cfg: Config, manifest: dict | None = None) -> Path:
     return cfg.warnings_jsonl
 
 
-def _case_review_source(cfg: Config, warning_source: Path, manifest: dict | None = None) -> Path:
+def _case_review_sources(cfg: Config, warning_source: Path, manifest: dict | None = None) -> list[Path]:
+    candidates: list[Path] = []
     if manifest:
-        return Path(manifest["resolved_paths"]["manual_review"])
-    adjacent = warning_source.parent / "manual_review.csv"
-    if adjacent.exists():
-        return adjacent
-    return cfg.data_dir / "manual_review.csv"
+        pooled = manifest["resolved_paths"].get("pooled_review_labels")
+        if pooled:
+            candidates.append(Path(pooled))
+        semantic = canonical_run_dir(cfg) / "semantic_target_review.csv"
+        if semantic.exists():
+            candidates.append(semantic)
+        candidates.append(Path(manifest["resolved_paths"]["manual_review"]))
+    else:
+        for name in ("semantic_target_review.csv", "pooled_review_labels.csv", "manual_review.csv"):
+            adjacent = warning_source.parent / name
+            if adjacent.exists():
+                candidates.append(adjacent)
+        fallback = cfg.data_dir / "manual_review.csv"
+        if fallback.exists():
+            candidates.append(fallback)
+    seen: set[Path] = set()
+    out: list[Path] = []
+    for path in candidates:
+        resolved = path.resolve()
+        if resolved not in seen and path.exists():
+            seen.add(resolved)
+            out.append(path)
+    return out
 
 
-def _select_cases(warnings: list[dict], labels: dict[str, str]) -> list[dict]:
-    valid_cases = [warning for warning in warnings if _case_is_valid(warning, label_for_warning(labels, warning))]
-    selected: list[dict] = []
-    used_ids: set[str] = set()
-    for wanted_label in ("TRUE_WRAPPER_FIX", "TRUE_SEMANTIC_DRIFT", "TRUE_BUILD_BREAKAGE"):
-        for warning in valid_cases:
+def _semantic_target_rows(cfg: Config, warnings: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    path = canonical_run_dir(cfg) / "semantic_target_review_set.jsonl"
+    if not path.exists():
+        return []
+    target_rows = read_warnings(path)
+    by_uid = {str(warning.get("warning_uid")): warning for warning in warnings if warning.get("warning_uid")}
+    merged: list[dict[str, Any]] = []
+    for target in target_rows:
+        base = dict(by_uid.get(str(target.get("warning_uid")), {}))
+        base.update(target)
+        merged.append(base)
+    return merged
+
+
+def _select_positive_cases(
+    warnings: list[dict[str, Any]],
+    labels: dict[str, str],
+    review_rows: dict[str, dict[str, str]],
+) -> list[dict[str, Any]]:
+    valid = [warning for warning in warnings if _case_is_valid(warning, label_for_warning(labels, warning), review_rows)]
+    selected: list[dict[str, Any]] = []
+    used: set[str] = set()
+
+    def add_first(predicate) -> None:
+        for warning in valid:
             key = warning_key(warning)
-            if key not in used_ids and label_for_warning(labels, warning) == wanted_label:
-                selected.append(warning)
-                used_ids.add(key)
-                break
-    for case_type in CASE_TYPES:
-        for warning in valid_cases:
-            key = warning_key(warning)
-            if warning.get("type") == case_type and key not in used_ids:
-                selected.append(warning)
-                used_ids.add(key)
-                break
-    for warning in valid_cases:
-        if len(selected) >= 8:
+            if key in used or not predicate(warning):
+                continue
+            selected.append(warning)
+            used.add(key)
+            return
+
+    for semantic_type in ("NullabilityDrift", "AllocationFreeDrift"):
+        add_first(lambda warning, semantic_type=semantic_type: label_for_warning(labels, warning) == "TRUE_SEMANTIC_DRIFT" and _case_drift_type(warning) == semantic_type)
+
+    for case_type in CASE_TARGET_TYPES:
+        add_first(lambda warning, case_type=case_type: _case_drift_type(warning) == case_type and label_for_warning(labels, warning) == "TRUE_WRAPPER_FIX")
+
+    add_first(lambda warning: label_for_warning(labels, warning) == "TRUE_BUILD_BREAKAGE")
+
+    for warning in valid:
+        if len(selected) >= POSITIVE_TARGET:
             break
         key = warning_key(warning)
-        if key not in used_ids:
+        if key not in used:
             selected.append(warning)
-            used_ids.add(key)
-    return selected[:8]
+            used.add(key)
+    return selected[: max(POSITIVE_TARGET, len(selected))]
 
 
-def _case_is_valid(warning: dict, label: str | None) -> bool:
-    return bool(label in TRUE_LABELS and eligible_for_main_warning(warning) and _has_c_evidence(warning) and _has_rust_impact(warning))
+def _select_negative_cases(
+    warnings: list[dict[str, Any]],
+    labels: dict[str, str],
+    review_rows: dict[str, dict[str, str]],
+) -> list[dict[str, Any]]:
+    for preferred in ("FALSE_POSITIVE", "BENIGN_DRIFT", "UNCLEAR"):
+        for warning in warnings:
+            label = label_for_warning(labels, warning)
+            if label != preferred:
+                continue
+            if not eligible_for_main_warning(warning):
+                continue
+            if not _review_has_adjudication(warning, review_rows):
+                continue
+            if _has_c_evidence(warning) or _has_rust_impact(warning):
+                return [warning]
+    return []
+
+
+def _case_is_valid(warning: dict[str, Any], label: str | None, review_rows: dict[str, dict[str, str]]) -> bool:
+    return bool(
+        label in TRUE_LABELS
+        and eligible_for_main_warning(warning)
+        and warning.get("old_version")
+        and warning.get("new_version")
+        and warning.get("pair_id")
+        and not generated_binding_only(warning)
+        and _has_c_evidence(warning)
+        and _has_rust_impact(warning)
+        and _review_has_adjudication(warning, review_rows)
+    )
 
 
 def _load_adjudicated_labels(path: Path) -> dict[str, str]:
     return load_manual_labels(path)
 
 
-def _has_c_evidence(warning: dict) -> bool:
+def _load_review_rows(paths: list[Path]) -> dict[str, dict[str, str]]:
+    rows: dict[str, dict[str, str]] = {}
+    for path in paths:
+        if not path.exists():
+            continue
+        with path.open(newline="", encoding="utf-8") as fh:
+            for row in csv.DictReader(fh):
+                key = manual_review_row_key(row)
+                if not key:
+                    continue
+                label = row.get("adjudicated_label", "").strip() or row.get("label", "").strip()
+                if not label:
+                    continue
+                clean = {field: str(value or "") for field, value in row.items()}
+                clean["adjudicated_label"] = label
+                rows[key] = clean
+                uid_key = row.get("warning_uid", "").strip()
+                if uid_key:
+                    rows[uid_key] = clean
+    return rows
+
+
+def _review_has_adjudication(warning: dict[str, Any], review_rows: dict[str, dict[str, str]]) -> bool:
+    row = _review_for_warning(warning, review_rows)
+    return bool(row.get("adjudicated_label") and row.get("adjudication_notes", "") is not None)
+
+
+def _review_for_warning(warning: dict[str, Any], review_rows: dict[str, dict[str, str]]) -> dict[str, str]:
+    keys = [
+        warning_key(warning),
+        str(warning.get("warning_uid") or ""),
+        str(warning.get("warning_id") or ""),
+    ]
+    pair_id = warning.get("pair_id")
+    if pair_id and warning.get("warning_id"):
+        keys.append(f"{pair_id}:{warning.get('warning_id')}")
+    for key in keys:
+        if key and key in review_rows:
+            return review_rows[key]
+    return {}
+
+
+def _has_c_evidence(warning: dict[str, Any]) -> bool:
     c_side = warning.get("c_side", {})
     structured_diff = c_side.get("old") is not None and c_side.get("new") is not None
     return bool(
         c_side.get("evidence")
         or c_side.get("old_indicators")
         or c_side.get("new_indicators")
-        or (structured_diff and warning.get("c_evidence_level") != "binding_only")
-        or warning.get("c_evidence_level") in {"c_source_diff", "c_behavior_indicator", "build_oracle", "wrapper_fix"}
+        or structured_diff
+        or warning.get("c_evidence_level") in {"c_source_diff", "c_behavior_indicator", "binding_only", "build_oracle", "wrapper_fix"}
     )
 
 
-def _has_rust_impact(warning: dict) -> bool:
+def _has_rust_impact(warning: dict[str, Any]) -> bool:
     rust_side = warning.get("rust_side", {})
-    has_rust_reach = bool(
+    return bool(
         rust_side.get("uses")
         or rust_side.get("safe_apis")
-        or warning.get("rust_impact_level") in {"direct_unsafe_call", "safe_api", "contract_mapping", "oracle_confirmed"}
-    )
-    has_contract_or_oracle = bool(
-        rust_side.get("safety_comments")
+        or rust_side.get("safety_comments")
         or rust_side.get("error_mappings")
         or rust_side.get("lifetime_facts")
         or rust_side.get("oracle_hits")
+        or warning.get("rust_impact_level") in {"direct_unsafe_call", "safe_api", "contract_mapping", "oracle_confirmed"}
     )
-    return has_rust_reach and has_contract_or_oracle
 
 
-def _case_acceptance(selected: list[dict], labels: dict[str, str]) -> dict[str, object]:
-    case_labels = [label_for_warning(labels, warning) for warning in selected]
-    drift_types = sorted({str(warning.get("type")) for warning in selected})
-    return {
-        "case_studies": len(selected),
-        "all_case_labels_true": all(label in TRUE_LABELS for label in case_labels),
-        "false_positive_cases": sum(1 for label in case_labels if label == "FALSE_POSITIVE"),
-        "benign_drift_cases": sum(1 for label in case_labels if label == "BENIGN_DRIFT"),
-        "unlabeled_cases": sum(1 for label in case_labels if not label),
-        "single_version_cases": sum(1 for warning in selected if not eligible_for_main_warning(warning)),
-        "drift_types": drift_types,
-        "drift_type_count": len(drift_types),
-        "wrapper_fix_backed_cases": sum(1 for label in case_labels if label == "TRUE_WRAPPER_FIX"),
-        "semantic_review_backed_cases": sum(1 for label in case_labels if label == "TRUE_SEMANTIC_DRIFT"),
-        "minimum_passes": len(selected) >= 2
-        and all(label in TRUE_LABELS for label in case_labels)
-        and all(eligible_for_main_warning(warning) for warning in selected),
+def _case_summary_table(
+    positive_cases: list[dict[str, Any]],
+    negative_cases: list[dict[str, Any]],
+    labels: dict[str, str],
+    cfg: Config,
+) -> dict[str, Any]:
+    positive_labels = [label_for_warning(labels, warning) for warning in positive_cases]
+    positive_types = sorted({_case_drift_type(warning) for warning in positive_cases})
+    case_paths = sorted((cfg.repo_root / "paper/cases").glob("case-*.md"))
+    absolute_paths = _count_absolute_local_paths(case_paths)
+    semantic_true_cases = sum(1 for label in positive_labels if label == "TRUE_SEMANTIC_DRIFT")
+    wrapper_cases = sum(1 for label in positive_labels if label == "TRUE_WRAPPER_FIX")
+    summary = {
+        "case_studies": len(positive_cases),
+        "positive_case_studies": len(positive_cases),
+        "negative_case_studies": len(negative_cases),
+        "case_drift_types": positive_types,
+        "drift_type_count": len(positive_types),
+        "semantic_true_cases": semantic_true_cases,
+        "wrapper_fix_backed_cases": wrapper_cases,
+        "build_breakage_cases": sum(1 for label in positive_labels if label == "TRUE_BUILD_BREAKAGE"),
+        "false_positive_cases": sum(1 for label in positive_labels if label == "FALSE_POSITIVE"),
+        "benign_drift_cases": sum(1 for label in positive_labels if label == "BENIGN_DRIFT"),
+        "unlabeled_cases": sum(1 for label in positive_labels if not label),
+        "absolute_local_paths": absolute_paths,
+        "positive_label_distribution": dict(Counter(positive_labels)),
+        "negative_label_distribution": dict(Counter(label_for_warning(labels, warning) for warning in negative_cases)),
     }
+    summary["acceptance"] = {
+        "case_studies_minimum": summary["case_studies"] >= 6,
+        "drift_type_count_minimum": summary["drift_type_count"] >= 3,
+        "semantic_true_cases_minimum": summary["semantic_true_cases"] >= 2,
+        "wrapper_fix_cases_minimum": summary["wrapper_fix_backed_cases"] >= 2,
+        "positive_labels_clean": summary["false_positive_cases"] == 0 and summary["benign_drift_cases"] == 0 and summary["unlabeled_cases"] == 0,
+        "absolute_local_paths_clean": summary["absolute_local_paths"] == 0,
+        "negative_case_present": summary["negative_case_studies"] >= 1,
+    }
+    summary["acceptance"]["minimum_passes"] = all(summary["acceptance"].values())
+    return summary
 
 
-def _case_template(case_type: str, warning: dict, oracle_label: str | None = None) -> str:
+def _count_absolute_local_paths(paths: list[Path]) -> int:
+    count = 0
+    for path in paths:
+        text = path.read_text(encoding="utf-8")
+        count += sum(text.count(marker) for marker in LOCAL_PATH_MARKERS)
+    return count
+
+
+def _case_template(case_type: str, warning: dict[str, Any], label: str, review: dict[str, str], *, case_kind: str) -> str:
     c_side = warning.get("c_side", {})
     rust_side = warning.get("rust_side", {})
-    symbol = c_side.get("symbol", "unknown")
+    symbol = _symbol(warning)
     warning_id = warning.get("warning_id", "unknown")
-    old_version = _old_version(warning)
-    new_version = _new_version(warning)
-    rust_evidence = _format_rust_evidence(rust_side)
-    summary = _case_summary(symbol, warning_id, rust_side)
-    return f"""# {case_type} Case Study
+    title_prefix = "Positive" if case_kind == "positive" else "Failure Analysis"
+    return f"""# {title_prefix}: {case_type} for `{symbol}`
 
-## One-Line Summary
+## Summary
 
-{summary}
+{_case_summary(symbol, warning_id, label, case_kind)}
 
 ## Old Version Evidence
 
-- Version: `{old_version}`
+- Version: `{_old_version(warning)}`
 - Old value or indicators: `{c_side.get('old', c_side.get('old_indicators', []))}`
 
 ## New Version Evidence
 
-- Version: `{new_version}`
+- Version: `{_new_version(warning)}`
 - New value or indicators: `{c_side.get('new', c_side.get('new_indicators', []))}`
 
-## C-Side Diff Or Indicator Change
-
-BindDrift observed `{case_type}` evidence for `{symbol}`.
+## C-Side Diff
 
 {_format_c_evidence(c_side)}
 
-## Rust Wrapper Or Safe API Dependency
+## Rust-Side Dependency
 
-BindDrift attached the following Rust impact evidence.
+{_format_rust_evidence(rust_side)}
 
-{rust_evidence}
+## Safe API / Contract Assumption
 
-## Reviewer Adjudicated Label
+{_contract_assumption(warning)}
 
-The adjudicated review label is `{oracle_label or "UNLABELED"}`.
+## Manual Review Label
 
-## Why The Compiler Cannot Fully Catch It
-
-This case is treated as a contract-review target. The type checker can validate the current call shape, but it does not verify that Rust wrapper assumptions about nullability, error representation, ownership, or context remain synchronized with C-side behavior.
+- Adjudicated label: `{label or "UNLABELED"}`
+- Reviewer 1: `{review.get('reviewer1_label', '')}` -- {review.get('reviewer1_notes', '')}
+- Reviewer 2: `{review.get('reviewer2_label', '')}` -- {review.get('reviewer2_notes', '')}
+- Adjudication: {review.get('adjudication_notes', '')}
 
 ## Why This Is Not Generated-Binding-Only
 
 {_not_binding_only_explanation(warning)}
 
-## BindDrift Warning
+## Why Compiler Alone Does Not Catch It
+
+The compiler checks the current Rust/C binding shape. This case is about whether a Rust abstraction, helper, or safety invariant remains synchronized with an evolving C-side contract across versions.
+
+## Alternative Explanation Considered
+
+{_alternative_explanation(label)}
+
+## Maintainer Review Implication
+
+{_maintainer_implication(label)}
+
+## Reproduction Pointers
 
 - Warning: `{warning_id}`
+- Warning UID: `{warning.get('warning_uid', 'n/a')}`
+- Replay pair: `{warning.get('pair_id') or 'n/a'}`
 - Drift type: `{case_type}`
 - C symbol: `{symbol}`
-- Risk: `{warning.get("risk", "Unknown")}`
-- Score: `{warning.get("score", 0)}`
-- Adjudicated label: `{oracle_label or "UNLABELED"}`
-- Replay pair: `{warning.get("pair_id") or "n/a"}`
-
-## Evidence
-
-The evidence above is copied from the ranked BindDrift warning report. The current artifact keeps this case within the warning/prioritization claim boundary.
-
-## Impact
-
-Historical warning from `{old_version}` to `{new_version}`.
-
-## Lesson
-
-Safe Rust APIs can depend on C-side contracts that are not represented in the Rust function signature. BindDrift makes that dependency explicit so maintainers can prioritize review.
+- Risk: `{warning.get('risk', 'Unknown')}`
+- Score: `{warning.get('score', 0)}`
 """
 
 
-def _old_version(warning: dict) -> str:
+def _old_version(warning: dict[str, Any]) -> str:
     return str(warning.get("old_version") or warning.get("c_side", {}).get("old_version") or "unknown")
 
 
-def _new_version(warning: dict) -> str:
+def _new_version(warning: dict[str, Any]) -> str:
     return str(warning.get("new_version") or warning.get("c_side", {}).get("new_version") or "unknown")
 
 
-def _not_binding_only_explanation(warning: dict) -> str:
+def _symbol(warning: dict[str, Any]) -> str:
+    return str((warning.get("c_side") or {}).get("symbol") or "unknown")
+
+
+def _case_drift_type(warning: dict[str, Any]) -> str:
+    return str(warning.get("semantic_target_type") or warning.get("type") or "Warning")
+
+
+def _slug(value: str) -> str:
+    slug = re.sub(r"[^a-zA-Z0-9_]+", "_", value.strip().lower()).strip("_")
+    return slug or "unknown"
+
+
+def _not_binding_only_explanation(warning: dict[str, Any]) -> str:
+    rust_side = warning.get("rust_side", {})
     if warning.get("c_evidence_level") == "binding_only":
-        return "This case is retained only because additional contract or oracle evidence reaches Rust code; generated bindings alone are not sufficient for case-study selection."
-    return "This case includes C-side source or indicator evidence plus Rust-side contract, safe API, or oracle evidence; generated bindings alone are not sufficient for case-study selection."
+        return "The case has Rust reachability or contract/oracle evidence beyond a generated binding delta; generated-binding-only rows are excluded from positive case selection."
+    if rust_side.get("uses") or rust_side.get("safe_apis") or rust_side.get("error_mappings") or rust_side.get("safety_comments"):
+        return "The case includes C-side source or indicator evidence plus Rust-side dependency evidence."
+    return "The case is retained because review evidence connects the warning to a Rust-impact path rather than a standalone generated binding change."
 
 
-def _case_summary(symbol: str, warning_id: str, rust_side: dict) -> str:
-    if rust_side.get("oracle_hits"):
-        evidence = "oracle evidence"
-    elif rust_side.get("error_mappings") or rust_side.get("lifetime_facts") or rust_side.get("safety_comments"):
-        evidence = "contract evidence"
-    elif rust_side.get("safe_apis"):
-        evidence = "safe API exposure"
-    else:
-        evidence = "direct Rust binding use"
-    return f"`{symbol}` produced `{warning_id}` with adjudicated true-positive {evidence}."
+def _case_summary(symbol: str, warning_id: str, label: str, case_kind: str) -> str:
+    if case_kind == "negative":
+        return f"`{symbol}` produced `{warning_id}` and is included as a negative/failure-analysis case with adjudicated label `{label}`."
+    return f"`{symbol}` produced `{warning_id}` and is included as an adjudicated positive review target with label `{label}`."
 
 
-def _format_c_evidence(c_side: dict) -> str:
-    evidence = c_side.get("evidence") or []
-    lines = [f"- Old indicators/value: `{c_side.get('old', c_side.get('old_indicators', []))}`", f"- New indicators/value: `{c_side.get('new', c_side.get('new_indicators', []))}`"]
-    for item in evidence[:5]:
+def _format_c_evidence(c_side: dict[str, Any]) -> str:
+    lines = [
+        f"- Old indicators/value: `{c_side.get('old', c_side.get('old_indicators', []))}`",
+        f"- New indicators/value: `{c_side.get('new', c_side.get('new_indicators', []))}`",
+    ]
+    for item in (c_side.get("evidence") or [])[:5]:
         if isinstance(item, dict):
             lines.append(f"- `{item.get('evidence_file')}:{item.get('evidence_line')}`: `{item.get('evidence_text', '')}`")
     return "\n".join(lines)
 
 
-def _format_rust_evidence(rust_side: dict) -> str:
+def _format_rust_evidence(rust_side: dict[str, Any]) -> str:
     lines: list[str] = []
     for use in (rust_side.get("uses") or [])[:5]:
         if isinstance(use, dict):
             lines.append(f"- `{use.get('rust_file')}:{use.get('line')}` in `{use.get('enclosing_function')}`")
+    for item in (rust_side.get("safe_apis") or [])[:3]:
+        if isinstance(item, dict):
+            lines.append(f"- safe API `{item.get('api_name')}`")
     for item in (rust_side.get("safety_comments") or [])[:3]:
         if isinstance(item, dict):
             lines.append(f"- `{item.get('rust_file')}:{item.get('line')}`: `{item.get('text', '')}`")
@@ -292,10 +482,56 @@ def _format_rust_evidence(rust_side: dict) -> str:
     for item in (rust_side.get("lifetime_facts") or [])[:3]:
         if isinstance(item, dict):
             lines.append(f"- `{item.get('rust_file')}:{item.get('line')}` lifetime fact `{item.get('fact_type')}`")
-    for item in (rust_side.get("safe_apis") or [])[:3]:
-        if isinstance(item, dict):
-            lines.append(f"- safe API `{item.get('api_name')}`")
     for item in (rust_side.get("oracle_hits") or [])[:3]:
         if isinstance(item, dict):
             lines.append(f"- {item.get('oracle_type')}: `{item.get('symbol', item.get('commit_id', 'oracle'))}`")
     return "\n".join(lines) if lines else "- No Rust-side evidence was attached to this warning."
+
+
+def _contract_assumption(warning: dict[str, Any]) -> str:
+    rust_side = warning.get("rust_side", {})
+    if rust_side.get("safe_apis"):
+        return "The warning reaches a public safe Rust API, so the maintainer review question is whether that API's documented contract remains synchronized with the C-side behavior."
+    if rust_side.get("error_mappings"):
+        return "The warning reaches Rust error-mapping code, so the review question is whether the C return convention still matches Rust Result/Error handling."
+    if rust_side.get("lifetime_facts"):
+        return "The warning reaches Rust ownership or lifetime evidence, so the review question is whether object lifetime assumptions changed."
+    if rust_side.get("oracle_hits"):
+        return "The warning is connected to later Rust wrapper/helper evidence and is reported separately from semantic-only drift."
+    return "The warning reaches Rust code and should be reviewed as an evidence-backed target, not as an automatically confirmed defect."
+
+
+def _alternative_explanation(label: str) -> str:
+    if label == "TRUE_SEMANTIC_DRIFT":
+        return "Review considered whether this was only signature churn or generated binding noise; adjudication kept it because C-side drift, Rust exposure, and contract dependence were all present."
+    if label == "TRUE_WRAPPER_FIX":
+        return "Review considered whether this was semantic drift; adjudication classifies it as wrapper-fix-backed validation instead of standalone semantic evidence."
+    if label == "TRUE_BUILD_BREAKAGE":
+        return "Review considered whether this was a soft contract warning; adjudication uses build evidence as the stronger label."
+    return "Review considered whether the warning should be promoted, but adjudication found the evidence benign, unsupported, or incomplete."
+
+
+def _maintainer_implication(label: str) -> str:
+    if label in TRUE_LABELS:
+        return "A maintainer should inspect the Rust wrapper or safe abstraction path when carrying this C-side change across versions."
+    return "This case documents why similar high-scoring warnings need manual review before being counted as true positives."
+
+
+def _missing_case_types(summary: dict[str, Any]) -> str:
+    present = set(summary.get("case_drift_types") or [])
+    missing = [case_type for case_type in CASE_TARGET_TYPES if case_type not in present]
+    lines = [
+        "# Missing Case Types",
+        "",
+        f"Selected positive drift types: {', '.join(summary.get('case_drift_types') or []) or 'none'}.",
+        "",
+    ]
+    if not missing:
+        lines.append("No target drift type is missing from the positive case suite.")
+    else:
+        lines.append("The following target drift types were not represented by an adjudicated positive case:")
+        lines.extend(f"- `{case_type}`" for case_type in missing)
+    if summary.get("semantic_true_cases", 0) < 2:
+        lines.append("")
+        lines.append("Semantic true-positive case coverage is below the two-case gate, so semantic claims must remain exploratory.")
+    return "\n".join(lines).rstrip() + "\n"

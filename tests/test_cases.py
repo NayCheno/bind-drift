@@ -94,14 +94,17 @@ def test_case_studies_only_use_true_labels_with_strong_evidence(tmp_path: Path):
     assert not stale.exists()
     assert files[0].name.startswith("case-01-nullabilitydrift-foo_get")
     text = files[0].read_text(encoding="utf-8")
-    assert "Adjudicated label: `TRUE_SEMANTIC_DRIFT`" in text
+    assert "- Adjudicated label: `TRUE_SEMANTIC_DRIFT`" in text
+    assert "## Summary" in text
     assert "## Old Version Evidence" in text
     assert "## New Version Evidence" in text
-    assert "## C-Side Diff Or Indicator Change" in text
-    assert "## Rust Wrapper Or Safe API Dependency" in text
-    assert "## Reviewer Adjudicated Label" in text
+    assert "## C-Side Diff" in text
+    assert "## Rust-Side Dependency" in text
+    assert "## Safe API / Contract Assumption" in text
+    assert "## Manual Review Label" in text
     assert "## Why This Is Not Generated-Binding-Only" in text
-    assert "adjudicated true-positive contract evidence" in text
+    assert "## Alternative Explanation Considered" in text
+    assert "adjudicated positive review target" in text
     assert "ERR_PTR_MAPPING" in text
 
 
@@ -168,8 +171,8 @@ def test_case_studies_use_replay_adjacent_review_and_structured_diff(tmp_path: P
     text = Path(result["files"][0]).read_text(encoding="utf-8")
 
     assert result["cases"] == 1
-    assert result["manual_review"] == str(run_dir / "manual_review.csv")
-    assert "Adjudicated label: `TRUE_WRAPPER_FIX`" in text
+    assert result["manual_review"] == "data/replay/latest/manual_review.csv"
+    assert "- Adjudicated label: `TRUE_WRAPPER_FIX`" in text
     assert "wrapper validates flags" in text
 
 
@@ -258,5 +261,20 @@ def test_case_studies_main_mode_fails_without_two_true_positive_cases(tmp_path: 
 
     import pytest
 
-    with pytest.raises(RuntimeError, match="Fewer than 2"):
+    with pytest.raises(RuntimeError, match="Fewer than 6"):
         generate_case_studies(cfg)
+
+
+def test_case_suite_artifact_meets_strict_summary_gates() -> None:
+    summary = json.loads(Path("paper/tables/case_study_summary.json").read_text(encoding="utf-8"))
+
+    assert summary["case_studies"] >= 6
+    assert summary["negative_case_studies"] >= 1
+    assert summary["drift_type_count"] >= 3
+    assert summary["semantic_true_cases"] >= 2
+    assert summary["wrapper_fix_backed_cases"] >= 2
+    assert summary["false_positive_cases"] == 0
+    assert summary["benign_drift_cases"] == 0
+    assert summary["unlabeled_cases"] == 0
+    assert summary["absolute_local_paths"] == 0
+    assert summary["acceptance"]["minimum_passes"] is True
