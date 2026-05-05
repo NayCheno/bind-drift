@@ -25,36 +25,40 @@
       "candidate_count": 194490,
       "kind": "baseline",
       "manual_review": {
-        "label_distribution": {},
-        "labeled_warnings": 0,
+        "label_distribution": {
+          "BENIGN_DRIFT": 35,
+          "FALSE_POSITIVE": 76,
+          "UNCLEAR": 1
+        },
+        "labeled_warnings": 81,
         "per_type": {
           "FieldDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 21,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 1374
           },
           "MacroConstDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 13,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 2980
           },
           "SignatureDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 47,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 13513
           }
         },
-        "precision": null,
+        "precision": 0.0,
         "precision_at_k": {
-          "10": null,
-          "100": null,
-          "50": null
+          "10": 0.0,
+          "100": 0.0,
+          "50": 0.0
         },
         "true_labeled_warnings": 0,
-        "unclear_warnings": 0
+        "unclear_warnings": 1
       },
       "note": "Metrics are computed over the variant's filtered or re-ranked warning list.",
       "variant": "BindgenOnly",
@@ -90,24 +94,28 @@
       "candidate_count": 183645,
       "kind": "baseline",
       "manual_review": {
-        "label_distribution": {},
-        "labeled_warnings": 0,
+        "label_distribution": {
+          "BENIGN_DRIFT": 35,
+          "FALSE_POSITIVE": 76,
+          "UNCLEAR": 1
+        },
+        "labeled_warnings": 47,
         "per_type": {
           "SignatureDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 47,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 13513
           }
         },
-        "precision": null,
+        "precision": 0.0,
         "precision_at_k": {
-          "10": null,
-          "100": null,
-          "50": null
+          "10": 0.0,
+          "100": 0.0,
+          "50": 0.0
         },
         "true_labeled_warnings": 0,
-        "unclear_warnings": 0
+        "unclear_warnings": 1
       },
       "note": "Metrics are computed over the variant's filtered or re-ranked warning list.",
       "variant": "CSignatureDiff",
@@ -143,7 +151,11 @@
       "candidate_count": 0,
       "kind": "baseline",
       "manual_review": {
-        "label_distribution": {},
+        "label_distribution": {
+          "BENIGN_DRIFT": 35,
+          "FALSE_POSITIVE": 76,
+          "UNCLEAR": 1
+        },
         "labeled_warnings": 0,
         "per_type": {},
         "precision": null,
@@ -153,7 +165,7 @@
           "50": null
         },
         "true_labeled_warnings": 0,
-        "unclear_warnings": 0
+        "unclear_warnings": 1
       },
       "note": "Metrics are computed over the variant's filtered or re-ranked warning list.",
       "variant": "BuildOnly",
@@ -189,66 +201,70 @@
       "candidate_count": 14495,
       "kind": "baseline",
       "manual_review": {
-        "label_distribution": {},
-        "labeled_warnings": 0,
+        "label_distribution": {
+          "BENIGN_DRIFT": 35,
+          "FALSE_POSITIVE": 76,
+          "UNCLEAR": 1
+        },
+        "labeled_warnings": 105,
         "per_type": {
           "AllocationFreePairingDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 1,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 1
           },
           "ErrorDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 10,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 10
           },
           "FieldDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 21,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 1374
           },
           "MacroConstDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 12,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 2226
           },
           "NullabilityDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 12,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 22
           },
           "OwnershipRefcountDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 6,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 8
           },
           "SignatureDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 41,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 12309
           },
           "SleepabilityDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 2,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 2
           }
         },
-        "precision": null,
+        "precision": 0.0,
         "precision_at_k": {
-          "10": null,
-          "100": null,
-          "50": null
+          "10": 0.0,
+          "100": 0.0,
+          "50": 0.0
         },
         "true_labeled_warnings": 0,
-        "unclear_warnings": 0
+        "unclear_warnings": 1
       },
       "note": "Metrics are computed over the variant's filtered or re-ranked warning list.",
       "variant": "GrepUsage",
@@ -284,66 +300,70 @@
       "candidate_count": 17910,
       "kind": "baseline",
       "manual_review": {
-        "label_distribution": {},
-        "labeled_warnings": 0,
+        "label_distribution": {
+          "BENIGN_DRIFT": 35,
+          "FALSE_POSITIVE": 76,
+          "UNCLEAR": 1
+        },
+        "labeled_warnings": 112,
         "per_type": {
           "AllocationFreePairingDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 1,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 1
           },
           "ErrorDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 10,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 10
           },
           "FieldDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 21,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 1374
           },
           "MacroConstDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 13,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 2980
           },
           "NullabilityDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 12,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 22
           },
           "OwnershipRefcountDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 6,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 8
           },
           "SignatureDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 47,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 13513
           },
           "SleepabilityDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 2,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 2
           }
         },
-        "precision": null,
+        "precision": 0.0,
         "precision_at_k": {
-          "10": null,
-          "100": null,
-          "50": null
+          "10": 0.0,
+          "100": 0.0,
+          "50": 0.0
         },
         "true_labeled_warnings": 0,
-        "unclear_warnings": 0
+        "unclear_warnings": 1
       },
       "note": "Metrics are computed over the variant's filtered or re-ranked warning list.",
       "variant": "NoRanking",
@@ -379,36 +399,40 @@
       "candidate_count": 17910,
       "kind": "baseline",
       "manual_review": {
-        "label_distribution": {},
-        "labeled_warnings": 0,
+        "label_distribution": {
+          "BENIGN_DRIFT": 35,
+          "FALSE_POSITIVE": 76,
+          "UNCLEAR": 1
+        },
+        "labeled_warnings": 81,
         "per_type": {
           "FieldDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 21,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 1374
           },
           "MacroConstDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 13,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 2980
           },
           "SignatureDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 47,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 13513
           }
         },
-        "precision": null,
+        "precision": 0.0,
         "precision_at_k": {
-          "10": null,
-          "100": null,
-          "50": null
+          "10": 0.0,
+          "100": 0.0,
+          "50": 0.0
         },
         "true_labeled_warnings": 0,
-        "unclear_warnings": 0
+        "unclear_warnings": 1
       },
       "note": "Metrics are computed over the variant's filtered or re-ranked warning list.",
       "variant": "Tier1Only",
@@ -444,66 +468,70 @@
       "candidate_count": 183645,
       "kind": "ablation",
       "manual_review": {
-        "label_distribution": {},
-        "labeled_warnings": 0,
+        "label_distribution": {
+          "BENIGN_DRIFT": 35,
+          "FALSE_POSITIVE": 76,
+          "UNCLEAR": 1
+        },
+        "labeled_warnings": 112,
         "per_type": {
           "AllocationFreePairingDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 1,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 1
           },
           "ErrorDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 10,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 10
           },
           "FieldDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 21,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 1374
           },
           "MacroConstDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 13,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 2980
           },
           "NullabilityDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 12,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 22
           },
           "OwnershipRefcountDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 6,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 8
           },
           "SignatureDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 47,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 13513
           },
           "SleepabilityDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 2,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 2
           }
         },
-        "precision": null,
+        "precision": 0.0,
         "precision_at_k": {
           "10": null,
           "100": null,
           "50": null
         },
         "true_labeled_warnings": 0,
-        "unclear_warnings": 0
+        "unclear_warnings": 1
       },
       "note": "Metrics are computed over the variant's filtered or re-ranked warning list.",
       "variant": "NoGraph",
@@ -539,36 +567,40 @@
       "candidate_count": 17910,
       "kind": "ablation",
       "manual_review": {
-        "label_distribution": {},
-        "labeled_warnings": 0,
+        "label_distribution": {
+          "BENIGN_DRIFT": 35,
+          "FALSE_POSITIVE": 76,
+          "UNCLEAR": 1
+        },
+        "labeled_warnings": 81,
         "per_type": {
           "FieldDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 21,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 1374
           },
           "MacroConstDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 13,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 2980
           },
           "SignatureDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 47,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 13513
           }
         },
-        "precision": null,
+        "precision": 0.0,
         "precision_at_k": {
-          "10": null,
-          "100": null,
-          "50": null
+          "10": 0.0,
+          "100": 0.0,
+          "50": 0.0
         },
         "true_labeled_warnings": 0,
-        "unclear_warnings": 0
+        "unclear_warnings": 1
       },
       "note": "Metrics are computed over the variant's filtered or re-ranked warning list.",
       "variant": "NoTier2",
@@ -604,66 +636,70 @@
       "candidate_count": 17910,
       "kind": "ablation",
       "manual_review": {
-        "label_distribution": {},
-        "labeled_warnings": 0,
+        "label_distribution": {
+          "BENIGN_DRIFT": 35,
+          "FALSE_POSITIVE": 76,
+          "UNCLEAR": 1
+        },
+        "labeled_warnings": 112,
         "per_type": {
           "AllocationFreePairingDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 1,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 1
           },
           "ErrorDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 10,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 10
           },
           "FieldDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 21,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 1374
           },
           "MacroConstDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 13,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 2980
           },
           "NullabilityDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 12,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 22
           },
           "OwnershipRefcountDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 6,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 8
           },
           "SignatureDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 47,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 13513
           },
           "SleepabilityDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 2,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 2
           }
         },
-        "precision": null,
+        "precision": 0.0,
         "precision_at_k": {
-          "10": null,
-          "100": null,
-          "50": null
+          "10": 0.0,
+          "100": 0.0,
+          "50": 0.0
         },
         "true_labeled_warnings": 0,
-        "unclear_warnings": 0
+        "unclear_warnings": 1
       },
       "note": "Metrics are computed over the variant's filtered or re-ranked warning list.",
       "variant": "NoRanking",
@@ -699,66 +735,70 @@
       "candidate_count": 17910,
       "kind": "ablation",
       "manual_review": {
-        "label_distribution": {},
-        "labeled_warnings": 0,
+        "label_distribution": {
+          "BENIGN_DRIFT": 35,
+          "FALSE_POSITIVE": 76,
+          "UNCLEAR": 1
+        },
+        "labeled_warnings": 112,
         "per_type": {
           "AllocationFreePairingDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 1,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 1
           },
           "ErrorDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 10,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 10
           },
           "FieldDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 21,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 1374
           },
           "MacroConstDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 13,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 2980
           },
           "NullabilityDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 12,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 22
           },
           "OwnershipRefcountDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 6,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 8
           },
           "SignatureDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 47,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 13513
           },
           "SleepabilityDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 2,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 2
           }
         },
-        "precision": null,
+        "precision": 0.0,
         "precision_at_k": {
-          "10": null,
-          "100": null,
-          "50": null
+          "10": 0.0,
+          "100": 0.0,
+          "50": 0.0
         },
         "true_labeled_warnings": 0,
-        "unclear_warnings": 0
+        "unclear_warnings": 1
       },
       "note": "Metrics are computed over the variant's filtered or re-ranked warning list.",
       "variant": "NoSafetyComment",
@@ -794,66 +834,70 @@
       "candidate_count": 17910,
       "kind": "ablation",
       "manual_review": {
-        "label_distribution": {},
-        "labeled_warnings": 0,
+        "label_distribution": {
+          "BENIGN_DRIFT": 35,
+          "FALSE_POSITIVE": 76,
+          "UNCLEAR": 1
+        },
+        "labeled_warnings": 112,
         "per_type": {
           "AllocationFreePairingDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 1,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 1
           },
           "ErrorDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 10,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 10
           },
           "FieldDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 21,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 1374
           },
           "MacroConstDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 13,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 2980
           },
           "NullabilityDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 12,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 22
           },
           "OwnershipRefcountDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 6,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 8
           },
           "SignatureDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 47,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 13513
           },
           "SleepabilityDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 2,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 2
           }
         },
-        "precision": null,
+        "precision": 0.0,
         "precision_at_k": {
-          "10": null,
-          "100": null,
-          "50": null
+          "10": 0.0,
+          "100": 0.0,
+          "50": 0.0
         },
         "true_labeled_warnings": 0,
-        "unclear_warnings": 0
+        "unclear_warnings": 1
       },
       "note": "Metrics are computed over the variant's filtered or re-ranked warning list.",
       "variant": "NoCommitText",
@@ -889,36 +933,40 @@
       "candidate_count": 17910,
       "kind": "ablation",
       "manual_review": {
-        "label_distribution": {},
-        "labeled_warnings": 0,
+        "label_distribution": {
+          "BENIGN_DRIFT": 35,
+          "FALSE_POSITIVE": 76,
+          "UNCLEAR": 1
+        },
+        "labeled_warnings": 81,
         "per_type": {
           "FieldDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 21,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 1374
           },
           "MacroConstDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 13,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 2980
           },
           "SignatureDrift": {
-            "labeled_warnings": 0,
-            "precision": null,
+            "labeled_warnings": 47,
+            "precision": 0.0,
             "true_labeled_warnings": 0,
             "warnings": 13513
           }
         },
-        "precision": null,
+        "precision": 0.0,
         "precision_at_k": {
-          "10": null,
-          "100": null,
-          "50": null
+          "10": 0.0,
+          "100": 0.0,
+          "50": 0.0
         },
         "true_labeled_warnings": 0,
-        "unclear_warnings": 0
+        "unclear_warnings": 1
       },
       "note": "Metrics are computed over the variant's filtered or re-ranked warning list.",
       "variant": "NoBehaviorIndicator",

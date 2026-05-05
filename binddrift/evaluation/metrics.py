@@ -10,6 +10,23 @@ TRUE_LABELS = {"TRUE_BUILD_BREAKAGE", "TRUE_WRAPPER_FIX", "TRUE_SEMANTIC_DRIFT"}
 FALSE_LABELS = {"BENIGN_DRIFT", "FALSE_POSITIVE", "UNCLEAR"}
 
 
+def warning_label_key(warning_id: object, pair_id: object | None = None) -> str:
+    if pair_id:
+        return f"{pair_id}:{warning_id}"
+    return str(warning_id)
+
+
+def warning_key(warning: dict[str, Any]) -> str:
+    return warning_label_key(warning.get("warning_id"), warning.get("pair_id"))
+
+
+def label_for_warning(labels: dict[str, str], warning: dict[str, Any]) -> str:
+    key = warning_key(warning)
+    if key in labels:
+        return labels[key]
+    return labels.get(str(warning.get("warning_id")), "")
+
+
 def load_manual_labels(path: Path) -> dict[str, str]:
     if not path.exists():
         return {}
@@ -20,7 +37,7 @@ def load_manual_labels(path: Path) -> dict[str, str]:
             if not warning_id:
                 continue
             label = row.get("adjudicated_label", "").strip() or row.get("label", "").strip()
-            labels[warning_id] = label
+            labels[warning_label_key(warning_id, row.get("pair_id", "").strip() or None)] = label
         return labels
 
 
@@ -45,10 +62,10 @@ def manual_review_agreement(path: Path) -> dict[str, Any]:
 
 
 def precision_at_k(warnings: list[dict[str, Any]], labels: dict[str, str], k: int) -> float | None:
-    labeled = [warning for warning in warnings[:k] if labels.get(str(warning.get("warning_id")))]
+    labeled = [warning for warning in warnings[:k] if label_for_warning(labels, warning)]
     if not labeled:
         return None
-    true_count = sum(1 for warning in labeled if labels.get(str(warning.get("warning_id"))) in TRUE_LABELS)
+    true_count = sum(1 for warning in labeled if label_for_warning(labels, warning) in TRUE_LABELS)
     return round(true_count / len(labeled), 4)
 
 
@@ -62,15 +79,15 @@ def _round(value: float | None) -> float | None:
 
 
 def labeled_summary(warnings: list[dict[str, Any]], labels: dict[str, str], ks: tuple[int, ...] = (10, 50, 100)) -> dict[str, Any]:
-    labeled_count = sum(1 for warning in warnings if labels.get(str(warning.get("warning_id"))))
-    true_count = sum(1 for warning in warnings if labels.get(str(warning.get("warning_id"))) in TRUE_LABELS)
+    labeled_count = sum(1 for warning in warnings if label_for_warning(labels, warning))
+    true_count = sum(1 for warning in warnings if label_for_warning(labels, warning) in TRUE_LABELS)
     per_type: dict[str, dict[str, Any]] = {}
     by_type: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for warning in warnings:
         by_type[str(warning.get("type", "Unknown"))].append(warning)
     for drift_type, rows in sorted(by_type.items()):
-        type_labeled = [warning for warning in rows if labels.get(str(warning.get("warning_id")))]
-        type_true = [warning for warning in type_labeled if labels.get(str(warning.get("warning_id"))) in TRUE_LABELS]
+        type_labeled = [warning for warning in rows if label_for_warning(labels, warning)]
+        type_true = [warning for warning in type_labeled if label_for_warning(labels, warning) in TRUE_LABELS]
         per_type[drift_type] = {
             "warnings": len(rows),
             "labeled_warnings": len(type_labeled),

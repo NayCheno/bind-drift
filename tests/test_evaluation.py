@@ -1,6 +1,7 @@
 from pathlib import Path
 
-from binddrift.evaluation.evaluator import parse_build_log
+from binddrift.config import Config
+from binddrift.evaluation.evaluator import generate_manual_review, parse_build_log
 from binddrift.evaluation.metrics import labeled_summary, load_manual_labels, manual_review_agreement, oracle_summary
 
 
@@ -27,6 +28,20 @@ def test_labeled_summary_reports_precision_at_k():
     assert summary["labeled_warnings"] == 2
     assert summary["precision"] == 0.5
     assert summary["precision_at_k"]["2"] == 0.5
+
+
+def test_labeled_summary_does_not_cross_match_reused_warning_ids():
+    warnings = [
+        {"pair_id": "p1", "warning_id": "W-1"},
+        {"pair_id": "p2", "warning_id": "W-1"},
+    ]
+    labels = {"p1:W-1": "TRUE_SEMANTIC_DRIFT"}
+
+    summary = labeled_summary(warnings, labels, ks=(2,))
+
+    assert summary["labeled_warnings"] == 1
+    assert summary["true_labeled_warnings"] == 1
+    assert summary["precision_at_k"]["2"] == 1.0
 
 
 def test_oracle_summary_reports_symbol_recall_and_mrr():
@@ -75,3 +90,36 @@ def test_manual_labels_prefer_adjudicated_label_and_report_agreement(tmp_path: P
     assert labels["W-2"] == "TRUE_WRAPPER_FIX"
     assert agreement["double_labeled"] == 2
     assert agreement["agreements"] == 1
+
+
+def test_manual_labels_include_pair_id_when_present(tmp_path: Path):
+    review = tmp_path / "manual_review.csv"
+    review.write_text(
+        "warning_id,pair_id,reviewer1_label,reviewer2_label,adjudicated_label,label\n"
+        "W-1,p1,TRUE_SEMANTIC_DRIFT,TRUE_SEMANTIC_DRIFT,TRUE_SEMANTIC_DRIFT,\n",
+        encoding="utf-8",
+    )
+
+    labels = load_manual_labels(review)
+
+    assert labels == {"p1:W-1": "TRUE_SEMANTIC_DRIFT"}
+
+
+def test_generate_manual_review_migrates_legacy_rows_by_warning_shape(tmp_path: Path):
+    cfg = Config.from_args(repo_root=tmp_path, data_dir="data/replay/latest")
+    cfg.data_dir.mkdir(parents=True)
+    (cfg.data_dir / "manual_review.csv").write_text(
+        "warning_id,type,risk,score,symbol,reviewer1_label,reviewer2_label,adjudicated_label,label\n"
+        "W-1,SignatureDrift,High,1.0,foo,TRUE_SEMANTIC_DRIFT,TRUE_SEMANTIC_DRIFT,TRUE_SEMANTIC_DRIFT,\n",
+        encoding="utf-8",
+    )
+    warnings = [
+        {"pair_id": "p1", "warning_id": "W-1", "type": "SignatureDrift", "risk": "High", "score": 1.0, "c_side": {"symbol": "foo"}},
+        {"pair_id": "p2", "warning_id": "W-1", "type": "SignatureDrift", "risk": "High", "score": 1.0, "c_side": {"symbol": "bar"}},
+    ]
+
+    review = generate_manual_review(cfg, warnings, top_k=2)
+    labels = load_manual_labels(review)
+
+    assert labels["p1:W-1"] == "TRUE_SEMANTIC_DRIFT"
+    assert labels["p2:W-1"] == ""

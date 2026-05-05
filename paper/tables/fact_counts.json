@@ -1,38 +1,38 @@
 {
   "by_version": [
     {
-      "binding_functions": 0,
-      "c_functions": 0,
-      "graph_edges": 0,
-      "rust_binding_uses": 0,
+      "binding_functions": 1318,
+      "c_functions": 76,
+      "graph_edges": 6490,
+      "rust_binding_uses": 18,
       "version_id": "v6.1"
     },
     {
-      "binding_functions": 0,
-      "c_functions": 0,
-      "graph_edges": 0,
-      "rust_binding_uses": 0,
+      "binding_functions": 1340,
+      "c_functions": 79,
+      "graph_edges": 6635,
+      "rust_binding_uses": 27,
       "version_id": "v6.2"
     },
     {
-      "binding_functions": 0,
-      "c_functions": 0,
-      "graph_edges": 0,
-      "rust_binding_uses": 0,
+      "binding_functions": 1346,
+      "c_functions": 108,
+      "graph_edges": 6751,
+      "rust_binding_uses": 31,
       "version_id": "v6.3"
     },
     {
-      "binding_functions": 0,
-      "c_functions": 0,
-      "graph_edges": 0,
-      "rust_binding_uses": 0,
+      "binding_functions": 1546,
+      "c_functions": 325,
+      "graph_edges": 8959,
+      "rust_binding_uses": 80,
       "version_id": "v6.4"
     },
     {
-      "binding_functions": 0,
-      "c_functions": 0,
-      "graph_edges": 0,
-      "rust_binding_uses": 0,
+      "binding_functions": 1551,
+      "c_functions": 328,
+      "graph_edges": 9033,
+      "rust_binding_uses": 81,
       "version_id": "v6.5"
     },
     {
@@ -156,26 +156,61 @@
     }
   ],
   "counts": {
-    "binding_consts": 516825,
-    "binding_functions": 187389,
-    "binding_structs": 62632,
+    "binding_consts": 543542,
+    "binding_functions": 194490,
+    "binding_structs": 65241,
     "build_breakage_events": 0,
-    "c_behavior_indicators": 25619,
-    "c_functions": 182729,
-    "c_macros": 473904,
-    "c_structs": 31459,
-    "drift_events": 31188,
-    "graph_edges": 484322,
+    "c_behavior_indicators": 26356,
+    "c_functions": 183645,
+    "c_macros": 474635,
+    "c_structs": 31491,
+    "drift_events": 49098,
+    "graph_edges": 522190,
     "layout_facts": 0,
-    "rust_binding_uses": 14258,
-    "rust_error_mappings": 6425,
-    "rust_lifetime_facts": 9265,
-    "rust_safe_apis": 6119,
-    "rust_safety_comments": 172428,
+    "rust_binding_uses": 14495,
+    "rust_error_mappings": 6600,
+    "rust_lifetime_facts": 10586,
+    "rust_safe_apis": 6250,
+    "rust_safety_comments": 180469,
     "versions": 22,
     "wrapper_fix_events": 1506
   },
   "main_by_version": [
+    {
+      "binding_functions": 1318,
+      "c_functions": 76,
+      "graph_edges": 6490,
+      "rust_binding_uses": 18,
+      "version_id": "v6.1"
+    },
+    {
+      "binding_functions": 1340,
+      "c_functions": 79,
+      "graph_edges": 6635,
+      "rust_binding_uses": 27,
+      "version_id": "v6.2"
+    },
+    {
+      "binding_functions": 1346,
+      "c_functions": 108,
+      "graph_edges": 6751,
+      "rust_binding_uses": 31,
+      "version_id": "v6.3"
+    },
+    {
+      "binding_functions": 1546,
+      "c_functions": 325,
+      "graph_edges": 8959,
+      "rust_binding_uses": 80,
+      "version_id": "v6.4"
+    },
+    {
+      "binding_functions": 1551,
+      "c_functions": 328,
+      "graph_edges": 9033,
+      "rust_binding_uses": 81,
+      "version_id": "v6.5"
+    },
     {
       "binding_functions": 3853,
       "c_functions": 4394,
@@ -290,10 +325,21 @@
     }
   ],
   "main_evidence_gate": {
+    "candidate_run_ids": [
+      "latest"
+    ],
+    "canonical_run_id": "latest",
     "eligible_run_ids": [
-      "replay-20260504T224640Z"
+      "latest"
     ],
     "excluded_runs": [
+      {
+        "reasons": [
+          "missing_replay_dir",
+          "missing_aggregate_warnings"
+        ],
+        "run_id": "replay-20260504T224640Z"
+      },
       {
         "reasons": [
           "missing_replay_dir",
@@ -376,6 +422,7 @@
     "usable": true,
     "version_ids": [
       "HEAD_6d35786de281",
+      "v6.1",
       "v6.10",
       "v6.11",
       "v6.12",
@@ -386,6 +433,10 @@
       "v6.17",
       "v6.18",
       "v6.19",
+      "v6.2",
+      "v6.3",
+      "v6.4",
+      "v6.5",
       "v6.6",
       "v6.7",
       "v6.8",

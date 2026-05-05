@@ -1,9 +1,20 @@
 {
   "main_evidence_gate": {
+    "candidate_run_ids": [
+      "latest"
+    ],
+    "canonical_run_id": "latest",
     "eligible_run_ids": [
-      "replay-20260504T224640Z"
+      "latest"
     ],
     "excluded_runs": [
+      {
+        "reasons": [
+          "missing_replay_dir",
+          "missing_aggregate_warnings"
+        ],
+        "run_id": "replay-20260504T224640Z"
+      },
       {
         "reasons": [
           "missing_replay_dir",
@@ -86,6 +97,7 @@
     "usable": true,
     "version_ids": [
       "HEAD_6d35786de281",
+      "v6.1",
       "v6.10",
       "v6.11",
       "v6.12",
@@ -96,6 +108,10 @@
       "v6.17",
       "v6.18",
       "v6.19",
+      "v6.2",
+      "v6.3",
+      "v6.4",
+      "v6.5",
       "v6.6",
       "v6.7",
       "v6.8",
@@ -104,6 +120,14 @@
     ]
   },
   "runs": [
+    {
+      "duration_seconds": 587.915,
+      "pairs": 20,
+      "run_id": "latest",
+      "status": "completed",
+      "versions": 21,
+      "warnings": 17910
+    },
     {
       "duration_seconds": 740.731,
       "pairs": 15,

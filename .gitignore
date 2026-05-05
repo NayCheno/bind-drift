@@ -5,6 +5,8 @@ __pycache__/
 .mypy_cache/
 .ruff_cache/
 .binddrift/
+data/*.db
+data/replay/replay-*/
 build/
 dist/
 *.egg-info/

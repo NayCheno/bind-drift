@@ -1,13 +1,13 @@
 {
   "agreement": {
     "agreement_rate": 1.0,
-    "agreements": 165,
-    "double_labeled": 165
+    "agreements": 112,
+    "double_labeled": 112
   },
   "all_labels_unclear": false,
-  "labeled_warnings": 165,
-  "manual_review_csv": "/home/nya/workspace/bind-drift/data/replay/replay-20260504T224640Z/manual_review.csv",
-  "source_run_id": "replay-20260504T224640Z",
-  "true_labeled_warnings": 2,
+  "labeled_warnings": 112,
+  "manual_review_csv": "/home/nya/workspace/bind-drift/data/replay/latest/manual_review.csv",
+  "source_run_id": "latest",
+  "true_labeled_warnings": 0,
   "usable_for_main": true
 }

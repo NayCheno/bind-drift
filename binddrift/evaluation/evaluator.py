@@ -11,7 +11,7 @@ from binddrift.db import connect, initialize, upsert_many
 from binddrift.gitutil import git_output
 from binddrift.warnings import read_warnings
 from .baselines import generate_baselines
-from .metrics import labeled_summary, load_manual_labels, manual_review_agreement, oracle_summary
+from .metrics import labeled_summary, load_manual_labels, manual_review_agreement, oracle_summary, warning_key
 
 
 BUILD_ERROR_RE = re.compile(r"(bindings::(?P<binding>[A-Za-z_][A-Za-z0-9_]*)|missing field|mismatched types|layout)")
@@ -105,12 +105,21 @@ def generate_manual_review(cfg: Config, warnings: list[dict[str, Any]], top_k: i
     existing: dict[str, dict[str, str]] = {}
     if path.exists():
         with path.open(newline="", encoding="utf-8") as fh:
-            existing = {row["warning_id"]: row for row in csv.DictReader(fh) if row.get("warning_id")}
+            for row in csv.DictReader(fh):
+                if not row.get("warning_id"):
+                    continue
+                if row.get("pair_id"):
+                    existing[f"{row['pair_id']}:{row['warning_id']}"] = row
+                else:
+                    existing[_legacy_review_key(row)] = row
+                    existing.setdefault(row["warning_id"], row)
     with path.open("w", newline="", encoding="utf-8") as fh:
         writer = csv.DictWriter(
             fh,
+            lineterminator="\n",
             fieldnames=[
                 "warning_id",
+                "pair_id",
                 "type",
                 "risk",
                 "score",
@@ -128,10 +137,14 @@ def generate_manual_review(cfg: Config, warnings: list[dict[str, Any]], top_k: i
         writer.writeheader()
         selected = _manual_review_sample(warnings, top_k=top_k)
         for warning in selected:
-            prior = existing.get(str(warning.get("warning_id")), {})
+            prior = existing.get(warning_key(warning)) or existing.get(_legacy_warning_key(warning))
+            if not prior and not warning.get("pair_id"):
+                prior = existing.get(str(warning.get("warning_id")))
+            prior = prior or {}
             writer.writerow(
                 {
                     "warning_id": warning.get("warning_id"),
+                    "pair_id": warning.get("pair_id", ""),
                     "type": warning.get("type"),
                     "risk": warning.get("risk"),
                     "score": warning.get("score"),
@@ -149,25 +162,34 @@ def generate_manual_review(cfg: Config, warnings: list[dict[str, Any]], top_k: i
     return path
 
 
+def _legacy_review_key(row: dict[str, str]) -> str:
+    return f"{row.get('warning_id', '')}:{row.get('type', '')}:{row.get('symbol', '')}"
+
+
+def _legacy_warning_key(warning: dict[str, Any]) -> str:
+    symbol = warning.get("c_side", {}).get("symbol", "")
+    return f"{warning.get('warning_id', '')}:{warning.get('type', '')}:{symbol}"
+
+
 def _manual_review_sample(warnings: list[dict[str, Any]], top_k: int = 100, stratified_k: int = 100) -> list[dict[str, Any]]:
     selected: list[dict[str, Any]] = []
     used: set[str] = set()
     for warning in warnings[:top_k]:
-        warning_id = str(warning.get("warning_id"))
-        if warning_id not in used:
+        key = warning_key(warning)
+        if key not in used:
             selected.append(warning)
-            used.add(warning_id)
+            used.add(key)
     types = sorted({str(warning.get("type")) for warning in warnings})
     per_type = max(1, stratified_k // len(types)) if types else 0
     for drift_type in types:
         for warning in warnings:
             if warning.get("type") != drift_type:
                 continue
-            warning_id = str(warning.get("warning_id"))
-            if warning_id in used:
+            key = warning_key(warning)
+            if key in used:
                 continue
             selected.append(warning)
-            used.add(warning_id)
+            used.add(key)
             if len(selected) >= top_k + stratified_k:
                 return selected
             if sum(1 for row in selected[top_k:] if row.get("type") == drift_type) >= per_type:

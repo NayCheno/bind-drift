@@ -6,10 +6,11 @@ from typing import Any
 
 from binddrift.config import Config
 from binddrift.db import connect, initialize
-from binddrift.evaluation.metrics import load_manual_labels, manual_review_agreement
+from binddrift.evaluation.metrics import load_manual_labels, manual_review_agreement, warning_label_key
 
 
 MAIN_REPLAY_STATUSES = {"completed", "completed_with_failures"}
+MAIN_REPLAY_RUN_ID = "latest"
 
 
 def generate_paper_tables(cfg: Config) -> dict[str, object]:
@@ -182,6 +183,28 @@ def _load_json(value: str | None, default: Any) -> Any:
         return default
 
 
+def _read_warning_ids(path: Path) -> tuple[int, set[str], set[str]]:
+    ids: set[str] = set()
+    keys: set[str] = set()
+    count = 0
+    with path.open(encoding="utf-8") as fh:
+        for line in fh:
+            if not line.strip():
+                continue
+            count += 1
+            row = json.loads(line)
+            warning_id = row.get("warning_id")
+            if warning_id:
+                ids.add(str(warning_id))
+                keys.add(warning_label_key(warning_id, row.get("pair_id")))
+    return count, ids, keys
+
+
+def _manual_review_warning_ids(path: Path) -> set[str]:
+    labels = load_manual_labels(path)
+    return set(labels)
+
+
 def _main_replay_gate(conn) -> dict[str, Any]:
     """Identify replay outputs strong enough for main paper tables.
 
@@ -191,8 +214,7 @@ def _main_replay_gate(conn) -> dict[str, Any]:
     from `main_by_version`.
     """
 
-    eligible_run_ids: list[str] = []
-    version_ids: set[str] = set()
+    eligible_runs: list[dict[str, Any]] = []
     excluded_runs: list[dict[str, Any]] = []
     for run in conn.execute("SELECT * FROM replay_runs ORDER BY started_at DESC"):
         reasons: list[str] = []
@@ -209,17 +231,41 @@ def _main_replay_gate(conn) -> dict[str, Any]:
         if not run_dir or not Path(run_dir).exists():
             reasons.append("missing_replay_dir")
         aggregate_warnings = summary.get("aggregate_warnings")
-        if aggregate_warnings and not Path(aggregate_warnings).exists():
-            reasons.append("missing_aggregate_warnings")
+        aggregate_warning_count = None
+        aggregate_warning_ids: set[str] | None = None
+        aggregate_warning_keys: set[str] | None = None
+        if aggregate_warnings:
+            aggregate_path = Path(aggregate_warnings)
+            if not aggregate_path.exists():
+                reasons.append("missing_aggregate_warnings")
+            else:
+                try:
+                    aggregate_warning_count, aggregate_warning_ids, aggregate_warning_keys = _read_warning_ids(aggregate_path)
+                except (OSError, json.JSONDecodeError) as exc:
+                    reasons.append(f"invalid_aggregate_warnings:{type(exc).__name__}")
         completed_pairs = [
             dict(row)
             for row in conn.execute(
-                "SELECT old_version, new_version FROM replay_pairs WHERE run_id=? AND status='completed'",
+                "SELECT old_version, new_version, warning_count FROM replay_pairs WHERE run_id=? AND status='completed'",
                 (run_id,),
             )
         ]
         if not completed_pairs:
             reasons.append("no_completed_pairs")
+        db_warning_count = sum(int(row["warning_count"] or 0) for row in completed_pairs)
+        if aggregate_warning_count is not None and aggregate_warning_count != db_warning_count:
+            reasons.append(f"aggregate_warning_count_mismatch:{aggregate_warning_count}!={db_warning_count}")
+        if run_dir:
+            review_path = Path(run_dir) / "manual_review.csv"
+            if review_path.exists() and aggregate_warning_ids is not None and aggregate_warning_keys is not None:
+                review_ids = _manual_review_warning_ids(review_path)
+                missing_review_ids = {
+                    warning_id
+                    for warning_id in review_ids
+                    if warning_id not in aggregate_warning_ids and warning_id not in aggregate_warning_keys
+                }
+                if missing_review_ids:
+                    reasons.append(f"manual_review_ids_not_in_warnings:{len(missing_review_ids)}")
         candidate_versions = sorted({row["old_version"] for row in completed_pairs} | {row["new_version"] for row in completed_pairs})
         zero_binding_versions = [
             version_id
@@ -231,11 +277,24 @@ def _main_replay_gate(conn) -> dict[str, Any]:
         if reasons:
             excluded_runs.append({"run_id": run_id, "reasons": reasons})
             continue
-        eligible_run_ids.append(run_id)
-        version_ids.update(candidate_versions)
+        eligible_runs.append({"run_id": run_id, "version_ids": candidate_versions})
+    selected_runs = _select_main_replay_runs(eligible_runs, excluded_runs)
+    version_ids = {version_id for run in selected_runs for version_id in run["version_ids"]}
     return {
-        "usable": bool(eligible_run_ids),
-        "eligible_run_ids": eligible_run_ids,
+        "usable": bool(selected_runs),
+        "canonical_run_id": selected_runs[0]["run_id"] if selected_runs else None,
+        "eligible_run_ids": [run["run_id"] for run in selected_runs],
+        "candidate_run_ids": [run["run_id"] for run in eligible_runs],
         "version_ids": sorted(version_ids),
         "excluded_runs": excluded_runs,
     }
+
+
+def _select_main_replay_runs(eligible_runs: list[dict[str, Any]], excluded_runs: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    if not eligible_runs:
+        return []
+    selected = next((run for run in eligible_runs if run["run_id"] == MAIN_REPLAY_RUN_ID), eligible_runs[0])
+    for run in eligible_runs:
+        if run["run_id"] != selected["run_id"]:
+            excluded_runs.append({"run_id": run["run_id"], "reasons": [f"superseded_by:{selected['run_id']}"]})
+    return [selected]

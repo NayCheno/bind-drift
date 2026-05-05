@@ -217,3 +217,182 @@ def test_manual_review_summary_prefers_latest_eligible_replay_csv(tmp_path: Path
     assert summary["source_run_id"] == "main-run"
     assert summary["manual_review_csv"] == str(run_dir / "manual_review.csv")
     assert summary["true_labeled_warnings"] == 1
+
+
+def test_manual_review_summary_prefers_canonical_latest_run(tmp_path: Path):
+    cfg = Config.from_args(repo_root=tmp_path)
+    conn = connect(cfg.database)
+    initialize(conn)
+    upsert_many(
+        conn,
+        "versions",
+        [
+            {"version_id": "v6.1", "git_commit": "old", "tag": "v6.1", "date": "2026-01-01", "arch": "x86_64", "config_hash": "a", "rustc_version": "rustc", "clang_version": "clang", "bindgen_version": "bindgen"},
+            {"version_id": "v6.2", "git_commit": "new", "tag": "v6.2", "date": "2026-02-01", "arch": "x86_64", "config_hash": "b", "rustc_version": "rustc", "clang_version": "clang", "bindgen_version": "bindgen"},
+        ],
+    )
+    upsert_many(
+        conn,
+        "binding_functions",
+        [
+            {"version_id": "v6.1", "rust_symbol": "foo", "c_symbol": "foo", "params": "[]", "return_type": "void", "is_unsafe": 1, "source_file": "bindings.rs", "line": 1},
+            {"version_id": "v6.2", "rust_symbol": "foo", "c_symbol": "foo", "params": "[]", "return_type": "void", "is_unsafe": 1, "source_file": "bindings.rs", "line": 1},
+        ],
+    )
+    rows = []
+    pair_rows = []
+    for run_id, started_at in (("newer-timestamp-run", "2026-05-04T00:02:00+00:00"), ("latest", "2026-05-04T00:01:00+00:00")):
+        run_dir = tmp_path / f"data/replay/{run_id}"
+        run_dir.mkdir(parents=True)
+        (run_dir / "warnings.jsonl").write_text('{"warning_id":"W-1"}\n', encoding="utf-8")
+        (run_dir / "manual_review.csv").write_text(
+            "warning_id,reviewer1_label,reviewer2_label,adjudicated_label,label\n"
+            "W-1,,,TRUE_WRAPPER_FIX,\n",
+            encoding="utf-8",
+        )
+        rows.append(
+            {
+                "run_id": run_id,
+                "started_at": started_at,
+                "completed_at": "2026-05-04T00:03:00+00:00",
+                "status": "completed",
+                "start_ref": "v6.1",
+                "include_head": 0,
+                "build_bindings": 1,
+                "configure": 1,
+                "jobs": 1,
+                "arch": "x86_64",
+                "c_roots": "[]",
+                "max_files": None,
+                "refs": json.dumps([{"version_id": "v6.1"}, {"version_id": "v6.2"}]),
+                "summary": json.dumps({"run_dir": str(run_dir), "aggregate_warnings": str(run_dir / "warnings.jsonl")}),
+                "error": None,
+            }
+        )
+        pair_rows.append(
+            {
+                "pair_id": f"{run_id}-pair",
+                "run_id": run_id,
+                "pair_index": 1,
+                "old_ref": "v6.1",
+                "new_ref": "v6.2",
+                "old_version": "v6.1",
+                "new_version": "v6.2",
+                "old_commit": "old",
+                "new_commit": "new",
+                "started_at": started_at,
+                "completed_at": "2026-05-04T00:03:00+00:00",
+                "status": "completed",
+                "warning_count": 1,
+                "build_status": "built",
+                "extraction_summary": "{}",
+                "evaluation_summary": "{}",
+                "warnings_jsonl": str(run_dir / "warnings.jsonl"),
+                "report_md": str(run_dir / "warnings.md"),
+                "error": None,
+            }
+        )
+    upsert_many(conn, "replay_runs", rows)
+    upsert_many(conn, "replay_pairs", pair_rows)
+
+    generate_paper_tables(cfg)
+
+    summary = json.loads((tmp_path / "paper/tables/manual_review_summary.json").read_text(encoding="utf-8"))
+    replay_summary = json.loads((tmp_path / "paper/tables/replay_summary.json").read_text(encoding="utf-8"))
+    gate = replay_summary["main_evidence_gate"]
+    assert summary["source_run_id"] == "latest"
+    assert gate["canonical_run_id"] == "latest"
+    assert gate["eligible_run_ids"] == ["latest"]
+    assert set(gate["candidate_run_ids"]) == {"latest", "newer-timestamp-run"}
+    assert {"run_id": "newer-timestamp-run", "reasons": ["superseded_by:latest"]} in gate["excluded_runs"]
+
+
+def test_manual_review_summary_rejects_stale_review_rows_without_warnings(tmp_path: Path):
+    cfg = Config.from_args(repo_root=tmp_path)
+    conn = connect(cfg.database)
+    initialize(conn)
+    run_dir = tmp_path / "data/replay/latest"
+    run_dir.mkdir(parents=True)
+    (run_dir / "warnings.jsonl").write_text("", encoding="utf-8")
+    (run_dir / "manual_review.csv").write_text(
+        "warning_id,reviewer1_label,reviewer2_label,adjudicated_label,label\n"
+        "W-stale,,,BENIGN_DRIFT,\n",
+        encoding="utf-8",
+    )
+    upsert_many(
+        conn,
+        "versions",
+        [
+            {"version_id": "v6.1", "git_commit": "old", "tag": "v6.1", "date": "2026-01-01", "arch": "x86_64", "config_hash": "a", "rustc_version": "rustc", "clang_version": "clang", "bindgen_version": "bindgen"},
+            {"version_id": "v6.2", "git_commit": "new", "tag": "v6.2", "date": "2026-02-01", "arch": "x86_64", "config_hash": "b", "rustc_version": "rustc", "clang_version": "clang", "bindgen_version": "bindgen"},
+        ],
+    )
+    upsert_many(
+        conn,
+        "binding_functions",
+        [
+            {"version_id": "v6.1", "rust_symbol": "foo", "c_symbol": "foo", "params": "[]", "return_type": "void", "is_unsafe": 1, "source_file": "bindings.rs", "line": 1},
+            {"version_id": "v6.2", "rust_symbol": "foo", "c_symbol": "foo", "params": "[]", "return_type": "void", "is_unsafe": 1, "source_file": "bindings.rs", "line": 1},
+        ],
+    )
+    upsert_many(
+        conn,
+        "replay_runs",
+        [
+            {
+                "run_id": "latest",
+                "started_at": "2026-05-04T00:00:00+00:00",
+                "completed_at": "2026-05-04T00:01:00+00:00",
+                "status": "completed",
+                "start_ref": "v6.1",
+                "include_head": 0,
+                "build_bindings": 1,
+                "configure": 1,
+                "jobs": 1,
+                "arch": "x86_64",
+                "c_roots": "[]",
+                "max_files": None,
+                "refs": json.dumps([{"version_id": "v6.1"}, {"version_id": "v6.2"}]),
+                "summary": json.dumps({"run_dir": str(run_dir), "aggregate_warnings": str(run_dir / "warnings.jsonl")}),
+                "error": None,
+            }
+        ],
+    )
+    upsert_many(
+        conn,
+        "replay_pairs",
+        [
+            {
+                "pair_id": "latest-pair",
+                "run_id": "latest",
+                "pair_index": 1,
+                "old_ref": "v6.1",
+                "new_ref": "v6.2",
+                "old_version": "v6.1",
+                "new_version": "v6.2",
+                "old_commit": "old",
+                "new_commit": "new",
+                "started_at": "2026-05-04T00:00:00+00:00",
+                "completed_at": "2026-05-04T00:01:00+00:00",
+                "status": "completed",
+                "warning_count": 0,
+                "build_status": "built",
+                "extraction_summary": "{}",
+                "evaluation_summary": "{}",
+                "warnings_jsonl": str(run_dir / "warnings.jsonl"),
+                "report_md": str(run_dir / "warnings.md"),
+                "error": None,
+            }
+        ],
+    )
+
+    generate_paper_tables(cfg)
+
+    summary = json.loads((tmp_path / "paper/tables/manual_review_summary.json").read_text(encoding="utf-8"))
+    replay_summary = json.loads((tmp_path / "paper/tables/replay_summary.json").read_text(encoding="utf-8"))
+    assert summary["source_run_id"] is None
+    assert summary["usable_for_main"] is False
+    assert {
+        "run_id": "latest",
+        "reasons": ["manual_review_ids_not_in_warnings:1"],
+    } in replay_summary["main_evidence_gate"]["excluded_runs"]

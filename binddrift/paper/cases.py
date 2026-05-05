@@ -4,7 +4,7 @@ from pathlib import Path
 
 from binddrift.config import Config
 from binddrift.db import connect, initialize
-from binddrift.evaluation.metrics import load_manual_labels
+from binddrift.evaluation.metrics import label_for_warning, load_manual_labels, warning_key
 from binddrift.warnings import read_warnings
 
 
@@ -32,7 +32,7 @@ def generate_case_studies(cfg: Config) -> dict[str, object]:
         case_type = warning.get("type", "Warning")
         symbol = warning.get("c_side", {}).get("symbol", "unknown")
         path = cases_dir / f"case-{idx:02d}-{case_type.lower()}-{symbol.lower()}.md"
-        path.write_text(_case_template(case_type, warning, labels.get(str(warning.get("warning_id")))), encoding="utf-8")
+        path.write_text(_case_template(case_type, warning, label_for_warning(labels, warning)), encoding="utf-8")
         created.append(str(path))
     return {"cases": len(created), "files": created, "warning_source": str(warning_source)}
 
@@ -57,16 +57,18 @@ def _select_cases(warnings: list[dict]) -> list[dict]:
     used_ids: set[str] = set()
     for case_type in CASE_TYPES:
         for warning in warnings:
-            if warning.get("type") == case_type and warning.get("warning_id") not in used_ids:
+            key = warning_key(warning)
+            if warning.get("type") == case_type and key not in used_ids:
                 selected.append(warning)
-                used_ids.add(warning["warning_id"])
+                used_ids.add(key)
                 break
     for warning in warnings:
         if len(selected) >= 8:
             break
-        if warning.get("warning_id") not in used_ids:
+        key = warning_key(warning)
+        if key not in used_ids:
             selected.append(warning)
-            used_ids.add(warning["warning_id"])
+            used_ids.add(key)
     return selected[:8]
 
 
