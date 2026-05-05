@@ -5,7 +5,12 @@
     "c_functions": 183645,
     "graph_edges": 522190,
     "rust_binding_uses": 14495,
-    "warnings": 11
+    "warnings": 331
+  },
+  "source": {
+    "manual_review": "/home/nya/workspace/bind-drift/data/replay/latest/manual_review.csv",
+    "run_manifest": "/home/nya/workspace/bind-drift/data/replay/latest/run_manifest.json",
+    "warnings": "/home/nya/workspace/bind-drift/data/replay/latest/warnings.jsonl"
   },
   "variants": [
     {
@@ -32,13 +37,19 @@
             "labeled_warnings": 0,
             "precision": null,
             "true_labeled_warnings": 0,
-            "warnings": 2
+            "warnings": 25
+          },
+          "MacroConstDrift": {
+            "labeled_warnings": 0,
+            "precision": null,
+            "true_labeled_warnings": 0,
+            "warnings": 26
           },
           "SignatureDrift": {
             "labeled_warnings": 0,
             "precision": null,
             "true_labeled_warnings": 0,
-            "warnings": 9
+            "warnings": 280
           }
         },
         "precision": null,
@@ -52,19 +63,19 @@
       },
       "note": "Metrics are computed over the variant's filtered or re-ranked warning list.",
       "variant": "BindgenOnly",
-      "warning_count": 11,
+      "warning_count": 331,
       "wrapper_fix_prediction": {
-        "f1": 0.0621,
-        "matched_symbols": 10,
-        "mrr": 0.0065,
+        "f1": 0.8551,
+        "matched_symbols": 254,
+        "mrr": 0.0142,
         "oracle_symbols": 311,
-        "precision": 0.9091,
+        "precision": 0.8973,
         "precision_at_k": {
-          "10": 0.9,
-          "100": 0.9091,
-          "50": 0.9091
+          "10": 0.6,
+          "100": 0.67,
+          "50": 0.9
         },
-        "recall": 0.0322
+        "recall": 0.8167
       }
     },
     {
@@ -91,7 +102,7 @@
             "labeled_warnings": 0,
             "precision": null,
             "true_labeled_warnings": 0,
-            "warnings": 9
+            "warnings": 280
           }
         },
         "precision": null,
@@ -105,19 +116,19 @@
       },
       "note": "Metrics are computed over the variant's filtered or re-ranked warning list.",
       "variant": "CSignatureDiff",
-      "warning_count": 9,
+      "warning_count": 280,
       "wrapper_fix_prediction": {
-        "f1": 0.05,
-        "matched_symbols": 8,
-        "mrr": 0.0059,
+        "f1": 0.872,
+        "matched_symbols": 246,
+        "mrr": 0.0152,
         "oracle_symbols": 311,
-        "precision": 0.8889,
+        "precision": 0.9714,
         "precision_at_k": {
-          "10": 0.8889,
-          "100": 0.8889,
-          "50": 0.8889
+          "10": 0.6,
+          "100": 0.92,
+          "50": 0.84
         },
-        "recall": 0.0257
+        "recall": 0.791
       }
     },
     {
@@ -190,13 +201,19 @@
             "labeled_warnings": 0,
             "precision": null,
             "true_labeled_warnings": 0,
-            "warnings": 2
+            "warnings": 25
+          },
+          "MacroConstDrift": {
+            "labeled_warnings": 0,
+            "precision": null,
+            "true_labeled_warnings": 0,
+            "warnings": 26
           },
           "SignatureDrift": {
             "labeled_warnings": 0,
             "precision": null,
             "true_labeled_warnings": 0,
-            "warnings": 9
+            "warnings": 279
           }
         },
         "precision": null,
@@ -210,19 +227,19 @@
       },
       "note": "Metrics are computed over the variant's filtered or re-ranked warning list.",
       "variant": "GrepUsage",
-      "warning_count": 11,
+      "warning_count": 330,
       "wrapper_fix_prediction": {
-        "f1": 0.0621,
-        "matched_symbols": 10,
-        "mrr": 0.0065,
+        "f1": 0.855,
+        "matched_symbols": 254,
+        "mrr": 0.0142,
         "oracle_symbols": 311,
-        "precision": 0.9091,
+        "precision": 0.897,
         "precision_at_k": {
-          "10": 0.9,
-          "100": 0.9091,
-          "50": 0.9091
+          "10": 0.6,
+          "100": 0.67,
+          "50": 0.9
         },
-        "recall": 0.0322
+        "recall": 0.8167
       }
     },
     {
@@ -239,7 +256,7 @@
         },
         "recall": null
       },
-      "candidate_count": 11,
+      "candidate_count": 331,
       "kind": "baseline",
       "manual_review": {
         "label_distribution": {},
@@ -249,13 +266,19 @@
             "labeled_warnings": 0,
             "precision": null,
             "true_labeled_warnings": 0,
-            "warnings": 2
+            "warnings": 25
+          },
+          "MacroConstDrift": {
+            "labeled_warnings": 0,
+            "precision": null,
+            "true_labeled_warnings": 0,
+            "warnings": 26
           },
           "SignatureDrift": {
             "labeled_warnings": 0,
             "precision": null,
             "true_labeled_warnings": 0,
-            "warnings": 9
+            "warnings": 280
           }
         },
         "precision": null,
@@ -269,19 +292,19 @@
       },
       "note": "Metrics are computed over the variant's filtered or re-ranked warning list.",
       "variant": "NoRanking",
-      "warning_count": 11,
+      "warning_count": 331,
       "wrapper_fix_prediction": {
-        "f1": 0.0621,
-        "matched_symbols": 10,
-        "mrr": 0.0094,
+        "f1": 0.8551,
+        "matched_symbols": 254,
+        "mrr": 0.0171,
         "oracle_symbols": 311,
-        "precision": 0.9091,
+        "precision": 0.8973,
         "precision_at_k": {
           "10": 1.0,
-          "100": 0.9091,
-          "50": 0.9091
+          "100": 0.9,
+          "50": 0.92
         },
-        "recall": 0.0322
+        "recall": 0.8167
       }
     },
     {
@@ -298,7 +321,7 @@
         },
         "recall": null
       },
-      "candidate_count": 11,
+      "candidate_count": 331,
       "kind": "baseline",
       "manual_review": {
         "label_distribution": {},
@@ -308,13 +331,19 @@
             "labeled_warnings": 0,
             "precision": null,
             "true_labeled_warnings": 0,
-            "warnings": 2
+            "warnings": 25
+          },
+          "MacroConstDrift": {
+            "labeled_warnings": 0,
+            "precision": null,
+            "true_labeled_warnings": 0,
+            "warnings": 26
           },
           "SignatureDrift": {
             "labeled_warnings": 0,
             "precision": null,
             "true_labeled_warnings": 0,
-            "warnings": 9
+            "warnings": 280
           }
         },
         "precision": null,
@@ -328,19 +357,19 @@
       },
       "note": "Metrics are computed over the variant's filtered or re-ranked warning list.",
       "variant": "Tier1Only",
-      "warning_count": 11,
+      "warning_count": 331,
       "wrapper_fix_prediction": {
-        "f1": 0.0621,
-        "matched_symbols": 10,
-        "mrr": 0.0065,
+        "f1": 0.8551,
+        "matched_symbols": 254,
+        "mrr": 0.0142,
         "oracle_symbols": 311,
-        "precision": 0.9091,
+        "precision": 0.8973,
         "precision_at_k": {
-          "10": 0.9,
-          "100": 0.9091,
-          "50": 0.9091
+          "10": 0.6,
+          "100": 0.67,
+          "50": 0.9
         },
-        "recall": 0.0322
+        "recall": 0.8167
       }
     },
     {
@@ -367,13 +396,19 @@
             "labeled_warnings": 0,
             "precision": null,
             "true_labeled_warnings": 0,
-            "warnings": 2
+            "warnings": 25
+          },
+          "MacroConstDrift": {
+            "labeled_warnings": 0,
+            "precision": null,
+            "true_labeled_warnings": 0,
+            "warnings": 26
           },
           "SignatureDrift": {
             "labeled_warnings": 0,
             "precision": null,
             "true_labeled_warnings": 0,
-            "warnings": 9
+            "warnings": 280
           }
         },
         "precision": null,
@@ -387,19 +422,19 @@
       },
       "note": "Metrics are computed over the variant's filtered or re-ranked warning list.",
       "variant": "NoGraph",
-      "warning_count": 11,
+      "warning_count": 331,
       "wrapper_fix_prediction": {
-        "f1": 0.0621,
-        "matched_symbols": 10,
-        "mrr": 0.0094,
+        "f1": 0.8551,
+        "matched_symbols": 254,
+        "mrr": 0.0115,
         "oracle_symbols": 311,
-        "precision": 0.9091,
+        "precision": 0.8973,
         "precision_at_k": {
           "10": 1.0,
-          "100": 0.9091,
-          "50": 0.9091
+          "100": 0.75,
+          "50": 0.5
         },
-        "recall": 0.0322
+        "recall": 0.8167
       }
     },
     {
@@ -416,7 +451,7 @@
         },
         "recall": null
       },
-      "candidate_count": 11,
+      "candidate_count": 331,
       "kind": "ablation",
       "manual_review": {
         "label_distribution": {},
@@ -426,13 +461,19 @@
             "labeled_warnings": 0,
             "precision": null,
             "true_labeled_warnings": 0,
-            "warnings": 2
+            "warnings": 25
+          },
+          "MacroConstDrift": {
+            "labeled_warnings": 0,
+            "precision": null,
+            "true_labeled_warnings": 0,
+            "warnings": 26
           },
           "SignatureDrift": {
             "labeled_warnings": 0,
             "precision": null,
             "true_labeled_warnings": 0,
-            "warnings": 9
+            "warnings": 280
           }
         },
         "precision": null,
@@ -446,19 +487,19 @@
       },
       "note": "Metrics are computed over the variant's filtered or re-ranked warning list.",
       "variant": "NoTier2",
-      "warning_count": 11,
+      "warning_count": 331,
       "wrapper_fix_prediction": {
-        "f1": 0.0621,
-        "matched_symbols": 10,
-        "mrr": 0.0065,
+        "f1": 0.8551,
+        "matched_symbols": 254,
+        "mrr": 0.0142,
         "oracle_symbols": 311,
-        "precision": 0.9091,
+        "precision": 0.8973,
         "precision_at_k": {
-          "10": 0.9,
-          "100": 0.9091,
-          "50": 0.9091
+          "10": 0.6,
+          "100": 0.67,
+          "50": 0.9
         },
-        "recall": 0.0322
+        "recall": 0.8167
       }
     },
     {
@@ -475,7 +516,7 @@
         },
         "recall": null
       },
-      "candidate_count": 11,
+      "candidate_count": 331,
       "kind": "ablation",
       "manual_review": {
         "label_distribution": {},
@@ -485,13 +526,19 @@
             "labeled_warnings": 0,
             "precision": null,
             "true_labeled_warnings": 0,
-            "warnings": 2
+            "warnings": 25
+          },
+          "MacroConstDrift": {
+            "labeled_warnings": 0,
+            "precision": null,
+            "true_labeled_warnings": 0,
+            "warnings": 26
           },
           "SignatureDrift": {
             "labeled_warnings": 0,
             "precision": null,
             "true_labeled_warnings": 0,
-            "warnings": 9
+            "warnings": 280
           }
         },
         "precision": null,
@@ -505,19 +552,19 @@
       },
       "note": "Metrics are computed over the variant's filtered or re-ranked warning list.",
       "variant": "NoRanking",
-      "warning_count": 11,
+      "warning_count": 331,
       "wrapper_fix_prediction": {
-        "f1": 0.0621,
-        "matched_symbols": 10,
-        "mrr": 0.0094,
+        "f1": 0.8551,
+        "matched_symbols": 254,
+        "mrr": 0.0171,
         "oracle_symbols": 311,
-        "precision": 0.9091,
+        "precision": 0.8973,
         "precision_at_k": {
           "10": 1.0,
-          "100": 0.9091,
-          "50": 0.9091
+          "100": 0.9,
+          "50": 0.92
         },
-        "recall": 0.0322
+        "recall": 0.8167
       }
     },
     {
@@ -534,7 +581,7 @@
         },
         "recall": null
       },
-      "candidate_count": 11,
+      "candidate_count": 331,
       "kind": "ablation",
       "manual_review": {
         "label_distribution": {},
@@ -544,13 +591,19 @@
             "labeled_warnings": 0,
             "precision": null,
             "true_labeled_warnings": 0,
-            "warnings": 2
+            "warnings": 25
+          },
+          "MacroConstDrift": {
+            "labeled_warnings": 0,
+            "precision": null,
+            "true_labeled_warnings": 0,
+            "warnings": 26
           },
           "SignatureDrift": {
             "labeled_warnings": 0,
             "precision": null,
             "true_labeled_warnings": 0,
-            "warnings": 9
+            "warnings": 280
           }
         },
         "precision": null,
@@ -564,19 +617,19 @@
       },
       "note": "Metrics are computed over the variant's filtered or re-ranked warning list.",
       "variant": "NoSafetyComment",
-      "warning_count": 11,
+      "warning_count": 331,
       "wrapper_fix_prediction": {
-        "f1": 0.0621,
-        "matched_symbols": 10,
-        "mrr": 0.0065,
+        "f1": 0.8551,
+        "matched_symbols": 254,
+        "mrr": 0.0142,
         "oracle_symbols": 311,
-        "precision": 0.9091,
+        "precision": 0.8973,
         "precision_at_k": {
-          "10": 0.9,
-          "100": 0.9091,
-          "50": 0.9091
+          "10": 0.6,
+          "100": 0.67,
+          "50": 0.9
         },
-        "recall": 0.0322
+        "recall": 0.8167
       }
     },
     {
@@ -593,7 +646,7 @@
         },
         "recall": null
       },
-      "candidate_count": 11,
+      "candidate_count": 331,
       "kind": "ablation",
       "manual_review": {
         "label_distribution": {},
@@ -603,13 +656,19 @@
             "labeled_warnings": 0,
             "precision": null,
             "true_labeled_warnings": 0,
-            "warnings": 2
+            "warnings": 25
+          },
+          "MacroConstDrift": {
+            "labeled_warnings": 0,
+            "precision": null,
+            "true_labeled_warnings": 0,
+            "warnings": 26
           },
           "SignatureDrift": {
             "labeled_warnings": 0,
             "precision": null,
             "true_labeled_warnings": 0,
-            "warnings": 9
+            "warnings": 280
           }
         },
         "precision": null,
@@ -623,19 +682,19 @@
       },
       "note": "Metrics are computed over the variant's filtered or re-ranked warning list.",
       "variant": "NoCommitText",
-      "warning_count": 11,
+      "warning_count": 331,
       "wrapper_fix_prediction": {
-        "f1": 0.0621,
-        "matched_symbols": 10,
-        "mrr": 0.0065,
+        "f1": 0.8551,
+        "matched_symbols": 254,
+        "mrr": 0.0142,
         "oracle_symbols": 311,
-        "precision": 0.9091,
+        "precision": 0.8973,
         "precision_at_k": {
-          "10": 0.9,
-          "100": 0.9091,
-          "50": 0.9091
+          "10": 0.6,
+          "100": 0.67,
+          "50": 0.9
         },
-        "recall": 0.0322
+        "recall": 0.8167
       }
     },
     {
@@ -652,7 +711,7 @@
         },
         "recall": null
       },
-      "candidate_count": 11,
+      "candidate_count": 331,
       "kind": "ablation",
       "manual_review": {
         "label_distribution": {},
@@ -662,13 +721,19 @@
             "labeled_warnings": 0,
             "precision": null,
             "true_labeled_warnings": 0,
-            "warnings": 2
+            "warnings": 25
+          },
+          "MacroConstDrift": {
+            "labeled_warnings": 0,
+            "precision": null,
+            "true_labeled_warnings": 0,
+            "warnings": 26
           },
           "SignatureDrift": {
             "labeled_warnings": 0,
             "precision": null,
             "true_labeled_warnings": 0,
-            "warnings": 9
+            "warnings": 280
           }
         },
         "precision": null,
@@ -682,19 +747,19 @@
       },
       "note": "Metrics are computed over the variant's filtered or re-ranked warning list.",
       "variant": "NoBehaviorIndicator",
-      "warning_count": 11,
+      "warning_count": 331,
       "wrapper_fix_prediction": {
-        "f1": 0.0621,
-        "matched_symbols": 10,
-        "mrr": 0.0065,
+        "f1": 0.8551,
+        "matched_symbols": 254,
+        "mrr": 0.0142,
         "oracle_symbols": 311,
-        "precision": 0.9091,
+        "precision": 0.8973,
         "precision_at_k": {
-          "10": 0.9,
-          "100": 0.9091,
-          "50": 0.9091
+          "10": 0.6,
+          "100": 0.67,
+          "50": 0.9
         },
-        "recall": 0.0322
+        "recall": 0.8167
       }
     }
   ]

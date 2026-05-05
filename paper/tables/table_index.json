@@ -19,6 +19,10 @@
     "available": true,
     "path": "/home/nya/workspace/bind-drift/paper/tables/replay_summary.json"
   },
+  "run_manifest": {
+    "available": true,
+    "path": "/home/nya/workspace/bind-drift/data/replay/latest/run_manifest.json"
+  },
   "runtime_scalability": {
     "available": true,
     "path": "/home/nya/workspace/bind-drift/paper/tables/runtime_scalability.json"

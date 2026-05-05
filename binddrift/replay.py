@@ -14,7 +14,7 @@ from binddrift.db import connect, initialize, upsert_many
 from binddrift.detectors.tier1 import run_tier1, run_tier1_with_context
 from binddrift.detectors.tier2 import run_tier2, run_tier2_with_context
 from binddrift.environment import capture_environment, write_environment
-from binddrift.evaluation.evaluator import run_evaluation
+from binddrift.evaluation.evaluator import generate_manual_review, run_evaluation
 from binddrift.extractors.bindgen import extract_bindings
 from binddrift.extractors.c_api import binding_closure_roots, extract_c_api
 from binddrift.extractors.rust_usage import extract_rust_usage
@@ -24,6 +24,7 @@ from binddrift.kernel import build_kernel_bindings, prepare_kernel_build
 from binddrift.paper.cases import generate_case_studies
 from binddrift.paper.tables import generate_paper_tables
 from binddrift.ranking.scorer import rank_warnings
+from binddrift.run_manifest import aggregate_pair_jsonl, write_run_manifest
 from binddrift.toolchain_matrix import write_toolchain_matrix
 from binddrift.versions import ensure_worktree, sanitize_ref, select_versions
 from binddrift.warnings import read_warnings
@@ -346,6 +347,7 @@ def run_version_replay(
     processed: dict[str, dict[str, Any]] = {}
     pairs: list[dict[str, Any]] = []
     aggregate_warnings = run_dir / "warnings.jsonl"
+    aggregate_drift_facts = run_dir / "drift_facts.jsonl"
     started = time.time()
 
     for index, (old_version, new_version) in enumerate(zip(versions, versions[1:], strict=False), start=1):
@@ -465,7 +467,14 @@ def run_version_replay(
 
     completed = sum(1 for pair in pairs if pair["status"] == "completed")
     failed = sum(1 for pair in pairs if pair["status"] != "completed")
+    drift_fact_count = aggregate_pair_jsonl(run_dir, "drift_facts.jsonl", aggregate_drift_facts)
     aggregate_ranking = rank_warnings(_cfg_for_replay_run(cfg, run_dir))
+    aggregate_review = generate_manual_review(
+        _cfg_for_replay_run(cfg, run_dir),
+        read_warnings(aggregate_warnings),
+        top_k=100,
+    )
+    should_write_manifest = bool(completed and failed == 0 and aggregate_ranking["warnings"] > 0)
     summary = {
         "run_id": run_id,
         "versions": len(versions),
@@ -476,7 +485,11 @@ def run_version_replay(
         "ranking": aggregate_ranking,
         "duration_seconds": round(time.time() - started, 3),
         "aggregate_warnings": str(aggregate_warnings),
+        "aggregate_drift_facts": str(aggregate_drift_facts),
+        "drift_facts": drift_fact_count,
+        "manual_review": str(aggregate_review),
         "run_dir": str(run_dir),
+        "run_manifest": str(run_dir / "run_manifest.json") if should_write_manifest else None,
         "stale_previous": stale,
     }
     (run_dir / "summary.json").write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -488,4 +501,6 @@ def run_version_replay(
         }
     )
     _persist_run(cfg, run_row)
+    if should_write_manifest:
+        write_run_manifest(cfg, run_id=run_id)
     return summary

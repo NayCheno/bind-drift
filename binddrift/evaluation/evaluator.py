@@ -9,6 +9,7 @@ from typing import Any
 from binddrift.config import Config
 from binddrift.db import connect, initialize, upsert_many
 from binddrift.gitutil import git_output
+from binddrift.run_manifest import canonical_run_dir, manifest_exists, validate_run_manifest
 from binddrift.warnings import read_warnings
 from .baselines import generate_baselines
 from .metrics import labeled_summary, load_manual_labels, manual_review_agreement, oracle_summary, warning_key
@@ -218,11 +219,21 @@ def run_evaluation(
     pair_id: str | None = None,
 ) -> dict[str, Any]:
     cfg.ensure_dirs()
-    warnings = read_warnings(cfg.warnings_jsonl)
+    manifest = None
+    warnings_path = cfg.warnings_jsonl
+    review_path: Path | None = None
+    canonical_latest_exists = (canonical_run_dir(cfg) / "warnings.jsonl").exists()
+    if pair_id is None and run_id in (None, "latest") and (manifest_exists(cfg) or canonical_latest_exists):
+        manifest = validate_run_manifest(cfg)
+        warnings_path = Path(manifest["resolved_paths"]["warnings"])
+        review_path = Path(manifest["resolved_paths"]["manual_review"])
+        run_id = str(manifest["run_id"])
+    warnings = read_warnings(warnings_path)
     build_findings = parse_build_log(build_log) if build_log else []
     wrapper_fixes = mine_wrapper_fixes(cfg)
     persisted = persist_ground_truth(cfg, build_log, build_findings, wrapper_fixes, run_id=run_id, pair_id=pair_id)
-    review_path = generate_manual_review(cfg, warnings, top_k=top_k)
+    if review_path is None:
+        review_path = generate_manual_review(cfg, warnings, top_k=top_k)
     labels = load_manual_labels(review_path)
     metrics = labeled_summary(warnings, labels)
     agreement = manual_review_agreement(review_path)
@@ -237,6 +248,7 @@ def run_evaluation(
         "manual_review_agreement": agreement,
         "build_breakage_prediction": build_metrics,
         "wrapper_fix_prediction": wrapper_metrics,
+        "run_manifest": str(canonical_run_dir(cfg) / "run_manifest.json") if manifest else None,
         "recall": {
             "build_breakage": build_metrics["recall"],
             "wrapper_fix": wrapper_metrics["recall"],
@@ -246,7 +258,7 @@ def run_evaluation(
     tables_dir = cfg.repo_root / "paper/tables"
     tables_dir.mkdir(parents=True, exist_ok=True)
     (tables_dir / "evaluation_summary.json").write_text(json.dumps(table, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    baselines = generate_baselines(cfg)
+    baselines = generate_baselines(cfg, warnings_path=warnings_path, review_path=review_path, run_manifest=table["run_manifest"])
     return {
         "summary": table,
         "baselines": baselines,

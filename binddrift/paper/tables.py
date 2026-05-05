@@ -7,6 +7,7 @@ from typing import Any
 from binddrift.config import Config
 from binddrift.db import connect, initialize
 from binddrift.evaluation.metrics import load_manual_labels, manual_review_agreement, warning_label_key
+from binddrift.run_manifest import canonical_run_dir, manifest_exists, validate_run_manifest
 
 
 MAIN_REPLAY_STATUSES = {"completed", "completed_with_failures"}
@@ -16,14 +17,18 @@ MAIN_REPLAY_RUN_ID = "latest"
 def generate_paper_tables(cfg: Config) -> dict[str, object]:
     tables_dir = cfg.repo_root / "paper/tables"
     tables_dir.mkdir(parents=True, exist_ok=True)
+    manifest = None
+    if manifest_exists(cfg) or (canonical_run_dir(cfg) / "warnings.jsonl").exists():
+        manifest = validate_run_manifest(cfg)
     replay_summary = tables_dir / "replay_summary.json"
     fact_counts = tables_dir / "fact_counts.json"
     manual_review = tables_dir / "manual_review_summary.json"
     runtime = tables_dir / "runtime_scalability.json"
     _write_replay_summary(cfg, replay_summary)
     _write_fact_counts(cfg, fact_counts)
-    _write_manual_review_summary(cfg, manual_review)
-    _write_runtime_scalability(cfg, runtime)
+    _write_manual_review_summary(cfg, manual_review, manifest=manifest)
+    _write_runtime_scalability(cfg, runtime, manifest=manifest)
+    _validate_table_consistency(cfg, manifest)
     known = {
         "evaluation_summary": tables_dir / "evaluation_summary.json",
         "baselines_ablations": tables_dir / "baselines_ablations.json",
@@ -31,6 +36,7 @@ def generate_paper_tables(cfg: Config) -> dict[str, object]:
         "fact_counts": fact_counts,
         "manual_review_summary": manual_review,
         "runtime_scalability": runtime,
+        "run_manifest": canonical_run_dir(cfg) / "run_manifest.json",
         "toolchain_matrix": cfg.data_dir / "toolchain_matrix.json",
     }
     index = {
@@ -115,20 +121,24 @@ def _write_fact_counts(cfg: Config, path: Path) -> None:
     )
 
 
-def _write_manual_review_summary(cfg: Config, path: Path) -> None:
+def _write_manual_review_summary(cfg: Config, path: Path, manifest: dict[str, Any] | None = None) -> None:
     conn = connect(cfg.database)
     initialize(conn)
     source_run_id = None
     review_path = cfg.data_dir / "manual_review.csv"
     gate = _main_replay_gate(conn)
-    for run_id in gate["eligible_run_ids"]:
-        run = conn.execute("SELECT summary FROM replay_runs WHERE run_id=?", (run_id,)).fetchone()
-        summary = _load_json(run["summary"] if run else None, {})
-        candidate = Path(summary.get("run_dir", "")) / "manual_review.csv" if summary.get("run_dir") else None
-        if candidate and candidate.exists():
-            review_path = candidate
-            source_run_id = run_id
-            break
+    if manifest:
+        review_path = Path(manifest["resolved_paths"]["manual_review"])
+        source_run_id = str(manifest["run_id"])
+    else:
+        for run_id in gate["eligible_run_ids"]:
+            run = conn.execute("SELECT summary FROM replay_runs WHERE run_id=?", (run_id,)).fetchone()
+            summary = _load_json(run["summary"] if run else None, {})
+            candidate = Path(summary.get("run_dir", "")) / "manual_review.csv" if summary.get("run_dir") else None
+            if candidate and candidate.exists():
+                review_path = candidate
+                source_run_id = run_id
+                break
     labels = load_manual_labels(review_path)
     labeled = [label for label in labels.values() if label]
     all_unclear = bool(labeled) and set(labeled) == {"UNCLEAR"}
@@ -152,26 +162,99 @@ def _write_manual_review_summary(cfg: Config, path: Path) -> None:
     )
 
 
-def _write_runtime_scalability(cfg: Config, path: Path) -> None:
+def _write_runtime_scalability(cfg: Config, path: Path, manifest: dict[str, Any] | None = None) -> None:
     conn = connect(cfg.database)
     initialize(conn)
     rows = []
     for row in conn.execute("SELECT run_id, status, summary FROM replay_runs ORDER BY started_at DESC LIMIT 20"):
         summary = json.loads(row["summary"] or "{}")
-        rows.append(
-            {
-                "run_id": row["run_id"],
-                "status": row["status"],
-                "versions": summary.get("versions"),
-                "pairs": summary.get("pairs"),
-                "warnings": summary.get("warnings"),
-                "duration_seconds": summary.get("duration_seconds"),
-            }
-        )
+        item = {
+            "run_id": row["run_id"],
+            "status": row["status"],
+            "versions": summary.get("versions"),
+            "pairs": summary.get("pairs"),
+            "duration_seconds": summary.get("duration_seconds"),
+        }
+        if manifest and row["run_id"] == manifest["run_id"]:
+            item.update(
+                {
+                    "drift_facts": manifest["drift_fact_count"],
+                    "promoted_warnings": manifest["promoted_warning_count"],
+                    "paper_topk": manifest["paper_topk"],
+                }
+            )
+        else:
+            item["promoted_warnings"] = summary.get("warnings")
+        rows.append(item)
     path.write_text(
         json.dumps({"runs": rows, "main_evidence_gate": _main_replay_gate(conn)}, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
+
+
+def _validate_table_consistency(cfg: Config, manifest: dict[str, Any] | None) -> None:
+    if not manifest:
+        return
+    tables_dir = cfg.repo_root / "paper/tables"
+    evaluation_path = tables_dir / "evaluation_summary.json"
+    evaluation = None
+    if evaluation_path.exists():
+        evaluation = json.loads(evaluation_path.read_text(encoding="utf-8"))
+        if evaluation.get("warnings") != manifest["warning_count"]:
+            raise RuntimeError(
+                f"evaluation_summary warnings {evaluation.get('warnings')} != run_manifest warning_count {manifest['warning_count']}"
+            )
+        expected_manifest = canonical_run_dir(cfg) / "run_manifest.json"
+        evaluation_manifest = evaluation.get("run_manifest")
+        if not evaluation_manifest or Path(evaluation_manifest).resolve() != expected_manifest.resolve():
+            raise RuntimeError(
+                f"evaluation_summary run_manifest {evaluation_manifest} != {expected_manifest}"
+            )
+    manual_path = tables_dir / "manual_review_summary.json"
+    manual = None
+    if manual_path.exists():
+        manual = json.loads(manual_path.read_text(encoding="utf-8"))
+        if manual.get("source_run_id") != manifest["run_id"]:
+            raise RuntimeError(
+                f"manual_review_summary source_run_id {manual.get('source_run_id')} != run_manifest run_id {manifest['run_id']}"
+            )
+    if evaluation and manual:
+        evaluation_manual = evaluation.get("manual_review") or {}
+        if (
+            evaluation_manual.get("labeled_warnings") != manual.get("labeled_warnings")
+            and "filtered_labeled_warnings" not in evaluation_manual
+        ):
+            raise RuntimeError(
+                "evaluation_summary manual_review.labeled_warnings "
+                f"{evaluation_manual.get('labeled_warnings')} != manual_review_summary labeled_warnings {manual.get('labeled_warnings')}"
+            )
+    baselines_path = tables_dir / "baselines_ablations.json"
+    if baselines_path.exists():
+        baselines = json.loads(baselines_path.read_text(encoding="utf-8"))
+        baseline_warnings = (baselines.get("counts") or {}).get("warnings")
+        if baseline_warnings != manifest["warning_count"]:
+            raise RuntimeError(
+                f"baselines_ablations counts.warnings {baseline_warnings} != run_manifest warning_count {manifest['warning_count']}"
+            )
+        source = baselines.get("source") or {}
+        expected_manifest = canonical_run_dir(cfg) / "run_manifest.json"
+        source_manifest = source.get("run_manifest")
+        if not source_manifest or Path(source_manifest).resolve() != expected_manifest.resolve():
+            raise RuntimeError(
+                f"baselines_ablations source.run_manifest {source_manifest} != {expected_manifest}"
+            )
+        expected_warnings = Path(manifest["resolved_paths"]["warnings"]).resolve()
+        source_warnings = source.get("warnings")
+        if not source_warnings or Path(source_warnings).resolve() != expected_warnings:
+            raise RuntimeError(
+                f"baselines_ablations source.warnings {source_warnings} != {expected_warnings}"
+            )
+        expected_review = Path(manifest["resolved_paths"]["manual_review"]).resolve()
+        source_review = source.get("manual_review")
+        if not source_review or Path(source_review).resolve() != expected_review:
+            raise RuntimeError(
+                f"baselines_ablations source.manual_review {source_review} != {expected_review}"
+            )
 
 
 def _load_json(value: str | None, default: Any) -> Any:

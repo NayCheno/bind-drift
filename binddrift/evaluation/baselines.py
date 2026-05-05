@@ -15,11 +15,11 @@ TIER1_TYPES = {"SignatureDrift", "LayoutDrift", "FieldDrift", "MacroConstDrift",
 TIER2_TYPES = {"NullabilityDrift", "ErrorDrift", "OwnershipRefcountDrift", "AllocationFreePairingDrift", "SleepabilityDrift"}
 
 
-def generate_baselines(cfg: Config) -> dict[str, Any]:
+def generate_baselines(cfg: Config, warnings_path=None, review_path=None, run_manifest: str | None = None) -> dict[str, Any]:
     conn = connect(cfg.database)
     initialize(conn)
-    warnings = read_warnings(cfg.warnings_jsonl)
-    labels = load_manual_labels(cfg.data_dir / "manual_review.csv")
+    warnings = read_warnings(warnings_path or cfg.warnings_jsonl)
+    labels = load_manual_labels(review_path or (cfg.data_dir / "manual_review.csv"))
     build_symbols = _build_symbols(conn, warnings)
     wrapper_symbols: set[str] = set()
     for row in conn.execute("SELECT matched_symbols FROM wrapper_fix_events WHERE likely_wrapper_fix=1"):
@@ -63,7 +63,12 @@ def generate_baselines(cfg: Config) -> dict[str, Any]:
         )
     path = cfg.repo_root / "paper/tables/baselines_ablations.json"
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps({"counts": counts, "variants": rows}, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    source = {
+        "warnings": str(warnings_path or cfg.warnings_jsonl),
+        "manual_review": str(review_path or (cfg.data_dir / "manual_review.csv")),
+        "run_manifest": run_manifest,
+    }
+    path.write_text(json.dumps({"counts": counts, "source": source, "variants": rows}, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return {"baseline_table": str(path), "variants": len(rows), "counts": counts}
 
 

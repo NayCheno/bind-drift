@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from dataclasses import replace
 from pathlib import Path
 from typing import Callable
 
@@ -12,6 +13,7 @@ from .detectors.tier1 import run_tier1, run_tier1_with_context
 from .detectors.tier2 import run_tier2, run_tier2_with_context
 from .environment import capture_environment, write_environment
 from .evaluation.evaluator import run_evaluation
+from .evaluation.evaluator import generate_manual_review
 from .evaluation.diagnostics import diagnose_false_positives
 from .extractors.bindgen import extract_bindings
 from .extractors.c_api import extract_c_api
@@ -22,6 +24,8 @@ from .ranking.scorer import rank_warnings
 from .paper.cases import generate_case_studies
 from .paper.tables import generate_paper_tables
 from .replay import run_pilot_replay, run_version_replay
+from .run_manifest import aggregate_pair_jsonl, canonical_run_dir, write_run_manifest
+from .warnings import read_warnings
 from .toolchain import bootstrap_toolchain, check_toolchain
 from .toolchain_matrix import write_toolchain_matrix
 from .versions import ensure_worktree, select_versions
@@ -195,6 +199,26 @@ def cmd_eval(args: argparse.Namespace, cfg: Config) -> int:
         pair_id=args.pair_id,
     )
     print(json.dumps(result, indent=2, sort_keys=True))
+    return 0
+
+
+def cmd_eval_manifest(args: argparse.Namespace, cfg: Config) -> int:
+    run_dir = canonical_run_dir(cfg, args.run_id)
+    run_cfg = replace(
+        cfg,
+        data_dir=run_dir,
+        warnings_jsonl=run_dir / "warnings.jsonl",
+        drift_facts_jsonl=run_dir / "drift_facts.jsonl",
+        report_md=run_dir / "warnings.md",
+    )
+    drift_facts = run_dir / "drift_facts.jsonl"
+    if args.refresh or not drift_facts.exists():
+        aggregate_pair_jsonl(run_dir, "drift_facts.jsonl", drift_facts)
+    review = run_dir / "manual_review.csv"
+    if args.refresh_review or not review.exists():
+        generate_manual_review(run_cfg, read_warnings(run_cfg.warnings_jsonl), top_k=args.top_k)
+    manifest = write_run_manifest(cfg, run_id=args.run_id)
+    print(json.dumps(manifest, indent=2, sort_keys=True))
     return 0
 
 
@@ -408,6 +432,12 @@ def build_parser() -> argparse.ArgumentParser:
     eval_all.add_argument("--run-id", help="Replay run id associated with the evaluation oracle rows.")
     eval_all.add_argument("--pair-id", help="Replay pair id associated with the evaluation oracle rows.")
     _set(eval_all, cmd_eval)
+    manifest = eval_sub.add_parser("manifest", help="Generate the canonical replay run manifest.")
+    manifest.add_argument("--run-id", default="latest", help="Replay run id to manifest.")
+    manifest.add_argument("--top-k", type=int, default=100, help="Top warnings to include in a generated review skeleton.")
+    manifest.add_argument("--refresh", action="store_true", help="Rebuild aggregate drift_facts.jsonl before writing the manifest.")
+    manifest.add_argument("--refresh-review", action="store_true", help="Regenerate the canonical manual_review.csv skeleton.")
+    _set(manifest, cmd_eval_manifest)
     diagnose = eval_sub.add_parser("diagnose-false-positives", help="Convert manual labels into hard negatives and diagnosis counts.")
     diagnose.add_argument("--manual-review", required=True, help="Manual review CSV with labels.")
     diagnose.add_argument("--warnings", required=True, help="Warnings JSONL used by the manual review CSV.")

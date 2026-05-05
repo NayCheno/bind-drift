@@ -121,100 +121,102 @@
   },
   "runs": [
     {
-      "duration_seconds": 587.915,
+      "drift_facts": 17867,
+      "duration_seconds": 568.001,
       "pairs": 20,
+      "paper_topk": 331,
+      "promoted_warnings": 331,
       "run_id": "latest",
       "status": "completed",
-      "versions": 21,
-      "warnings": 17910
+      "versions": 21
     },
     {
       "duration_seconds": 740.731,
       "pairs": 15,
+      "promoted_warnings": 16973,
       "run_id": "replay-20260504T224640Z",
       "status": "completed",
-      "versions": 16,
-      "warnings": 16973
+      "versions": 16
     },
     {
       "duration_seconds": 1424.754,
       "pairs": 20,
+      "promoted_warnings": 13579,
       "run_id": "replay-20260504T220545Z",
       "status": "completed_with_failures",
-      "versions": 21,
-      "warnings": 13579
+      "versions": 21
     },
     {
       "duration_seconds": 147.527,
       "pairs": 1,
+      "promoted_warnings": 572,
       "run_id": "replay-20260504T220238Z",
       "status": "completed",
-      "versions": 2,
-      "warnings": 572
+      "versions": 2
     },
     {
       "duration_seconds": null,
       "pairs": 1,
+      "promoted_warnings": null,
       "run_id": "replay-20260504T214049Z",
       "status": "failed",
-      "versions": 2,
-      "warnings": null
+      "versions": 2
     },
     {
       "duration_seconds": null,
       "pairs": 1,
+      "promoted_warnings": null,
       "run_id": "replay-20260504T213940Z",
       "status": "failed",
-      "versions": 2,
-      "warnings": null
+      "versions": 2
     },
     {
       "duration_seconds": null,
       "pairs": 1,
+      "promoted_warnings": null,
       "run_id": "replay-20260504T213828Z",
       "status": "failed",
-      "versions": 2,
-      "warnings": null
+      "versions": 2
     },
     {
       "duration_seconds": null,
       "pairs": 1,
+      "promoted_warnings": null,
       "run_id": "replay-20260504T213525Z",
       "status": "failed",
-      "versions": 2,
-      "warnings": null
+      "versions": 2
     },
     {
       "duration_seconds": null,
       "pairs": 1,
+      "promoted_warnings": null,
       "run_id": "replay-20260504T210923Z",
       "status": "failed",
-      "versions": 2,
-      "warnings": null
+      "versions": 2
     },
     {
       "duration_seconds": null,
       "pairs": 1,
+      "promoted_warnings": null,
       "run_id": "replay-20260504T210739Z",
       "status": "failed",
-      "versions": 2,
-      "warnings": null
+      "versions": 2
     },
     {
       "duration_seconds": null,
       "pairs": 1,
+      "promoted_warnings": null,
       "run_id": "replay-20260504T210634Z",
       "status": "failed",
-      "versions": 2,
-      "warnings": null
+      "versions": 2
     },
     {
       "duration_seconds": null,
       "pairs": null,
+      "promoted_warnings": null,
       "run_id": "replay-20260504T210428Z",
       "status": "stale",
-      "versions": null,
-      "warnings": null
+      "versions": null
     }
   ]
 }

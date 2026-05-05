@@ -25,13 +25,19 @@
         "labeled_warnings": 0,
         "precision": null,
         "true_labeled_warnings": 0,
-        "warnings": 2
+        "warnings": 25
+      },
+      "MacroConstDrift": {
+        "labeled_warnings": 0,
+        "precision": null,
+        "true_labeled_warnings": 0,
+        "warnings": 26
       },
       "SignatureDrift": {
         "labeled_warnings": 0,
         "precision": null,
         "true_labeled_warnings": 0,
-        "warnings": 9
+        "warnings": 280
       }
     },
     "precision": null,
@@ -51,21 +57,22 @@
   "note": "Build and wrapper-fix recall are symbol-level replay-oracle estimates; semantic precision comes from manual labels.",
   "recall": {
     "build_breakage": null,
-    "wrapper_fix": 0.2759
+    "wrapper_fix": 0.5172
   },
-  "warnings": 11,
+  "run_manifest": "/home/nya/workspace/bind-drift/data/replay/latest/run_manifest.json",
+  "warnings": 331,
   "wrapper_fix_candidates": 24,
   "wrapper_fix_prediction": {
-    "f1": 0.4,
-    "matched_symbols": 8,
-    "mrr": 0.0438,
+    "f1": 0.0934,
+    "matched_symbols": 15,
+    "mrr": 0.005,
     "oracle_symbols": 29,
-    "precision": 0.7273,
+    "precision": 0.0514,
     "precision_at_k": {
-      "10": 0.7,
-      "100": 0.7273,
-      "50": 0.7273
+      "10": 0.0,
+      "100": 0.04,
+      "50": 0.02
     },
-    "recall": 0.2759
+    "recall": 0.5172
   }
 }

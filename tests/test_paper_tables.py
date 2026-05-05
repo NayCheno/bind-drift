@@ -1,9 +1,12 @@
 import json
 from pathlib import Path
 
+import pytest
+
 from binddrift.config import Config
 from binddrift.db import connect, initialize, upsert_many
 from binddrift.paper.tables import generate_paper_tables
+from binddrift.run_manifest import ArtifactConsistencyError, write_run_manifest
 
 
 def test_paper_tables_exclude_stale_and_zero_binding_replays(tmp_path: Path):
@@ -245,6 +248,7 @@ def test_manual_review_summary_prefers_canonical_latest_run(tmp_path: Path):
         run_dir = tmp_path / f"data/replay/{run_id}"
         run_dir.mkdir(parents=True)
         (run_dir / "warnings.jsonl").write_text('{"warning_id":"W-1"}\n', encoding="utf-8")
+        (run_dir / "drift_facts.jsonl").write_text('{"fact_id":"F-1"}\n', encoding="utf-8")
         (run_dir / "manual_review.csv").write_text(
             "warning_id,reviewer1_label,reviewer2_label,adjudicated_label,label\n"
             "W-1,,,TRUE_WRAPPER_FIX,\n",
@@ -294,6 +298,7 @@ def test_manual_review_summary_prefers_canonical_latest_run(tmp_path: Path):
         )
     upsert_many(conn, "replay_runs", rows)
     upsert_many(conn, "replay_pairs", pair_rows)
+    write_run_manifest(cfg)
 
     generate_paper_tables(cfg)
 
@@ -386,13 +391,6 @@ def test_manual_review_summary_rejects_stale_review_rows_without_warnings(tmp_pa
         ],
     )
 
-    generate_paper_tables(cfg)
-
-    summary = json.loads((tmp_path / "paper/tables/manual_review_summary.json").read_text(encoding="utf-8"))
-    replay_summary = json.loads((tmp_path / "paper/tables/replay_summary.json").read_text(encoding="utf-8"))
-    assert summary["source_run_id"] is None
-    assert summary["usable_for_main"] is False
-    assert {
-        "run_id": "latest",
-        "reasons": ["manual_review_ids_not_in_warnings:1"],
-    } in replay_summary["main_evidence_gate"]["excluded_runs"]
+    (run_dir / "drift_facts.jsonl").write_text("", encoding="utf-8")
+    with pytest.raises(ArtifactConsistencyError, match="empty"):
+        write_run_manifest(cfg)
