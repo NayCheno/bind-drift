@@ -1,22 +1,21 @@
-# BindDrift: Detecting Cross-Language API and Contract Drift in Rust-for-Linux Safe Abstractions
+# BindDrift: Evidence-Backed Warning Prioritization for Rust-for-Linux API and Contract Drift
 
 ## Abstract
 
 Rust-for-Linux safe abstractions rely on Linux C APIs whose signatures, layouts,
 and behavioral contracts evolve outside Rust's type system. BindDrift is a
-static-analysis and empirical-replay artifact for detecting cross-language API
-and contract drift from Linux C declarations and helpers to generated Rust
-bindings, unsafe Rust call sites, and public safe abstractions. BindDrift builds
-a C-to-Rust dependency graph, detects objective API drift and indicator-based
-contract drift, and ranks warnings for maintainer review. The artifact now
-records a per-version Rust-for-Linux toolchain matrix before replay, so older
-kernel releases are built with their required Rust compiler and bindgen versions
-instead of the host's current stable toolchain. On the current LLVM 18 host,
-BindDrift marks `v6.1` through `v6.5` as binding-build incompatible because
-their required bindgen `0.56.0` is known to fail with LLVM 16+ anonymous C item
-names; the main replay therefore uses the reproducible `v6.6` through `v7.0`
-plus `HEAD` window. The paper claim is evidence-backed warning prioritization,
-not soundness proof or automatic bug confirmation.
+static-analysis and cross-version replay artifact for evidence-backed warning
+prioritization, not automatic bug confirmation. BindDrift separates low-level
+cross-version drift facts from promoted Rust-impact warnings, then attaches an
+evidence chain from Linux C declarations or helpers through generated Rust
+bindings, unsafe Rust call sites, wrapper code, safety comments, or public safe
+abstractions. Each emitted warning is a review target for maintainers. The
+current canonical replay spans 21 Linux snapshots from `v6.1` through `v7.0`
+plus `HEAD`, covers 20 adjacent version pairs, records 17,867 drift facts,
+promotes 331 Rust-impact warnings, and sends the top 100 warnings through
+double review and manual adjudication. The resulting paper-top-100 review has
+37 adjudicated true-positive review targets, 35 benign drifts, 27 false
+positives, and one unclear warning.
 
 ## 1. Introduction
 
@@ -27,7 +26,7 @@ unchanged while the underlying C API changes its failure convention, refcount
 contract, allocation/free pairing, or sleepability constraints.
 
 BindDrift frames this as a software evolution problem. The relevant dependency
-chain is:
+chain is an evidence chain:
 
 ```text
 Linux C function/type/macro/helper
@@ -40,6 +39,11 @@ The key observation is that Rust type checking sees only part of this chain.
 Type-visible signature or layout changes can break builds, but semantic changes
 such as `NULL` versus `ERR_PTR`, owned versus borrowed references, or new
 blocking behavior may still require human review.
+
+This paper therefore makes a warning prioritization claim: BindDrift identifies
+cross-version drift facts, filters them through Rust-impact evidence, and ranks
+the resulting warnings as review targets. It does not certify Rust abstraction
+correctness or automatically confirm a concrete runtime defect.
 
 ## 2. Background And Scope
 
@@ -83,11 +87,11 @@ APIs, safety comments, error mappings, and lifetime facts. Edges capture
 generation, binding calls, safe API exposure, contract comments, error mapping,
 and lifetime relevance.
 
-Fourth, detectors produce warnings. Tier 1 detectors compare two versions for
-signature, field, layout, macro/constant, and helper drift. Tier 2 detectors
-compare C behavior indicators and require Rust-side evidence before emitting
-nullability, error, ownership/refcount, allocation/free, or sleepability
-warnings.
+Fourth, detectors produce two layers of output. Drift facts record low-level
+cross-version changes in signatures, fields, layouts, macro/constants, helpers,
+and behavior indicators. Promoted warnings are the subset with Rust-impact
+evidence, such as direct binding use, safe API exposure, safety comments,
+error/lifetime mappings, or wrapper-fix evidence.
 
 Fifth, the ranker scores warnings by drift severity, Rust exposure, unsafe
 proximity, safe API relevance, helper involvement, confidence, build-breakage
@@ -111,49 +115,56 @@ events, wrapper-fix candidates, manual labels, and generated table provenance.
 The CCF-B-strength evaluation is organized around one main release-tag replay
 and one small external-validity slice.
 
-The main experiment replays adjacent Linux mainline releases from `v6.6` through
-`v7.0` plus the checked-out `HEAD` on x86_64. The earlier `v6.1` through `v6.5`
-tags are retained in the toolchain matrix as documented exclusions on this host:
-they require bindgen `0.56.0`, which fails with LLVM/libclang 16+ anonymous C
-item names. Each included version is configured with a Rust-enabled kernel
-config, built with the versioned Rust and bindgen tools from the matrix, and
-required to produce generated binding snapshots before drift detection. The
-current main replay completed 15 adjacent pairs, produced 16,973 ranked
-warnings, and stores pair-level build status, binding hashes, extraction
-summaries, wrapper-fix oracle rows, review CSVs, and evaluation tables under a
-replay run directory.
+The main experiment replays 20 adjacent Linux mainline pairs across 21 version
+snapshots from `v6.1` through `v7.0` plus the checked-out `HEAD` on x86_64. Each
+included version is configured with a Rust-enabled kernel config, built with
+versioned Rust and bindgen tools from the matrix, and required to produce
+generated binding snapshots before drift detection. The canonical `latest`
+manifest fixes the files used by all paper tables: 17,867 drift facts, 331
+promoted Rust-impact warnings, and a paper top-100 warning set.
 
-Manual semantic evaluation uses the top 100 ranked warnings plus 100
-stratified-by-type warnings. Two reviewers label warnings independently, then an
-adjudicator records the final label. The artifact reports precision at k,
-symbol-level build/wrapper-fix recall, label distribution, and reviewer
-agreement. The aggregate review sheet has been generated for the main replay;
-until two independent reviewers and an adjudicator complete it, warning rows
-remain review targets rather than confirmed bugs.
+Manual semantic evaluation uses the paper top-100 warnings. Two reviewers label
+warnings independently, then an adjudicator records the final label; this manual
+adjudication is the only source of semantic precision claims. All 100 paper
+warnings are double-labeled with agreement rate 1.0. The final labels are
+35 `TRUE_WRAPPER_FIX`, 2 `TRUE_SEMANTIC_DRIFT`, 35 `BENIGN_DRIFT`,
+27 `FALSE_POSITIVE`, and 1 `UNCLEAR`. Manual precision is 0.37 overall, with
+P@10 = 0.30, P@50 = 0.36, and P@100 = 0.37. These labels support a claim that
+BindDrift surfaces useful review targets, not a claim that every warning is a
+confirmed defect.
 
-Baselines compare BindDrift against bindgen-only drift, C signature drift,
-build-only evidence, grep-based Rust usage, no ranking, and Tier-1-only
-detection. Ablations remove the graph, Tier 2 detectors, ranking, safety
-comments, commit text, or behavior indicators. The paper tables are generated
-from artifact outputs, not hand-entered numbers.
+Baselines compare BindDrift against binding-diff, C-signature, C-indicator,
+Rust-use, oracle-blind, no-ranking, and random variants. In the current tables,
+the evidence gate is supported as the stronger claim: BindDrift reduces the
+warning volume to a reviewed Rust-impact set, but the ranking comparison does
+not yet support a broad claim that BindDrift beats every simple baseline on
+top-K manual precision. The typed wrapper oracle is reported as auxiliary
+validation, while symbol-level wrapper matching is treated as an upper bound.
+The paper tables are generated from artifact outputs, not hand-entered numbers.
+
+The extractor audit samples 450 facts across C functions, Rust binding uses,
+C behavior indicators, Rust error mappings, Rust lifetime facts, and promoted
+warning evidence. All samples are reviewed through CSV labels tied to the
+current sample provenance; the audit reports `all_minimums_pass = true`.
 
 ## 6. Case Studies
 
-The artifact includes five warning-backed case studies:
+The artifact includes four warning-backed case studies generated only from
+adjudicated true positives:
 
-- `rb_first`: `NULL_RETURN` evidence reaches Rust rbtree cursor and iterator
-  code.
-- `auxiliary_device_uninit`: free/release and refcount-put evidence reaches the
-  Rust auxiliary device drop path.
-- `dma_alloc_attrs`: `NULL_RETURN` evidence reaches Rust DMA allocation
-  wrappers.
-- `kunit_get_current_test`: `NULL_RETURN` evidence reaches Rust KUnit helpers.
-- `auxiliary_device_uninit` allocation/free pairing: release behavior reaches
-  Rust cleanup code.
+- `mdiobus_read`: wrapper-fix-backed signature drift reaches Rust PHY register
+  access code.
+- `security_secid_to_secctx`: semantic-review-backed signature drift reaches
+  `SecurityCtx::from_secid` and its safety/error-mapping assumptions.
+- `mdiobus_write`: wrapper-fix-backed signature drift reaches Rust PHY register
+  write code.
+- `security_release_secctx`: semantic-review-backed signature drift reaches the
+  Rust security context drop path.
 
-Each case is classified as a review target rather than a confirmed bug. This
-matches the artifact's claim boundary and avoids overstating single-version
-indicator evidence.
+Each case is classified as a review target rather than a confirmed defect. No
+case study is unlabeled, false positive, benign drift, or single-version-only.
+The current case set covers one drift type, so it satisfies the minimum case
+study gate but not the stronger target of covering at least two drift types.
 
 ## 7. Threats To Validity
 
@@ -162,10 +173,11 @@ binding outputs, and toolchain/config differences. BindDrift mitigates these by
 recording extraction diagnostics, environment metadata, and config hashes.
 
 Construct validity threats include the ambiguity of semantic drift labels and
-the fact that warnings are not bugs. The manual review guide separates
-`TRUE_SEMANTIC_DRIFT`, `BENIGN_DRIFT`, `FALSE_POSITIVE`, and `UNCLEAR`. In this
-run, all reviewed warnings are `UNCLEAR` because historical comparison was not
-available.
+the fact that warnings are review targets rather than confirmed defects. The
+manual review guide separates `TRUE_SEMANTIC_DRIFT`, `TRUE_WRAPPER_FIX`,
+`BENIGN_DRIFT`, `FALSE_POSITIVE`, and `UNCLEAR`, and the evaluation uses the
+adjudicated label for paper metrics. The current case studies all come from
+signature drift, so broader drift-type coverage remains future work.
 
 External validity threats include focusing on Linux/Rust-for-Linux and x86_64.
 Future work should evaluate additional architectures, rust-next branches, and
@@ -185,4 +197,4 @@ BindDrift makes Rust-for-Linux cross-language dependencies explicit and ranks
 API/contract drift warnings for review. The current artifact implements the full
 pipeline and reports measured pilot results while preserving the central claim
 boundary: BindDrift prioritizes evidence-backed review targets; it does not
-prove soundness or claim every warning is a bug.
+certify correctness or claim every warning is a confirmed defect.
