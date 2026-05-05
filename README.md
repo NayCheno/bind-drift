@@ -25,16 +25,15 @@ The prototype is implemented as a staged command-line workflow. The pilot pipeli
 
 For the stronger multi-version evaluation path, first generate and bootstrap the
 per-kernel Rust-for-Linux toolchain matrix, then run adjacent-release replay.
-The matrix should still start at `v6.1` so old tags are classified, but the
-current reproducible main window starts at `v6.6`: `v6.1` through `v6.5` require
-bindgen `0.56.0`, which is known to fail with LLVM/libclang 16+ anonymous C item
-names. BindDrift records those tags as toolchain-incompatible on this host
-instead of treating the failures as drift evidence.
+The matrix starts at `v6.1` and records the libclang family needed by each
+bindgen release. On hosts that provide LLVM 15, BindDrift automatically runs
+the `v6.1` through `v6.5` bindgen `0.56.0` entries against libclang 15, avoiding
+the known LLVM/libclang 16+ anonymous C item-name failure.
 
 ```bash
 uv run binddrift toolchain matrix --start v6.1 --fetch-tags
 uv run binddrift toolchain bootstrap --install-matrix
-uv run binddrift replay versions --start v6.6 --include-head --fetch-tags --build-bindings --configure --arch x86_64 --toolchain auto --jobs 1
+uv run binddrift replay versions --start v6.1 --include-head --fetch-tags --build-bindings --configure --arch x86_64 --toolchain auto --jobs 1
 uv run binddrift --data-dir data/replay/latest eval all --top-k 100 --run-id latest
 uv run binddrift paper build
 ```
@@ -46,12 +45,12 @@ without overwriting the pilot warning report.
 
 `toolchain matrix` reads each checked-out kernel version's
 `scripts/min-tool-version.sh`, writes `data/toolchain_matrix.json`, and records
-the exact `RUSTC`, `RUSTDOC`, `RUSTFMT`, `CLIPPY_DRIVER`, `RUST_LIB_SRC`, and
-`BINDGEN` values replay will inject into kernel builds. It also records
-`LIBCLANG_PATH` and `LLVM_CONFIG_PATH` so bindgen uses the same libclang family
-as the compiler used by `LLVM=1`. This avoids running old release tags with a
-newer Rust compiler or mismatched libclang that may no longer match the kernel's
-Rust build assumptions.
+the exact `RUSTC`, `RUSTDOC`, `RUSTFMT`, `CLIPPY_DRIVER`, `RUST_LIB_SRC`,
+`BINDGEN`, and when needed `LLVM` values replay will inject into kernel builds.
+It also records `LIBCLANG_PATH` and `LLVM_CONFIG_PATH`; old bindgen releases are
+pinned to a compatible LLVM/libclang family when available. This avoids running
+old release tags with a newer Rust compiler or mismatched libclang that may no
+longer match the kernel's Rust build assumptions.
 
 ## Documentation
 

@@ -1,0 +1,15 @@
+{
+  "aggregate_warnings": "/home/nya/workspace/bind-drift/data/replay/latest/warnings.jsonl",
+  "completed_pairs": 20,
+  "duration_seconds": 587.915,
+  "failed_pairs": 0,
+  "pairs": 20,
+  "run_dir": "/home/nya/workspace/bind-drift/data/replay/latest",
+  "run_id": "latest",
+  "stale_previous": {
+    "pairs": 1,
+    "runs": 1
+  },
+  "versions": 21,
+  "warnings": 17910
+}

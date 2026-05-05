@@ -44,7 +44,7 @@ def test_toolchain_matrix_generates_bootstrap_commands(monkeypatch, tmp_path: Pa
     monkeypatch.setattr(
         toolchain_matrix,
         "_llvm_env",
-        lambda: (
+        lambda bindgen_version=None: (
             {"LIBCLANG_PATH": "/usr/lib/llvm-18/lib", "LLVM_CONFIG_PATH": "/usr/bin/llvm-config-18"},
             {"libclang_path": "/usr/lib/llvm-18/lib", "llvm_config_version_text": "18.1.3"},
             [],
@@ -98,11 +98,16 @@ def test_toolchain_matrix_preserves_kernel_tag_requirements(monkeypatch, tmp_pat
     monkeypatch.setattr(
         toolchain_matrix,
         "_llvm_env",
-        lambda: (
+        lambda bindgen_version=None: (
             {"LIBCLANG_PATH": "/usr/lib/llvm-18/lib", "LLVM_CONFIG_PATH": "/usr/bin/llvm-config-18"},
             {"libclang_path": "/usr/lib/llvm-18/lib", "llvm_config_version_text": "18.1.3"},
             [],
         ),
+    )
+    monkeypatch.setattr(
+        toolchain_matrix,
+        "_ensure_llvm_wrappers",
+        lambda cfg, resolved: (str(cfg.state_dir / "toolchains/llvm-18/bin") + "/", {"clang": "/usr/bin/clang-18"}, []),
     )
     repo = tmp_path / "vendor/linux"
     repo.mkdir(parents=True)
@@ -144,9 +149,27 @@ esac
         {"rustc": "1.68.2", "bindgen": "0.56.0"},
         {"rustc": "1.78.0", "bindgen": "0.65.1"},
     ]
+    assert matrix["entries"][0]["make_vars"]["LLVM"].endswith("toolchains/llvm-18/bin/")
+    assert matrix["entries"][1]["make_vars"]["LLVM"].endswith("toolchains/llvm-18/bin/")
+    assert "LLVM" not in matrix["entries"][2]["make_vars"]
     assert matrix["entries"][0]["compatibility_issues"][0]["kind"] == "bindgen_0_56_llvm16_anonymous_ident"
     assert matrix["entries"][1]["compatibility_issues"][0]["kind"] == "bindgen_0_56_llvm16_anonymous_ident"
     assert matrix["entries"][2]["compatibility_issues"] == []
+
+
+def test_old_bindgen_selects_legacy_llvm_when_available(monkeypatch):
+    versions = {
+        "llvm-config-15": "15.0.7",
+        "llvm-config-18": "18.1.3",
+        "llvm-config": "18.1.3",
+    }
+
+    monkeypatch.setattr(toolchain_matrix, "_candidate_llvm_config_commands", lambda: list(versions))
+    monkeypatch.setattr(toolchain_matrix, "_llvm_config_command", lambda: "llvm-config-18")
+    monkeypatch.setattr(toolchain_matrix, "_run_text", lambda command, env=None: versions.get(command[0]))
+
+    assert toolchain_matrix._select_llvm_config_command("0.56.0") == "llvm-config-15"
+    assert toolchain_matrix._select_llvm_config_command("0.65.1") == "llvm-config-18"
 
 
 def test_bootstrap_commands_use_legacy_bindgen_crate_name(tmp_path: Path):

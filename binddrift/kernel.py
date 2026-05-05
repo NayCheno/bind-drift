@@ -33,10 +33,13 @@ def _run_make(
     env_vars: dict[str, str] | None = None,
     log_file: Path | None = None,
 ) -> dict[str, Any]:
-    cmd = ["make", f"O={objtree}", "LLVM=1"]
+    make_vars = make_vars or {}
+    cmd = ["make", f"O={objtree}"]
+    if "LLVM" not in make_vars:
+        cmd.append("LLVM=1")
     if arch != "x86_64":
         cmd.append(f"ARCH={arch}")
-    for name, value in sorted((make_vars or {}).items()):
+    for name, value in sorted(make_vars.items()):
         cmd.append(f"{name}={value}")
     cmd.extend(targets)
     try:

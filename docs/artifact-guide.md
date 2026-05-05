@@ -35,10 +35,10 @@ uv run binddrift toolchain matrix --start v6.1 --fetch-tags
 The command reads each selected kernel version's minimum-tool script and writes
 `data/toolchain_matrix.json`. The file contains the exact Make variables used by
 replay: `RUSTC`, `HOSTRUSTC`, `RUSTDOC`, `RUSTFMT`, `CLIPPY_DRIVER`,
-`RUST_LIB_SRC`, and `BINDGEN`. It also records environment variables such as
-`LIBCLANG_PATH` and `LLVM_CONFIG_PATH`, plus compatibility issues that would
-make a version invalid for binding-built replay on the current host. To install
-the missing Rust toolchains and per-version bindgen binaries:
+`RUST_LIB_SRC`, `BINDGEN`, and where needed `LLVM`. It also records environment
+variables such as `LIBCLANG_PATH` and `LLVM_CONFIG_PATH`, plus compatibility
+issues that would make a version invalid for binding-built replay on the current
+host. To install the missing Rust toolchains and per-version bindgen binaries:
 
 ```bash
 uv run binddrift toolchain bootstrap --install-matrix
@@ -47,10 +47,10 @@ uv run binddrift toolchain bootstrap --install-matrix
 Do not use the host's current stable Rust compiler for the main replay unless
 the matrix says it matches the checked-out kernel version. Newer Rust releases
 or mismatched libclang versions can break older kernel Rust build rules, which
-would contaminate the experiment with toolchain noise. In the current host
-environment, `v6.1` through `v6.5` require bindgen `0.56.0` and are marked
-incompatible with LLVM/libclang 18 because bindgen `0.56.0` is known to fail
-with LLVM 16+ anonymous C item names.
+would contaminate the experiment with toolchain noise. When LLVM 15 is
+available, the matrix pins `v6.1` through `v6.5` bindgen `0.56.0` to libclang
+15 and injects an LLVM 15 tool prefix for kernel Make, avoiding the known
+LLVM/libclang 16+ anonymous C item-name failure.
 
 ## Full Binding Extraction
 
@@ -79,7 +79,7 @@ toolchain). Run:
 
 ```bash
 uv run binddrift replay versions \
-  --start v6.6 \
+  --start v6.1 \
   --include-head \
   --fetch-tags \
   --build-bindings \
@@ -89,10 +89,8 @@ uv run binddrift replay versions \
 ```
 
 This creates one replay run under `data/replay/latest/`, clearing any previous
-contents of that directory first. Use `v6.6` as the main reproducible start
-point on LLVM 18 hosts; use the `v6.1` matrix entries as documented exclusions
-unless libclang 15 or older is available. Each adjacent version pair writes its
-own `warnings.jsonl`, `warnings.md`, `manual_review.csv`, and evaluation tables,
+contents of that directory first. Each adjacent version pair writes its own
+`warnings.jsonl`, `warnings.md`, `manual_review.csv`, and evaluation tables,
 while the SQLite database records the current run as `latest` in `replay_runs`,
 `replay_pairs`, pair-scoped drift events, build oracle rows, and wrapper-fix
 oracle rows. Failed pairs are recorded with an error instead of being silently

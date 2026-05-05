@@ -17,6 +17,17 @@ TOOL_CASE_RE = re.compile(
     r"(?P<tool>rustc|bindgen)\)\s*\n\s*echo\s+(?P<version>[0-9]+(?:\.[0-9]+){1,2})",
     re.MULTILINE,
 )
+LLVM_WRAPPED_TOOLS = (
+    "clang",
+    "clang++",
+    "ld.lld",
+    "llvm-ar",
+    "llvm-nm",
+    "llvm-objcopy",
+    "llvm-objdump",
+    "llvm-readelf",
+    "llvm-strip",
+)
 
 
 def parse_min_tool_versions(script_text: str) -> dict[str, str]:
@@ -89,6 +100,10 @@ def _bindgen_root(cfg: Config, bindgen_version: str) -> Path:
     return cfg.state_dir / "toolchains" / f"bindgen-{bindgen_version}"
 
 
+def _llvm_wrapper_root(cfg: Config, llvm_major: int) -> Path:
+    return cfg.state_dir / "toolchains" / f"llvm-{llvm_major}" / "bin"
+
+
 def _command_available(command: str) -> bool:
     first = command.split()[0]
     return shutil.which(first) is not None
@@ -111,17 +126,101 @@ def _llvm_config_command() -> str:
     return "llvm-config"
 
 
-def _llvm_env() -> tuple[dict[str, str], dict[str, Any], list[str]]:
+def _candidate_llvm_config_commands() -> list[str]:
+    commands: list[str] = []
+    seen: set[str] = set()
+
+    def add(command: str) -> None:
+        path = shutil.which(command)
+        if path and path not in seen:
+            seen.add(path)
+            commands.append(command)
+
+    add(_llvm_config_command())
+    add("llvm-config")
+    for directory in os.environ.get("PATH", "").split(os.pathsep):
+        if not directory:
+            continue
+        try:
+            paths = sorted(Path(directory).glob("llvm-config-[0-9]*"))
+        except OSError:
+            continue
+        for path in paths:
+            add(path.name)
+    return commands
+
+
+def _select_llvm_config_command(bindgen_version: str | None) -> str:
+    if bindgen_version and _version_key(bindgen_version) < (0, 62, 0):
+        compatible: list[tuple[tuple[int, ...], str]] = []
+        for command in _candidate_llvm_config_commands():
+            version = _run_text([command, "--version"])
+            major = _major_version(version)
+            if major and major <= 15:
+                compatible.append((_version_key(version), command))
+        if compatible:
+            return max(compatible, key=lambda item: item[0])[1]
+    return _llvm_config_command()
+
+
+def _clang_for_llvm(llvm_config: str, llvm_version: str | None) -> tuple[str | None, str | None]:
+    llvm_bindir = _run_text([llvm_config, "--bindir"])
+    if llvm_bindir:
+        clang = Path(llvm_bindir) / "clang"
+        if clang.exists():
+            return str(clang), _run_text([str(clang), "--version"])
+    major = _major_version(llvm_version)
+    if major and shutil.which(f"clang-{major}"):
+        command = f"clang-{major}"
+        return shutil.which(command), _run_text([command, "--version"])
+    clang_path = shutil.which("clang")
+    return clang_path, _run_text(["clang", "--version"]) if clang_path else None
+
+
+def _llvm_tool_path(tool: str, llvm_bindir: str | None, llvm_major: int | None) -> str | None:
+    if llvm_bindir:
+        path = Path(llvm_bindir) / tool
+        if path.exists():
+            return str(path)
+    if llvm_major and shutil.which(f"{tool}-{llvm_major}"):
+        return shutil.which(f"{tool}-{llvm_major}")
+    return shutil.which(tool)
+
+
+def _ensure_llvm_wrappers(cfg: Config, resolved: dict[str, Any]) -> tuple[str | None, dict[str, str], list[str]]:
+    llvm_major = _major_version(resolved.get("llvm_config_version_text"))
+    if not llvm_major:
+        return None, {}, ["llvm tool wrappers"]
+    root = _llvm_wrapper_root(cfg, llvm_major)
+    root.mkdir(parents=True, exist_ok=True)
+    wrappers: dict[str, str] = {}
+    missing: list[str] = []
+    llvm_bindir = resolved.get("llvm_bindir")
+    for tool in LLVM_WRAPPED_TOOLS:
+        target = _llvm_tool_path(tool, llvm_bindir, llvm_major)
+        path = root / tool
+        if target:
+            path.write_text(f"#!/usr/bin/env sh\nexec {target} \"$@\"\n", encoding="utf-8")
+            path.chmod(0o755)
+            wrappers[tool] = target
+        else:
+            missing.append(tool)
+            if path.exists():
+                path.unlink()
+    return f"{root}/", wrappers, missing
+
+
+def _llvm_env(bindgen_version: str | None = None) -> tuple[dict[str, str], dict[str, Any], list[str]]:
     missing: list[str] = []
     resolved: dict[str, Any] = {}
     env_vars: dict[str, str] = {}
 
-    llvm_config = _llvm_config_command()
+    llvm_config = _select_llvm_config_command(bindgen_version)
     llvm_config_path = shutil.which(llvm_config)
     llvm_libdir = _run_text([llvm_config, "--libdir"]) if llvm_config_path else None
     llvm_version = _run_text([llvm_config, "--version"]) if llvm_config_path else None
-    clang_path = shutil.which("clang")
-    clang_version = _run_text(["clang", "--version"]) if clang_path else None
+    llvm_bindir = _run_text([llvm_config, "--bindir"]) if llvm_config_path else None
+    clang_path, clang_version = _clang_for_llvm(llvm_config, llvm_version) if llvm_config_path else (None, None)
 
     if llvm_config_path:
         env_vars["LLVM_CONFIG_PATH"] = llvm_config_path
@@ -139,6 +238,7 @@ def _llvm_env() -> tuple[dict[str, str], dict[str, Any], list[str]]:
             "llvm_config": llvm_config,
             "llvm_config_path": llvm_config_path,
             "llvm_config_version_text": llvm_version,
+            "llvm_bindir": llvm_bindir,
             "llvm_libdir": llvm_libdir,
             "libclang_path": env_vars.get("LIBCLANG_PATH"),
         }
@@ -176,9 +276,15 @@ def make_toolchain_spec(cfg: Config, ref: str, version_row: dict[str, Any]) -> d
     make_vars: dict[str, str] = {}
     missing: list[str] = []
     resolved: dict[str, Any] = {}
-    env_vars, llvm_resolved, llvm_missing = _llvm_env()
+    env_vars, llvm_resolved, llvm_missing = _llvm_env(bindgen_version)
     resolved.update(llvm_resolved)
     missing.extend(llvm_missing)
+    if bindgen_version and _version_key(bindgen_version) < (0, 62, 0):
+        llvm_prefix, llvm_wrappers, llvm_wrapper_missing = _ensure_llvm_wrappers(cfg, resolved)
+        if llvm_prefix:
+            make_vars["LLVM"] = llvm_prefix
+            resolved["llvm_wrappers"] = llvm_wrappers
+        missing.extend(llvm_wrapper_missing)
 
     if rustc_version:
         wrappers = _ensure_rustup_wrappers(cfg, rustc_version)
