@@ -138,33 +138,56 @@ Rust-use, oracle-blind, no-ranking, and random variants. In the current tables,
 the evidence gate is supported as the stronger claim: BindDrift reduces the
 warning volume to a reviewed Rust-impact set, but the ranking comparison does
 not yet support a broad claim that BindDrift beats every simple baseline on
-top-K manual precision. The typed wrapper oracle is reported as auxiliary
-validation, while symbol-level wrapper matching is treated as an upper bound.
-The paper tables are generated from artifact outputs, not hand-entered numbers.
+top-K manual precision. The strict pooled ranking table reports oracle-blind
+P@10 = 0.30, P@20 = 0.20, P@50 = 0.08, P@100 = 0.04, and NDCG@20 = 0.1966, so
+the ranking result is downgraded to evidence-gate support only. The wrapper-fix oracle is auxiliary validation, while symbol-level wrapper matching is treated as an upper bound. The paper tables are generated from artifact outputs, not hand-entered numbers.
 
-The extractor audit samples 450 facts across C functions, Rust binding uses,
-C behavior indicators, Rust error mappings, Rust lifetime facts, and promoted
-warning evidence. All samples are reviewed through CSV labels tied to the
-current sample provenance; the audit reports `all_minimums_pass = true`.
+The targeted semantic review pass samples 100 adjudicated semantic target rows
+across nullability, ownership/refcount, allocation/free, sleepability/context,
+and layout/field categories. It finds 2 `TRUE_SEMANTIC_DRIFT` rows, 54
+`TRUE_WRAPPER_FIX` rows, 2 build-breakage rows, and several benign, unclear, or
+false-positive rows. Because the semantic gate requires at least 8 semantic true positives and at least 3 semantic drift types, the semantic drift result remains exploratory.
+
+The strict extractor audit samples 600 facts across C functions, C behavior
+indicators, Rust binding uses, Rust safe API exposures, Rust error mappings,
+Rust lifetime facts, and promoted warning evidence chains. All strict audit rows
+have paired labels and adjudication. The audit reports Cohen's kappa = 1.0 and
+`all_minimums_pass = true`, including promoted warning evidence precision above
+the 0.85 gate.
+
+The artifact also includes eight positive warning-backed case studies selected
+from adjudicated true positives.
 
 ## 6. Case Studies
 
-The artifact includes four warning-backed case studies generated only from
-adjudicated true positives:
+The artifact includes eight positive warning-backed case studies generated only
+from adjudicated true positives:
 
-- `mdiobus_read`: wrapper-fix-backed signature drift reaches Rust PHY register
-  access code.
-- `security_secid_to_secctx`: semantic-review-backed signature drift reaches
-  `SecurityCtx::from_secid` and its safety/error-mapping assumptions.
-- `mdiobus_write`: wrapper-fix-backed signature drift reaches Rust PHY register
-  write code.
-- `security_release_secctx`: semantic-review-backed signature drift reaches the
-  Rust security context drop path.
+- `security_secid_to_secctx`: nullability/error semantic drift reaches
+  `SecurityCtx::from_secid`.
+- `security_release_secctx`: allocation/free semantic drift reaches the Rust
+  security context drop path.
+- `mdiobus_write`: wrapper-fix-backed nullability/error drift reaches Rust PHY
+  register write code.
+- `refcount_set`: ownership/refcount wrapper-fix evidence reaches Rust wrapper
+  paths.
+- `gpu_buddy_free_list`: allocation/free wrapper-fix evidence reaches Rust GPU
+  helper code.
+- `fsleep`: sleepability/context wrapper-fix evidence reaches Rust-visible helper
+  code.
+- `queue_limits`: layout/field wrapper-fix evidence reaches Rust block wrapper
+  paths.
+- `__mutex_init`: build-breakage-backed sleepability/context evidence reaches
+  Rust synchronization helper code.
+
+The suite also includes one negative/failure-analysis case for `PTR_ERR`, whose
+adjudicated label is `FALSE_POSITIVE`.
 
 Each case is classified as a review target rather than a confirmed defect. No
-case study is unlabeled, false positive, benign drift, or single-version-only.
-The current case set covers one drift type, so it satisfies the minimum case
-study gate but not the stronger target of covering at least two drift types.
+positive case study is unlabeled, false positive, benign drift, or
+single-version-only. The positive case set covers five drift target categories,
+contains 2 semantic true cases and 5 wrapper-fix-backed cases, and has no local
+absolute paths in the generated case artifacts.
 
 ## 7. Threats To Validity
 
@@ -176,8 +199,11 @@ Construct validity threats include the ambiguity of semantic drift labels and
 the fact that warnings are review targets rather than confirmed defects. The
 manual review guide separates `TRUE_SEMANTIC_DRIFT`, `TRUE_WRAPPER_FIX`,
 `BENIGN_DRIFT`, `FALSE_POSITIVE`, and `UNCLEAR`, and the evaluation uses the
-adjudicated label for paper metrics. The current case studies all come from
-signature drift, so broader drift-type coverage remains future work.
+adjudicated label for paper metrics. Not every warning is a confirmed bug.
+Wrapper-fix-backed labels and semantic labels are reported separately, and
+`TRUE_WRAPPER_FIX` is not counted as `TRUE_SEMANTIC_DRIFT`. The current semantic
+target review is underpowered for a strong semantic-discovery claim, so semantic
+drift is presented as exploratory.
 
 External validity threats include focusing on Linux/Rust-for-Linux and x86_64.
 Future work should evaluate additional architectures, rust-next branches, and

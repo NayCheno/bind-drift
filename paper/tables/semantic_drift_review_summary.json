@@ -147,6 +147,6 @@
     "OwnershipRefcountDrift": 20,
     "SleepabilityContextDrift": 20
   },
-  "warnings_sha256": "22880471cc4b1e344279e13dc75fd13e293413b6fc57f9a326d5b25e008a9aaa",
+  "warnings_sha256": "8f1d3aa76e606aa62f2017b19e9992f7b9eda9339d10377a424aa246144f85c2",
   "warnings_source": "data/replay/latest/promoted_warnings.jsonl"
 }

@@ -121,7 +121,7 @@ def generate_extractor_audit(cfg: Config, manifest: dict[str, Any] | None = None
     rows, provenance = _ensure_sample_csv(cfg, manifest, sample_path)
 
     summary = {
-        "sample_csv": str(sample_path),
+        "sample_csv": repo_relative(cfg, sample_path),
         "tables": _summaries(rows),
         "metrics": {},
         "acceptance": {},
@@ -153,8 +153,8 @@ def generate_extractor_audit(cfg: Config, manifest: dict[str, Any] | None = None
     summary["all_minimums_pass"] = all(item["passes"] for item in summary["acceptance"].values())
     path = cfg.repo_root / "paper/tables/extractor_audit.json"
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    return {"extractor_audit": str(path), "sample_csv": str(sample_path)}
+    path.write_text(json.dumps(sanitize_local_paths(summary, cfg), indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return {"extractor_audit": repo_relative(cfg, path), "sample_csv": repo_relative(cfg, sample_path)}
 
 
 def _ensure_sample_csv(
@@ -339,7 +339,7 @@ def _sample_provenance(
         "sampled_rows": len(rows),
         "manifest_run_id": str(manifest.get("run_id")) if manifest else None,
         "manifest_artifact_sha256": manifest_sha,
-        "database_path": str(cfg.database),
+        "database_path": repo_relative(cfg, cfg.database),
         "review_label_sources": review_sources,
     }
 

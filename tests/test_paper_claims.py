@@ -53,9 +53,16 @@ def test_paper_draft_preserves_claim_boundary() -> None:
         "p@10 = 0.30",
         "p@50 = 0.36",
         "p@100 = 0.37",
+        "p@20 = 0.20",
+        "ndcg@20 = 0.1966",
+        "semantic drift result remains exploratory",
+        "cohen's kappa = 1.0",
+        "eight positive warning-backed case studies",
     ]
     for phrase in expected_numbers:
         assert phrase in text
 
     assert "evidence gate is supported as the stronger claim" in text
     assert "does not yet support a broad claim" in text
+    assert "not every warning is a confirmed bug" in full_text.lower()
+    assert "wrapper-fix oracle is auxiliary validation" in full_text.lower()

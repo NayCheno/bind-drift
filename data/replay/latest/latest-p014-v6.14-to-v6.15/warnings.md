@@ -23,12 +23,12 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.15/rust/kernel/page.rs:105 `Page::as_ptr` unsafe=1
+- .binddrift/worktrees/v6.15/rust/kernel/page.rs:105 `Page::as_ptr` unsafe=1
 - safe API `Page::as_ptr`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.15/rust/kernel/page.rs:100 `/// different addresses. However, even if the addresses are different, the underlying memory is`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.15/rust/kernel/page.rs:101 `/// still the same for these purposes (e.g., it's still a data race if they both write to the`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.15/rust/kernel/page.rs:102 `/// same underlying byte at the same time).`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.15/rust/kernel/page.rs:105 `AS_PTR`
+- .binddrift/worktrees/v6.15/rust/kernel/page.rs:100 `/// different addresses. However, even if the addresses are different, the underlying memory is`
+- .binddrift/worktrees/v6.15/rust/kernel/page.rs:101 `/// still the same for these purposes (e.g., it's still a data race if they both write to the`
+- .binddrift/worktrees/v6.15/rust/kernel/page.rs:102 `/// same underlying byte at the same time).`
+- .binddrift/worktrees/v6.15/rust/kernel/page.rs:105 `AS_PTR`
 
 ## W-000004 SignatureDrift
 
@@ -53,9 +53,9 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.15/rust/kernel/net/phy/reg.rs:111 `read` unsafe=1
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.15/rust/kernel/net/phy/reg.rs:107 `// SAFETY: `phydev` is pointing to a valid object by the type invariant of `Device`.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.15/rust/kernel/net/phy/reg.rs:113 `TO_RESULT_MAPPING`
+- .binddrift/worktrees/v6.15/rust/kernel/net/phy/reg.rs:111 `read` unsafe=1
+- .binddrift/worktrees/v6.15/rust/kernel/net/phy/reg.rs:107 `// SAFETY: `phydev` is pointing to a valid object by the type invariant of `Device`.`
+- .binddrift/worktrees/v6.15/rust/kernel/net/phy/reg.rs:113 `TO_RESULT_MAPPING`
 - wrapper_fix: `b2e47002b2350f57bfa8fe1c231e9fbb6baef78b`
 
 ## W-000005 SignatureDrift
@@ -81,9 +81,9 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.15/rust/kernel/net/phy/reg.rs:123 `write` unsafe=1
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.15/rust/kernel/net/phy/reg.rs:119 `// SAFETY: `phydev` is pointing to a valid object by the type invariant of `Device`.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.15/rust/kernel/net/phy/reg.rs:122 `TO_RESULT_MAPPING`
+- .binddrift/worktrees/v6.15/rust/kernel/net/phy/reg.rs:123 `write` unsafe=1
+- .binddrift/worktrees/v6.15/rust/kernel/net/phy/reg.rs:119 `// SAFETY: `phydev` is pointing to a valid object by the type invariant of `Device`.`
+- .binddrift/worktrees/v6.15/rust/kernel/net/phy/reg.rs:122 `TO_RESULT_MAPPING`
 - wrapper_fix: `b2e47002b2350f57bfa8fe1c231e9fbb6baef78b`
 
 ## W-000001 FieldDrift
@@ -109,16 +109,16 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.15/rust/kernel/pci.rs:62 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.15/rust/kernel/pci.rs:89 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.15/rust/kernel/pci.rs:254 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.15/rust/kernel/pci.rs:364 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.15/rust/kernel/pci.rs:431 `deref` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.15/rust/kernel/pci.rs:249 `/// # Invariants`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.15/rust/kernel/pci.rs:250 `///`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.15/rust/kernel/pci.rs:251 `/// A [`Device`] instance represents a valid `struct device` created by the C portion of the kernel.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.15/rust/kernel/pci.rs:254 `OPAQUE`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.15/rust/kernel/pci.rs:431 `OPAQUE`
+- .binddrift/worktrees/v6.15/rust/kernel/pci.rs:62 `None` unsafe=0
+- .binddrift/worktrees/v6.15/rust/kernel/pci.rs:89 `None` unsafe=0
+- .binddrift/worktrees/v6.15/rust/kernel/pci.rs:254 `None` unsafe=0
+- .binddrift/worktrees/v6.15/rust/kernel/pci.rs:364 `None` unsafe=0
+- .binddrift/worktrees/v6.15/rust/kernel/pci.rs:431 `deref` unsafe=0
+- .binddrift/worktrees/v6.15/rust/kernel/pci.rs:249 `/// # Invariants`
+- .binddrift/worktrees/v6.15/rust/kernel/pci.rs:250 `///`
+- .binddrift/worktrees/v6.15/rust/kernel/pci.rs:251 `/// A [`Device`] instance represents a valid `struct device` created by the C portion of the kernel.`
+- .binddrift/worktrees/v6.15/rust/kernel/pci.rs:254 `OPAQUE`
+- .binddrift/worktrees/v6.15/rust/kernel/pci.rs:431 `OPAQUE`
 - wrapper_fix: `7b948a2af6b5d64a25c14da8f63d8084ea527cd9`
 
 ## W-000002 MacroConstDrift
@@ -143,6 +143,6 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.15/rust/kernel/sync/condvar.rs:123 `CondVar::new` unsafe=1
+- .binddrift/worktrees/v6.15/rust/kernel/sync/condvar.rs:123 `CondVar::new` unsafe=1
 - safe API `CondVar::new`
-- weak lifetime name /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.15/rust/kernel/sync/condvar.rs:123 `LIFETIME_NAMING_PATTERN`
+- weak lifetime name .binddrift/worktrees/v6.15/rust/kernel/sync/condvar.rs:123 `LIFETIME_NAMING_PATTERN`

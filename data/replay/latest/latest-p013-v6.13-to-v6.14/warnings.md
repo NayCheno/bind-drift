@@ -23,12 +23,12 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/security.rs:31 `SecurityCtx::from_secid` unsafe=1
+- .binddrift/worktrees/v6.14/rust/kernel/security.rs:31 `SecurityCtx::from_secid` unsafe=1
 - safe API `SecurityCtx::from_secid`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/security.rs:27 `// SAFETY: `struct lsm_context` can be initialized to all zeros.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/security.rs:30 `// SAFETY: Just a C FFI call. The pointer is valid for writes.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/security.rs:26 `RESULT_RETURN`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/security.rs:31 `TO_RESULT_MAPPING`
+- .binddrift/worktrees/v6.14/rust/kernel/security.rs:27 `// SAFETY: `struct lsm_context` can be initialized to all zeros.`
+- .binddrift/worktrees/v6.14/rust/kernel/security.rs:30 `// SAFETY: Just a C FFI call. The pointer is valid for writes.`
+- .binddrift/worktrees/v6.14/rust/kernel/security.rs:26 `RESULT_RETURN`
+- .binddrift/worktrees/v6.14/rust/kernel/security.rs:31 `TO_RESULT_MAPPING`
 
 ## W-000014 FieldDrift
 
@@ -54,17 +54,17 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/pci.rs:58 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/pci.rs:86 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/pci.rs:359 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/pci.rs:364 `Device::from_dev` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/pci.rs:367 `as_raw` unsafe=1
+- .binddrift/worktrees/v6.14/rust/kernel/pci.rs:58 `None` unsafe=0
+- .binddrift/worktrees/v6.14/rust/kernel/pci.rs:86 `None` unsafe=0
+- .binddrift/worktrees/v6.14/rust/kernel/pci.rs:359 `None` unsafe=0
+- .binddrift/worktrees/v6.14/rust/kernel/pci.rs:364 `Device::from_dev` unsafe=0
+- .binddrift/worktrees/v6.14/rust/kernel/pci.rs:367 `as_raw` unsafe=1
 - safe API `Device::from_dev`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/pci.rs:354 `/// Create a PCI Device instance from an existing `device::Device`.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/pci.rs:355 `///`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/pci.rs:356 `/// # Safety`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/pci.rs:358 `AREF`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/pci.rs:360 `AREF`
+- .binddrift/worktrees/v6.14/rust/kernel/pci.rs:354 `/// Create a PCI Device instance from an existing `device::Device`.`
+- .binddrift/worktrees/v6.14/rust/kernel/pci.rs:355 `///`
+- .binddrift/worktrees/v6.14/rust/kernel/pci.rs:356 `/// # Safety`
+- .binddrift/worktrees/v6.14/rust/kernel/pci.rs:358 `AREF`
+- .binddrift/worktrees/v6.14/rust/kernel/pci.rs:360 `AREF`
 - wrapper_fix: `7b948a2af6b5d64a25c14da8f63d8084ea527cd9`
 
 ## W-000015 FieldDrift
@@ -91,16 +91,16 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/error.rs:323 `From<core::convert::Infallible>::to_result` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/platform.rs:56 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/platform.rs:77 `probe_callback` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/platform.rs:184 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/platform.rs:189 `from_dev` unsafe=0
+- .binddrift/worktrees/v6.14/rust/kernel/error.rs:323 `From<core::convert::Infallible>::to_result` unsafe=0
+- .binddrift/worktrees/v6.14/rust/kernel/platform.rs:56 `None` unsafe=0
+- .binddrift/worktrees/v6.14/rust/kernel/platform.rs:77 `probe_callback` unsafe=0
+- .binddrift/worktrees/v6.14/rust/kernel/platform.rs:184 `None` unsafe=0
+- .binddrift/worktrees/v6.14/rust/kernel/platform.rs:189 `from_dev` unsafe=0
 - safe API `From<core::convert::Infallible>::to_result`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/error.rs:318 `///`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/error.rs:319 `/// ```ignore`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/error.rs:320 `/// # use kernel::from_result;`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/platform.rs:185 `AREF`
+- .binddrift/worktrees/v6.14/rust/kernel/error.rs:318 `///`
+- .binddrift/worktrees/v6.14/rust/kernel/error.rs:319 `/// ```ignore`
+- .binddrift/worktrees/v6.14/rust/kernel/error.rs:320 `/// # use kernel::from_result;`
+- .binddrift/worktrees/v6.14/rust/kernel/platform.rs:185 `AREF`
 - wrapper_fix: `ef4dc4cc7001e9cce8a3b556362171648be9ad92`
 - wrapper_fix: `4d320e30ee04c25c660eca2bb33e846ebb71a79a`
 - wrapper_fix: `0242623384c767b1156b61b67894b4ecf6682b8b`
@@ -129,11 +129,11 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/block/mq/gen_disk.rs:96 `GenDiskBuilder::capacity_sectors` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/block/mq/gen_disk.rs:97 `GenDiskBuilder::capacity_sectors` unsafe=1
+- .binddrift/worktrees/v6.14/rust/kernel/block/mq/gen_disk.rs:96 `GenDiskBuilder::capacity_sectors` unsafe=0
+- .binddrift/worktrees/v6.14/rust/kernel/block/mq/gen_disk.rs:97 `GenDiskBuilder::capacity_sectors` unsafe=1
 - safe API `GenDiskBuilder::capacity_sectors`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/block/mq/gen_disk.rs:96 `// SAFETY: `bindings::queue_limits` contain only fields that are valid when zeroed.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/block/mq/gen_disk.rs:95 `RESULT_RETURN`
+- .binddrift/worktrees/v6.14/rust/kernel/block/mq/gen_disk.rs:96 `// SAFETY: `bindings::queue_limits` contain only fields that are valid when zeroed.`
+- .binddrift/worktrees/v6.14/rust/kernel/block/mq/gen_disk.rs:95 `RESULT_RETURN`
 - wrapper_fix: `5e3b7009f116f684ac6b93d8924506154f3b1f6d`
 
 ## W-000002 SignatureDrift
@@ -161,13 +161,13 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/error.rs:283 `From<core::convert::Infallible>::to_result` unsafe=1
+- .binddrift/worktrees/v6.14/rust/kernel/error.rs:283 `From<core::convert::Infallible>::to_result` unsafe=1
 - safe API `From<core::convert::Infallible>::to_result`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/error.rs:278 `///     pdev: &mut PlatformDevice,`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/error.rs:279 `///     index: u32,`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/error.rs:280 `/// ) -> Result<*mut kernel::ffi::c_void> {`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/error.rs:280 `RESULT_RETURN`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/error.rs:283 `ERR_PTR_MAPPING`
+- .binddrift/worktrees/v6.14/rust/kernel/error.rs:278 `///     pdev: &mut PlatformDevice,`
+- .binddrift/worktrees/v6.14/rust/kernel/error.rs:279 `///     index: u32,`
+- .binddrift/worktrees/v6.14/rust/kernel/error.rs:280 `/// ) -> Result<*mut kernel::ffi::c_void> {`
+- .binddrift/worktrees/v6.14/rust/kernel/error.rs:280 `RESULT_RETURN`
+- .binddrift/worktrees/v6.14/rust/kernel/error.rs:283 `ERR_PTR_MAPPING`
 - wrapper_fix: `752417b3f0e7721f1d630f40da22d57e0dae043e`
 - wrapper_fix: `69d5fbb0159673ea6737204f4d458a220e81a0c9`
 
@@ -196,12 +196,12 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/faux.rs:31 `Registration::new` unsafe=1
+- .binddrift/worktrees/v6.14/rust/kernel/faux.rs:31 `Registration::new` unsafe=1
 - safe API `Registration::new`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/faux.rs:26 `/// Create and register a new faux device with the given name.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/faux.rs:28 `// SAFETY:`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/faux.rs:27 `RESULT_RETURN`
-- weak lifetime name /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/faux.rs:31 `LIFETIME_NAMING_PATTERN`
+- .binddrift/worktrees/v6.14/rust/kernel/faux.rs:26 `/// Create and register a new faux device with the given name.`
+- .binddrift/worktrees/v6.14/rust/kernel/faux.rs:28 `// SAFETY:`
+- .binddrift/worktrees/v6.14/rust/kernel/faux.rs:27 `RESULT_RETURN`
+- weak lifetime name .binddrift/worktrees/v6.14/rust/kernel/faux.rs:31 `LIFETIME_NAMING_PATTERN`
 - wrapper_fix: `78418f300d3999f1cf8a9ac71065bf2eca61f4dd`
 
 ## W-000017 SignatureDrift
@@ -225,9 +225,9 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/security.rs:68 `drop` unsafe=1
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/security.rs:65 `// SAFETY: By the invariant of `Self`, this frees a context that came from a successful`
-- weak lifetime name /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/security.rs:68 `LIFETIME_NAMING_PATTERN`
+- .binddrift/worktrees/v6.14/rust/kernel/security.rs:68 `drop` unsafe=1
+- .binddrift/worktrees/v6.14/rust/kernel/security.rs:65 `// SAFETY: By the invariant of `Self`, this frees a context that came from a successful`
+- weak lifetime name .binddrift/worktrees/v6.14/rust/kernel/security.rs:68 `LIFETIME_NAMING_PATTERN`
 
 ## W-000008 SignatureDrift
 
@@ -253,10 +253,10 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/pci.rs:385 `Device::enable_device_mem` unsafe=1
+- .binddrift/worktrees/v6.14/rust/kernel/pci.rs:385 `Device::enable_device_mem` unsafe=1
 - safe API `Device::enable_device_mem`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/pci.rs:382 `/// Enable memory resources for this device.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/pci.rs:384 `// SAFETY: `self.as_raw` is guaranteed to be a pointer to a valid `struct pci_dev`.`
+- .binddrift/worktrees/v6.14/rust/kernel/pci.rs:382 `/// Enable memory resources for this device.`
+- .binddrift/worktrees/v6.14/rust/kernel/pci.rs:384 `// SAFETY: `self.as_raw` is guaranteed to be a pointer to a valid `struct pci_dev`.`
 - wrapper_fix: `7b948a2af6b5d64a25c14da8f63d8084ea527cd9`
 
 ## W-000011 SignatureDrift
@@ -283,9 +283,9 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/pci.rs:396 `Device::set_master` unsafe=1
+- .binddrift/worktrees/v6.14/rust/kernel/pci.rs:396 `Device::set_master` unsafe=1
 - safe API `Device::set_master`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/pci.rs:393 `/// Enable bus-mastering for this device.`
+- .binddrift/worktrees/v6.14/rust/kernel/pci.rs:393 `/// Enable bus-mastering for this device.`
 - wrapper_fix: `7b948a2af6b5d64a25c14da8f63d8084ea527cd9`
 
 ## W-000013 SignatureDrift
@@ -312,12 +312,12 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/error.rs:327 `From<core::convert::Infallible>::to_result` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/platform.rs:69 `probe_callback` unsafe=1
+- .binddrift/worktrees/v6.14/rust/kernel/error.rs:327 `From<core::convert::Infallible>::to_result` unsafe=0
+- .binddrift/worktrees/v6.14/rust/kernel/platform.rs:69 `probe_callback` unsafe=1
 - safe API `From<core::convert::Infallible>::to_result`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/error.rs:322 `/// unsafe extern "C" fn probe_callback(`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/error.rs:323 `///     pdev: *mut bindings::platform_device,`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/error.rs:324 `/// ) -> kernel::ffi::c_int {`
+- .binddrift/worktrees/v6.14/rust/kernel/error.rs:322 `/// unsafe extern "C" fn probe_callback(`
+- .binddrift/worktrees/v6.14/rust/kernel/error.rs:323 `///     pdev: *mut bindings::platform_device,`
+- .binddrift/worktrees/v6.14/rust/kernel/error.rs:324 `/// ) -> kernel::ffi::c_int {`
 - wrapper_fix: `ef4dc4cc7001e9cce8a3b556362171648be9ad92`
 
 ## W-000001 SignatureDrift
@@ -344,11 +344,11 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/devres.rs:119 `new` unsafe=1
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/devres.rs:123 `new` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/devres.rs:116 `// SAFETY: `devm_add_action` guarantees to call `Self::devres_callback` once `dev` is`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/devres.rs:122 `// SAFETY: We just created another reference to `inner` in order to pass it to`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/devres.rs:125 `FROM_RAW`
+- .binddrift/worktrees/v6.14/rust/kernel/devres.rs:119 `new` unsafe=1
+- .binddrift/worktrees/v6.14/rust/kernel/devres.rs:123 `new` unsafe=0
+- .binddrift/worktrees/v6.14/rust/kernel/devres.rs:116 `// SAFETY: `devm_add_action` guarantees to call `Self::devres_callback` once `dev` is`
+- .binddrift/worktrees/v6.14/rust/kernel/devres.rs:122 `// SAFETY: We just created another reference to `inner` in order to pass it to`
+- .binddrift/worktrees/v6.14/rust/kernel/devres.rs:125 `FROM_RAW`
 - wrapper_fix: `ba268514ea14b44570030e8ed2aef92a38679e85`
 
 ## W-000004 SignatureDrift
@@ -375,10 +375,10 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/faux.rs:55 `drop` unsafe=1
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/faux.rs:54 `// SAFETY: `self.0` is a valid registered faux_device via our type invariants.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/faux.rs:59 `// SAFETY: The faux device API is thread-safe as guaranteed by the device core, as long as`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.14/rust/kernel/faux.rs:52 `IMPL_DROP`
+- .binddrift/worktrees/v6.14/rust/kernel/faux.rs:55 `drop` unsafe=1
+- .binddrift/worktrees/v6.14/rust/kernel/faux.rs:54 `// SAFETY: `self.0` is a valid registered faux_device via our type invariants.`
+- .binddrift/worktrees/v6.14/rust/kernel/faux.rs:59 `// SAFETY: The faux device API is thread-safe as guaranteed by the device core, as long as`
+- .binddrift/worktrees/v6.14/rust/kernel/faux.rs:52 `IMPL_DROP`
 - wrapper_fix: `78418f300d3999f1cf8a9ac71065bf2eca61f4dd`
 
 ## W-000005 SignatureDrift

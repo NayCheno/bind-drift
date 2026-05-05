@@ -89,17 +89,17 @@
   },
   "note": "Extractor audit samples are deterministic and unfiltered. Precision is computed only from reviewed CSV rows with explicit is_correct labels; pending rows are not counted as passing.",
   "provenance": {
-    "database_path": "/home/nya/workspace/bind-drift/.binddrift/binddrift.sqlite3",
+    "database_path": ".binddrift/binddrift.sqlite3",
     "manifest_artifact_sha256": {
-      "drift_facts.jsonl": "9e11b927fad503e87aafd1ee9e3aa0beb6ceb2866dabfd3bdc508c405c5d3f96",
+      "drift_facts.jsonl": "369e5c8bb0dff94f4fb4e6efe5b366d032a2f1a80bb617a0a05b07777af53838",
       "evaluation_protocol.json": "302a55e865b95f33f829a40cb817be5d6e8d6c38daec9ca9b4fcbaa93b875959",
       "manual_review.csv": "8fef42e73df2e898ab1f107b46cd6a8c8768d4777ebdb631a08e260acede3435",
       "pooled_review_labels.csv": "924f925a71f533aec971231d5d7225dc349ef59c9b2e38dfee291d6b53361b72",
       "pooled_review_manifest.json": "827d047401615058dd0414334fff57cdcb4def6bd8b3ffc8c08ef0049582b34f",
       "pooled_review_set.jsonl": "455fafb567c75cf136b80906f0bce3c964f3659b7ce631471a54fc0760a2d6d2",
-      "promoted_warnings.jsonl": "22880471cc4b1e344279e13dc75fd13e293413b6fc57f9a326d5b25e008a9aaa",
+      "promoted_warnings.jsonl": "8f1d3aa76e606aa62f2017b19e9992f7b9eda9339d10377a424aa246144f85c2",
       "single_version_review_targets.jsonl": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "warnings.jsonl": "2ffcc87b9713c7dd471929e775d93c88788cb57dfe4f2d3eea1600dcbaadad40"
+      "warnings.jsonl": "cfe026268801f89b5c97db9d7b8d2f7a3c8ae8b1addfcef96e256b9b42f70861"
     },
     "manifest_run_id": "latest",
     "review_label_sources": {
@@ -108,42 +108,42 @@
       "split_review_labels_transferred": 450,
       "split_sources": [
         {
-          "path": "/home/nya/workspace/bind-drift/data/audit/reviews/c_functions_review.csv",
+          "path": "data/audit/reviews/c_functions_review.csv",
           "rows": 100,
           "table": "c_functions",
           "target_count_present": true,
           "target_rows": 100
         },
         {
-          "path": "/home/nya/workspace/bind-drift/data/audit/reviews/rust_binding_uses_review.csv",
+          "path": "data/audit/reviews/rust_binding_uses_review.csv",
           "rows": 100,
           "table": "rust_binding_uses",
           "target_count_present": true,
           "target_rows": 100
         },
         {
-          "path": "/home/nya/workspace/bind-drift/data/audit/reviews/c_behavior_indicators_review.csv",
+          "path": "data/audit/reviews/c_behavior_indicators_review.csv",
           "rows": 100,
           "table": "c_behavior_indicators",
           "target_count_present": true,
           "target_rows": 100
         },
         {
-          "path": "/home/nya/workspace/bind-drift/data/audit/reviews/rust_error_mappings_review.csv",
+          "path": "data/audit/reviews/rust_error_mappings_review.csv",
           "rows": 50,
           "table": "rust_error_mappings",
           "target_count_present": true,
           "target_rows": 50
         },
         {
-          "path": "/home/nya/workspace/bind-drift/data/audit/reviews/rust_lifetime_facts_review.csv",
+          "path": "data/audit/reviews/rust_lifetime_facts_review.csv",
           "rows": 50,
           "table": "rust_lifetime_facts",
           "target_count_present": true,
           "target_rows": 50
         },
         {
-          "path": "/home/nya/workspace/bind-drift/data/audit/reviews/promoted_warnings_review.csv",
+          "path": "data/audit/reviews/promoted_warnings_review.csv",
           "rows": 50,
           "table": "promoted_warnings",
           "target_count_present": true,
@@ -153,11 +153,11 @@
       "stale_or_unmatched_previous_rows": 0,
       "stale_or_unmatched_split_rows": 0
     },
-    "sample_hash": "6871209c753117342d4bc86803ff4b88de922d25e3fc35d6f9700578fe60a7e9",
+    "sample_hash": "49c86cb9ca2c2102284410e0bb85ea33164d47cf20238993b242fc6301bb1a77",
     "sampled_rows": 450,
     "sampler_version": "extractor-audit-v2"
   },
-  "sample_csv": "/home/nya/workspace/bind-drift/data/audit/extractor_sample.csv",
+  "sample_csv": "data/audit/extractor_sample.csv",
   "tables": {
     "c_behavior_indicators": {
       "correct": 96,

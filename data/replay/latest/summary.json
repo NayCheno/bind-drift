@@ -1,5 +1,5 @@
 {
-  "aggregate_warnings": "/home/nya/workspace/bind-drift/data/replay/latest/warnings.jsonl",
+  "aggregate_warnings": "data/replay/latest/warnings.jsonl",
   "completed_pairs": 20,
   "duration_seconds": 568.001,
   "failed_pairs": 0,
@@ -7,11 +7,11 @@
   "ranking": {
     "dropped_unpromoted": 0,
     "input_warnings": 331,
-    "report": "/home/nya/workspace/bind-drift/data/replay/latest/warnings.md",
-    "warning_file": "/home/nya/workspace/bind-drift/data/replay/latest/warnings.jsonl",
+    "report": "data/replay/latest/warnings.md",
+    "warning_file": "data/replay/latest/warnings.jsonl",
     "warnings": 331
   },
-  "run_dir": "/home/nya/workspace/bind-drift/data/replay/latest",
+  "run_dir": "data/replay/latest",
   "run_id": "latest",
   "stale_previous": {
     "pairs": 0,

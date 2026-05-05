@@ -33,6 +33,8 @@ def _sanitize_string(value: str, cfg: Config) -> str:
         str(cfg.data_dir): "data",
         str(cfg.database): ".binddrift/binddrift.sqlite3",
         str(cfg.linux_tree): "vendor/linux",
+        str(Path.home()): "$HOME",
+        "/tmp/": "$TMPDIR/",
     }
     out = value
     for old, new in sorted(replacements.items(), key=lambda item: len(item[0]), reverse=True):

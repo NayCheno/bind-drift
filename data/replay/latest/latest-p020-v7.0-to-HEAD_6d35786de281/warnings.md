@@ -23,16 +23,16 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/HEAD_6d35786de281/rust/kernel/io.rs:32 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/HEAD_6d35786de281/rust/kernel/pci.rs:417 `Device::subsystem_device_id` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/HEAD_6d35786de281/rust/kernel/pci.rs:429 `Device::resource_start` unsafe=0
+- .binddrift/worktrees/HEAD_6d35786de281/rust/kernel/io.rs:32 `None` unsafe=0
+- .binddrift/worktrees/HEAD_6d35786de281/rust/kernel/pci.rs:417 `Device::subsystem_device_id` unsafe=0
+- .binddrift/worktrees/HEAD_6d35786de281/rust/kernel/pci.rs:429 `Device::resource_start` unsafe=0
 - safe API `Device::subsystem_device_id`
 - safe API `Device::resource_start`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/HEAD_6d35786de281/rust/kernel/io.rs:28 `/// Resource Size type.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/HEAD_6d35786de281/rust/kernel/io.rs:29 `///`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/HEAD_6d35786de281/rust/kernel/io.rs:30 `/// This is a type alias to either `u32` or `u64` depending on the config option`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/HEAD_6d35786de281/rust/kernel/pci.rs:417 `RESULT_RETURN`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/HEAD_6d35786de281/rust/kernel/pci.rs:429 `RESULT_RETURN`
+- .binddrift/worktrees/HEAD_6d35786de281/rust/kernel/io.rs:28 `/// Resource Size type.`
+- .binddrift/worktrees/HEAD_6d35786de281/rust/kernel/io.rs:29 `///`
+- .binddrift/worktrees/HEAD_6d35786de281/rust/kernel/io.rs:30 `/// This is a type alias to either `u32` or `u64` depending on the config option`
+- .binddrift/worktrees/HEAD_6d35786de281/rust/kernel/pci.rs:417 `RESULT_RETURN`
+- .binddrift/worktrees/HEAD_6d35786de281/rust/kernel/pci.rs:429 `RESULT_RETURN`
 
 ## W-000009 FieldDrift
 
@@ -58,20 +58,20 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/HEAD_6d35786de281/rust/kernel/auxiliary.rs:269 `Device::parent` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/HEAD_6d35786de281/rust/kernel/device.rs:163 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/HEAD_6d35786de281/rust/kernel/device.rs:170 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/HEAD_6d35786de281/rust/kernel/device.rs:181 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/HEAD_6d35786de281/rust/kernel/device.rs:183 `None` unsafe=0
+- .binddrift/worktrees/HEAD_6d35786de281/rust/kernel/auxiliary.rs:269 `Device::parent` unsafe=0
+- .binddrift/worktrees/HEAD_6d35786de281/rust/kernel/device.rs:163 `None` unsafe=0
+- .binddrift/worktrees/HEAD_6d35786de281/rust/kernel/device.rs:170 `None` unsafe=0
+- .binddrift/worktrees/HEAD_6d35786de281/rust/kernel/device.rs:181 `None` unsafe=0
+- .binddrift/worktrees/HEAD_6d35786de281/rust/kernel/device.rs:183 `None` unsafe=0
 - safe API `Device::parent`
 - safe API `Device<Ctx>::parent`
 - safe API `Config<T>::set`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/HEAD_6d35786de281/rust/kernel/auxiliary.rs:265 `// SAFETY: A `struct auxiliary_device` always has a parent.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/HEAD_6d35786de281/rust/kernel/device.rs:158 `/// A `Device` instance represents a valid `struct device` created by the C portion of the kernel.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/HEAD_6d35786de281/rust/kernel/device.rs:159 `///`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/HEAD_6d35786de281/rust/kernel/device.rs:163 `AREF`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/HEAD_6d35786de281/rust/kernel/device.rs:170 `OPAQUE`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/HEAD_6d35786de281/rust/kernel/device.rs:183 `AREF`
+- .binddrift/worktrees/HEAD_6d35786de281/rust/kernel/auxiliary.rs:265 `// SAFETY: A `struct auxiliary_device` always has a parent.`
+- .binddrift/worktrees/HEAD_6d35786de281/rust/kernel/device.rs:158 `/// A `Device` instance represents a valid `struct device` created by the C portion of the kernel.`
+- .binddrift/worktrees/HEAD_6d35786de281/rust/kernel/device.rs:159 `///`
+- .binddrift/worktrees/HEAD_6d35786de281/rust/kernel/device.rs:163 `AREF`
+- .binddrift/worktrees/HEAD_6d35786de281/rust/kernel/device.rs:170 `OPAQUE`
+- .binddrift/worktrees/HEAD_6d35786de281/rust/kernel/device.rs:183 `AREF`
 - wrapper_fix: `a23b018c3bf646274f02edd46bf448c20c826d94`
 - wrapper_fix: `7b948a2af6b5d64a25c14da8f63d8084ea527cd9`
 - wrapper_fix: `4d320e30ee04c25c660eca2bb33e846ebb71a79a`
@@ -101,10 +101,10 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/HEAD_6d35786de281/rust/kernel/gpu/buddy.rs:469 `GpuBuddy::avail` unsafe=1
+- .binddrift/worktrees/HEAD_6d35786de281/rust/kernel/gpu/buddy.rs:469 `GpuBuddy::avail` unsafe=1
 - safe API `GpuBuddy::avail`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/HEAD_6d35786de281/rust/kernel/gpu/buddy.rs:466 `// SAFETY: Per the type invariant, `inner` contains an initialized`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/HEAD_6d35786de281/rust/kernel/gpu/buddy.rs:468 `TO_RESULT_MAPPING`
+- .binddrift/worktrees/HEAD_6d35786de281/rust/kernel/gpu/buddy.rs:466 `// SAFETY: Per the type invariant, `inner` contains an initialized`
+- .binddrift/worktrees/HEAD_6d35786de281/rust/kernel/gpu/buddy.rs:468 `TO_RESULT_MAPPING`
 - wrapper_fix: `b9616d9721bf8a56d5038e85d2ebbe0ec9d56a94`
 
 ## W-000010 FieldDrift
@@ -130,15 +130,15 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/HEAD_6d35786de281/rust/kernel/pci.rs:101 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/HEAD_6d35786de281/rust/kernel/pci.rs:123 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/HEAD_6d35786de281/rust/kernel/pci.rs:339 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/HEAD_6d35786de281/rust/kernel/pci.rs:345 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/HEAD_6d35786de281/rust/kernel/pci.rs:466 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/HEAD_6d35786de281/rust/kernel/pci.rs:124 `// SAFETY: The PCI bus only ever calls the remove callback with a valid pointer to a`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/HEAD_6d35786de281/rust/kernel/pci.rs:334 `///`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/HEAD_6d35786de281/rust/kernel/pci.rs:335 `/// A [`Device`] instance represents a valid `struct pci_dev` created by the C portion of the`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/HEAD_6d35786de281/rust/kernel/pci.rs:339 `OPAQUE`
+- .binddrift/worktrees/HEAD_6d35786de281/rust/kernel/pci.rs:101 `None` unsafe=0
+- .binddrift/worktrees/HEAD_6d35786de281/rust/kernel/pci.rs:123 `None` unsafe=0
+- .binddrift/worktrees/HEAD_6d35786de281/rust/kernel/pci.rs:339 `None` unsafe=0
+- .binddrift/worktrees/HEAD_6d35786de281/rust/kernel/pci.rs:345 `None` unsafe=0
+- .binddrift/worktrees/HEAD_6d35786de281/rust/kernel/pci.rs:466 `None` unsafe=0
+- .binddrift/worktrees/HEAD_6d35786de281/rust/kernel/pci.rs:124 `// SAFETY: The PCI bus only ever calls the remove callback with a valid pointer to a`
+- .binddrift/worktrees/HEAD_6d35786de281/rust/kernel/pci.rs:334 `///`
+- .binddrift/worktrees/HEAD_6d35786de281/rust/kernel/pci.rs:335 `/// A [`Device`] instance represents a valid `struct pci_dev` created by the C portion of the`
+- .binddrift/worktrees/HEAD_6d35786de281/rust/kernel/pci.rs:339 `OPAQUE`
 - wrapper_fix: `7b948a2af6b5d64a25c14da8f63d8084ea527cd9`
 
 ## W-000008 SignatureDrift
@@ -165,10 +165,10 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/HEAD_6d35786de281/rust/kernel/gpu/buddy.rs:345 `new` unsafe=1
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/HEAD_6d35786de281/rust/kernel/gpu/buddy.rs:342 `// SAFETY: `ptr` points to valid uninitialized memory from the pin-init`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/HEAD_6d35786de281/rust/kernel/gpu/buddy.rs:344 `TO_RESULT_MAPPING`
-- weak lifetime name /home/nya/workspace/bind-drift/.binddrift/worktrees/HEAD_6d35786de281/rust/kernel/gpu/buddy.rs:345 `LIFETIME_NAMING_PATTERN`
+- .binddrift/worktrees/HEAD_6d35786de281/rust/kernel/gpu/buddy.rs:345 `new` unsafe=1
+- .binddrift/worktrees/HEAD_6d35786de281/rust/kernel/gpu/buddy.rs:342 `// SAFETY: `ptr` points to valid uninitialized memory from the pin-init`
+- .binddrift/worktrees/HEAD_6d35786de281/rust/kernel/gpu/buddy.rs:344 `TO_RESULT_MAPPING`
+- weak lifetime name .binddrift/worktrees/HEAD_6d35786de281/rust/kernel/gpu/buddy.rs:345 `LIFETIME_NAMING_PATTERN`
 - wrapper_fix: `b9616d9721bf8a56d5038e85d2ebbe0ec9d56a94`
 
 ## W-000004 SignatureDrift
@@ -194,9 +194,9 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/HEAD_6d35786de281/rust/kernel/gpu/buddy.rs:566 `offset` unsafe=1
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/HEAD_6d35786de281/rust/kernel/gpu/buddy.rs:563 `/// Get the block's raw offset in the buddy address space (without base offset).`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/HEAD_6d35786de281/rust/kernel/gpu/buddy.rs:565 `// SAFETY: `self.as_raw()` is valid per the type's invariants.`
+- .binddrift/worktrees/HEAD_6d35786de281/rust/kernel/gpu/buddy.rs:566 `offset` unsafe=1
+- .binddrift/worktrees/HEAD_6d35786de281/rust/kernel/gpu/buddy.rs:563 `/// Get the block's raw offset in the buddy address space (without base offset).`
+- .binddrift/worktrees/HEAD_6d35786de281/rust/kernel/gpu/buddy.rs:565 `// SAFETY: `self.as_raw()` is valid per the type's invariants.`
 - wrapper_fix: `b9616d9721bf8a56d5038e85d2ebbe0ec9d56a94`
 
 ## W-000005 SignatureDrift
@@ -222,10 +222,10 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/HEAD_6d35786de281/rust/kernel/gpu/buddy.rs:572 `order` unsafe=1
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/HEAD_6d35786de281/rust/kernel/gpu/buddy.rs:569 `/// Get the block order.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/HEAD_6d35786de281/rust/kernel/gpu/buddy.rs:571 `// SAFETY: `self.as_raw()` is valid per the type's invariants.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/HEAD_6d35786de281/rust/kernel/gpu/buddy.rs:576 `// SAFETY: `Block` is a wrapper around `gpu_buddy_block` which can be`
+- .binddrift/worktrees/HEAD_6d35786de281/rust/kernel/gpu/buddy.rs:572 `order` unsafe=1
+- .binddrift/worktrees/HEAD_6d35786de281/rust/kernel/gpu/buddy.rs:569 `/// Get the block order.`
+- .binddrift/worktrees/HEAD_6d35786de281/rust/kernel/gpu/buddy.rs:571 `// SAFETY: `self.as_raw()` is valid per the type's invariants.`
+- .binddrift/worktrees/HEAD_6d35786de281/rust/kernel/gpu/buddy.rs:576 `// SAFETY: `Block` is a wrapper around `gpu_buddy_block` which can be`
 - wrapper_fix: `b9616d9721bf8a56d5038e85d2ebbe0ec9d56a94`
 
 ## W-000006 SignatureDrift
@@ -251,10 +251,10 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/HEAD_6d35786de281/rust/kernel/gpu/buddy.rs:369 `drop` unsafe=1
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/HEAD_6d35786de281/rust/kernel/gpu/buddy.rs:367 `// SAFETY: Per the type invariant, `inner` contains an initialized`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/HEAD_6d35786de281/rust/kernel/gpu/buddy.rs:373 `// SAFETY: `GpuBuddyInner` can be sent between threads.`
-- weak lifetime name /home/nya/workspace/bind-drift/.binddrift/worktrees/HEAD_6d35786de281/rust/kernel/gpu/buddy.rs:369 `LIFETIME_NAMING_PATTERN`
+- .binddrift/worktrees/HEAD_6d35786de281/rust/kernel/gpu/buddy.rs:369 `drop` unsafe=1
+- .binddrift/worktrees/HEAD_6d35786de281/rust/kernel/gpu/buddy.rs:367 `// SAFETY: Per the type invariant, `inner` contains an initialized`
+- .binddrift/worktrees/HEAD_6d35786de281/rust/kernel/gpu/buddy.rs:373 `// SAFETY: `GpuBuddyInner` can be sent between threads.`
+- weak lifetime name .binddrift/worktrees/HEAD_6d35786de281/rust/kernel/gpu/buddy.rs:369 `LIFETIME_NAMING_PATTERN`
 - wrapper_fix: `b9616d9721bf8a56d5038e85d2ebbe0ec9d56a94`
 
 ## W-000007 SignatureDrift
@@ -280,10 +280,10 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/HEAD_6d35786de281/rust/kernel/gpu/buddy.rs:541 `drop` unsafe=1
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/HEAD_6d35786de281/rust/kernel/gpu/buddy.rs:537 `// SAFETY:`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/HEAD_6d35786de281/rust/kernel/gpu/buddy.rs:546 `/// A GPU buddy block.`
-- weak lifetime name /home/nya/workspace/bind-drift/.binddrift/worktrees/HEAD_6d35786de281/rust/kernel/gpu/buddy.rs:541 `LIFETIME_NAMING_PATTERN`
+- .binddrift/worktrees/HEAD_6d35786de281/rust/kernel/gpu/buddy.rs:541 `drop` unsafe=1
+- .binddrift/worktrees/HEAD_6d35786de281/rust/kernel/gpu/buddy.rs:537 `// SAFETY:`
+- .binddrift/worktrees/HEAD_6d35786de281/rust/kernel/gpu/buddy.rs:546 `/// A GPU buddy block.`
+- weak lifetime name .binddrift/worktrees/HEAD_6d35786de281/rust/kernel/gpu/buddy.rs:541 `LIFETIME_NAMING_PATTERN`
 - wrapper_fix: `b9616d9721bf8a56d5038e85d2ebbe0ec9d56a94`
 
 ## W-000001 SignatureDrift

@@ -6,7 +6,7 @@
   },
   "all_labels_unclear": false,
   "labeled_warnings": 100,
-  "manual_review_csv": "/home/nya/workspace/bind-drift/data/replay/latest/manual_review.csv",
+  "manual_review_csv": "data/replay/latest/manual_review.csv",
   "source_run_id": "latest",
   "true_labeled_warnings": 37,
   "usable_for_main": true
