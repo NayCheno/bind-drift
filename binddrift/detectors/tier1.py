@@ -5,6 +5,7 @@ from typing import Any
 
 from binddrift.config import Config
 from binddrift.db import connect, initialize, upsert_many
+from binddrift.evidence.impact import apply_impact_to_warning, compute_rust_impact
 from binddrift.kernel import default_version_id
 from binddrift.warnings import fact_id, warning_id, write_drift_facts, write_warnings
 
@@ -140,15 +141,23 @@ def _add_fact(
     return idx + 1
 
 
-def _promote_tier1_facts(facts: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def _promote_tier1_facts(conn, facts: list[dict[str, Any]], version: str, pair_id: str | None = None) -> list[dict[str, Any]]:
     warnings: list[dict[str, Any]] = []
     warning_idx = 1
     for fact in facts:
-        if fact.get("fact_source") in {"c_api_diff", "behavior_indicator_diff"} or (
-            fact.get("fact_source") == "macro_diff" and fact.get("c_evidence_level") == "c_source_diff"
-        ):
-            warnings.append(_make_warning(warning_idx, fact))
-            warning_idx += 1
+        symbol = str(fact.get("c_side", {}).get("symbol", ""))
+        impact = compute_rust_impact(conn, version, symbol, fact.get("type", ""), pair_id=pair_id)
+        if fact.get("c_evidence_level") == "binding_only" and "oracle_hit" not in impact["reasons"]:
+            fact["rust_impact_level"] = impact["impact_level"]
+            fact["demotion_reasons"] = sorted(set(fact.get("demotion_reasons", []) + ["binding_only_without_oracle"]))
+            continue
+        if not impact["eligible"]:
+            fact["rust_impact_level"] = impact["impact_level"]
+            fact["demotion_reasons"] = sorted(set(fact.get("demotion_reasons", []) + ["no_rust_impact_evidence"]))
+            continue
+        warning = apply_impact_to_warning(_make_warning(warning_idx, fact), impact)
+        warnings.append(warning)
+        warning_idx += 1
     return warnings
 
 
@@ -353,7 +362,7 @@ def run_tier1_with_context(
         fact.setdefault("c_side", {})["old_version"] = selected_old
         fact.setdefault("c_side", {})["new_version"] = selected_new
 
-    warnings = _promote_tier1_facts(facts)
+    warnings = _promote_tier1_facts(conn, facts, selected_new, pair_id=pair_id)
     for warning in warnings:
         warning["run_id"] = run_id
         warning["pair_id"] = pair_id

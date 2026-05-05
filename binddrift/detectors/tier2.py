@@ -5,6 +5,7 @@ from typing import Any
 
 from binddrift.config import Config
 from binddrift.db import connect, initialize, upsert_many
+from binddrift.evidence.impact import compute_rust_impact
 from binddrift.kernel import default_version_id
 from binddrift.warnings import read_warnings, warning_id, write_warnings
 
@@ -167,6 +168,17 @@ def run_tier2_with_context(
     initialize(conn)
     selected_new = new or default_version_id(cfg)
     selected_old = old
+    if not selected_old:
+        existing = read_warnings(cfg.warnings_jsonl) if append else []
+        write_warnings(cfg, existing)
+        return {
+            "warnings": len(existing),
+            "new_warnings": 0,
+            "warning_file": str(cfg.warnings_jsonl),
+            "old_version": selected_old,
+            "new_version": selected_new,
+            "status": "need_old_version",
+        }
     old_ind = _indicators(conn, selected_old) if selected_old else {}
     new_ind = _indicators(conn, selected_new)
     existing = read_warnings(cfg.warnings_jsonl) if append else []
@@ -176,21 +188,24 @@ def run_tier2_with_context(
     for symbol, indicators in sorted(new_ind.items()):
         if symbol == "<file>":
             continue
+        if selected_old and symbol not in old_ind:
+            continue
         old_set = old_ind.get(symbol, set())
         changed = indicators - old_set if selected_old else indicators
-        exposure = _rust_exposure(conn, selected_new, symbol)
-        if not exposure:
-            continue
         for indicator in sorted(changed):
             drift_type = _drift_type(indicator, old_set, indicators)
             if not drift_type:
                 continue
-            c_evidence = _evidence(conn, selected_new, symbol, indicator)
-            rust_evidence = _rust_mapping(conn, selected_new, symbol)
-            lifetime_evidence = _rust_lifetime(conn, selected_new, symbol)
-            if drift_type in {"NullabilityDrift", "ErrorDrift"} and not rust_evidence:
+            impact = compute_rust_impact(conn, selected_new, symbol, drift_type, pair_id=pair_id)
+            if not impact["eligible"]:
                 continue
-            if drift_type in {"OwnershipRefcountDrift", "AllocationFreePairingDrift"} and not lifetime_evidence:
+            c_evidence = _evidence(conn, selected_new, symbol, indicator)
+            rust_evidence = impact["safety_comments"] + impact["error_mappings"]
+            lifetime_evidence = impact["lifetime_facts"]
+            weak_lifetime_evidence = impact["weak_lifetime_facts"]
+            if drift_type in {"NullabilityDrift", "ErrorDrift"} and not (
+                rust_evidence or impact["direct_uses"] or impact["safe_apis"] or impact["oracle_hits"]
+            ):
                 continue
             warnings.append(
                 {
@@ -213,16 +228,24 @@ def run_tier2_with_context(
                     },
                     "rust_side": {
                         "binding": f"bindings::{symbol}",
-                        "uses": exposure,
+                        "uses": impact["direct_uses"],
+                        "safe_apis": impact["safe_apis"],
                         "safety_comments": rust_evidence,
                         "lifetime_facts": lifetime_evidence,
+                        "weak_lifetime_facts": weak_lifetime_evidence,
+                        "oracle_hits": impact["oracle_hits"],
                     },
-                    "evidence_chain": c_evidence + rust_evidence + lifetime_evidence,
+                    "evidence_chain": c_evidence + rust_evidence + lifetime_evidence + impact["oracle_hits"],
                     "explanation": f"{symbol} has {indicator} C-side evidence and is used across a Rust unsafe boundary.",
                     "suggested_action": "Review the safe abstraction contract for stale error, ownership, allocation, or sleepability assumptions.",
                     "confidence": max([item["confidence"] for item in c_evidence], default=0.5),
                     "indicator_based": True,
                     "not_a_bug_claim": True,
+                    "record_kind": "warning",
+                    "promotion_status": "promoted",
+                    "rust_impact_level": impact["impact_level"],
+                    "promotion_reasons": impact["reasons"],
+                    "demotion_reasons": [],
                 }
             )
             idx += 1
