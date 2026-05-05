@@ -88,11 +88,12 @@ uv run binddrift replay versions \
   --jobs 1
 ```
 
-This creates one replay run under `data/replay/<run_id>/`. Use `v6.6` as the
-main reproducible start point on LLVM 18 hosts; use the `v6.1` matrix entries as
-documented exclusions unless libclang 15 or older is available. Each adjacent
-version pair writes its own `warnings.jsonl`, `warnings.md`, `manual_review.csv`,
-and evaluation tables, while the SQLite database records `replay_runs`,
+This creates one replay run under `data/replay/latest/`, clearing any previous
+contents of that directory first. Use `v6.6` as the main reproducible start
+point on LLVM 18 hosts; use the `v6.1` matrix entries as documented exclusions
+unless libclang 15 or older is available. Each adjacent version pair writes its
+own `warnings.jsonl`, `warnings.md`, `manual_review.csv`, and evaluation tables,
+while the SQLite database records the current run as `latest` in `replay_runs`,
 `replay_pairs`, pair-scoped drift events, build oracle rows, and wrapper-fix
 oracle rows. Failed pairs are recorded with an error instead of being silently
 skipped.
@@ -100,7 +101,7 @@ skipped.
 After replay completes, generate the aggregate review sheet and paper tables:
 
 ```bash
-uv run binddrift --data-dir data/replay/<run_id> eval all --top-k 100 --run-id <run_id>
+uv run binddrift --data-dir data/replay/latest eval all --top-k 100 --run-id latest
 uv run binddrift paper build
 ```
 

@@ -35,11 +35,14 @@ instead of treating the failures as drift evidence.
 uv run binddrift toolchain matrix --start v6.1 --fetch-tags
 uv run binddrift toolchain bootstrap --install-matrix
 uv run binddrift replay versions --start v6.6 --include-head --fetch-tags --build-bindings --configure --arch x86_64 --toolchain auto --jobs 1
-uv run binddrift --data-dir data/replay/<run_id> eval all --top-k 100 --run-id <run_id>
+uv run binddrift --data-dir data/replay/latest eval all --top-k 100 --run-id latest
 uv run binddrift paper build
 ```
 
-Replay outputs are stored under `data/replay/<run_id>/` and are also indexed in the SQLite `replay_runs` and `replay_pairs` tables so historical runs do not overwrite the pilot warning report.
+Replay outputs are stored under `data/replay/latest/`. Each `replay versions`
+run clears that directory and replaces the SQLite `latest` replay rows before
+writing new pair outputs, so generated replay artifacts stay stable in commits
+without overwriting the pilot warning report.
 
 `toolchain matrix` reads each checked-out kernel version's
 `scripts/min-tool-version.sh`, writes `data/toolchain_matrix.json`, and records

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 import time
 from dataclasses import replace
 from datetime import datetime, timezone
@@ -26,6 +27,9 @@ from binddrift.ranking.scorer import rank_warnings
 from binddrift.toolchain_matrix import write_toolchain_matrix
 from binddrift.versions import ensure_worktree, sanitize_ref, select_versions
 from binddrift.warnings import read_warnings
+
+
+REPLAY_RUN_ID = "latest"
 
 
 def run_pilot_replay(cfg: Config, commit_limit: int = 50, c_max_files: int = 50) -> dict[str, Any]:
@@ -54,7 +58,21 @@ def _now() -> str:
 
 
 def _run_id() -> str:
-    return "replay-" + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    return REPLAY_RUN_ID
+
+
+def _reset_replay_run_outputs(cfg: Config, run_id: str, run_dir: Path) -> None:
+    if run_dir.exists():
+        if run_dir.name != run_id or run_dir.parent.name != "replay":
+            raise RuntimeError(f"refusing to clear unexpected replay directory: {run_dir}")
+        shutil.rmtree(run_dir)
+    run_dir.mkdir(parents=True, exist_ok=True)
+
+    conn = connect(cfg.database)
+    initialize(conn)
+    for table in ("build_breakage_events", "drift_events", "replay_pairs", "replay_runs"):
+        conn.execute(f"DELETE FROM {table} WHERE run_id=?", (run_id,))
+    conn.commit()
 
 
 class ReplayStageError(RuntimeError):
@@ -269,7 +287,7 @@ def run_version_replay(
     stop_on_error: bool = False,
     toolchain: str = "auto",
 ) -> dict[str, Any]:
-    """Run adjacent-version replay without overwriting pilot outputs.
+    """Run adjacent-version replay into the fixed latest replay output.
 
     The implementation is intentionally sequential even though the public CLI
     records `jobs`: SQLite writes, Linux worktrees, and kernel object trees are
@@ -279,6 +297,9 @@ def run_version_replay(
 
     cfg.ensure_dirs()
     stale = mark_stale_replay_runs(cfg)
+    run_id = _run_id()
+    run_dir = cfg.data_dir / "replay" / run_id
+    _reset_replay_run_outputs(cfg, run_id, run_dir)
     refs_result = select_versions(cfg, start=start, include_head=include_head, fetch=fetch_tags, limit=limit)
     refs = refs_result["refs"]
     matrix = write_toolchain_matrix(cfg, refs, refs_result["version_rows"]) if toolchain == "auto" else None
@@ -291,9 +312,6 @@ def run_version_replay(
         if toolchain == "auto":
             version["toolchain"] = specs_by_version.get(version["version_id"], {})
         versions.append(version)
-    run_id = _run_id()
-    run_dir = cfg.data_dir / "replay" / run_id
-    run_dir.mkdir(parents=True, exist_ok=True)
     c_roots = roots
     run_row = {
         "run_id": run_id,

@@ -74,6 +74,36 @@ def _make_tagged_linux_repo(root: Path) -> Path:
 def test_version_replay_records_pair_outputs(tmp_path: Path):
     _make_tagged_linux_repo(tmp_path)
     cfg = Config.from_args(repo_root=tmp_path)
+    stale_dir = tmp_path / "data/replay/latest"
+    stale_dir.mkdir(parents=True)
+    (stale_dir / "stale.txt").write_text("old replay output\n", encoding="utf-8")
+    conn = connect(cfg.database)
+    initialize(conn)
+    conn.execute(
+        """
+        INSERT INTO replay_runs(run_id, started_at, status, include_head, build_bindings, configure, jobs, arch, c_roots, refs, summary)
+        VALUES('latest', '2026-05-04T00:00:00+00:00', 'completed', 0, 0, 0, 1, 'x86_64', '[]', '[]', '{}')
+        """
+    )
+    conn.execute(
+        """
+        INSERT INTO replay_pairs(pair_id, run_id, pair_index, old_ref, new_ref, old_version, new_version, started_at, status, extraction_summary, evaluation_summary)
+        VALUES('latest-p999-stale', 'latest', 999, 'v6.0', 'v6.1', 'v6.0', 'v6.1', '2026-05-04T00:00:00+00:00', 'completed', '{}', '{}')
+        """
+    )
+    conn.execute(
+        """
+        INSERT INTO drift_events(event_id, run_id, pair_id, old_version, new_version, drift_type, symbol, evidence)
+        VALUES('stale-drift', 'latest', 'latest-p999-stale', 'v6.0', 'v6.1', 'SignatureDrift', 'stale_symbol', '{}')
+        """
+    )
+    conn.execute(
+        """
+        INSERT INTO build_breakage_events(event_id, run_id, pair_id, build_log, line, symbol, text)
+        VALUES('stale-build', 'latest', 'latest-p999-stale', 'old.log', 1, 'stale_symbol', 'old error')
+        """
+    )
+    conn.commit()
 
     summary = run_version_replay(
         cfg,
@@ -88,16 +118,27 @@ def test_version_replay_records_pair_outputs(tmp_path: Path):
     assert summary["pairs"] == 1
     assert summary["completed_pairs"] == 1
     assert summary["warnings"] >= 1
+    assert summary["run_id"] == "latest"
     aggregate = Path(summary["aggregate_warnings"])
     assert aggregate.exists()
+    assert aggregate.parent == stale_dir
+    assert not (stale_dir / "stale.txt").exists()
     warnings = read_warnings(aggregate)
     assert warnings[0]["run_id"] == summary["run_id"]
     assert warnings[0]["pair_id"]
+    assert warnings[0]["pair_id"].startswith("latest-p001-")
     assert warnings[0]["old_version"] == "v6.1"
     assert warnings[0]["new_version"] == "v6.2"
 
     conn = connect(cfg.database)
     initialize(conn)
+    assert conn.execute(
+        "SELECT COUNT(*) AS n FROM replay_pairs WHERE pair_id='latest-p999-stale'"
+    ).fetchone()["n"] == 0
+    assert conn.execute("SELECT COUNT(*) AS n FROM drift_events WHERE event_id='stale-drift'").fetchone()["n"] == 0
+    assert conn.execute(
+        "SELECT COUNT(*) AS n FROM build_breakage_events WHERE event_id='stale-build'"
+    ).fetchone()["n"] == 0
     pair = conn.execute("SELECT * FROM replay_pairs").fetchone()
     assert pair["status"] == "completed"
     assert pair["warning_count"] == len(warnings)
