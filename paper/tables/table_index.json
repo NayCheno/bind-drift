@@ -51,6 +51,10 @@
     "available": true,
     "path": "paper/tables/runtime_scalability.json"
   },
+  "strict_extractor_audit": {
+    "available": true,
+    "path": "paper/tables/strict_extractor_audit.json"
+  },
   "toolchain_matrix": {
     "available": true,
     "path": "data/toolchain_matrix.json"

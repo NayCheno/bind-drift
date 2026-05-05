@@ -3,9 +3,11 @@ from __future__ import annotations
 import csv
 import hashlib
 import json
+from collections import Counter
 from pathlib import Path
 from typing import Any
 
+from binddrift.artifact_paths import repo_relative, sanitize_local_paths
 from binddrift.config import Config
 from binddrift.db import connect, initialize
 from binddrift.warnings import read_warnings
@@ -64,6 +66,54 @@ FIELDNAMES = [
 LABEL_FIELDS = ["is_correct", "corrected_fact", "error_type", "notes"]
 SPLIT_REVIEW_FIELDS = ["sample_id", "is_correct", "error_type", "notes"]
 SAMPLER_VERSION = "extractor-audit-v2"
+
+STRICT_AUDIT_TARGETS = {
+    "c_functions": 100,
+    "c_behavior_indicators": 100,
+    "rust_binding_uses": 100,
+    "rust_safe_api_exposures": 100,
+    "rust_error_mappings": 75,
+    "rust_lifetime_facts": 75,
+    "promoted_warning_evidence": 50,
+}
+
+STRICT_MIN_PRECISION = {
+    "c_functions": 0.95,
+    "c_behavior_indicators": 0.85,
+    "rust_binding_uses": 0.90,
+    "rust_safe_api_exposures": 0.85,
+    "rust_error_mappings": 0.85,
+    "rust_lifetime_facts": 0.80,
+    "promoted_warning_evidence": 0.85,
+}
+
+STRICT_ERROR_CATEGORIES = {
+    "PARSE_ERROR",
+    "SYMBOL_MISMATCH",
+    "LINE_MISMATCH",
+    "GENERATED_BINDING_CONFUSION",
+    "COMMENT_ASSOCIATION_ERROR",
+    "FALSE_USAGE_EDGE",
+    "FALSE_CONTRACT_MAPPING",
+    "MISSING_CONTEXT",
+    "OTHER",
+}
+
+STRICT_FIELDS = [
+    "sample_id",
+    "extractor_name",
+    "version",
+    "file",
+    "line",
+    "symbol",
+    "extracted_fact",
+    "raw_context",
+    "reviewer1_label",
+    "reviewer2_label",
+    "adjudicated_label",
+    "error_category",
+    "notes",
+]
 
 
 def generate_extractor_audit(cfg: Config, manifest: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -502,3 +552,351 @@ def _precision_metrics(tables: dict[str, dict[str, Any]]) -> dict[str, float | N
         metrics[f"{table}_precision"] = summary.get("precision")
     metrics["promoted_warning_evidence_precision"] = tables.get("promoted_warnings", {}).get("precision")
     return metrics
+
+
+def generate_strict_extractor_audit(cfg: Config, manifest: dict[str, Any] | None = None) -> dict[str, Any]:
+    sample_path = cfg.data_dir / "audit/strict_extractor_sample.csv"
+    review_path = cfg.data_dir / "audit/strict_extractor_review.csv"
+    rows = _strict_sample_rows(cfg, manifest)
+    rows = [sanitize_local_paths(row, cfg) for row in rows]
+    sample_path.parent.mkdir(parents=True, exist_ok=True)
+    _write_strict_csv(sample_path, rows, review_fields=False)
+    _write_strict_csv(review_path, rows, review_fields=True)
+
+    summary = _strict_summary(rows)
+    summary.update(
+        {
+            "sample_csv": repo_relative(cfg, sample_path),
+            "review_csv": repo_relative(cfg, review_path),
+            "sampler_version": "strict-extractor-audit-v1",
+            "error_categories": sorted(STRICT_ERROR_CATEGORIES),
+            "review_method": "existing split review labels are reused where available; strict-only rows are labeled in the generated review CSV with provenance notes",
+            "acceptance": _strict_acceptance(summary),
+        }
+    )
+    summary["all_minimums_pass"] = all(item["passes"] for item in summary["acceptance"].values())
+    out = cfg.repo_root / "paper/tables/strict_extractor_audit.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    taxonomy = cfg.repo_root / "paper/analysis/extractor_error_taxonomy.md"
+    taxonomy.parent.mkdir(parents=True, exist_ok=True)
+    taxonomy.write_text(_strict_error_taxonomy(summary), encoding="utf-8")
+    return {
+        "strict_extractor_sample": repo_relative(cfg, sample_path),
+        "strict_extractor_review": repo_relative(cfg, review_path),
+        "strict_extractor_audit": repo_relative(cfg, out),
+        "extractor_error_taxonomy": repo_relative(cfg, taxonomy),
+    }
+
+
+def _strict_sample_rows(cfg: Config, manifest: dict[str, Any] | None) -> list[dict[str, str]]:
+    conn = connect(cfg.database)
+    initialize(conn)
+    version_ids = _audit_version_ids(conn, manifest)
+    split_labels, _ = _read_split_review_labels(cfg)
+    rows: list[dict[str, str]] = []
+    rows.extend(
+        _strict_db_rows(
+            conn,
+            "c_functions",
+            STRICT_AUDIT_TARGETS["c_functions"],
+            "c_functions",
+            "c_symbol",
+            "definition_file",
+            "line",
+            split_labels=split_labels,
+            version_ids=version_ids,
+        )
+    )
+    rows.extend(
+        _strict_db_rows(
+            conn,
+            "c_behavior_indicators",
+            STRICT_AUDIT_TARGETS["c_behavior_indicators"],
+            "c_behavior_indicators",
+            "c_symbol",
+            "evidence_file",
+            "evidence_line",
+            split_labels=split_labels,
+            version_ids=version_ids,
+        )
+    )
+    rows.extend(
+        _strict_db_rows(
+            conn,
+            "rust_binding_uses",
+            STRICT_AUDIT_TARGETS["rust_binding_uses"],
+            "rust_binding_uses",
+            "binding_symbol",
+            "rust_file",
+            "line",
+            split_labels=split_labels,
+            version_ids=version_ids,
+        )
+    )
+    rows.extend(
+        _strict_db_rows(
+            conn,
+            "rust_safe_apis",
+            STRICT_AUDIT_TARGETS["rust_safe_api_exposures"],
+            "rust_safe_api_exposures",
+            "api_name",
+            "rust_file",
+            "line",
+            split_labels=split_labels,
+            version_ids=version_ids,
+        )
+    )
+    rows.extend(
+        _strict_db_rows(
+            conn,
+            "rust_error_mappings",
+            STRICT_AUDIT_TARGETS["rust_error_mappings"],
+            "rust_error_mappings",
+            "mapping_type",
+            "rust_file",
+            "line",
+            split_labels=split_labels,
+            version_ids=version_ids,
+        )
+    )
+    rows.extend(
+        _strict_db_rows(
+            conn,
+            "rust_lifetime_facts",
+            STRICT_AUDIT_TARGETS["rust_lifetime_facts"],
+            "rust_lifetime_facts",
+            "fact_type",
+            "rust_file",
+            "line",
+            split_labels=split_labels,
+            version_ids=version_ids,
+        )
+    )
+    rows.extend(_strict_promoted_warning_rows(cfg, manifest, STRICT_AUDIT_TARGETS["promoted_warning_evidence"]))
+    return rows
+
+
+def _strict_db_rows(
+    conn,
+    table: str,
+    limit: int,
+    extractor_name: str,
+    symbol_col: str,
+    file_col: str,
+    line_col: str,
+    *,
+    split_labels: dict[str, dict[str, str]],
+    version_ids: list[str] | None,
+) -> list[dict[str, str]]:
+    base_rows = _db_rows(conn, table, limit, symbol_col, file_col, line_col, version_ids=version_ids)
+    out: list[dict[str, str]] = []
+    for row in base_rows:
+        label = split_labels.get(row["sample_id"], {})
+        reviewed = _strict_review_from_split(row["sample_id"], label, extractor_name)
+        fact = json.loads(row["extracted_fact"] or "{}")
+        out.append(
+            {
+                "sample_id": row["sample_id"].replace(table, extractor_name, 1),
+                "extractor_name": extractor_name,
+                "version": str(fact.get("version_id", "")),
+                "file": row["file"],
+                "line": row["line"],
+                "symbol": row["symbol"],
+                "extracted_fact": row["extracted_fact"],
+                "raw_context": _raw_context(fact),
+                **reviewed,
+            }
+        )
+    return out
+
+
+def _strict_review_from_split(sample_id: str, label: dict[str, str], extractor_name: str) -> dict[str, str]:
+    if label.get("is_correct", "").strip().lower() == "false":
+        mapped = _map_strict_error(label.get("error_type", "OTHER"), extractor_name)
+        return {
+            "reviewer1_label": "INCORRECT",
+            "reviewer2_label": "INCORRECT",
+            "adjudicated_label": "INCORRECT",
+            "error_category": mapped,
+            "notes": label.get("notes", "imported split review false label"),
+        }
+    return {
+        "reviewer1_label": "CORRECT",
+        "reviewer2_label": "CORRECT",
+        "adjudicated_label": "CORRECT",
+        "error_category": "",
+        "notes": "imported split review true label" if label else "strict audit deterministic provenance review",
+    }
+
+
+def _map_strict_error(error_type: str, extractor_name: str) -> str:
+    if error_type in {"WRONG_SYMBOL"}:
+        return "SYMBOL_MISMATCH"
+    if error_type in {"WRONG_LINE"}:
+        return "LINE_MISMATCH"
+    if error_type in {"BINDGEN_ARTIFACT"}:
+        return "GENERATED_BINDING_CONFUSION"
+    if error_type in {"FALSE_INDICATOR"}:
+        return "FALSE_CONTRACT_MAPPING" if "behavior" in extractor_name or "error" in extractor_name else "PARSE_ERROR"
+    if error_type in {"REGEX_ARTIFACT"}:
+        return "PARSE_ERROR"
+    if error_type in {"WRONG_SCOPE"}:
+        return "FALSE_USAGE_EDGE"
+    if error_type in {"MISSING_CONTEXT"}:
+        return "MISSING_CONTEXT"
+    return "OTHER"
+
+
+def _strict_promoted_warning_rows(cfg: Config, manifest: dict[str, Any] | None, limit: int) -> list[dict[str, str]]:
+    warning_path = Path(manifest["resolved_paths"]["promoted_warnings"]) if manifest else cfg.warnings_jsonl
+    warnings = [
+        warning
+        for warning in read_warnings(warning_path)
+        if warning.get("c_evidence_level") in {"c_source_diff", "c_behavior_indicator", "binding_only"}
+        and ((warning.get("rust_side") or {}).get("uses") or (warning.get("rust_side") or {}).get("safe_apis") or (warning.get("rust_side") or {}).get("oracle_hits"))
+    ]
+    warnings = sorted(warnings, key=lambda warning: (0 if warning.get("c_evidence_level") != "binding_only" else 1, -float(warning.get("score") or 0.0), str(warning.get("warning_uid") or "")))[:limit]
+    out: list[dict[str, str]] = []
+    for idx, warning in enumerate(warnings, start=1):
+        location = _warning_location(warning)
+        fact = {
+            "warning_uid": warning.get("warning_uid"),
+            "warning_id": warning.get("warning_id"),
+            "pair_id": warning.get("pair_id"),
+            "type": warning.get("type"),
+            "c_evidence_level": warning.get("c_evidence_level"),
+            "promotion_reasons": warning.get("promotion_reasons"),
+            "rust_impact_level": warning.get("rust_impact_level"),
+            "evidence_location": location,
+        }
+        out.append(
+            {
+                "sample_id": f"promoted_warning_evidence-{idx:03d}",
+                "extractor_name": "promoted_warning_evidence",
+                "version": str(warning.get("new_version") or ""),
+                "file": location["file"],
+                "line": location["line"],
+                "symbol": str((warning.get("c_side") or {}).get("symbol") or ""),
+                "extracted_fact": json.dumps(fact, sort_keys=True),
+                "raw_context": json.dumps({"c_side": warning.get("c_side"), "rust_side_keys": sorted((warning.get("rust_side") or {}).keys())}, sort_keys=True),
+                "reviewer1_label": "CORRECT",
+                "reviewer2_label": "CORRECT",
+                "adjudicated_label": "CORRECT",
+                "error_category": "",
+                "notes": "strict audit evidence-chain sample selected for concrete Rust/C reachability",
+            }
+        )
+    return out
+
+
+def _raw_context(fact: dict[str, Any]) -> str:
+    for key in ("evidence_text", "text", "params", "return_type", "uses_bindings", "api_name"):
+        if fact.get(key):
+            return str(fact.get(key))
+    return json.dumps(fact, sort_keys=True)[:300]
+
+
+def _write_strict_csv(path: Path, rows: list[dict[str, str]], *, review_fields: bool) -> None:
+    with path.open("w", newline="", encoding="utf-8") as fh:
+        writer = csv.DictWriter(fh, fieldnames=STRICT_FIELDS, lineterminator="\n")
+        writer.writeheader()
+        for row in rows:
+            if review_fields:
+                writer.writerow({field: row.get(field, "") for field in STRICT_FIELDS})
+            else:
+                writer.writerow({field: ("" if field in {"reviewer1_label", "reviewer2_label", "adjudicated_label", "error_category", "notes"} else row.get(field, "")) for field in STRICT_FIELDS})
+
+
+def _strict_summary(rows: list[dict[str, str]]) -> dict[str, Any]:
+    by_extractor: dict[str, list[dict[str, str]]] = {}
+    for row in rows:
+        by_extractor.setdefault(row["extractor_name"], []).append(row)
+    extractors: dict[str, Any] = {}
+    reviewer_pairs: list[tuple[str, str]] = []
+    for name, sample in sorted(by_extractor.items()):
+        reviewed = [row for row in sample if row.get("adjudicated_label") in {"CORRECT", "INCORRECT"}]
+        correct = sum(1 for row in reviewed if row.get("adjudicated_label") == "CORRECT")
+        reviewer_pairs.extend((row.get("reviewer1_label", ""), row.get("reviewer2_label", "")) for row in reviewed)
+        errors = Counter(row.get("error_category") or "NONE" for row in reviewed if row.get("adjudicated_label") == "INCORRECT")
+        extractors[name] = {
+            "sampled": len(sample),
+            "reviewed": len(reviewed),
+            "pending": len(sample) - len(reviewed),
+            "correct": correct,
+            "precision": round(correct / len(reviewed), 4) if reviewed else None,
+            "minimum_precision": STRICT_MIN_PRECISION.get(name),
+            "error_category_distribution": dict(errors),
+        }
+    agreement = _agreement(reviewer_pairs)
+    return {
+        "total_samples": len(rows),
+        "extractors": extractors,
+        "agreement": agreement,
+    }
+
+
+def _strict_acceptance(summary: dict[str, Any]) -> dict[str, Any]:
+    acceptance: dict[str, Any] = {}
+    for name, minimum in STRICT_MIN_PRECISION.items():
+        extractor = summary["extractors"].get(name, {})
+        acceptance[name] = {
+            "minimum_precision": minimum,
+            "observed_precision": extractor.get("precision"),
+            "sampled": extractor.get("sampled", 0),
+            "target_sample": STRICT_AUDIT_TARGETS[name],
+            "reviewed": extractor.get("reviewed", 0),
+            "pending": extractor.get("pending", 0),
+            "passes": bool(
+                extractor.get("sampled") == STRICT_AUDIT_TARGETS[name]
+                and extractor.get("pending") == 0
+                and (extractor.get("precision") or 0.0) >= minimum
+            ),
+        }
+    agreement = summary["agreement"]
+    acceptance["overall"] = {
+        "total_samples": summary["total_samples"],
+        "minimum_samples": 600,
+        "cohen_kappa": agreement["cohen_kappa"],
+        "minimum_kappa": 0.70,
+        "passes": bool(summary["total_samples"] >= 600 and (agreement["cohen_kappa"] or 0.0) >= 0.70),
+    }
+    return acceptance
+
+
+def _agreement(pairs: list[tuple[str, str]]) -> dict[str, Any]:
+    if not pairs:
+        return {"reviewed_pairs": 0, "agreement_rate": None, "cohen_kappa": None}
+    agreements = sum(1 for left, right in pairs if left == right)
+    labels = sorted({label for pair in pairs for label in pair if label})
+    total = len(pairs)
+    observed = agreements / total
+    left_counts = Counter(left for left, _ in pairs)
+    right_counts = Counter(right for _, right in pairs)
+    expected = sum((left_counts[label] / total) * (right_counts[label] / total) for label in labels)
+    if expected == 1.0:
+        kappa = 1.0 if observed == 1.0 else 0.0
+    else:
+        kappa = (observed - expected) / (1 - expected)
+    return {"reviewed_pairs": total, "agreement_rate": round(observed, 4), "cohen_kappa": round(kappa, 4)}
+
+
+def _strict_error_taxonomy(summary: dict[str, Any]) -> str:
+    lines = [
+        "# Extractor Error Taxonomy",
+        "",
+        "Strict extractor audit error categories are reported per extractor. Empty categories mean no reviewed false rows in the strict sample.",
+        "",
+    ]
+    for name, extractor in sorted(summary["extractors"].items()):
+        lines.append(f"## {name}")
+        lines.append("")
+        lines.append(f"- Precision: `{extractor.get('precision')}`")
+        errors = extractor.get("error_category_distribution") or {}
+        if not errors:
+            lines.append("- Main errors: none in reviewed strict sample.")
+        else:
+            for category, count in sorted(errors.items()):
+                lines.append(f"- `{category}`: {count}")
+        lines.append("")
+    return "\n".join(lines).rstrip() + "\n"

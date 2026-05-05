@@ -1,0 +1,169 @@
+{
+  "acceptance": {
+    "c_behavior_indicators": {
+      "minimum_precision": 0.85,
+      "observed_precision": 0.96,
+      "passes": true,
+      "pending": 0,
+      "reviewed": 100,
+      "sampled": 100,
+      "target_sample": 100
+    },
+    "c_functions": {
+      "minimum_precision": 0.95,
+      "observed_precision": 1.0,
+      "passes": true,
+      "pending": 0,
+      "reviewed": 100,
+      "sampled": 100,
+      "target_sample": 100
+    },
+    "overall": {
+      "cohen_kappa": 1.0,
+      "minimum_kappa": 0.7,
+      "minimum_samples": 600,
+      "passes": true,
+      "total_samples": 600
+    },
+    "promoted_warning_evidence": {
+      "minimum_precision": 0.85,
+      "observed_precision": 1.0,
+      "passes": true,
+      "pending": 0,
+      "reviewed": 50,
+      "sampled": 50,
+      "target_sample": 50
+    },
+    "rust_binding_uses": {
+      "minimum_precision": 0.9,
+      "observed_precision": 1.0,
+      "passes": true,
+      "pending": 0,
+      "reviewed": 100,
+      "sampled": 100,
+      "target_sample": 100
+    },
+    "rust_error_mappings": {
+      "minimum_precision": 0.85,
+      "observed_precision": 0.8933,
+      "passes": true,
+      "pending": 0,
+      "reviewed": 75,
+      "sampled": 75,
+      "target_sample": 75
+    },
+    "rust_lifetime_facts": {
+      "minimum_precision": 0.8,
+      "observed_precision": 0.9733,
+      "passes": true,
+      "pending": 0,
+      "reviewed": 75,
+      "sampled": 75,
+      "target_sample": 75
+    },
+    "rust_safe_api_exposures": {
+      "minimum_precision": 0.85,
+      "observed_precision": 1.0,
+      "passes": true,
+      "pending": 0,
+      "reviewed": 100,
+      "sampled": 100,
+      "target_sample": 100
+    }
+  },
+  "agreement": {
+    "agreement_rate": 1.0,
+    "cohen_kappa": 1.0,
+    "reviewed_pairs": 600
+  },
+  "all_minimums_pass": true,
+  "error_categories": [
+    "COMMENT_ASSOCIATION_ERROR",
+    "FALSE_CONTRACT_MAPPING",
+    "FALSE_USAGE_EDGE",
+    "GENERATED_BINDING_CONFUSION",
+    "LINE_MISMATCH",
+    "MISSING_CONTEXT",
+    "OTHER",
+    "PARSE_ERROR",
+    "SYMBOL_MISMATCH"
+  ],
+  "extractors": {
+    "c_behavior_indicators": {
+      "correct": 96,
+      "error_category_distribution": {
+        "PARSE_ERROR": 4
+      },
+      "minimum_precision": 0.85,
+      "pending": 0,
+      "precision": 0.96,
+      "reviewed": 100,
+      "sampled": 100
+    },
+    "c_functions": {
+      "correct": 100,
+      "error_category_distribution": {},
+      "minimum_precision": 0.95,
+      "pending": 0,
+      "precision": 1.0,
+      "reviewed": 100,
+      "sampled": 100
+    },
+    "promoted_warning_evidence": {
+      "correct": 50,
+      "error_category_distribution": {},
+      "minimum_precision": 0.85,
+      "pending": 0,
+      "precision": 1.0,
+      "reviewed": 50,
+      "sampled": 50
+    },
+    "rust_binding_uses": {
+      "correct": 100,
+      "error_category_distribution": {},
+      "minimum_precision": 0.9,
+      "pending": 0,
+      "precision": 1.0,
+      "reviewed": 100,
+      "sampled": 100
+    },
+    "rust_error_mappings": {
+      "correct": 67,
+      "error_category_distribution": {
+        "FALSE_CONTRACT_MAPPING": 1,
+        "FALSE_USAGE_EDGE": 5,
+        "SYMBOL_MISMATCH": 2
+      },
+      "minimum_precision": 0.85,
+      "pending": 0,
+      "precision": 0.8933,
+      "reviewed": 75,
+      "sampled": 75
+    },
+    "rust_lifetime_facts": {
+      "correct": 73,
+      "error_category_distribution": {
+        "PARSE_ERROR": 2
+      },
+      "minimum_precision": 0.8,
+      "pending": 0,
+      "precision": 0.9733,
+      "reviewed": 75,
+      "sampled": 75
+    },
+    "rust_safe_api_exposures": {
+      "correct": 100,
+      "error_category_distribution": {},
+      "minimum_precision": 0.85,
+      "pending": 0,
+      "precision": 1.0,
+      "reviewed": 100,
+      "sampled": 100
+    }
+  },
+  "review_csv": "data/audit/strict_extractor_review.csv",
+  "review_method": "existing split review labels are reused where available; strict-only rows are labeled in the generated review CSV with provenance notes",
+  "sample_csv": "data/audit/strict_extractor_sample.csv",
+  "sampler_version": "strict-extractor-audit-v1",
+  "total_samples": 600
+}

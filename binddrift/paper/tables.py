@@ -9,7 +9,7 @@ from binddrift.config import Config
 from binddrift.db import connect, initialize
 from binddrift.evaluation.protocol import FORBIDDEN_PRIMARY_SCORE_COMPONENTS, load_evaluation_protocol
 from binddrift.evaluation.metrics import load_manual_labels, manual_review_agreement, warning_label_key
-from binddrift.paper.audit import generate_extractor_audit
+from binddrift.paper.audit import generate_extractor_audit, generate_strict_extractor_audit
 from binddrift.ranking.oracle_blind_scorer import rank_primary_warnings_oracle_blind
 from binddrift.run_manifest import canonical_run_dir, manifest_exists, repo_relative, resolve_manifest_path, sha256_file, validate_run_manifest
 from binddrift.warnings import read_warnings
@@ -36,11 +36,13 @@ def generate_paper_tables(cfg: Config) -> dict[str, object]:
     _write_manual_review_summary(cfg, manual_review, manifest=manifest)
     _write_runtime_scalability(cfg, runtime, manifest=manifest)
     audit = generate_extractor_audit(cfg, manifest=manifest)
+    strict_audit = generate_strict_extractor_audit(cfg, manifest=manifest)
     _validate_table_consistency(cfg, manifest)
     known = {
         "evaluation_summary": tables_dir / "evaluation_summary.json",
         "baselines_ablations": tables_dir / "baselines_ablations.json",
         "extractor_audit": Path(audit["extractor_audit"]),
+        "strict_extractor_audit": Path(strict_audit["strict_extractor_audit"]),
         "replay_summary": replay_summary,
         "fact_counts": fact_counts,
         "manual_review_summary": manual_review,
