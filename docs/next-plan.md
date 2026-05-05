@@ -1,718 +1,1094 @@
-# 下一步严格计划
-
-目标不是“继续堆功能”，而是把当前 56/100 左右的状态推进到 CCF-B borderline / weak accept 可能区间。计划按“阻断接收的风险优先级”排序。
-
-当前必须承认的事实是：`evaluation_summary` 里主 warning 数是 11，`wrapper-fix` precision 已升到 0.7273、P@10 为 0.7，这是好消息；但 build oracle 为 0，manual review 在 evaluation summary 中没有读到任何 labeled warning。同时 `manual_review_summary` 又显示有 112 条双人标注、agreement 1.0，但 true labeled warnings 为 0。所以下一步的核心不是再增加 detector，而是把实验闭环做实。
+# BindDrift 下一阶段计划：从 Borderline 推进到严格 CCF-B 可接收
 
 ## 总目标
 
-下一轮完成后，评分目标应从 56/100 提升到至少：
+当前 BindDrift 已经达到 CCF-B borderline artifact 水平：系统完整、实验规模可用、manual review 和 run manifest 已经成形。但严格 CCF-B 正会仍会卡在四个问题上：
 
-- 65/100：可以作为 CCF-B borderline workshop/system-track 风格投稿
-- 70/100：可以认真冲 CCF-B 正会
+1. top-K ranking 不够强：当前 P@10 = 0.30，低于 P@100 = 0.37，说明排序没有把真阳性稳定推到前面。
+2. true positive 来源偏 wrapper-fix：当前 37 个 true positives 中，35 个是 `TRUE_WRAPPER_FIX`，只有 2 个 `TRUE_SEMANTIC_DRIFT`。
+3. case studies 类型单一：当前 4 个 case studies 都是 `SignatureDrift`，不能支撑“多类 API/contract drift”的强 claim。
+4. baseline/ranking claim 需要重新设计：当前最强 claim 是 evidence gate，而不是 ranking 全面优于简单 baseline。
 
-最低可接受目标：
+下一阶段目标不是扩大 warning 数量，而是完成下面的 CCF-B hard gates：
 
-- artifact 自洽
-- manual review 能被 `evaluation_summary` 正确读取
-- 主 warning set 有非零人工真阳性
-- baseline/ablation 显示 BindDrift 明确优于简单基线
-- case study 全部来自 adjudicated true positives
+- 主论文 claim 从 “detect drift” 稳定收窄为 “evidence-backed warning prioritization”
+- 主 ranking evaluation 不能使用 wrapper-fix oracle 作为 scoring feature
+- top-K 结果必须在 locked pooled review set 上优于强 baseline
+- 至少补出多类型、非 wrapper-only 的 true semantic case studies
+- 所有表格、case、review、baseline、audit 必须从同一个 manifest 可重复生成
+- paper build 必须在不满足验收条件时 hard fail
 
-## 阶段 0：先冻结主实验口径
+目标分数：从当前约 66/100 提升到 72+/100。
 
-### 问题
+---
 
-现在最大隐患是：不同文件对“主结果”的说法不一致。`evaluation_summary` 说 warnings 是 11。`manual_review_summary` 说 112 条已双人标注但 0 true。runtime 表之前又显示 latest run 有 17,910 warnings。这个状态下，审稿人会先质疑实验口径，而不是讨论方法。
+## 阶段 0：冻结 claim、manifest、evaluation split
 
-### 解决方案
+### 当前问题
 
-建立一个强制的 `run_manifest.json`，每次 paper build 只允许引用 manifest 中声明的文件。
+现在的结果能支持：
 
-建议新增：
+> BindDrift reduces many cross-version drift facts into fewer evidence-backed Rust-impact review targets.
+
+但还不能支持：
+
+> BindDrift is a bug detector.
+> BindDrift ranking is broadly superior to all simple baselines.
+> BindDrift discovers many new semantic bugs.
+
+如果下一阶段继续调 ranking，同时仍用同一批 top-100 labels 汇报结果，会被 CCF-B 评审认为有 overfitting 风险。
+
+### 修改方案
+
+新增一个冻结文件：
 
 ```text
-data/replay/latest/run_manifest.json
+data/replay/latest/evaluation_protocol.json
 ```
 
-内容必须包括：
+内容包括：
 
 ```json
 {
-  "run_id": "latest",
-  "canonical_warning_file": "data/replay/latest/warnings.jsonl",
-  "canonical_review_file": "data/replay/latest/manual_review.csv",
-  "canonical_drift_facts_file": "data/replay/latest/drift_facts.jsonl",
-  "canonical_database": ".binddrift/binddrift.sqlite3",
-  "warning_count": 11,
-  "drift_fact_count": 17910,
-  "reviewed_warning_count": 11,
-  "pair_count": 20,
-  "version_count": 21,
-  "sha256": {
-    "warnings.jsonl": "...",
-    "manual_review.csv": "...",
-    "drift_facts.jsonl": "..."
+  "protocol_version": "ccfb-strict-v1",
+  "claim_boundary": "evidence-backed warning prioritization",
+  "primary_warning_set": "oracle_blind_ranked_warnings",
+  "oracle_usage": {
+    "wrapper_fix_oracle": "labels_and_auxiliary_validation_only",
+    "build_oracle": "labels_and_auxiliary_validation_only",
+    "not_allowed_in_primary_score": true
+  },
+  "splits": {
+    "dev_pairs": ["latest-p001", "latest-p002", "..."],
+    "validation_pairs": ["latest-p011", "..."],
+    "locked_test_pairs": ["latest-p016", "..."]
+  },
+  "primary_metrics": [
+    "P@10",
+    "P@20",
+    "P@50",
+    "P@100",
+    "NDCG@20",
+    "AUPRC_on_pooled_review_set"
+  ],
+  "baseline_metrics": [
+    "relative_lift_over_best_simple_baseline",
+    "absolute_lift_over_random",
+    "warning_volume_reduction"
+  ],
+  "manual_review_policy": {
+    "double_review": true,
+    "adjudication_required": true,
+    "cohen_kappa_required": true,
+    "unclear_is_not_true_positive": true
   }
 }
 ```
 
-同时修改 paper build 和 eval all，让以下文件都必须读取同一个 manifest：
+同时修改 table generation：
 
-- `paper/tables/evaluation_summary.json`
-- `paper/tables/manual_review_summary.json`
-- `paper/tables/runtime_scalability.json`
-- `paper/tables/baselines_ablations.json`
+binddrift/paper/tables.py
+binddrift/evaluation/evaluator.py
+binddrift/evaluation/baselines.py
+binddrift/run_manifest.py
 
-新增 hard fail：
+所有主表必须读取：
 
-```python
-assert evaluation_summary["warnings"] == run_manifest["warning_count"]
-assert manual_review_summary["source_run_id"] == run_manifest["run_id"]
-assert reviewed_warning_count <= warning_count
-assert warnings_jsonl_sha == manifest_sha
-```
+run_manifest.json
+evaluation_protocol.json
+manual_review.csv
+pooled_review_set.jsonl
+pooled_review_labels.csv
 
-如果有任何不一致，paper build 直接失败，不生成 paper tables。
+不能直接读临时 warnings 文件。
 
 ### 验收标准
 
 必须全部满足：
 
-1. `data/replay/latest/warnings.jsonl` 非空，且行数 = `evaluation_summary["warnings"]`
-2. `data/replay/latest/manual_review.csv` 存在
-3. `manual_review_summary["source_run_id"] == "latest"`
-4. `evaluation_summary.manual_review.labeled_warnings == manual_review_summary.labeled_warnings`，或者有明确字段解释 `filtered_labeled_warnings`
-5. `runtime_scalability.json` 中 `latest.warnings` 与 `evaluation_summary.warnings` 口径一致；如果一个是 drift facts，一个是 promoted warnings，必须字段改名为 `drift_facts` 与 `promoted_warnings`
-6. paper build 在上述任一条件不满足时失败
+存在 data/replay/latest/evaluation_protocol.json
+paper/tables/evaluation_summary.json 中包含：
+protocol_version
+claim_boundary
+primary_warning_set
+oracle_blind_primary_result
+主 paper result 默认使用 oracle-blind ranking。
+wrapper-fix/build oracle 不得作为 primary ranking score 的输入。
+如果代码检测到 primary score 使用 oracle label 或 wrapper-fix label，paper build hard fail。
+pytest tests/test_evaluation_protocol.py tests/test_paper_tables.py 通过。
+论文中不得出现以下未被结果支持的强 claim：
+bug detector
+automatically detects bugs
+proves unsoundness
+outperforms all baselines
+complete detection
+paper/draft.md 必须明确写出：
+warnings are review targets
+not every warning is a confirmed bug
+wrapper-fix oracle is auxiliary validation
+ranking improvement is evaluated separately from evidence gating
 
-通过标准：artifact consistency 100%。
+**通过标准：**claim consistency 100%。
 
-如果这一阶段不完成，不进入下一阶段。
+## 阶段 1：重做 fair ranking evaluation，避免 top-100 自证
 
-## 阶段 1：修复 manual review 读入与 warning identity
+### 当前问题
 
-### 问题
+当前 top-100 manual review 只能说明现有排名下有 37 个 true positives。它不能公平比较不同 ranker，因为 baseline 的 top warnings 可能没有被标注。
 
-`manual_review_summary` 能看到 112 条标注，但 `evaluation_summary` 的 manual review 是 0 条 labeled。这说明 label key、`pair_id`、`warning_id`、`run_id` 或 review CSV 路径至少有一个不一致。
+严格 CCF-B 评审会问：
 
-### 解决方案
+你的 baseline top-20 如果没被人工标注，怎么知道 BindDrift 排名真的更好？
 
-定义永久稳定的 warning identity，不再只依赖 `W-000001` 这种局部编号。
+### 修改方案
 
-新增字段：
+新增 pooled review evaluation。
 
-```json
-{
-  "warning_uid": "sha256(run_id|pair_id|old_version|new_version|type|symbol|indicator|old_value|new_value)",
-  "run_id": "latest",
-  "pair_id": "latest-p010-v6.10-to-v6.11",
-  "warning_id": "W-000001"
-}
-```
+生成一个固定 review pool：
 
-manual review CSV 必须包含：
+data/replay/latest/pooled_review_set.jsonl
+data/replay/latest/pooled_review_labels.csv
+data/replay/latest/pooled_review_manifest.json
 
-```text
-warning_uid,run_id,pair_id,warning_id,type,symbol,rank,score,reviewer1_label,reviewer2_label,adjudicated_label,adjudication_notes
-```
+pool 构成：
 
-`load_manual_labels` 的优先级：
+union(
+top100(BindDrift-oracle-blind),
+top100(BindDrift-current),
+top100(BindingDiffOnly),
+top100(CSignatureDiffOnly),
+top100(CIndicatorOnly),
+top100(RustUseOnly),
+top100(NoImpactGate),
+top100(NoGraph),
+top100(NoRanking),
+stratified_sample_by_warning_type(120),
+stratified_sample_by_version_pair(80)
+)
 
-```text
-warning_uid > pair_id:warning_id > warning_id
-```
+去重后，如果 pool 超过 500 条，按下面规则压缩到 400–500 条：
 
-但 paper 主表只能使用 `warning_uid` 匹配。`warning_id` 只作为展示编号。
+保留所有 ranker top-20 union
+保留所有 non-SignatureDrift candidates
+保留所有 candidate with safe API exposure
+保留每个 warning type 至少 30 条
+其余按 pair/type 分层采样
 
-同时新增诊断命令：
+新增命令：
 
 ```bash
-uv run binddrift eval check-label-join \
-  --warnings data/replay/latest/warnings.jsonl \
-  --manual-review data/replay/latest/manual_review.csv
+python -m binddrift.evaluation.pooled_review \
+  --run latest \
+  --rankers binddrift_oracle_blind,binddrift_current,binding_diff,c_signature,c_indicator,rust_use,no_graph,no_impact_gate,no_ranking,random \
+  --output data/replay/latest/pooled_review_set.jsonl
 ```
 
-输出：
+新增评估：
+
+```bash
+python -m binddrift.evaluation.evaluate_rankers \
+  --pool data/replay/latest/pooled_review_set.jsonl \
+  --labels data/replay/latest/pooled_review_labels.csv \
+  --protocol data/replay/latest/evaluation_protocol.json \
+  --output paper/tables/ranking_pooled_evaluation.json
+```
+
+### 验收标准
+
+主结果必须满足最低线：
+
+| 指标                     | 当前参考   | CCF-B 最低验收 | CCF-B 目标 |
+| ------------------------ | ---------- | -------------- | ---------- |
+| P@10                     | 0.30       | ≥ 0.50         | ≥ 0.60     |
+| P@20                     | 未稳定报告 | ≥ 0.45         | ≥ 0.55     |
+| P@50                     | 0.36       | ≥ 0.42         | ≥ 0.50     |
+| P@100                    | 0.37       | ≥ 0.40         | ≥ 0.45     |
+| NDCG@20                  | 未稳定报告 | ≥ 0.55         | ≥ 0.65     |
+| unclear rate             | 1%         | ≤ 5%           | ≤ 3%       |
+| false positive rate @100 | 27%        | ≤ 25%          | ≤ 20%      |
+
+### Baseline 验收
+
+BindDrift-oracle-blind 在 pooled review set 上必须优于 best simple baseline。
+至少满足以下两个条件：
+P@20 比 best simple baseline 高 ≥ 0.10
+P@50 比 best simple baseline 高 ≥ 0.07
+NDCG@20 比 best simple baseline 高 ≥ 0.10
+如果不满足，则论文必须降级 claim：
+可以说 evidence gate reduces review volume
+不可以说 ranking significantly improves prioritization
+ranking_pooled_evaluation.json 必须包含每个 ranker 的：
+P@10/P@20/P@50/P@100
+NDCG@20
+true label distribution
+warning volume
+confidence interval by bootstrap
+paired randomization test 或 bootstrap significance against best baseline
+bootstrap 95% CI 必须生成并写入表格。
+所有 ranker 必须在同一 pooled labels 上评估，不能用各自单独 top-100 labels。
+如果 pooled labels 覆盖率低于 95%，paper build hard fail。
+
+**通过标准：**ranking evaluation 可以经受 CCF-B reviewer 复查。
+
+## 阶段 2：修复 ranking 本身，而不是只改表述
+
+### 当前问题
+
+当前 P@10 低说明 score 函数没有把最可靠 warning 放前面。下一阶段要优化 ranker，但必须避免 oracle leakage。
+
+### 修改方案
+
+新增 oracle-blind ranker：
+
+binddrift/ranking/oracle_blind_scorer.py
+
+主 ranking feature 只能使用 detection-time 可获得信息：
+
+允许：
+
+C source diff evidence
+binding diff evidence
+direct Rust unsafe call evidence
+safe API exposure
+safety comment proximity
+error mapping evidence
+lifetime/ownership evidence
+type/layout dependency
+cross-version stability
+warning type reliability prior learned from dev split
+symbol-specific fanout
+generated-binding-only demotion
+multi-evidence agreement
+
+禁止：
+
+wrapper-fix commit label
+manual review label
+build breakage oracle label
+adjudicated label
+future commit message indicating fix
+post-hoc case-study selection signal
+
+新增 score explanation：
+
+每条 warning 输出：
 
 ```json
 {
-  "warnings": 11,
-  "review_rows": 11,
-  "matched_review_rows": 11,
-  "unmatched_warnings": [],
-  "orphan_review_rows": [],
-  "label_distribution": {
-    "TRUE_WRAPPER_FIX": 3,
-    "TRUE_SEMANTIC_DRIFT": 2,
-    "BENIGN_DRIFT": 4,
-    "FALSE_POSITIVE": 2
-  }
+  "score": 12.4,
+  "score_components": {
+    "c_source_diff": 2.0,
+    "rust_direct_use": 2.0,
+    "safe_api_exposure": 2.0,
+    "contract_evidence": 2.0,
+    "multi_evidence_bonus": 1.5,
+    "generated_binding_only_penalty": -3.0
+  },
+  "oracle_blind": true
+}
+```
+
+新增 ranker audit：
+
+paper/tables/ranking_score_audit.json
+
+它必须报告 top false positives 的主要 score 来源，避免某个 spurious feature 支配排序。
+
+### 排序规则建议
+
+把 score 从简单加权改成两阶段：
+
+第一阶段：eligibility tier
+Tier A: C source diff + direct Rust use + safe API/contract evidence
+Tier B: C source diff + direct Rust use
+Tier C: binding diff + direct Rust use + contract evidence
+Tier D: generated-binding-only or weak graph-only
+
+主 top-50 禁止出现 Tier D。
+
+第二阶段：within-tier ranking
+
+按以下顺序打分：
+
+evidence diversity：C diff、Rust use、safe API、safety comment、error mapping、lifetime fact 是否同时出现
+Rust abstraction reachability：是否到 public safe API
+contract sensitivity：nullability/error/ownership/allocation/sleepability 高于纯 signature churn
+historical recurrence：同一 symbol 是否跨版本反复影响 Rust wrapper
+fanout penalty：过高 fanout 的 common helper 降权
+generated-binding-only penalty：只有 bindgen edge 的强降权
+
+### 验收标准
+
+paper/tables/ranking_score_audit.json 存在。
+top-50 中 generated_binding_only warning 数量 = 0。
+top-50 中每条 warning 至少满足：
+C source evidence 或 semantic indicator evidence
+direct Rust use 或 safe API exposure
+非空 score_components
+primary ranker 的 oracle_blind == true。
+primary ranker 结果达到阶段 1 的最低 top-K 指标。
+top-20 false positives 必须生成 failure analysis：
+paper/analysis/top20_false_positive_analysis.md
+如果 P@10 仍低于 0.50，论文不得声称 ranking improvement，只能保留 evidence gate claim。
+
+**通过标准：**ranking 不再是 CCF-B 最大弱点。
+
+## 阶段 3：增加非 wrapper-only、非 SignatureDrift 的 semantic true positives
+
+### 当前问题
+
+当前 37 个 true positives 中，35 个是 wrapper-fix-backed，只有 2 个 semantic-review-backed。case studies 也集中在 SignatureDrift。这会让审稿人认为 BindDrift 主要是在找历史 wrapper fixes，而不是发现 cross-language semantic contract drift。
+
+### 修改方案
+
+新增 semantic drift mining pass：
+
+binddrift/detectors/semantic_review_targets.py
+
+重点挖掘以下类别：
+
+NullabilityDrift
+NULL / ERR*PTR / IS_ERR / PTR_ERR / nullable pointer convention
+Rust side Option, Result, to_result, from_err_ptr
+OwnershipRefcountDrift
+get_device, put_device, kref_get, kref_put, refcount_inc, refcount_dec
+Rust side Drop, ARef, lifetime wrapper
+AllocationFreeDrift
+kmalloc, kzalloc, devm*\*, kfree, release callback
+Rust side allocator wrapper, Drop, Box, ownership transfer
+SleepabilityContextDrift
+might_sleep, GFP_KERNEL, lock context, atomic context
+Rust side safety comment or wrapper function marked usable in context
+LayoutFieldDrift
+C struct field addition/removal/retype
+Rust side field access, offset assumption, wrapper invariant
+
+新增 targeted review set：
+
+data/replay/latest/semantic_target_review_set.jsonl
+data/replay/latest/semantic_target_review.csv
+paper/tables/semantic_drift_review_summary.json
+
+采样策略：
+
+top50 semantic candidates by oracle-blind score
+
+- 20 NullabilityDrift
+- 20 OwnershipRefcountDrift
+- 20 AllocationFreeDrift
+- 20 SleepabilityContextDrift
+- 20 LayoutFieldDrift
+
+每类不足则全部纳入，并在表格中报告不足原因。
+
+### 验收标准
+
+最低 CCF-B 验收：
+
+至少找到 8 个 TRUE_SEMANTIC_DRIFT。
+其中至少 5 个不是 wrapper-fix-backed。
+至少覆盖 3 个 drift types。
+每个 true semantic drift 必须有：
+old/new C evidence
+Rust side usage evidence
+contract mapping evidence
+reviewer adjudication notes
+semantic_drift_review_summary.json 必须报告：
+candidates reviewed
+true semantic drift count
+type distribution
+false positive taxonomy
+examples not used as case studies
+如果 true semantic drift < 5，则论文必须把 semantic drift claim 降级为 exploratory。
+如果 true semantic drift ≥ 8，论文可以把 semantic review targets 作为次要贡献。
+不允许把 TRUE_WRAPPER_FIX 计入 TRUE_SEMANTIC_DRIFT。
+
+目标 CCF-B 验收：
+
+≥ 12 个 TRUE_SEMANTIC_DRIFT
+≥ 4 个 drift types
+≥ 3 个非-wrapper case studies
+
+**通过标准：**BindDrift 不再只像 wrapper-fix recovery 工具。
+
+## 阶段 4：重做 case studies，满足 CCF-B 说服力
+
+### 当前问题
+
+当前 case studies 已经绑定 true positives，这是正确的；但类型全部集中在 SignatureDrift，不足以支撑论文广度。
+
+### 修改方案
+
+生成新的 case suite：
+
+paper/cases/case-01-...
+paper/cases/case-02-...
+...
+paper/cases/case-08-...
+paper/tables/case_study_summary.json
+
+case 选择规则：
+
+must be adjudicated true positive
+must be eligible_for_main_warning
+must have old_version and new_version
+must have pair_id
+must not be generated-binding-only
+must include C-side evidence
+must include Rust-side dependency evidence
+must include reviewer adjudication note
+
+case suite 至少包括：
+
+2 SignatureDrift
+1 NullabilityDrift
+1 OwnershipRefcountDrift
+1 AllocationFreeDrift
+1 LayoutFieldDrift or FieldDrift
+1 SleepabilityContextDrift if available
+1 failure case or benign drift analysis
+
+如果某类没有 true positive，必须写入：
+
+paper/analysis/missing_case_types.md
+
+并解释为什么没有。
+
+case 文件必须包含
+
+每个 case 必须有固定模板：
+
+```markdown
+# Case Title
+
+## Summary
+
+## Old Version Evidence
+
+## New Version Evidence
+
+## C-Side Diff
+
+## Rust-Side Dependency
+
+## Safe API / Contract Assumption
+
+## Manual Review Label
+
+## Why This Is Not Generated-Binding-Only
+
+## Why Compiler Alone Does Not Catch It
+
+## Alternative Explanation Considered
+
+## Maintainer Review Implication
+
+## Reproduction Pointers
+```
+
+额外修复
+
+当前 case 输出中不应出现本机绝对路径，例如：
+
+/home/...
+/Users/...
+/tmp/...
+
+所有路径必须转为 repo-relative 或 kernel-tree-relative。
+
+### 验收标准
+
+至少 6 个 case studies。
+至少 3 个 drift types。
+至少 2 个 TRUE_SEMANTIC_DRIFT case。
+至少 2 个 wrapper-fix-backed case。
+至少 1 个 negative/failure-analysis case，用来解释 false positive 或 benign drift。
+所有 case 必须来自 adjudicated labels。
+case_study_summary.json 中：
+case_studies >= 6
+drift_type_count >= 3
+semantic_true_cases >= 2
+false_positive_cases == 0 for positive cases
+benign_drift_cases == 0 for positive cases
+unlabeled_cases == 0
+absolute_local_paths == 0
+如果 case type count < 3，paper build hard fail。
+如果没有 negative/failure case，paper build warning；主论文必须至少在 threats/failure analysis 中补充。
+
+**通过标准：**case studies 能支撑“cross-language contract drift”而不只是 signature change。
+
+## 阶段 5：baseline 和 ablation 改成审稿人无法轻易反驳的版本
+
+### 当前问题
+
+简单 baseline 如果没有公平评估，会让 reviewer 质疑：
+
+是不是 grep Rust use + C signature diff 就够了？
+
+### 修改方案
+
+保留并强化以下 baseline：
+
+BindingDiffOnly
+CSignatureDiffOnly
+CIndicatorOnly
+RustUseOnly
+CSignaturePlusRustUse
+NoGraph
+NoImpactGate
+NoTier2
+NoRanking
+Random
+OracleBlindBindDrift
+FullBindDriftWithOracleAuxiliary
+
+注意：
+
+FullBindDriftWithOracleAuxiliary 只能放 appendix 或 auxiliary validation。
+OracleBlindBindDrift 是主表默认。
+baseline 和 BindDrift 必须在同一 pooled review set 上评估。
+
+新增表：
+
+paper/tables/baseline_strict_comparison.json
+paper/tables/ablation_strict_comparison.json
+paper/tables/warning_volume_reduction.json
+
+每个 baseline 必须报告：
+
+```json
+{
+  "ranker": "CSignaturePlusRustUse",
+  "candidate_count": 1234,
+  "review_pool_covered": 0.98,
+  "p_at_10": 0.4,
+  "p_at_20": 0.35,
+  "p_at_50": 0.32,
+  "p_at_100": 0.3,
+  "ndcg_at_20": 0.5,
+  "bootstrap_ci": {
+    "p_at_20": [0.25, 0.45]
+  },
+  "relative_lift_against_binddrift": -0.1
 }
 ```
 
 ### 验收标准
 
-必须全部满足：
+所有 baseline 使用同一个 pooled label set。
+best simple baseline 必须明确标出。
+BindDrift-oracle-blind 至少在 P@20 或 NDCG@20 上显著优于 best simple baseline。
+如果显著性不足，论文必须改写为：
+evidence gate improves candidate quality / volume
+ranking remains future work
+NoImpactGate 应该显著恶化 precision 或显著扩大 warning volume。
+NoGraph 应该显著降低 Rust-impact precision 或 recall proxy。
+NoTier2 应该降低 semantic drift coverage。
+所有 baseline 表必须由脚本生成，禁止手写。
+tests/test_baselines_strict.py 必须检查：
+baseline 列表完整
+metric 字段完整
+pooled labels 一致
+no oracle leakage in primary baseline comparison
 
-1. `check-label-join.matched_review_rows == warning_count`
-2. `orphan_review_rows == []`
-3. `unmatched_warnings == []`
-4. `evaluation_summary.manual_review.labeled_warnings > 0`
-5. `evaluation_summary.manual_review.label_distribution` 非空
-6. `manual_review_summary.labeled_warnings` 与 `evaluation_summary.manual_review.labeled_warnings` 一致
+**通过标准：**baseline 不再是论文软肋。
 
-硬性目标：
+## 阶段 6：extractor audit 从“有样本”升级为“可信测量”
 
-- 主 warning set 如果是 11 条，则至少 11/11 完成 adjudicated label
+### 当前问题
 
-如果仍然出现 `manual_review_summary` 有标签，但 `evaluation_summary` 读不到，这一阶段失败。
+C/Rust extractor 仍偏 heuristic。CCF-B 评审会问：
 
-## 阶段 2：禁止 single-version warning 进入 CCF-B 主实验
+如果 extractor 是 regex，那么结果是不是由 extractor error 主导？
 
-### 问题
+### 修改方案
 
-你当前很多 single-version review 目标会被标成 UNCLEAR，理由是“no historical baseline”。这类 warning 可以作为 pilot，但不能作为 CCF-B 主实验主张。因为 BindDrift 的论文定位是 cross-version API/contract drift，不是单版本 risk scanner。
+扩展 extractor audit：
 
-当前 scope 说 BindDrift 是 warning/prioritization artifact，检测 Linux C API change 可能 stale Rust binding/helper/wrapper/safe abstraction。所以主实验必须有 old/new version comparison。
+data/audit/strict_extractor_sample.csv
+data/audit/strict_extractor_review.csv
+paper/tables/strict_extractor_audit.json
 
-### 解决方案
+采样至少 600 条：
 
-增加 main evidence gate：
+100 C functions
+100 C behavior indicators
+100 Rust binding uses
+100 Rust safe API exposures
+75 Rust error mappings
+75 Rust lifetime/ownership facts
+50 promoted warning evidence chains
 
-```python
-def eligible_for_main_warning(w):
-    return (
-        w["old_version"] is not None
-        and w["new_version"] is not None
-        and w["old_version"] != w["new_version"]
-        and w["pair_id"] is not None
-        and w["promotion_status"] == "promoted"
-    )
-```
+每条 audit row 包含：
 
-所有 single-version warning：
+sample_id
+extractor_name
+version
+file
+line
+symbol
+extracted_fact
+raw_context
+reviewer1_label
+reviewer2_label
+adjudicated_label
+error_category
+notes
 
-```text
-old_version = null
-pair_id = null
-```
+错误类别：
 
-只进入：
-
-```text
-data/single_version_review_targets.jsonl
-```
-
-不进入：
-
-```text
-paper/tables/evaluation_summary.json
-paper/tables/manual_review_summary.json
-paper/cases/
-```
-
-如果你想保留 single-version 结果，可以在 appendix 中单独报告：
-
-```text
-Exploratory single-version review targets
-```
-
-不能放在主 precision / P@K 表里。
-
-### 验收标准
-
-必须全部满足：
-
-1. paper 主 warning set 中 `old_version` 非空
-2. paper 主 warning set 中 `pair_id` 非空
-3. `manual_review.csv` 中没有 “no historical baseline” 作为 adjudicated UNCLEAR 的主要原因
-4. `evaluation_summary` 中单独报告：
-   - `promoted_replay_warnings`
-   - `single_version_review_targets`
-5. 两者不能混算
-
-硬性目标：
-
-- 主 warning set 中 single-version warning 数 = 0
-
-## 阶段 3：重新构造主 warning set，目标不是 11 条，而是 top-100 可审
-
-### 问题
-
-现在 `evaluation_summary` 只有 11 条 warnings。数量太少，会带来两个问题：
-
-- P@10 看起来高，但样本太小
-- baseline 很容易和 BindDrift 选到同一批 warning，导致 ablation 没有区分度
-
-### 解决方案
-
-把输出分成三层：
-
-- `drift_facts`：所有版本变化事实，例如 17k/49k 级别
-- `promoted_warnings`：通过 Rust-impact gate 的 warning，例如 200-1000 条
-- `paper_topk`：排名前 100 条，用于人工 review 与 paper 主表
-
-当前 gate 可能过严，导致 promoted warnings 只有 11。建议调成：
-
-- Tier A：`oracle_confirmed`
-- Tier B：`c_source_diff + direct Rust unsafe use`
-- Tier C：`c_behavior_indicator change + contract mapping`
-- Tier D：`c_behavior_indicator change + safe API + safety comment`
-
-paper 主评估使用：
-
-```text
-Tier A + Tier B + Tier C + Tier D 的 top-100
-```
-
-不要只保留 oracle-confirmed，因为那会让结果变成“wrapper-fix lookup”，创新性不足。
+PARSE_ERROR
+SYMBOL_MISMATCH
+LINE_MISMATCH
+GENERATED_BINDING_CONFUSION
+COMMENT_ASSOCIATION_ERROR
+FALSE_USAGE_EDGE
+FALSE_CONTRACT_MAPPING
+MISSING_CONTEXT
+OTHER
 
 ### 验收标准
 
-建议目标：
+最低 CCF-B 验收：
 
-- `drift_facts >= 10,000`
-- `promoted_warnings` between 100 and 2,000
-- `paper_topk = 100`
-- `manual_review_rows = 100`
+| extractor                        | precision 最低要求 |
+| -------------------------------- | ------------------ |
+| C functions                      | ≥ 0.95             |
+| Rust binding uses                | ≥ 0.90             |
+| C behavior indicators            | ≥ 0.85             |
+| Rust error mappings              | ≥ 0.85             |
+| Rust lifetime facts              | ≥ 0.80             |
+| promoted warning evidence chains | ≥ 0.85             |
 
-如果真实 promoted warnings 少于 100，也可以接受，但必须解释：
+其他要求：
 
-```text
-BindDrift intentionally emits sparse high-confidence warnings.
-```
+总样本数 ≥ 600。
+每个 extractor 至少 50 条样本。
+Cohen’s kappa ≥ 0.70。
+如果 agreement rate = 1.0，必须同时报告 kappa；不能只报告 agreement。
+promoted warning evidence chain precision < 0.85 时，paper build hard fail。
+每类 extractor 的主要错误类别必须写入 paper/analysis/extractor_error_taxonomy.md。
+如果某 extractor precision < 阈值，主论文中对应 detector claim 必须降级。
 
-但最低不能只有 11 条，除非 11 条全部人工真阳性或高度可信。
+**通过标准：**heuristic extractor 的威胁被量化，而不是口头承认。
 
-硬性目标：
+## 阶段 7：manual review 质量控制升级
 
-- `paper_topk >= 50`
+### 当前问题
 
-## 阶段 4：重做人工 review，目标是非零真阳性和可解释负样本
+当前 review 有 double labels 和 adjudication，但严格 CCF-B 还会关心：
 
-### 问题
+reviewer 是否独立
+label guide 是否固定
+disagreement 如何处理
+unclear 是否算 true positive
+是否存在 label leakage
 
-当前 112 条人工标注 true labeled warnings 为 0。这对 CCF-B 是致命问题。即使 wrapper-fix oracle precision 很高，人工没有真阳性也无法支撑 semantic precision。
+### 修改方案
 
-### 解决方案
+新增 review guide：
 
-重新生成 review CSV，只 review 主 replay warnings，不 review single-version warnings。
+docs/manual-review-guide.md
 
-Review labels 保持：
+必须定义：
 
-- `TRUE_BUILD_BREAKAGE`
-- `TRUE_WRAPPER_FIX`
-- `TRUE_SEMANTIC_DRIFT`
-- `BENIGN_DRIFT`
-- `FALSE_POSITIVE`
-- `UNCLEAR`
+TRUE_SEMANTIC_DRIFT
+TRUE_WRAPPER_FIX
+BENIGN_DRIFT
+FALSE_POSITIVE
+UNCLEAR
 
-但必须新增两个字段：
+并明确：
 
-```text
-false_reason,true_reason
-```
+UNCLEAR is not counted as true positive
+TRUE_WRAPPER_FIX and TRUE_SEMANTIC_DRIFT are reported separately
+wrapper-fix-backed labels are auxiliary validation
+semantic true positives require human contract reasoning
 
-`true_reason` 枚举：
+新增 review quality summary：
 
-- `BUILD_LOG_MATCH`
-- `WRAPPER_FIX_COMMIT_MATCH`
-- `CONTRACT_CHANGE_REACHES_SAFE_API`
-- `ERROR_MAPPING_STALE`
-- `NULLABILITY_MAPPING_STALE`
-- `OWNERSHIP_LIFETIME_STALE`
-- `SLEEPABILITY_CONTEXT_STALE`
+paper/tables/manual_review_quality.json
 
-`false_reason` 枚举：
-
-- `NO_VERSION_CHANGE`
-- `NO_RUST_IMPACT`
-- `BINDING_ONLY`
-- `BENIGN_CONTRACT_CHANGE`
-- `WEAK_INDICATOR`
-- `MISMATCHED_SYMBOL`
-- `EXTRACTOR_ERROR`
-- `INSUFFICIENT_EVIDENCE`
-
-人工 review 流程：
-
-1. reviewer1 独立标 top-100
-2. reviewer2 独立标 top-100
-3. adjudicator 只处理分歧
-4. 生成 `adjudicated_label`
-5. eval all 只用 `adjudicated_label`
-
-### 验收标准
-
-最低目标：
-
-- `reviewed_warnings >= 50`
-- `double_labeled >= 50`
-- `agreement_rate >= 0.75`
-- `UNCLEAR <= 30%`
-- `true_labeled_warnings >= 5`
-
-CCF-B 可投目标：
-
-- `reviewed_warnings = 100`
-- `double_labeled = 100`
-- `agreement_rate >= 0.80`
-- `UNCLEAR <= 20%`
-- `true_labeled_warnings >= 10`
-- `manual precision >= 0.10`
-- `P@10 >= 0.30`
-- `P@50 >= 0.15`
-- `P@100 >= 0.10`
-
-硬性失败条件：
-
-- `true_labeled_warnings == 0`
-
-只要真阳性仍为 0，就不能投。
-
-## 阶段 5：重构 wrapper-fix oracle，避免被审稿人认为是 symbol-level leakage
-
-### 问题
-
-当前 wrapper-fix prediction 很好：precision 0.7273、P@10 0.7。但它仍是 symbol-level oracle，审稿人会问：
-
-- 是不是只要 symbol 出现在 wrapper-fix commit 里就算命中？
-- 这个 fix 是否真的和 warning 的 drift type 相关？
-
-### 解决方案
-
-把 wrapper oracle 从 symbol-level 升级为 typed oracle。
-
-新增字段：
+包含：
 
 ```json
 {
-  "oracle_type": "wrapper_fix",
-  "symbol": "PTR_ERR",
-  "commit": "...",
-  "fix_kind": "error_mapping | nullability | ownership | layout | signature | allocation | sleepability",
-  "matched_warning_type": "ErrorDrift",
-  "rust_file": "rust/kernel/...",
-  "diff_hunk": "...",
-  "evidence_strength": "strong | weak",
-  "time_relation": "after_drift | before_drift | same_pair"
+  "reviewed_warnings": 100,
+  "reviewers": 2,
+  "adjudicated": true,
+  "agreement_rate": 0.82,
+  "cohen_kappa": 0.74,
+  "disagreements": 18,
+  "unclear_count": 3,
+  "label_leakage_check": "passed"
 }
 ```
 
-命中规则：
+### 验收标准
 
-```text
-warning.symbol == oracle.symbol
-AND warning.type compatible with fix_kind
-AND oracle.commit_date after old_version_date
-AND oracle.commit_date <= new_version_or_head_date
-```
+所有主结果 labels 必须有 adjudicated label。
+UNCLEAR 不计入 TP。
+TRUE_WRAPPER_FIX 和 TRUE_SEMANTIC_DRIFT 分开报告。
+Cohen’s kappa 必须报告。
+reviewer disagreement examples 至少写 5 个。
+review guide 必须随 artifact 提交。
+review CSV 必须包含：
+warning_uid
+pair_id
+warning_id
+ranker_source
+type
+symbol
+reviewer1_label
+reviewer2_label
+adjudicated_label
+adjudication_notes
+如果 adjudication_notes 缺失率 > 20%，paper build hard fail。
+如果 pooled review set 的 label coverage < 95%，paper build hard fail。
 
-例如：
+**通过标准：**manual review 能经受审稿人质疑。
 
-- `ErrorDrift` 只能匹配 `error_mapping/signature fix`
-- `NullabilityDrift` 只能匹配 `nullability/error pointer fix`
-- `OwnershipRefcountDrift` 只能匹配 `ownership/refcount/lifetime fix`
+## 阶段 8：复现性和 artifact packaging 达到 CCF-B artifact evaluation 标准
+
+### 当前问题
+
+当前 manifest 已经有进展，但 CCF-B artifact 需要“一键重建主表”和“失败时可解释”。
+
+### 修改方案
+
+新增顶层命令：
+
+make reproduce-paper
+make check-artifact
+make build-paper-tables
+make validate-ccfb
+
+或等价 Python 命令：
+
+python -m binddrift.artifact reproduce
+python -m binddrift.artifact validate --strict-ccfb
+
+新增 strict validator：
+
+binddrift/artifact/strict_validator.py
+
+它检查：
+
+run_manifest exists
+evaluation_protocol exists
+all canonical files exist
+all sha256 match
+paper tables regenerate byte-for-byte
+manual labels cover warning set
+pooled labels cover ranker outputs
+case studies match adjudicated labels
+no absolute local paths
+no oracle leakage in primary ranking
+all tests pass
+all required paper tables exist
+
+新增 artifact report：
+
+paper/tables/artifact_reproducibility.json
 
 ### 验收标准
 
-必须报告两套指标：
+clean checkout 后能生成全部 paper tables。
+paper/tables/table_index.json 包含所有主表。
+所有主表都有 provenance：
+source files
+sha256
+generation command
+protocol version
+make validate-ccfb 或等价命令通过。
+output 中不得包含本机绝对路径。
+不允许 paper 表格中的数字与 manifest 不一致。
+不允许 case study label 与 manual review label 不一致。
+不允许 runtime scalability 的 warning count 与 evaluation summary 口径混淆。
+CI 至少运行：
+unit tests
+table generation tests
+manifest validation tests
+claim-boundary tests
+no-local-path tests
+如果没有 CI，README 必须提供本地可执行的 exact commands，并附最新运行日志摘要。
 
-- symbol-level wrapper oracle
-- typed wrapper oracle
+**通过标准：**artifact 进入 CCF-B 可审查状态。
 
-最低目标：
+## 阶段 9：论文重写为“结果驱动”，避免过度承诺
 
-- `typed_wrapper_precision_at_10 >= 0.30`
-- `typed_wrapper_precision_at_50 >= 0.15`
-- `typed_wrapper_recall >= 0.10`
+### 当前问题
 
-硬性要求：
+当前论文已经收窄 claim，这是对的。下一步要把弱点主动写清楚，否则 reviewer 会替我们写。
 
-- paper 主 claim 只能使用 typed oracle
-- symbol-level oracle 只能作为辅助/upper-bound
+### 修改方案
 
-## 阶段 6：重做 baseline / ablation，让它真的能回答“BindDrift 是否有用”
+论文核心叙事改为：
 
-### 问题
+Problem:
+Rust safe abstractions depend on evolving C APIs/contracts.
 
-当前 baseline 表危险：`BindgenOnly`、`CSignatureDiff`、`NoRanking` 等 baseline 的 wrapper precision 看起来不差，甚至可能高于 BindDrift。这会让审稿人认为你的 ranking 没有贡献。
+Challenge:
+Most C/bindgen changes are irrelevant to Rust safe abstractions.
 
-### 解决方案
+Contribution:
+BindDrift separates drift facts from Rust-impact warnings using evidence chains.
 
-重新设计 baseline，使它们各自输出自己的 top-100，而不是在同一批 11 条 promoted warnings 上过滤。
+Main result:
+Evidence gate reduces 17,867 drift facts to 331 promoted warnings and yields useful review targets.
 
-Baseline 应该是：
+Ranking result:
+Oracle-blind ranking improves or does not improve over baselines depending on strict pooled evaluation.
+Only claim improvement if strict metrics pass.
 
-- B1 `BindingDiffOnly`：所有 binding diff fact，按 diff severity 排
-- B2 `CSignatureDiffOnly`：所有 C signature diff，按 change size 排
-- B3 `CIndicatorOnly`：所有 behavior indicator change，按 indicator confidence 排
-- B4 `RustUseOnly`：所有触达 `rust_binding_uses` 的 symbol，按 use count 排
-- B5 `OracleBlindBindDrift`：BindDrift ranking，但去掉 wrapper/build oracle boost
-- B6 `NoRanking`：promoted warnings 原始顺序
-- B7 `Random`：random sample, run 10 seeds
+Semantic result:
+Report true semantic drift separately from wrapper-fix-backed validation.
 
-主比较指标：
+Limitations:
+Warnings are not bugs.
+Extractor is heuristic.
+Linux/Rust-for-Linux only.
+Case coverage is limited unless phase 4 passes.
 
-- manual P@10 / P@50 / P@100
-- typed wrapper P@10 / P@50 / P@100
-- MRR
-- AUC-style recall@K if possible
+必须新增/重写以下章节：
 
-### 验收标准
-
-最低目标：
-
-- BindDrift P@10 > every simple baseline P@10
-- BindDrift P@50 >= best baseline P@50 + 0.05
-- OracleBlindBindDrift < Full BindDrift on typed wrapper P@K
-- NoGraph / NoImpactGate 明显下降
-
-硬性失败条件：
-
-- NoRanking >= BindDrift on P@10 and P@50
-
-如果 NoRanking 仍然更好，你的 claim 必须改成：
-
-```text
-evidence gate reduces warning volume
-```
-
-而不能 claim：
-
-```text
-ranking improves prioritization
-```
-
-## 阶段 7：补 extractor / indicator audit
-
-### 问题
-
-当前实现仍然包含 regex/heuristic extraction。CCF-B 审稿人一定会问：C function、Rust use、indicator 的 precision 是多少？现在还没看到 extractor audit 表。
-
-### 解决方案
-
-新增：
-
-```text
-paper/tables/extractor_audit.json
-data/audit/extractor_sample.csv
-```
-
-抽样对象：
-
-- `c_functions`: 100
-- `rust_binding_uses`: 100
-- `c_behavior_indicators`: 100
-- `rust_error_mappings`: 50
-- `rust_lifetime_facts`: 50
-- `promoted_warnings`: 50
-
-CSV 字段：
-
-```text
-sample_id,table,symbol,file,line,extracted_fact,is_correct,corrected_fact,error_type,notes
-```
-
-`error_type` 枚举：
-
-- `WRONG_SYMBOL`
-- `WRONG_SCOPE`
-- `WRONG_LINE`
-- `FALSE_INDICATOR`
-- `MISSING_CONTEXT`
-- `REGEX_ARTIFACT`
-- `BINDGEN_ARTIFACT`
-- `OTHER`
+3. Claim Boundary
+   5.1 Evaluation Protocol
+   5.2 Pooled Manual Review
+   5.3 Oracle-Blind Ranking
+   5.4 Evidence Gate Ablation
+   5.5 Semantic Drift Review
+   5.6 Extractor Audit
+4. Case Studies
+5. Failure Analysis
+6. Threats to Validity
 
 ### 验收标准
 
-最低目标：
+Abstract 不得声称 automatic bug detection。
+Introduction 必须定义 review target。
+Evaluation 必须区分：
+drift facts
+promoted warnings
+paper top-k
+pooled review set
+Results 必须单独报告：
+wrapper-fix TP
+semantic TP
+benign drift
+false positive
+unclear
+Baseline section 必须写明 best simple baseline。
+Ranking section 不得使用 oracle-backed score 作为主结果。
+Failure analysis 至少包括：
+top false positives
+benign drifts
+missed semantic cases
+extractor errors
+Threats to validity 必须包括：
+oracle bias
+manual review subjectivity
+extractor heuristic error
+Linux-only external validity
+overfitting risk
+tests/test_paper_claims.py 必须检查 forbidden phrases。
+如果 strict ranking metrics 没过，论文必须降级 ranking claim。
 
-- c_functions precision >= 0.90
-- rust_binding_uses precision >= 0.90
-- c_behavior_indicators precision >= 0.75
-- rust_error_mappings precision >= 0.80
-- rust_lifetime_facts precision >= 0.75
-- promoted_warning_evidence precision >= 0.30
+**通过标准：**论文 claim 和实验证据完全对齐。
 
-CCF-B 可投目标：
+## 最终 CCF-B Gate
 
-- c_functions precision >= 0.95
-- rust_binding_uses precision >= 0.95
-- c_behavior_indicators precision >= 0.80
-- promoted_warning_evidence precision >= 0.40
+只有全部通过时，才建议投 CCF-B 正会。
 
-硬性要求：
+### Hard Gate A：主结果
 
-- `paper/tables/table_index.json` 必须包含 `extractor_audit`
+必须满足：
 
-## 阶段 8：case study 只允许来自真阳性
+drift_facts >= 15000
+promoted_warnings between 200 and 600
+paper_topk >= 100
+pooled_review_labels >= 400 or justified >= 300
+P@10 >= 0.50
+P@20 >= 0.45
+P@50 >= 0.42
+P@100 >= 0.40
+NDCG@20 >= 0.55
+false_positive_rate@100 <= 0.25
+unclear_rate <= 0.05
 
-### 问题
+### Hard Gate B：baseline
 
-你已经改了 case study selection，只选 TRUE_LABELS 且必须有 C/Rust evidence。这个方向正确。但现在 `manual_review_summary` 的 true labeled warnings 是 0。所以理论上当前不应该生成任何主 case study。
+必须满足至少两个：
 
-### 解决方案
+BindDrift P@20 - best_simple_baseline P@20 >= 0.10
+BindDrift P@50 - best_simple_baseline P@50 >= 0.07
+BindDrift NDCG@20 - best_simple_baseline NDCG@20 >= 0.10
+NoImpactGate warning volume >= 3x BindDrift warning volume
+NoImpactGate precision <= BindDrift precision - 0.10
 
-case generation 加 hard fail：
+如果不满足，仍可投稿，但必须降级为 artifact/workshop 风格，不建议按 CCF-B 正会主 claim 投稿。
 
-```python
-if main_paper_mode and len(selected_cases) == 0:
-    raise RuntimeError("No adjudicated true-positive case studies available")
-```
+### Hard Gate C：semantic evidence
 
-每个 case 必须满足：
+必须满足：
 
-- `adjudicated_label in TRUE_LABELS`
-- `old_version != null`
-- `new_version != null`
-- `pair_id != null`
-- has C evidence
-- has Rust impact evidence
-- has contract/oracle evidence
+TRUE_SEMANTIC_DRIFT >= 8
+non_wrapper_semantic_true_positives >= 5
+semantic_drift_types >= 3
 
-每个 case markdown 必须包含：
+如果不满足，semantic drift 只能作为 exploratory result。
 
-1. old version evidence
-2. new version evidence
-3. C-side diff or indicator change
-4. Rust wrapper/safe API dependency
-5. reviewer adjudicated label
-6. why compiler cannot catch it
-7. why this is not merely generated-binding-only
+### Hard Gate D：case studies
 
-### 验收标准
+必须满足：
 
-最低目标：
+positive_case_studies >= 6
+case_drift_types >= 3
+semantic_true_cases >= 2
+wrapper_fix_backed_cases >= 2
+unlabeled_positive_cases == 0
+false_positive_positive_cases == 0
+benign_positive_cases == 0
+absolute_local_paths == 0
 
-- case_studies >= 2
-- all case labels in TRUE_LABELS
-- 0 UNLABELED case
-- 0 FALSE_POSITIVE case
-- 0 BENIGN_DRIFT case
-- 0 single-version case
+### Hard Gate E：artifact
 
-CCF-B 可投目标：
+必须满足：
 
-- case_studies >= 3
-- 覆盖至少 2 种 drift type
-- 至少 1 个 wrapper-fix-backed case
-- 至少 1 个 semantic-review-backed case
+run_manifest valid
+evaluation_protocol valid
+paper tables regenerate
+manual labels joined by warning_uid
+pooled review coverage >= 95%
+case labels match manual review
+no oracle leakage in primary ranking
+no local absolute paths
+all tests pass
 
-## 阶段 9：重新定义最终论文 claim
+### Hard Gate F：paper claim
 
-### 当前可以 claim 的内容
+必须满足：
 
-如果阶段 0-8 都完成，可以 claim：
+No automatic bug detection claim
+No soundness proof claim
+No complete detection claim
+No ranking superiority claim unless strict baseline gate passes
+All limitations explicitly discussed
+All numbers generated from artifact
 
-```text
-BindDrift separates low-level cross-version drift facts from Rust-impact warnings and prioritizes warnings that reach Rust unsafe calls, safe APIs, or documented contract mappings.
-```
+## 推荐提交顺序
 
-可以 claim：
+### PR 1：protocol + oracle-blind primary result
 
-```text
-BindDrift reduces the reviewable warning volume by separating low-level drift facts from Rust-impact warnings; the current baseline table does not support a broad ranking-superiority claim.
-```
+文件：
 
-可以 claim：
+data/replay/latest/evaluation_protocol.json
+binddrift/evaluation/protocol.py
+binddrift/ranking/oracle_blind_scorer.py
+tests/test_evaluation_protocol.py
+tests/test_oracle_blind_ranking.py
 
-```text
-BindDrift surfaces wrapper-fix-related drift evidence with typed oracle validation.
-```
+验收：primary ranking 不使用 wrapper-fix/manual/build oracle。
 
-### 仍然不能 claim 的内容
+### PR 2：pooled review set + fair baseline evaluation
 
-不要 claim：
+文件：
 
-- proves Rust abstraction unsoundness
-- finds all contract drift
-- detects real bugs automatically
-- guarantees semantic drift
+binddrift/evaluation/pooled_review.py
+binddrift/evaluation/evaluate_rankers.py
+data/replay/latest/pooled_review_set.jsonl
+data/replay/latest/pooled_review_labels.csv
+paper/tables/ranking_pooled_evaluation.json
+paper/tables/baseline_strict_comparison.json
+tests/test_pooled_review.py
+tests/test_baselines_strict.py
 
-这和现有 scope 一致：项目明确说 Tier2 semantic findings 是 review targets，不是 confirmed bugs。
+验收：所有 ranker 在同一 label pool 上比较。
 
-### 验收标准
+### PR 3：ranking repair + score audit
 
-论文 introduction / abstract / evaluation 中不得出现：
+文件：
 
-- bug detector
-- soundness proof
-- complete detection
-- guaranteed stale abstraction
+binddrift/ranking/oracle_blind_scorer.py
+paper/tables/ranking_score_audit.json
+paper/analysis/top20_false_positive_analysis.md
+tests/test_ranking_score_audit.py
 
-必须出现：
+验收：top-50 无 generated-binding-only，P@10 达到最低标准或降级 claim。
 
-- warning prioritization
-- review target
-- evidence chain
-- cross-version replay
-- manual adjudication
+### PR 4：semantic target review
 
-## 最终验收矩阵
+文件：
 
-下面这张表是我建议你作为下一轮冲刺的“总验收标准”。
+binddrift/detectors/semantic_review_targets.py
+data/replay/latest/semantic_target_review_set.jsonl
+data/replay/latest/semantic_target_review.csv
+paper/tables/semantic_drift_review_summary.json
+tests/test_semantic_review_targets.py
 
-| 模块 | 最低验收 | CCF-B 可投验收 |
-| --- | --- | --- |
-| Artifact consistency | 所有 paper tables 来自同一 manifest | paper build 自动检查，不一致直接失败 |
-| 主 warnings | >= 50 条 replay warnings | top-100 完整可审 |
-| Single-version leakage | 主结果中 0 条 | 主结果和 appendix 分离 |
-| Manual review | >= 50 条双人标注 | 100 条双人标注 |
-| Agreement | >= 0.75 | >= 0.80 |
-| True positives | >= 5 | >= 10 |
-| UNCLEAR 占比 | <= 30% | <= 20% |
-| Manual P@10 | >= 0.30 | >= 0.40 |
-| Manual P@50 | >= 0.15 | >= 0.25 |
-| Typed wrapper P@10 | >= 0.30 | >= 0.50 |
-| Build oracle | 可为 0，但必须解释 | 若仍为 0，不能作为主指标 |
-| Baseline | BindDrift 优于至少 3 个简单 baseline | BindDrift 优于所有主要 baseline |
-| Extractor audit | 有表，有人工抽样 | C/Rust extraction precision >= 0.90 |
-| Case studies | >= 2 个真阳性 | >= 3 个真阳性，覆盖 >= 2 drift types |
+验收：至少 8 个 TRUE_SEMANTIC_DRIFT，否则降级 semantic claim。
 
-## 推荐执行顺序
+### PR 5：case suite rebuild
 
-严格按这个顺序做，不要跳：
+文件：
 
-1. `run_manifest` + artifact hard fail
-2. `warning_uid` + label join 修复
-3. 禁止 single-version warning 进入主实验
-4. 重新生成 top-100 replay warning set
-5. 双人 manual review + adjudication
-6. typed wrapper oracle
-7. baseline/ablation 重算
-8. extractor audit
-9. case study 生成
-10. paper claim 收窄与重写
+binddrift/paper/cases.py
+paper/cases/\*.md
+paper/tables/case_study_summary.json
+paper/analysis/missing_case_types.md
+tests/test_cases.py
 
-## 下一轮评分目标
+验收：至少 6 个 positive cases，至少 3 个 drift types，无本机绝对路径。
 
-如果只完成阶段 0-2：
+### PR 6：strict extractor audit
 
-```text
-56 -> 60
-```
+文件：
 
-如果完成阶段 0-5，并拿到非零人工真阳性：
+binddrift/paper/audit.py
+data/audit/strict_extractor_sample.csv
+data/audit/strict_extractor_review.csv
+paper/tables/strict_extractor_audit.json
+paper/analysis/extractor_error_taxonomy.md
+tests/test_extractor_audit.py
 
-```text
-56 -> 65
-```
+验收：promoted warning evidence chain precision ≥ 0.85。
 
-如果完成阶段 0-8，且 baseline 证明 BindDrift 优于简单方法：
+### PR 7：artifact validator + paper rewrite
 
-```text
-56 -> 70+
-```
+文件：
 
-现在最关键的不是再加 detector，而是让审稿人相信：
+binddrift/artifact/strict_validator.py
+paper/draft.md
+paper/tables/artifact_reproducibility.json
+tests/test_paper_claims.py
+tests/test_artifact_validator.py
 
-1. 这些 warnings 是同一个 run 的结果
-2. 人工 review 确实评估了这些 warnings
-3. 真阳性不是 0
-4. BindDrift 比简单 baseline 更会排序
-5. case study 不是自动包装出来的 false positive
+验收：validate-ccfb 全通过，论文 claim 与结果一致。
 
-这五点解决后，BindDrift 才真正进入 CCF-B 可投区间。
+## 最终判断规则
+
+完成后重新评分：
+
+< 68: 不建议投 CCF-B 正会，只适合 workshop/artifact/demo
+68–71: CCF-B borderline，可投但风险高
+72–75: CCF-B weak accept 区间，可认真投
+76+: CCF-B strong borderline / accept 区间
+
+如果所有 hard gates 通过，目标评分应为：
+
+问题重要性: 8/10
+创新性: 10/15
+方法完整性: 15/20
+实验设计: 17/20
+结果强度: 12/15
+复现性: 9/10
+论文表达: 8/10
+总分: 79/100 上限
+
+如果只完成 protocol、pooled review、artifact validator，但 ranking 和 semantic case 没过，预期评分：
+
+约 69–71/100
+
+如果 ranking P@10 提升到 ≥ 0.50，semantic true positives ≥ 8，case types ≥ 3，预期评分：
+
+约 72–75/100
