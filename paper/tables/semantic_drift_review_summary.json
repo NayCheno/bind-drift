@@ -1,0 +1,152 @@
+{
+  "acceptance": {
+    "minimum_non_wrapper_semantic_true_positives": 5,
+    "minimum_passes": false,
+    "minimum_semantic_drift_types": 3,
+    "minimum_true_semantic_drift": 8,
+    "non_wrapper_semantic_passes": false,
+    "semantic_drift_type_passes": false,
+    "true_semantic_drift_passes": false
+  },
+  "candidates_reviewed": 100,
+  "claim_recommendation": "semantic drift claim must be downgraded to exploratory",
+  "examples_not_used_as_case_studies": [
+    {
+      "label": "FALSE_POSITIVE",
+      "pair_id": "latest-p015-v6.15-to-v6.16",
+      "semantic_target_type": "NullabilityDrift",
+      "symbol": "PTR_ERR",
+      "type": "SignatureDrift",
+      "warning_id": "W-000006",
+      "warning_uid": "5ec7e735433ea17d474dbc803baf4b16cb67fbddd317ec06ceaf246b4b06e33e"
+    },
+    {
+      "label": "FALSE_POSITIVE",
+      "pair_id": "latest-p010-v6.10-to-v6.11",
+      "semantic_target_type": "NullabilityDrift",
+      "symbol": "ERR_PTR",
+      "type": "SignatureDrift",
+      "warning_id": "W-000009",
+      "warning_uid": "5c20a5fac8fbaeeb6434c09c2b2e7a057ef4e5bc9dd57c142e000d3287debb92"
+    },
+    {
+      "label": "FALSE_POSITIVE",
+      "pair_id": "latest-p020-v7.0-to-HEAD_6d35786de281",
+      "semantic_target_type": "NullabilityDrift",
+      "symbol": "resource_size_t",
+      "type": "SignatureDrift",
+      "warning_id": "W-000011",
+      "warning_uid": "47ca2f5d932446898aae96f2ff01ea450d0498594eec0f6a7ee3e7ea67af774d"
+    },
+    {
+      "label": "FALSE_POSITIVE",
+      "pair_id": "latest-p017-v6.17-to-v6.18",
+      "semantic_target_type": "NullabilityDrift",
+      "symbol": "vma_lookup",
+      "type": "SignatureDrift",
+      "warning_id": "W-000181",
+      "warning_uid": "04e6913c1237813f12eb282288f7542d4952208e3113163866b9fef9e31e9487"
+    },
+    {
+      "label": "TRUE_WRAPPER_FIX",
+      "pair_id": "latest-p014-v6.14-to-v6.15",
+      "semantic_target_type": "NullabilityDrift",
+      "symbol": "mdiobus_write",
+      "type": "SignatureDrift",
+      "warning_id": "W-000005",
+      "warning_uid": "a43f69159ca0eea7926e237192cc664924f3b30281339f73fecb06be4a8d8bb8"
+    },
+    {
+      "label": "TRUE_WRAPPER_FIX",
+      "pair_id": "latest-p014-v6.14-to-v6.15",
+      "semantic_target_type": "NullabilityDrift",
+      "symbol": "mdiobus_read",
+      "type": "SignatureDrift",
+      "warning_id": "W-000004",
+      "warning_uid": "1ca09a4bede1c8a765de13bdf0c950a8a1f7255fd2d09ce37ee24268c9deb284"
+    },
+    {
+      "label": "FALSE_POSITIVE",
+      "pair_id": "latest-p018-v6.18-to-v6.19",
+      "semantic_target_type": "NullabilityDrift",
+      "symbol": "dev_get_drvdata",
+      "type": "SignatureDrift",
+      "warning_id": "W-000028",
+      "warning_uid": "9c78646f531bef4f9f3b14a4a2eb9a999c08663e26144e04149684ce611c9f6e"
+    },
+    {
+      "label": "FALSE_POSITIVE",
+      "pair_id": "latest-p012-v6.12-to-v6.13",
+      "semantic_target_type": "NullabilityDrift",
+      "symbol": "device_add_disk",
+      "type": "SignatureDrift",
+      "warning_id": "W-000016",
+      "warning_uid": "fd7adb7aa151991c0fadce9167e16b157fdd69559e3aaba40a8ec27f668cded0"
+    },
+    {
+      "label": "FALSE_POSITIVE",
+      "pair_id": "latest-p012-v6.12-to-v6.13",
+      "semantic_target_type": "NullabilityDrift",
+      "symbol": "errname",
+      "type": "SignatureDrift",
+      "warning_id": "W-000017",
+      "warning_uid": "f8dcd9f2cd00551e7fcbf283302d8a99ffb5521ed87acb06c679f5224daad64e"
+    },
+    {
+      "label": "FALSE_POSITIVE",
+      "pair_id": "latest-p012-v6.12-to-v6.13",
+      "semantic_target_type": "NullabilityDrift",
+      "symbol": "firmware_request_nowarn",
+      "type": "SignatureDrift",
+      "warning_id": "W-000019",
+      "warning_uid": "a7b50f9e01fa519b3ca5429567469093b01a1a6e6aac05980f9c6eb72628692a"
+    }
+  ],
+  "false_positive_taxonomy": {
+    "binding_only_or_generated_surface": 12,
+    "missing_evidence": 11,
+    "real_drift_without_rust_contract_impact": 10,
+    "unsupported_or_mismapped_contract": 9
+  },
+  "label_distribution": {
+    "BENIGN_DRIFT": 10,
+    "FALSE_POSITIVE": 21,
+    "TRUE_BUILD_BREAKAGE": 2,
+    "TRUE_SEMANTIC_DRIFT": 2,
+    "TRUE_WRAPPER_FIX": 54,
+    "UNCLEAR": 11
+  },
+  "non_wrapper_semantic_true_positives": 2,
+  "note": "TRUE_WRAPPER_FIX is reported separately and is not counted as TRUE_SEMANTIC_DRIFT.",
+  "quota": {
+    "AllocationFreeDrift": 20,
+    "LayoutFieldDrift": 20,
+    "NullabilityDrift": 20,
+    "OwnershipRefcountDrift": 20,
+    "SleepabilityContextDrift": 20
+  },
+  "quota_shortages": {},
+  "review_method": "adjudicated double-review labels reused from pooled/manual review artifacts; missing labels are not counted as reviewed",
+  "review_sources": [
+    "data/replay/latest/pooled_review_labels.csv",
+    "data/replay/latest/manual_review.csv"
+  ],
+  "semantic_drift_type_count": 2,
+  "semantic_drift_types": [
+    "AllocationFreeDrift",
+    "NullabilityDrift"
+  ],
+  "target_review": "data/replay/latest/semantic_target_review.csv",
+  "target_set": "data/replay/latest/semantic_target_review_set.jsonl",
+  "true_semantic_drift_count": 2,
+  "true_wrapper_fix_count": 54,
+  "type_distribution": {
+    "AllocationFreeDrift": 20,
+    "LayoutFieldDrift": 20,
+    "NullabilityDrift": 20,
+    "OwnershipRefcountDrift": 20,
+    "SleepabilityContextDrift": 20
+  },
+  "warnings_sha256": "22880471cc4b1e344279e13dc75fd13e293413b6fc57f9a326d5b25e008a9aaa",
+  "warnings_source": "data/replay/latest/promoted_warnings.jsonl"
+}
