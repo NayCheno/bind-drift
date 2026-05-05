@@ -1,0 +1,33 @@
+{
+  "errors": [],
+  "evidence": {
+    "duplicates": [],
+    "files": 6,
+    "rows": 300
+  },
+  "reviewer1": {
+    "duplicates": [],
+    "files": 6,
+    "labels": {
+      "BENIGN_DRIFT": 32,
+      "FALSE_POSITIVE": 29,
+      "TRUE_SEMANTIC_DRIFT": 2,
+      "TRUE_WRAPPER_FIX": 230,
+      "UNCLEAR": 7
+    },
+    "rows": 300
+  },
+  "reviewer2": {
+    "duplicates": [],
+    "files": 6,
+    "labels": {
+      "BENIGN_DRIFT": 12,
+      "FALSE_POSITIVE": 39,
+      "TRUE_BUILD_BREAKAGE": 1,
+      "TRUE_SEMANTIC_DRIFT": 2,
+      "TRUE_WRAPPER_FIX": 67,
+      "UNCLEAR": 179
+    },
+    "rows": 300
+  }
+}

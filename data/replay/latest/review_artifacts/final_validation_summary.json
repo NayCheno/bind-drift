@@ -1,0 +1,19 @@
+{
+  "adjudications": 300,
+  "csv_files_with_rows": 16,
+  "errors": [],
+  "label_counts": {
+    "BENIGN_DRIFT": 38,
+    "FALSE_POSITIVE": 31,
+    "TRUE_BUILD_BREAKAGE": 3,
+    "TRUE_SEMANTIC_DRIFT": 2,
+    "TRUE_WRAPPER_FIX": 139,
+    "UNCLEAR": 87
+  },
+  "legacy_nonempty": 0,
+  "merge_ready": true,
+  "metadata_mismatches": 0,
+  "review_rows": 300,
+  "reviewer1_outputs": 300,
+  "reviewer2_outputs": 300
+}

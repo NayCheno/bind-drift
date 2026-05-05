@@ -1,0 +1,24 @@
+{
+  "batch_size": 50,
+  "batches": 6,
+  "by_pair": {
+    "latest-p002-v6.2-to-v6.3": 3,
+    "latest-p003-v6.3-to-v6.4": 4,
+    "latest-p004-v6.4-to-v6.5": 1,
+    "latest-p006-v6.6-to-v6.7": 2,
+    "latest-p007-v6.7-to-v6.8": 7,
+    "latest-p010-v6.10-to-v6.11": 9,
+    "latest-p011-v6.11-to-v6.12": 3,
+    "latest-p012-v6.12-to-v6.13": 39,
+    "latest-p013-v6.13-to-v6.14": 18,
+    "latest-p014-v6.14-to-v6.15": 5,
+    "latest-p015-v6.15-to-v6.16": 6,
+    "latest-p016-v6.16-to-v6.17": 10,
+    "latest-p017-v6.17-to-v6.18": 150,
+    "latest-p018-v6.18-to-v6.19": 28,
+    "latest-p019-v6.19-to-v7.0": 4,
+    "latest-p020-v7.0-to-HEAD_6d35786de281": 11
+  },
+  "missing_matches": [],
+  "packets": 300
+}
