@@ -128,7 +128,9 @@ def run_tier2_with_context(
             if not impact["eligible"]:
                 continue
             c_evidence = _evidence(conn, selected_new, symbol, indicator)
-            rust_evidence = impact["safety_comments"] + impact["error_mappings"]
+            safety_comments = impact["safety_comments"]
+            error_mappings = impact["error_mappings"]
+            rust_evidence = safety_comments + error_mappings
             lifetime_evidence = impact["lifetime_facts"]
             weak_lifetime_evidence = impact["weak_lifetime_facts"]
             if drift_type in {"NullabilityDrift", "ErrorDrift"} and not (
@@ -158,7 +160,8 @@ def run_tier2_with_context(
                         "binding": f"bindings::{symbol}",
                         "uses": impact["direct_uses"],
                         "safe_apis": impact["safe_apis"],
-                        "safety_comments": rust_evidence,
+                        "safety_comments": safety_comments,
+                        "error_mappings": error_mappings,
                         "lifetime_facts": lifetime_evidence,
                         "weak_lifetime_facts": weak_lifetime_evidence,
                         "oracle_hits": impact["oracle_hits"],
@@ -171,6 +174,7 @@ def run_tier2_with_context(
                     "not_a_bug_claim": True,
                     "record_kind": "warning",
                     "promotion_status": "promoted",
+                    "c_evidence_level": "c_behavior_indicator",
                     "rust_impact_level": impact["impact_level"],
                     "promotion_reasons": impact["reasons"],
                     "demotion_reasons": [],

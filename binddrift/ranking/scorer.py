@@ -1,88 +1,103 @@
 from __future__ import annotations
 
-import json
 from typing import Any
 
 from binddrift.config import Config
 from binddrift.warnings import read_warnings, write_warnings
 
 
-SEVERITY = {
-    "SignatureDrift": 3.0,
-    "LayoutDrift": 3.0,
-    "FieldDrift": 2.0,
-    "MacroConstDrift": 2.0,
-    "HelperDrift": 3.0,
-    "NullabilityDrift": 3.0,
-    "ErrorDrift": 2.0,
-    "OwnershipRefcountDrift": 3.0,
-    "AllocationFreePairingDrift": 3.0,
-    "SleepabilityDrift": 2.0,
-}
-
-CONTRACT_TYPES = {
-    "NullabilityDrift",
-    "ErrorDrift",
-    "OwnershipRefcountDrift",
-    "AllocationFreePairingDrift",
-    "SleepabilityDrift",
-}
+def _has_any(items: Any) -> bool:
+    return bool(items) if isinstance(items, list) else False
 
 
-def _rust_exposure(warning: dict[str, Any]) -> float:
+def score_breakdown(warning: dict[str, Any]) -> dict[str, float]:
     rust_side = warning.get("rust_side", {})
     uses = rust_side.get("uses") or []
-    exposure = rust_side.get("exposure") or {}
-    edge_count = exposure.get("edge_count", 0) if isinstance(exposure, dict) else 0
-    if uses:
-        return min(3.0, 1.0 + len(uses) / 4)
-    if edge_count:
-        return min(3.0, 1.0 + edge_count / 10)
-    return 0.5
+    safety_comments = rust_side.get("safety_comments") or []
+    error_mappings = rust_side.get("error_mappings") or []
+    lifetime_facts = rust_side.get("lifetime_facts") or []
+    safe_apis = rust_side.get("safe_apis") or []
+    oracle_hits = rust_side.get("oracle_hits") or []
+    c_side = warning.get("c_side", {})
+    old_value = c_side.get("old", c_side.get("old_indicators"))
+    new_value = c_side.get("new", c_side.get("new_indicators"))
+    promotion_reasons = set(warning.get("promotion_reasons") or [])
+    evidence_chain = warning.get("evidence_chain") or []
+
+    c_source_evidence = 1.0 if warning.get("c_evidence_level") in {"c_source_diff", "c_behavior_indicator", "build_oracle", "wrapper_fix"} else 0.0
+    direct_use = 1.0 if _has_any(uses) or "direct_binding_use" in promotion_reasons else 0.0
+    safe_api = 1.0 if _has_any(safe_apis) or "exposes_safe_api" in promotion_reasons else 0.0
+    contract_mapping = 1.0 if _has_any(error_mappings) or _has_any(lifetime_facts) else 0.0
+    safety_comment = 1.0 if _has_any(safety_comments) else 0.0
+    build_oracle = 1.0 if any(hit.get("oracle_type") == "build_breakage" for hit in oracle_hits if isinstance(hit, dict)) else 0.0
+    wrapper_oracle = 1.0 if any(hit.get("oracle_type") == "wrapper_fix" for hit in oracle_hits if isinstance(hit, dict)) else 0.0
+    indicator_confidence = max(0.0, min(float(warning.get("confidence", 0.0)), 1.0)) if warning.get("indicator_based") else 0.0
+
+    binding_only = 1.0 if warning.get("c_evidence_level") == "binding_only" else 0.0
+    added_without_old = 1.0 if old_value == "absent" and new_value == "added" and not c_source_evidence else 0.0
+    weak_name_match = 1.0 if _has_any(rust_side.get("weak_lifetime_facts") or []) and not (contract_mapping or safety_comment or build_oracle or wrapper_oracle) else 0.0
+    no_evidence_chain = 1.0 if not evidence_chain and not (direct_use or safe_api or build_oracle or wrapper_oracle) else 0.0
+
+    return {
+        "direct_rust_use": 4.0 * direct_use,
+        "safe_api_exposure": 4.0 * safe_api,
+        "contract_mapping": 3.0 * contract_mapping,
+        "safety_comment": 3.0 * safety_comment,
+        "c_source_diff_strength": 3.0 * c_source_evidence,
+        "build_oracle_hit": 5.0 * build_oracle,
+        "wrapper_fix_hit": 4.0 * wrapper_oracle,
+        "indicator_confidence": round(indicator_confidence, 3),
+        "binding_only_penalty": -5.0 * binding_only,
+        "added_symbol_without_old_c_evidence_penalty": -3.0 * added_without_old,
+        "weak_name_match_penalty": -3.0 * weak_name_match,
+        "no_evidence_chain_penalty": -2.0 * no_evidence_chain,
+    }
 
 
 def score_warning(warning: dict[str, Any]) -> float:
-    drift_type = warning.get("type", "")
-    severity = SEVERITY.get(drift_type, 1.0)
-    exposure = _rust_exposure(warning)
-    rust_side = warning.get("rust_side", {})
-    uses = rust_side.get("uses") or []
-    unsafe = 1.0 if any(use.get("enclosing_unsafe_block") for use in uses if isinstance(use, dict)) else 0.5
-    contract = 1.0 if drift_type in CONTRACT_TYPES else 0.0
-    helper = 1.0 if "Helper" in drift_type or "helper" in json.dumps(warning).lower() else 0.0
-    historical = float(warning.get("confidence", 0.5))
-    build = 1.0 if drift_type in {"SignatureDrift", "LayoutDrift", "FieldDrift"} else 0.0
-    evidence = min(1.0, len(warning.get("evidence_chain") or []) / 5)
-    return round(
-        2.0 * severity
-        + 2.0 * exposure
-        + 1.5 * unsafe
-        + 1.5 * contract
-        + 1.0 * helper
-        + 1.0 * historical
-        + 1.0 * build
-        + evidence,
-        3,
-    )
+    return round(sum(score_breakdown(warning).values()), 3)
+
+
+def _is_promoted(warning: dict[str, Any]) -> bool:
+    if warning.get("promotion_status") == "unpromoted":
+        return False
+    return warning.get("promotion_status") == "promoted" or bool(warning.get("promotion_reasons"))
 
 
 def rank_warnings(cfg: Config) -> dict[str, Any]:
-    warnings = read_warnings(cfg.warnings_jsonl)
+    input_warnings = read_warnings(cfg.warnings_jsonl)
+    warnings = [warning for warning in input_warnings if _is_promoted(warning)]
     for warning in warnings:
         warning.setdefault("evidence_chain", [])
-        warning["score"] = score_warning(warning)
-        if warning.get("score", 0) >= 10:
+        breakdown = score_breakdown(warning)
+        warning["score_breakdown"] = breakdown
+        warning["score"] = round(sum(breakdown.values()), 3)
+        rust_side = warning.get("rust_side", {})
+        has_high_evidence = bool(
+            rust_side.get("safe_apis")
+            or rust_side.get("error_mappings")
+            or rust_side.get("lifetime_facts")
+            or rust_side.get("safety_comments")
+            or rust_side.get("oracle_hits")
+        )
+        if warning.get("score", 0) >= 12 and has_high_evidence:
             warning["risk"] = "High"
-        elif warning.get("score", 0) >= 7:
+        elif warning.get("score", 0) >= 8 and (rust_side.get("uses") or has_high_evidence):
             warning["risk"] = "Medium"
         else:
-            warning["risk"] = warning.get("risk", "Low")
+            warning["risk"] = "Low"
     warnings.sort(key=lambda item: item.get("score", 0), reverse=True)
     for idx, warning in enumerate(warnings, start=1):
         warning["rank"] = idx
     write_warnings(cfg, warnings)
     cfg.report_md.write_text(_markdown(warnings), encoding="utf-8")
-    return {"warnings": len(warnings), "warning_file": str(cfg.warnings_jsonl), "report": str(cfg.report_md)}
+    return {
+        "warnings": len(warnings),
+        "input_warnings": len(input_warnings),
+        "dropped_unpromoted": len(input_warnings) - len(warnings),
+        "warning_file": str(cfg.warnings_jsonl),
+        "report": str(cfg.report_md),
+    }
 
 
 def _markdown(warnings: list[dict[str, Any]]) -> str:
@@ -105,6 +120,10 @@ def _markdown(warnings: list[dict[str, Any]]) -> str:
                 "### C Evidence",
                 "",
                 _format_c_side(warning),
+                "",
+                "### Score Breakdown",
+                "",
+                _format_score_breakdown(warning),
                 "",
                 "### Rust Evidence",
                 "",
@@ -131,20 +150,36 @@ def _format_c_side(warning: dict[str, Any]) -> str:
 def _format_rust_side(warning: dict[str, Any]) -> str:
     rust_side = warning.get("rust_side", {})
     uses = rust_side.get("uses") or []
-    exposure = rust_side.get("exposure") or {}
     lines: list[str] = []
-    if isinstance(exposure, dict) and exposure.get("edge_count") is not None:
-        lines.append(f"- Graph edges: `{exposure.get('edge_count')}`")
     for use in uses[:5]:
         if isinstance(use, dict):
             lines.append(
                 f"- {use.get('rust_file')}:{use.get('line')} `{use.get('enclosing_function')}` "
                 f"unsafe={use.get('enclosing_unsafe_block')}"
             )
+    for item in (rust_side.get("safe_apis") or [])[:3]:
+        if isinstance(item, dict):
+            lines.append(f"- safe API `{item.get('api_name')}`")
     for item in (rust_side.get("safety_comments") or [])[:3]:
         if isinstance(item, dict):
             lines.append(f"- {item.get('rust_file')}:{item.get('line')} `{item.get('text', '')}`")
+    for item in (rust_side.get("error_mappings") or [])[:3]:
+        if isinstance(item, dict):
+            lines.append(f"- {item.get('rust_file')}:{item.get('line')} `{item.get('mapping_type')}`")
     for item in (rust_side.get("lifetime_facts") or [])[:3]:
         if isinstance(item, dict):
             lines.append(f"- {item.get('rust_file')}:{item.get('line')} `{item.get('fact_type')}`")
+    for item in (rust_side.get("weak_lifetime_facts") or [])[:3]:
+        if isinstance(item, dict):
+            lines.append(f"- weak lifetime name {item.get('rust_file')}:{item.get('line')} `{item.get('fact_type')}`")
+    for item in (rust_side.get("oracle_hits") or [])[:3]:
+        if isinstance(item, dict):
+            lines.append(f"- {item.get('oracle_type')}: `{item.get('symbol', item.get('commit_id', 'oracle'))}`")
     return "\n".join(lines) if lines else "- No Rust exposure evidence recorded."
+
+
+def _format_score_breakdown(warning: dict[str, Any]) -> str:
+    breakdown = warning.get("score_breakdown") or {}
+    if not breakdown:
+        return "- No score breakdown recorded."
+    return "\n".join(f"- {key}: `{value}`" for key, value in breakdown.items() if value)
