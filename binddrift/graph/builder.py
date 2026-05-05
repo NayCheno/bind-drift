@@ -131,15 +131,46 @@ def build_graph(cfg: Config, version_id: str | None = None) -> dict[str, Any]:
     return {"database": str(cfg.database), "version_id": vid, "nodes": len(nodes), "edges": len(edges)}
 
 
-def query_graph(cfg: Config, symbol: str | None = None, api: str | None = None, version_id: str | None = None) -> dict[str, Any]:
+def query_graph(
+    cfg: Config,
+    symbol: str | None = None,
+    api: str | None = None,
+    version_id: str | None = None,
+    fuzzy: bool = False,
+) -> dict[str, Any]:
     vid = version_id or default_version_id(cfg)
     conn = connect(cfg.database)
     initialize(conn)
     target = symbol or api or ""
     if not target:
         return {"version_id": vid, "error": "provide --symbol or --api"}
-    like = f"%:{target}%"
-    nodes = [dict(row) for row in conn.execute("SELECT * FROM graph_nodes WHERE version_id=? AND (label=? OR node_id LIKE ?) LIMIT 100", (vid, target, like))]
+    if fuzzy:
+        like = f"%:{target}%"
+        nodes = [
+            dict(row)
+            for row in conn.execute(
+                "SELECT * FROM graph_nodes WHERE version_id=? AND (label=? OR node_id LIKE ?) LIMIT 100",
+                (vid, target, like),
+            )
+        ]
+    else:
+        node_ids = [
+            f"CFunction:{target}",
+            f"RustBindingFunction:{target}",
+            f"CStruct:{target}",
+            f"RustBindingStruct:{target}",
+            f"CMacro:{target}",
+            f"RustBindingConst:{target}",
+            f"RustSafeAPI:{target}",
+        ]
+        placeholders = ",".join("?" for _ in node_ids)
+        nodes = [
+            dict(row)
+            for row in conn.execute(
+                f"SELECT * FROM graph_nodes WHERE version_id=? AND (label=? OR node_id IN ({placeholders})) LIMIT 100",
+                (vid, target, *node_ids),
+            )
+        ]
     node_ids = [row["node_id"] for row in nodes]
     edge_rows: list[sqlite3.Row] = []
     for node_id in node_ids:
@@ -147,6 +178,7 @@ def query_graph(cfg: Config, symbol: str | None = None, api: str | None = None, 
     return {
         "version_id": vid,
         "query": target,
+        "fuzzy": fuzzy,
         "nodes": nodes,
         "edges": [dict(row) for row in edge_rows],
     }

@@ -43,9 +43,24 @@ def _indicator_sets(conn, version: str) -> dict[str, set[str]]:
 
 
 def _graph_exposure(conn, version: str, symbol: str) -> dict[str, Any]:
+    node_ids = [
+        f"CFunction:{symbol}",
+        f"RustBindingFunction:{symbol}",
+        f"CStruct:{symbol}",
+        f"RustBindingStruct:{symbol}",
+        f"CMacro:{symbol}",
+        f"RustBindingConst:{symbol}",
+    ]
+    placeholders = ",".join("?" for _ in node_ids)
     edges = conn.execute(
-        "SELECT * FROM graph_edges WHERE version_id=? AND (src LIKE ? OR dst LIKE ?) LIMIT 50",
-        (version, f"%:{symbol}", f"%:{symbol}%"),
+        f"""
+        SELECT *
+        FROM graph_edges
+        WHERE version_id=?
+          AND (src IN ({placeholders}) OR dst IN ({placeholders}))
+        LIMIT 50
+        """,
+        (version, *node_ids, *node_ids),
     ).fetchall()
     return {"edge_count": len(edges), "edges": [dict(row) for row in edges[:10]]}
 

@@ -149,7 +149,7 @@ def cmd_graph_build(args: argparse.Namespace, cfg: Config) -> int:
 
 
 def cmd_graph_query(args: argparse.Namespace, cfg: Config) -> int:
-    result = query_graph(cfg, symbol=args.symbol, api=args.api, version_id=args.version_id)
+    result = query_graph(cfg, symbol=args.symbol, api=args.api, version_id=args.version_id, fuzzy=args.fuzzy)
     print(json.dumps(result, indent=2, sort_keys=True))
     return 0
 
@@ -336,6 +336,7 @@ def build_parser() -> argparse.ArgumentParser:
     query.add_argument("--symbol", help="C or binding symbol to query.")
     query.add_argument("--api", help="Rust safe API to query.")
     query.add_argument("--version-id", help="Version id to query.")
+    query.add_argument("--fuzzy", action="store_true", help="Allow substring node-id search for manual exploration only.")
     _set(query, cmd_graph_query)
     evidence = graph_sub.add_parser("evidence", help="Materialize a C-to-Rust evidence chain for a symbol.")
     evidence.add_argument("symbol", help="C or binding symbol to explain.")
