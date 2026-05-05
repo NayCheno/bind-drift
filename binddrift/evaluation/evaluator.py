@@ -13,6 +13,7 @@ from binddrift.run_manifest import canonical_run_dir, manifest_exists, validate_
 from binddrift.warnings import ensure_warning_uid, read_warnings, split_main_and_single_version
 from .baselines import generate_baselines
 from .metrics import labeled_summary, load_manual_labels, manual_review_agreement, oracle_summary, warning_key, warning_label_key
+from .wrapper_oracle import replay_head_date, typed_wrapper_oracle_summary, version_dates_from_db, wrapper_fix_events_from_db
 
 
 BUILD_ERROR_RE = re.compile(r"(bindings::(?P<binding>[A-Za-z_][A-Za-z0-9_]*)|missing field|mismatched types|layout)")
@@ -254,32 +255,56 @@ def run_evaluation(
         else len(warnings)
     )
     build_findings = parse_build_log(build_log) if build_log else []
-    wrapper_fixes = mine_wrapper_fixes(cfg)
-    persisted = persist_ground_truth(cfg, build_log, build_findings, wrapper_fixes, run_id=run_id, pair_id=pair_id)
+    persisted = persist_ground_truth(cfg, build_log, build_findings, [], run_id=run_id, pair_id=pair_id)
     if review_path is None:
         review_path = generate_manual_review(cfg, warnings, top_k=top_k)
     labels = load_manual_labels(review_path, uid_only=bool(manifest))
     metrics = labeled_summary(warnings, labels)
     agreement = manual_review_agreement(review_path)
+    conn = connect(cfg.database)
+    initialize(conn)
+    db_wrapper_events = wrapper_fix_events_from_db(conn)
+    persisted["wrapper_fix_events"] = len(db_wrapper_events)
+    persisted["wrapper_fix_candidates"] = sum(1 for row in db_wrapper_events if row["likely_wrapper_fix"])
+    version_dates = version_dates_from_db(conn)
+    head_date = replay_head_date(warnings, version_dates)
     build_metrics = oracle_summary(warnings, _build_symbols(build_findings))
-    wrapper_metrics = oracle_summary(warnings, _wrapper_symbols(wrapper_fixes))
+    wrapper_metrics = oracle_summary(warnings, _wrapper_symbols(db_wrapper_events))
+    typed_wrapper_metrics = typed_wrapper_oracle_summary(warnings, db_wrapper_events, version_dates=version_dates, head_date=head_date)
+    compatibility_typed_wrapper_metrics = typed_wrapper_oracle_summary(
+        warnings,
+        db_wrapper_events,
+        version_dates=version_dates,
+        head_date=head_date,
+        enforce_time=False,
+    )
     table = {
         "warnings": len(warnings),
         "promoted_replay_warnings": promoted_replay_warning_count,
         "single_version_review_targets": single_version_target_count,
         "build_breakage_findings": len(build_findings),
-        "wrapper_fix_candidates": sum(1 for row in wrapper_fixes if row["likely_wrapper_fix"]),
+        "wrapper_fix_candidates": sum(1 for row in db_wrapper_events if row["likely_wrapper_fix"]),
+        "wrapper_oracle_source": {
+            "database": str(cfg.database),
+            "table": "wrapper_fix_events",
+            "likely_wrapper_fix_events": len(db_wrapper_events),
+            "head_date": head_date,
+        },
         "ground_truth_rows": persisted,
         "manual_review": metrics,
         "manual_review_agreement": agreement,
         "build_breakage_prediction": build_metrics,
         "wrapper_fix_prediction": wrapper_metrics,
+        "symbol_level_wrapper_prediction": wrapper_metrics,
+        "typed_wrapper_prediction": typed_wrapper_metrics,
+        "typed_wrapper_compatibility_prediction": compatibility_typed_wrapper_metrics,
         "run_manifest": str(canonical_run_dir(cfg) / "run_manifest.json") if manifest else None,
         "recall": {
             "build_breakage": build_metrics["recall"],
             "wrapper_fix": wrapper_metrics["recall"],
+            "typed_wrapper": typed_wrapper_metrics["recall"],
         },
-        "note": "Build and wrapper-fix recall are symbol-level replay-oracle estimates; semantic precision comes from manual labels.",
+        "note": "Build recall is sparse; symbol-level wrapper recall is an upper-bound, typed wrapper recall requires fix-kind compatibility plus an old-to-head time window, and semantic precision comes from manual labels.",
     }
     tables_dir = cfg.repo_root / "paper/tables"
     tables_dir.mkdir(parents=True, exist_ok=True)

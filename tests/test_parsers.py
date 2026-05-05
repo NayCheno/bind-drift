@@ -188,6 +188,59 @@ def test_score_breakdown_rewards_multi_version_consistency():
     assert score_breakdown(warning)["multi_version_consistency"] == 2.0
 
 
+def test_rank_warnings_only_rewards_time_valid_typed_wrapper_hit(tmp_path: Path):
+    cfg = Config.from_args(repo_root=tmp_path)
+    conn = connect(cfg.database)
+    initialize(conn)
+    upsert_many(
+        conn,
+        "versions",
+        [
+            {"version_id": "v1", "git_commit": "old", "tag": "v1", "date": "2024-01-01", "arch": None, "config_hash": None, "rustc_version": None, "clang_version": None, "bindgen_version": None},
+            {"version_id": "head", "git_commit": "head", "tag": "head", "date": "2024-12-01", "arch": None, "config_hash": None, "rustc_version": None, "clang_version": None, "bindgen_version": None},
+        ],
+    )
+    base = {
+        "type": "ErrorDrift",
+        "old_version": "v1",
+        "new_version": "head",
+        "promotion_status": "promoted",
+        "promotion_reasons": ["direct_binding_use"],
+        "c_evidence_level": "c_behavior_indicator",
+        "c_side": {"symbol": "foo_get", "old_indicators": ["NULL_RETURN"], "new_indicators": ["ERROR_CODE"]},
+        "rust_side": {"uses": [{"rust_file": "device.rs", "line": 2, "enclosing_function": "Device::get", "enclosing_unsafe_block": 1}]},
+        "evidence_chain": [{"evidence_file": "foo.c", "evidence_line": 1, "evidence_text": "return -EINVAL;"}],
+    }
+    write_warnings(
+        cfg,
+        [
+            {
+                "warning_id": "W-1",
+                **base,
+                "rust_side": {
+                    **base["rust_side"],
+                    "oracle_hits": [{"oracle_type": "wrapper_fix", "date": "2023-01-01", "subject": "rust: error: fix foo_get wrapper"}],
+                },
+            },
+            {
+                "warning_id": "W-2",
+                **base,
+                "rust_side": {
+                    **base["rust_side"],
+                    "oracle_hits": [{"oracle_type": "wrapper_fix", "date": "2024-02-01", "subject": "rust: error: fix foo_get wrapper"}],
+                },
+            },
+        ],
+    )
+
+    rank_warnings(cfg)
+    ranked = read_warnings(cfg.warnings_jsonl)
+
+    assert ranked[0]["warning_id"] == "W-2"
+    assert ranked[0]["score_breakdown"]["wrapper_fix_hit"] == 4.0
+    assert ranked[1]["score_breakdown"]["wrapper_fix_hit"] == 0.0
+
+
 def test_rank_warnings_populates_multi_version_consistency_from_pair_ids(tmp_path: Path):
     cfg = Config.from_args(repo_root=tmp_path)
     base_warning = {

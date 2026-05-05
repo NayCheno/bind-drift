@@ -15,7 +15,8 @@
   },
   "ground_truth_rows": {
     "build_breakage_events": 0,
-    "wrapper_fix_events": 200
+    "wrapper_fix_candidates": 226,
+    "wrapper_fix_events": 226
   },
   "manual_review": {
     "label_distribution": {
@@ -60,27 +61,129 @@
     "agreements": 100,
     "double_labeled": 100
   },
-  "note": "Build and wrapper-fix recall are symbol-level replay-oracle estimates; semantic precision comes from manual labels.",
+  "note": "Build recall is sparse; symbol-level wrapper recall is an upper-bound, typed wrapper recall requires fix-kind compatibility plus an old-to-head time window, and semantic precision comes from manual labels.",
   "promoted_replay_warnings": 331,
   "recall": {
     "build_breakage": null,
-    "wrapper_fix": 0.1379
+    "typed_wrapper": 0.3579,
+    "wrapper_fix": 0.1254
   },
   "run_manifest": "/home/nya/workspace/bind-drift/data/replay/latest/run_manifest.json",
   "single_version_review_targets": 0,
-  "warnings": 100,
-  "wrapper_fix_candidates": 24,
-  "wrapper_fix_prediction": {
-    "f1": 0.062,
-    "matched_symbols": 4,
-    "mrr": 0.0023,
-    "oracle_symbols": 29,
-    "precision": 0.04,
+  "symbol_level_wrapper_prediction": {
+    "f1": 0.2113,
+    "matched_symbols": 39,
+    "mrr": 0.0092,
+    "oracle_symbols": 311,
+    "precision": 0.67,
     "precision_at_k": {
-      "10": 0.0,
-      "100": 0.04,
-      "50": 0.02
+      "10": 0.6,
+      "100": 0.67,
+      "50": 0.72
     },
-    "recall": 0.1379
+    "recall": 0.1254
+  },
+  "typed_wrapper_compatibility_prediction": {
+    "enforce_time": false,
+    "f1": 0.7634,
+    "fix_kind_distribution": {
+      "allocation": 6,
+      "error_mapping": 14,
+      "layout": 7,
+      "nullability": 5,
+      "ownership": 19,
+      "signature": 43,
+      "sleepability": 1
+    },
+    "global_oracle_rows": 832,
+    "head_date": "2026-05-03T15:25:47-07:00",
+    "matched_fix_kind_distribution": {
+      "allocation": 7,
+      "error_mapping": 24,
+      "layout": 9,
+      "nullability": 3,
+      "ownership": 35,
+      "signature": 71,
+      "sleepability": 1
+    },
+    "matched_oracle_rows": 86,
+    "matched_warnings": 66,
+    "mrr": 0.0868,
+    "note": "Typed wrapper oracle requires symbol and warning-type/fix-kind compatibility. The old_to_head time window accepts wrapper fixes after the warning old-version date and no later than the replay head date; compatibility mode is an auxiliary upper-bound.",
+    "oracle_rows": 95,
+    "precision": 0.66,
+    "precision_at_k": {
+      "10": 0.6,
+      "100": 0.66,
+      "50": 0.72
+    },
+    "recall": 0.9053,
+    "time_relation_distribution": {
+      "after_drift": 43,
+      "before_drift": 103,
+      "same_pair": 4
+    },
+    "time_window": "compatibility"
+  },
+  "typed_wrapper_prediction": {
+    "enforce_time": true,
+    "f1": 0.2725,
+    "fix_kind_distribution": {
+      "allocation": 6,
+      "error_mapping": 14,
+      "layout": 7,
+      "nullability": 5,
+      "ownership": 19,
+      "signature": 43,
+      "sleepability": 1
+    },
+    "global_oracle_rows": 832,
+    "head_date": "2026-05-03T15:25:47-07:00",
+    "matched_fix_kind_distribution": {
+      "allocation": 2,
+      "error_mapping": 7,
+      "layout": 2,
+      "nullability": 2,
+      "ownership": 18,
+      "signature": 16
+    },
+    "matched_oracle_rows": 34,
+    "matched_warnings": 22,
+    "mrr": 0.0404,
+    "note": "Typed wrapper oracle requires symbol and warning-type/fix-kind compatibility. The old_to_head time window accepts wrapper fixes after the warning old-version date and no later than the replay head date; compatibility mode is an auxiliary upper-bound.",
+    "oracle_rows": 95,
+    "precision": 0.22,
+    "precision_at_k": {
+      "10": 0.3,
+      "100": 0.22,
+      "50": 0.38
+    },
+    "recall": 0.3579,
+    "time_relation_distribution": {
+      "after_drift": 43,
+      "same_pair": 4
+    },
+    "time_window": "old_to_head"
+  },
+  "warnings": 100,
+  "wrapper_fix_candidates": 226,
+  "wrapper_fix_prediction": {
+    "f1": 0.2113,
+    "matched_symbols": 39,
+    "mrr": 0.0092,
+    "oracle_symbols": 311,
+    "precision": 0.67,
+    "precision_at_k": {
+      "10": 0.6,
+      "100": 0.67,
+      "50": 0.72
+    },
+    "recall": 0.1254
+  },
+  "wrapper_oracle_source": {
+    "database": "/home/nya/workspace/bind-drift/.binddrift/binddrift.sqlite3",
+    "head_date": "2026-05-03T15:25:47-07:00",
+    "likely_wrapper_fix_events": 226,
+    "table": "wrapper_fix_events"
   }
 }

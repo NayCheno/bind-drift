@@ -7,6 +7,7 @@ from binddrift.config import Config
 from binddrift.db import connect, initialize
 from binddrift.warnings import read_warnings, split_main_and_single_version
 from .metrics import labeled_summary, load_manual_labels, oracle_summary
+from .wrapper_oracle import replay_head_date, typed_wrapper_oracle_summary, version_dates_from_db, wrapper_fix_events_from_db
 
 
 BASELINES = ["BindgenOnly", "CSignatureDiff", "BuildOnly", "GrepUsage", "NoRanking", "Tier1Only"]
@@ -27,9 +28,12 @@ def generate_baselines(
     warnings, _single_version_targets = split_main_and_single_version(read_warnings(warnings_path or cfg.warnings_jsonl))
     labels = load_manual_labels(review_path or (cfg.data_dir / "manual_review.csv"), uid_only=uid_only_labels)
     build_symbols = _build_symbols(conn, warnings)
+    wrapper_events = wrapper_fix_events_from_db(conn)
     wrapper_symbols: set[str] = set()
-    for row in conn.execute("SELECT matched_symbols FROM wrapper_fix_events WHERE likely_wrapper_fix=1"):
-        wrapper_symbols.update(str(symbol) for symbol in json.loads(row["matched_symbols"]) if symbol)
+    for event in wrapper_events:
+        wrapper_symbols.update(str(symbol) for symbol in event.get("matched_symbols", []) if symbol)
+    version_dates = version_dates_from_db(conn)
+    head_date = replay_head_date(warnings, version_dates)
     counts = {
         "binding_functions": conn.execute("SELECT COUNT(*) AS n FROM binding_functions").fetchone()["n"],
         "c_functions": conn.execute("SELECT COUNT(*) AS n FROM c_functions").fetchone()["n"],
@@ -50,6 +54,9 @@ def generate_baselines(
                 "manual_review": labeled_summary(candidates, labels),
                 "build_breakage_prediction": oracle_summary(candidates, build_symbols),
                 "wrapper_fix_prediction": oracle_summary(candidates, wrapper_symbols),
+                "symbol_level_wrapper_prediction": oracle_summary(candidates, wrapper_symbols),
+                "typed_wrapper_prediction": typed_wrapper_oracle_summary(candidates, wrapper_events, version_dates=version_dates, head_date=head_date),
+                "typed_wrapper_compatibility_prediction": typed_wrapper_oracle_summary(candidates, wrapper_events, version_dates=version_dates, head_date=head_date, enforce_time=False),
                 "note": "Metrics are computed over the variant's filtered or re-ranked warning list.",
             }
         )
@@ -64,6 +71,9 @@ def generate_baselines(
                 "manual_review": labeled_summary(candidates, labels),
                 "build_breakage_prediction": oracle_summary(candidates, build_symbols),
                 "wrapper_fix_prediction": oracle_summary(candidates, wrapper_symbols),
+                "symbol_level_wrapper_prediction": oracle_summary(candidates, wrapper_symbols),
+                "typed_wrapper_prediction": typed_wrapper_oracle_summary(candidates, wrapper_events, version_dates=version_dates, head_date=head_date),
+                "typed_wrapper_compatibility_prediction": typed_wrapper_oracle_summary(candidates, wrapper_events, version_dates=version_dates, head_date=head_date, enforce_time=False),
                 "note": "Metrics are computed over the variant's filtered or re-ranked warning list.",
             }
         )

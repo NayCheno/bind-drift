@@ -68,18 +68,113 @@
         "unclear_warnings": 1
       },
       "note": "Metrics are computed over the variant's filtered or re-ranked warning list.",
-      "variant": "BindgenOnly",
-      "warning_count": 100,
-      "wrapper_fix_prediction": {
+      "symbol_level_wrapper_prediction": {
         "f1": 0.2113,
         "matched_symbols": 39,
-        "mrr": 0.0108,
+        "mrr": 0.0092,
         "oracle_symbols": 311,
         "precision": 0.67,
         "precision_at_k": {
           "10": 0.6,
           "100": 0.67,
-          "50": 0.9
+          "50": 0.72
+        },
+        "recall": 0.1254
+      },
+      "typed_wrapper_compatibility_prediction": {
+        "enforce_time": false,
+        "f1": 0.7634,
+        "fix_kind_distribution": {
+          "allocation": 6,
+          "error_mapping": 14,
+          "layout": 7,
+          "nullability": 5,
+          "ownership": 19,
+          "signature": 43,
+          "sleepability": 1
+        },
+        "global_oracle_rows": 832,
+        "head_date": "2026-05-03T15:25:47-07:00",
+        "matched_fix_kind_distribution": {
+          "allocation": 7,
+          "error_mapping": 24,
+          "layout": 9,
+          "nullability": 3,
+          "ownership": 35,
+          "signature": 71,
+          "sleepability": 1
+        },
+        "matched_oracle_rows": 86,
+        "matched_warnings": 66,
+        "mrr": 0.0868,
+        "note": "Typed wrapper oracle requires symbol and warning-type/fix-kind compatibility. The old_to_head time window accepts wrapper fixes after the warning old-version date and no later than the replay head date; compatibility mode is an auxiliary upper-bound.",
+        "oracle_rows": 95,
+        "precision": 0.66,
+        "precision_at_k": {
+          "10": 0.6,
+          "100": 0.66,
+          "50": 0.72
+        },
+        "recall": 0.9053,
+        "time_relation_distribution": {
+          "after_drift": 43,
+          "before_drift": 103,
+          "same_pair": 4
+        },
+        "time_window": "compatibility"
+      },
+      "typed_wrapper_prediction": {
+        "enforce_time": true,
+        "f1": 0.2725,
+        "fix_kind_distribution": {
+          "allocation": 6,
+          "error_mapping": 14,
+          "layout": 7,
+          "nullability": 5,
+          "ownership": 19,
+          "signature": 43,
+          "sleepability": 1
+        },
+        "global_oracle_rows": 832,
+        "head_date": "2026-05-03T15:25:47-07:00",
+        "matched_fix_kind_distribution": {
+          "allocation": 2,
+          "error_mapping": 7,
+          "layout": 2,
+          "nullability": 2,
+          "ownership": 18,
+          "signature": 16
+        },
+        "matched_oracle_rows": 34,
+        "matched_warnings": 22,
+        "mrr": 0.0404,
+        "note": "Typed wrapper oracle requires symbol and warning-type/fix-kind compatibility. The old_to_head time window accepts wrapper fixes after the warning old-version date and no later than the replay head date; compatibility mode is an auxiliary upper-bound.",
+        "oracle_rows": 95,
+        "precision": 0.22,
+        "precision_at_k": {
+          "10": 0.3,
+          "100": 0.22,
+          "50": 0.38
+        },
+        "recall": 0.3579,
+        "time_relation_distribution": {
+          "after_drift": 43,
+          "same_pair": 4
+        },
+        "time_window": "old_to_head"
+      },
+      "variant": "BindgenOnly",
+      "warning_count": 100,
+      "wrapper_fix_prediction": {
+        "f1": 0.2113,
+        "matched_symbols": 39,
+        "mrr": 0.0092,
+        "oracle_symbols": 311,
+        "precision": 0.67,
+        "precision_at_k": {
+          "10": 0.6,
+          "100": 0.67,
+          "50": 0.72
         },
         "recall": 0.1254
       }
@@ -127,16 +222,109 @@
         "unclear_warnings": 1
       },
       "note": "Metrics are computed over the variant's filtered or re-ranked warning list.",
+      "symbol_level_wrapper_prediction": {
+        "f1": 0.1784,
+        "matched_symbols": 31,
+        "mrr": 0.0091,
+        "oracle_symbols": 311,
+        "precision": 0.8491,
+        "precision_at_k": {
+          "10": 0.5,
+          "100": 0.8491,
+          "50": 0.84
+        },
+        "recall": 0.0997
+      },
+      "typed_wrapper_compatibility_prediction": {
+        "enforce_time": false,
+        "f1": 0.8892,
+        "fix_kind_distribution": {
+          "allocation": 5,
+          "error_mapping": 12,
+          "layout": 5,
+          "nullability": 3,
+          "ownership": 14,
+          "signature": 35,
+          "sleepability": 1
+        },
+        "global_oracle_rows": 832,
+        "head_date": "2026-05-03T15:25:47-07:00",
+        "matched_fix_kind_distribution": {
+          "allocation": 5,
+          "error_mapping": 24,
+          "nullability": 3,
+          "ownership": 17,
+          "signature": 50,
+          "sleepability": 1
+        },
+        "matched_oracle_rows": 70,
+        "matched_warnings": 45,
+        "mrr": 0.1064,
+        "note": "Typed wrapper oracle requires symbol and warning-type/fix-kind compatibility. The old_to_head time window accepts wrapper fixes after the warning old-version date and no later than the replay head date; compatibility mode is an auxiliary upper-bound.",
+        "oracle_rows": 75,
+        "precision": 0.8491,
+        "precision_at_k": {
+          "10": 0.5,
+          "100": 0.8491,
+          "50": 0.84
+        },
+        "recall": 0.9333,
+        "time_relation_distribution": {
+          "after_drift": 31,
+          "before_drift": 67,
+          "same_pair": 2
+        },
+        "time_window": "compatibility"
+      },
+      "typed_wrapper_prediction": {
+        "enforce_time": true,
+        "f1": 0.3168,
+        "fix_kind_distribution": {
+          "allocation": 5,
+          "error_mapping": 12,
+          "layout": 5,
+          "nullability": 3,
+          "ownership": 14,
+          "signature": 35,
+          "sleepability": 1
+        },
+        "global_oracle_rows": 832,
+        "head_date": "2026-05-03T15:25:47-07:00",
+        "matched_fix_kind_distribution": {
+          "allocation": 1,
+          "error_mapping": 7,
+          "nullability": 2,
+          "ownership": 10,
+          "signature": 13
+        },
+        "matched_oracle_rows": 25,
+        "matched_warnings": 16,
+        "mrr": 0.0456,
+        "note": "Typed wrapper oracle requires symbol and warning-type/fix-kind compatibility. The old_to_head time window accepts wrapper fixes after the warning old-version date and no later than the replay head date; compatibility mode is an auxiliary upper-bound.",
+        "oracle_rows": 75,
+        "precision": 0.3019,
+        "precision_at_k": {
+          "10": 0.2,
+          "100": 0.3019,
+          "50": 0.32
+        },
+        "recall": 0.3333,
+        "time_relation_distribution": {
+          "after_drift": 31,
+          "same_pair": 2
+        },
+        "time_window": "old_to_head"
+      },
       "variant": "CSignatureDiff",
       "warning_count": 53,
       "wrapper_fix_prediction": {
         "f1": 0.1784,
         "matched_symbols": 31,
-        "mrr": 0.0104,
+        "mrr": 0.0091,
         "oracle_symbols": 311,
         "precision": 0.8491,
         "precision_at_k": {
-          "10": 0.6,
+          "10": 0.5,
           "100": 0.8491,
           "50": 0.84
         },
@@ -173,6 +361,63 @@
         "unclear_warnings": 0
       },
       "note": "Metrics are computed over the variant's filtered or re-ranked warning list.",
+      "symbol_level_wrapper_prediction": {
+        "f1": null,
+        "matched_symbols": 0,
+        "mrr": 0.0,
+        "oracle_symbols": 311,
+        "precision": null,
+        "precision_at_k": {
+          "10": null,
+          "100": null,
+          "50": null
+        },
+        "recall": 0.0
+      },
+      "typed_wrapper_compatibility_prediction": {
+        "enforce_time": false,
+        "f1": null,
+        "fix_kind_distribution": {},
+        "global_oracle_rows": 832,
+        "head_date": "2026-05-03T15:25:47-07:00",
+        "matched_fix_kind_distribution": {},
+        "matched_oracle_rows": 0,
+        "matched_warnings": 0,
+        "mrr": null,
+        "note": "Typed wrapper oracle requires symbol and warning-type/fix-kind compatibility. The old_to_head time window accepts wrapper fixes after the warning old-version date and no later than the replay head date; compatibility mode is an auxiliary upper-bound.",
+        "oracle_rows": 0,
+        "precision": null,
+        "precision_at_k": {
+          "10": null,
+          "100": null,
+          "50": null
+        },
+        "recall": null,
+        "time_relation_distribution": {},
+        "time_window": "compatibility"
+      },
+      "typed_wrapper_prediction": {
+        "enforce_time": true,
+        "f1": null,
+        "fix_kind_distribution": {},
+        "global_oracle_rows": 832,
+        "head_date": "2026-05-03T15:25:47-07:00",
+        "matched_fix_kind_distribution": {},
+        "matched_oracle_rows": 0,
+        "matched_warnings": 0,
+        "mrr": null,
+        "note": "Typed wrapper oracle requires symbol and warning-type/fix-kind compatibility. The old_to_head time window accepts wrapper fixes after the warning old-version date and no later than the replay head date; compatibility mode is an auxiliary upper-bound.",
+        "oracle_rows": 0,
+        "precision": null,
+        "precision_at_k": {
+          "10": null,
+          "100": null,
+          "50": null
+        },
+        "recall": null,
+        "time_relation_distribution": {},
+        "time_window": "old_to_head"
+      },
       "variant": "BuildOnly",
       "warning_count": 0,
       "wrapper_fix_prediction": {
@@ -244,18 +489,113 @@
         "unclear_warnings": 1
       },
       "note": "Metrics are computed over the variant's filtered or re-ranked warning list.",
-      "variant": "GrepUsage",
-      "warning_count": 100,
-      "wrapper_fix_prediction": {
+      "symbol_level_wrapper_prediction": {
         "f1": 0.2113,
         "matched_symbols": 39,
-        "mrr": 0.0108,
+        "mrr": 0.0092,
         "oracle_symbols": 311,
         "precision": 0.67,
         "precision_at_k": {
           "10": 0.6,
           "100": 0.67,
-          "50": 0.9
+          "50": 0.72
+        },
+        "recall": 0.1254
+      },
+      "typed_wrapper_compatibility_prediction": {
+        "enforce_time": false,
+        "f1": 0.7634,
+        "fix_kind_distribution": {
+          "allocation": 6,
+          "error_mapping": 14,
+          "layout": 7,
+          "nullability": 5,
+          "ownership": 19,
+          "signature": 43,
+          "sleepability": 1
+        },
+        "global_oracle_rows": 832,
+        "head_date": "2026-05-03T15:25:47-07:00",
+        "matched_fix_kind_distribution": {
+          "allocation": 7,
+          "error_mapping": 24,
+          "layout": 9,
+          "nullability": 3,
+          "ownership": 35,
+          "signature": 71,
+          "sleepability": 1
+        },
+        "matched_oracle_rows": 86,
+        "matched_warnings": 66,
+        "mrr": 0.0868,
+        "note": "Typed wrapper oracle requires symbol and warning-type/fix-kind compatibility. The old_to_head time window accepts wrapper fixes after the warning old-version date and no later than the replay head date; compatibility mode is an auxiliary upper-bound.",
+        "oracle_rows": 95,
+        "precision": 0.66,
+        "precision_at_k": {
+          "10": 0.6,
+          "100": 0.66,
+          "50": 0.72
+        },
+        "recall": 0.9053,
+        "time_relation_distribution": {
+          "after_drift": 43,
+          "before_drift": 103,
+          "same_pair": 4
+        },
+        "time_window": "compatibility"
+      },
+      "typed_wrapper_prediction": {
+        "enforce_time": true,
+        "f1": 0.2725,
+        "fix_kind_distribution": {
+          "allocation": 6,
+          "error_mapping": 14,
+          "layout": 7,
+          "nullability": 5,
+          "ownership": 19,
+          "signature": 43,
+          "sleepability": 1
+        },
+        "global_oracle_rows": 832,
+        "head_date": "2026-05-03T15:25:47-07:00",
+        "matched_fix_kind_distribution": {
+          "allocation": 2,
+          "error_mapping": 7,
+          "layout": 2,
+          "nullability": 2,
+          "ownership": 18,
+          "signature": 16
+        },
+        "matched_oracle_rows": 34,
+        "matched_warnings": 22,
+        "mrr": 0.0404,
+        "note": "Typed wrapper oracle requires symbol and warning-type/fix-kind compatibility. The old_to_head time window accepts wrapper fixes after the warning old-version date and no later than the replay head date; compatibility mode is an auxiliary upper-bound.",
+        "oracle_rows": 95,
+        "precision": 0.22,
+        "precision_at_k": {
+          "10": 0.3,
+          "100": 0.22,
+          "50": 0.38
+        },
+        "recall": 0.3579,
+        "time_relation_distribution": {
+          "after_drift": 43,
+          "same_pair": 4
+        },
+        "time_window": "old_to_head"
+      },
+      "variant": "GrepUsage",
+      "warning_count": 100,
+      "wrapper_fix_prediction": {
+        "f1": 0.2113,
+        "matched_symbols": 39,
+        "mrr": 0.0092,
+        "oracle_symbols": 311,
+        "precision": 0.67,
+        "precision_at_k": {
+          "10": 0.6,
+          "100": 0.67,
+          "50": 0.72
         },
         "recall": 0.1254
       }
@@ -315,12 +655,107 @@
         "unclear_warnings": 1
       },
       "note": "Metrics are computed over the variant's filtered or re-ranked warning list.",
+      "symbol_level_wrapper_prediction": {
+        "f1": 0.2113,
+        "matched_symbols": 39,
+        "mrr": 0.0114,
+        "oracle_symbols": 311,
+        "precision": 0.67,
+        "precision_at_k": {
+          "10": 1.0,
+          "100": 0.67,
+          "50": 0.78
+        },
+        "recall": 0.1254
+      },
+      "typed_wrapper_compatibility_prediction": {
+        "enforce_time": false,
+        "f1": 0.7634,
+        "fix_kind_distribution": {
+          "allocation": 6,
+          "error_mapping": 14,
+          "layout": 7,
+          "nullability": 5,
+          "ownership": 19,
+          "signature": 43,
+          "sleepability": 1
+        },
+        "global_oracle_rows": 832,
+        "head_date": "2026-05-03T15:25:47-07:00",
+        "matched_fix_kind_distribution": {
+          "allocation": 7,
+          "error_mapping": 24,
+          "layout": 9,
+          "nullability": 3,
+          "ownership": 35,
+          "signature": 71,
+          "sleepability": 1
+        },
+        "matched_oracle_rows": 86,
+        "matched_warnings": 66,
+        "mrr": 0.1322,
+        "note": "Typed wrapper oracle requires symbol and warning-type/fix-kind compatibility. The old_to_head time window accepts wrapper fixes after the warning old-version date and no later than the replay head date; compatibility mode is an auxiliary upper-bound.",
+        "oracle_rows": 95,
+        "precision": 0.66,
+        "precision_at_k": {
+          "10": 1.0,
+          "100": 0.66,
+          "50": 0.78
+        },
+        "recall": 0.9053,
+        "time_relation_distribution": {
+          "after_drift": 43,
+          "before_drift": 103,
+          "same_pair": 4
+        },
+        "time_window": "compatibility"
+      },
+      "typed_wrapper_prediction": {
+        "enforce_time": true,
+        "f1": 0.2725,
+        "fix_kind_distribution": {
+          "allocation": 6,
+          "error_mapping": 14,
+          "layout": 7,
+          "nullability": 5,
+          "ownership": 19,
+          "signature": 43,
+          "sleepability": 1
+        },
+        "global_oracle_rows": 832,
+        "head_date": "2026-05-03T15:25:47-07:00",
+        "matched_fix_kind_distribution": {
+          "allocation": 2,
+          "error_mapping": 7,
+          "layout": 2,
+          "nullability": 2,
+          "ownership": 18,
+          "signature": 16
+        },
+        "matched_oracle_rows": 34,
+        "matched_warnings": 22,
+        "mrr": 0.0878,
+        "note": "Typed wrapper oracle requires symbol and warning-type/fix-kind compatibility. The old_to_head time window accepts wrapper fixes after the warning old-version date and no later than the replay head date; compatibility mode is an auxiliary upper-bound.",
+        "oracle_rows": 95,
+        "precision": 0.22,
+        "precision_at_k": {
+          "10": 0.5,
+          "100": 0.22,
+          "50": 0.3
+        },
+        "recall": 0.3579,
+        "time_relation_distribution": {
+          "after_drift": 43,
+          "same_pair": 4
+        },
+        "time_window": "old_to_head"
+      },
       "variant": "NoRanking",
       "warning_count": 100,
       "wrapper_fix_prediction": {
         "f1": 0.2113,
         "matched_symbols": 39,
-        "mrr": 0.0115,
+        "mrr": 0.0114,
         "oracle_symbols": 311,
         "precision": 0.67,
         "precision_at_k": {
@@ -386,18 +821,113 @@
         "unclear_warnings": 1
       },
       "note": "Metrics are computed over the variant's filtered or re-ranked warning list.",
-      "variant": "Tier1Only",
-      "warning_count": 100,
-      "wrapper_fix_prediction": {
+      "symbol_level_wrapper_prediction": {
         "f1": 0.2113,
         "matched_symbols": 39,
-        "mrr": 0.0108,
+        "mrr": 0.0092,
         "oracle_symbols": 311,
         "precision": 0.67,
         "precision_at_k": {
           "10": 0.6,
           "100": 0.67,
-          "50": 0.9
+          "50": 0.72
+        },
+        "recall": 0.1254
+      },
+      "typed_wrapper_compatibility_prediction": {
+        "enforce_time": false,
+        "f1": 0.7634,
+        "fix_kind_distribution": {
+          "allocation": 6,
+          "error_mapping": 14,
+          "layout": 7,
+          "nullability": 5,
+          "ownership": 19,
+          "signature": 43,
+          "sleepability": 1
+        },
+        "global_oracle_rows": 832,
+        "head_date": "2026-05-03T15:25:47-07:00",
+        "matched_fix_kind_distribution": {
+          "allocation": 7,
+          "error_mapping": 24,
+          "layout": 9,
+          "nullability": 3,
+          "ownership": 35,
+          "signature": 71,
+          "sleepability": 1
+        },
+        "matched_oracle_rows": 86,
+        "matched_warnings": 66,
+        "mrr": 0.0868,
+        "note": "Typed wrapper oracle requires symbol and warning-type/fix-kind compatibility. The old_to_head time window accepts wrapper fixes after the warning old-version date and no later than the replay head date; compatibility mode is an auxiliary upper-bound.",
+        "oracle_rows": 95,
+        "precision": 0.66,
+        "precision_at_k": {
+          "10": 0.6,
+          "100": 0.66,
+          "50": 0.72
+        },
+        "recall": 0.9053,
+        "time_relation_distribution": {
+          "after_drift": 43,
+          "before_drift": 103,
+          "same_pair": 4
+        },
+        "time_window": "compatibility"
+      },
+      "typed_wrapper_prediction": {
+        "enforce_time": true,
+        "f1": 0.2725,
+        "fix_kind_distribution": {
+          "allocation": 6,
+          "error_mapping": 14,
+          "layout": 7,
+          "nullability": 5,
+          "ownership": 19,
+          "signature": 43,
+          "sleepability": 1
+        },
+        "global_oracle_rows": 832,
+        "head_date": "2026-05-03T15:25:47-07:00",
+        "matched_fix_kind_distribution": {
+          "allocation": 2,
+          "error_mapping": 7,
+          "layout": 2,
+          "nullability": 2,
+          "ownership": 18,
+          "signature": 16
+        },
+        "matched_oracle_rows": 34,
+        "matched_warnings": 22,
+        "mrr": 0.0404,
+        "note": "Typed wrapper oracle requires symbol and warning-type/fix-kind compatibility. The old_to_head time window accepts wrapper fixes after the warning old-version date and no later than the replay head date; compatibility mode is an auxiliary upper-bound.",
+        "oracle_rows": 95,
+        "precision": 0.22,
+        "precision_at_k": {
+          "10": 0.3,
+          "100": 0.22,
+          "50": 0.38
+        },
+        "recall": 0.3579,
+        "time_relation_distribution": {
+          "after_drift": 43,
+          "same_pair": 4
+        },
+        "time_window": "old_to_head"
+      },
+      "variant": "Tier1Only",
+      "warning_count": 100,
+      "wrapper_fix_prediction": {
+        "f1": 0.2113,
+        "matched_symbols": 39,
+        "mrr": 0.0092,
+        "oracle_symbols": 311,
+        "precision": 0.67,
+        "precision_at_k": {
+          "10": 0.6,
+          "100": 0.67,
+          "50": 0.72
         },
         "recall": 0.1254
       }
@@ -457,6 +987,101 @@
         "unclear_warnings": 1
       },
       "note": "Metrics are computed over the variant's filtered or re-ranked warning list.",
+      "symbol_level_wrapper_prediction": {
+        "f1": 0.2113,
+        "matched_symbols": 39,
+        "mrr": 0.0067,
+        "oracle_symbols": 311,
+        "precision": 0.67,
+        "precision_at_k": {
+          "10": 1.0,
+          "100": 0.67,
+          "50": 0.46
+        },
+        "recall": 0.1254
+      },
+      "typed_wrapper_compatibility_prediction": {
+        "enforce_time": false,
+        "f1": 0.7634,
+        "fix_kind_distribution": {
+          "allocation": 6,
+          "error_mapping": 14,
+          "layout": 7,
+          "nullability": 5,
+          "ownership": 19,
+          "signature": 43,
+          "sleepability": 1
+        },
+        "global_oracle_rows": 832,
+        "head_date": "2026-05-03T15:25:47-07:00",
+        "matched_fix_kind_distribution": {
+          "allocation": 7,
+          "error_mapping": 24,
+          "layout": 9,
+          "nullability": 3,
+          "ownership": 35,
+          "signature": 71,
+          "sleepability": 1
+        },
+        "matched_oracle_rows": 86,
+        "matched_warnings": 66,
+        "mrr": 0.0704,
+        "note": "Typed wrapper oracle requires symbol and warning-type/fix-kind compatibility. The old_to_head time window accepts wrapper fixes after the warning old-version date and no later than the replay head date; compatibility mode is an auxiliary upper-bound.",
+        "oracle_rows": 95,
+        "precision": 0.66,
+        "precision_at_k": {
+          "10": 1.0,
+          "100": 0.66,
+          "50": 0.46
+        },
+        "recall": 0.9053,
+        "time_relation_distribution": {
+          "after_drift": 43,
+          "before_drift": 103,
+          "same_pair": 4
+        },
+        "time_window": "compatibility"
+      },
+      "typed_wrapper_prediction": {
+        "enforce_time": true,
+        "f1": 0.2725,
+        "fix_kind_distribution": {
+          "allocation": 6,
+          "error_mapping": 14,
+          "layout": 7,
+          "nullability": 5,
+          "ownership": 19,
+          "signature": 43,
+          "sleepability": 1
+        },
+        "global_oracle_rows": 832,
+        "head_date": "2026-05-03T15:25:47-07:00",
+        "matched_fix_kind_distribution": {
+          "allocation": 2,
+          "error_mapping": 7,
+          "layout": 2,
+          "nullability": 2,
+          "ownership": 18,
+          "signature": 16
+        },
+        "matched_oracle_rows": 34,
+        "matched_warnings": 22,
+        "mrr": 0.0326,
+        "note": "Typed wrapper oracle requires symbol and warning-type/fix-kind compatibility. The old_to_head time window accepts wrapper fixes after the warning old-version date and no later than the replay head date; compatibility mode is an auxiliary upper-bound.",
+        "oracle_rows": 95,
+        "precision": 0.22,
+        "precision_at_k": {
+          "10": 0.4,
+          "100": 0.22,
+          "50": 0.2
+        },
+        "recall": 0.3579,
+        "time_relation_distribution": {
+          "after_drift": 43,
+          "same_pair": 4
+        },
+        "time_window": "old_to_head"
+      },
       "variant": "NoGraph",
       "warning_count": 100,
       "wrapper_fix_prediction": {
@@ -528,18 +1153,113 @@
         "unclear_warnings": 1
       },
       "note": "Metrics are computed over the variant's filtered or re-ranked warning list.",
-      "variant": "NoTier2",
-      "warning_count": 100,
-      "wrapper_fix_prediction": {
+      "symbol_level_wrapper_prediction": {
         "f1": 0.2113,
         "matched_symbols": 39,
-        "mrr": 0.0108,
+        "mrr": 0.0092,
         "oracle_symbols": 311,
         "precision": 0.67,
         "precision_at_k": {
           "10": 0.6,
           "100": 0.67,
-          "50": 0.9
+          "50": 0.72
+        },
+        "recall": 0.1254
+      },
+      "typed_wrapper_compatibility_prediction": {
+        "enforce_time": false,
+        "f1": 0.7634,
+        "fix_kind_distribution": {
+          "allocation": 6,
+          "error_mapping": 14,
+          "layout": 7,
+          "nullability": 5,
+          "ownership": 19,
+          "signature": 43,
+          "sleepability": 1
+        },
+        "global_oracle_rows": 832,
+        "head_date": "2026-05-03T15:25:47-07:00",
+        "matched_fix_kind_distribution": {
+          "allocation": 7,
+          "error_mapping": 24,
+          "layout": 9,
+          "nullability": 3,
+          "ownership": 35,
+          "signature": 71,
+          "sleepability": 1
+        },
+        "matched_oracle_rows": 86,
+        "matched_warnings": 66,
+        "mrr": 0.0868,
+        "note": "Typed wrapper oracle requires symbol and warning-type/fix-kind compatibility. The old_to_head time window accepts wrapper fixes after the warning old-version date and no later than the replay head date; compatibility mode is an auxiliary upper-bound.",
+        "oracle_rows": 95,
+        "precision": 0.66,
+        "precision_at_k": {
+          "10": 0.6,
+          "100": 0.66,
+          "50": 0.72
+        },
+        "recall": 0.9053,
+        "time_relation_distribution": {
+          "after_drift": 43,
+          "before_drift": 103,
+          "same_pair": 4
+        },
+        "time_window": "compatibility"
+      },
+      "typed_wrapper_prediction": {
+        "enforce_time": true,
+        "f1": 0.2725,
+        "fix_kind_distribution": {
+          "allocation": 6,
+          "error_mapping": 14,
+          "layout": 7,
+          "nullability": 5,
+          "ownership": 19,
+          "signature": 43,
+          "sleepability": 1
+        },
+        "global_oracle_rows": 832,
+        "head_date": "2026-05-03T15:25:47-07:00",
+        "matched_fix_kind_distribution": {
+          "allocation": 2,
+          "error_mapping": 7,
+          "layout": 2,
+          "nullability": 2,
+          "ownership": 18,
+          "signature": 16
+        },
+        "matched_oracle_rows": 34,
+        "matched_warnings": 22,
+        "mrr": 0.0404,
+        "note": "Typed wrapper oracle requires symbol and warning-type/fix-kind compatibility. The old_to_head time window accepts wrapper fixes after the warning old-version date and no later than the replay head date; compatibility mode is an auxiliary upper-bound.",
+        "oracle_rows": 95,
+        "precision": 0.22,
+        "precision_at_k": {
+          "10": 0.3,
+          "100": 0.22,
+          "50": 0.38
+        },
+        "recall": 0.3579,
+        "time_relation_distribution": {
+          "after_drift": 43,
+          "same_pair": 4
+        },
+        "time_window": "old_to_head"
+      },
+      "variant": "NoTier2",
+      "warning_count": 100,
+      "wrapper_fix_prediction": {
+        "f1": 0.2113,
+        "matched_symbols": 39,
+        "mrr": 0.0092,
+        "oracle_symbols": 311,
+        "precision": 0.67,
+        "precision_at_k": {
+          "10": 0.6,
+          "100": 0.67,
+          "50": 0.72
         },
         "recall": 0.1254
       }
@@ -599,12 +1319,107 @@
         "unclear_warnings": 1
       },
       "note": "Metrics are computed over the variant's filtered or re-ranked warning list.",
+      "symbol_level_wrapper_prediction": {
+        "f1": 0.2113,
+        "matched_symbols": 39,
+        "mrr": 0.0114,
+        "oracle_symbols": 311,
+        "precision": 0.67,
+        "precision_at_k": {
+          "10": 1.0,
+          "100": 0.67,
+          "50": 0.78
+        },
+        "recall": 0.1254
+      },
+      "typed_wrapper_compatibility_prediction": {
+        "enforce_time": false,
+        "f1": 0.7634,
+        "fix_kind_distribution": {
+          "allocation": 6,
+          "error_mapping": 14,
+          "layout": 7,
+          "nullability": 5,
+          "ownership": 19,
+          "signature": 43,
+          "sleepability": 1
+        },
+        "global_oracle_rows": 832,
+        "head_date": "2026-05-03T15:25:47-07:00",
+        "matched_fix_kind_distribution": {
+          "allocation": 7,
+          "error_mapping": 24,
+          "layout": 9,
+          "nullability": 3,
+          "ownership": 35,
+          "signature": 71,
+          "sleepability": 1
+        },
+        "matched_oracle_rows": 86,
+        "matched_warnings": 66,
+        "mrr": 0.1322,
+        "note": "Typed wrapper oracle requires symbol and warning-type/fix-kind compatibility. The old_to_head time window accepts wrapper fixes after the warning old-version date and no later than the replay head date; compatibility mode is an auxiliary upper-bound.",
+        "oracle_rows": 95,
+        "precision": 0.66,
+        "precision_at_k": {
+          "10": 1.0,
+          "100": 0.66,
+          "50": 0.78
+        },
+        "recall": 0.9053,
+        "time_relation_distribution": {
+          "after_drift": 43,
+          "before_drift": 103,
+          "same_pair": 4
+        },
+        "time_window": "compatibility"
+      },
+      "typed_wrapper_prediction": {
+        "enforce_time": true,
+        "f1": 0.2725,
+        "fix_kind_distribution": {
+          "allocation": 6,
+          "error_mapping": 14,
+          "layout": 7,
+          "nullability": 5,
+          "ownership": 19,
+          "signature": 43,
+          "sleepability": 1
+        },
+        "global_oracle_rows": 832,
+        "head_date": "2026-05-03T15:25:47-07:00",
+        "matched_fix_kind_distribution": {
+          "allocation": 2,
+          "error_mapping": 7,
+          "layout": 2,
+          "nullability": 2,
+          "ownership": 18,
+          "signature": 16
+        },
+        "matched_oracle_rows": 34,
+        "matched_warnings": 22,
+        "mrr": 0.0878,
+        "note": "Typed wrapper oracle requires symbol and warning-type/fix-kind compatibility. The old_to_head time window accepts wrapper fixes after the warning old-version date and no later than the replay head date; compatibility mode is an auxiliary upper-bound.",
+        "oracle_rows": 95,
+        "precision": 0.22,
+        "precision_at_k": {
+          "10": 0.5,
+          "100": 0.22,
+          "50": 0.3
+        },
+        "recall": 0.3579,
+        "time_relation_distribution": {
+          "after_drift": 43,
+          "same_pair": 4
+        },
+        "time_window": "old_to_head"
+      },
       "variant": "NoRanking",
       "warning_count": 100,
       "wrapper_fix_prediction": {
         "f1": 0.2113,
         "matched_symbols": 39,
-        "mrr": 0.0115,
+        "mrr": 0.0114,
         "oracle_symbols": 311,
         "precision": 0.67,
         "precision_at_k": {
@@ -670,18 +1485,113 @@
         "unclear_warnings": 1
       },
       "note": "Metrics are computed over the variant's filtered or re-ranked warning list.",
+      "symbol_level_wrapper_prediction": {
+        "f1": 0.2113,
+        "matched_symbols": 39,
+        "mrr": 0.0092,
+        "oracle_symbols": 311,
+        "precision": 0.67,
+        "precision_at_k": {
+          "10": 0.6,
+          "100": 0.67,
+          "50": 0.72
+        },
+        "recall": 0.1254
+      },
+      "typed_wrapper_compatibility_prediction": {
+        "enforce_time": false,
+        "f1": 0.7634,
+        "fix_kind_distribution": {
+          "allocation": 6,
+          "error_mapping": 14,
+          "layout": 7,
+          "nullability": 5,
+          "ownership": 19,
+          "signature": 43,
+          "sleepability": 1
+        },
+        "global_oracle_rows": 832,
+        "head_date": "2026-05-03T15:25:47-07:00",
+        "matched_fix_kind_distribution": {
+          "allocation": 7,
+          "error_mapping": 24,
+          "layout": 9,
+          "nullability": 3,
+          "ownership": 35,
+          "signature": 71,
+          "sleepability": 1
+        },
+        "matched_oracle_rows": 86,
+        "matched_warnings": 66,
+        "mrr": 0.0868,
+        "note": "Typed wrapper oracle requires symbol and warning-type/fix-kind compatibility. The old_to_head time window accepts wrapper fixes after the warning old-version date and no later than the replay head date; compatibility mode is an auxiliary upper-bound.",
+        "oracle_rows": 95,
+        "precision": 0.66,
+        "precision_at_k": {
+          "10": 0.6,
+          "100": 0.66,
+          "50": 0.72
+        },
+        "recall": 0.9053,
+        "time_relation_distribution": {
+          "after_drift": 43,
+          "before_drift": 103,
+          "same_pair": 4
+        },
+        "time_window": "compatibility"
+      },
+      "typed_wrapper_prediction": {
+        "enforce_time": true,
+        "f1": 0.2725,
+        "fix_kind_distribution": {
+          "allocation": 6,
+          "error_mapping": 14,
+          "layout": 7,
+          "nullability": 5,
+          "ownership": 19,
+          "signature": 43,
+          "sleepability": 1
+        },
+        "global_oracle_rows": 832,
+        "head_date": "2026-05-03T15:25:47-07:00",
+        "matched_fix_kind_distribution": {
+          "allocation": 2,
+          "error_mapping": 7,
+          "layout": 2,
+          "nullability": 2,
+          "ownership": 18,
+          "signature": 16
+        },
+        "matched_oracle_rows": 34,
+        "matched_warnings": 22,
+        "mrr": 0.0404,
+        "note": "Typed wrapper oracle requires symbol and warning-type/fix-kind compatibility. The old_to_head time window accepts wrapper fixes after the warning old-version date and no later than the replay head date; compatibility mode is an auxiliary upper-bound.",
+        "oracle_rows": 95,
+        "precision": 0.22,
+        "precision_at_k": {
+          "10": 0.3,
+          "100": 0.22,
+          "50": 0.38
+        },
+        "recall": 0.3579,
+        "time_relation_distribution": {
+          "after_drift": 43,
+          "same_pair": 4
+        },
+        "time_window": "old_to_head"
+      },
       "variant": "NoSafetyComment",
       "warning_count": 100,
       "wrapper_fix_prediction": {
         "f1": 0.2113,
         "matched_symbols": 39,
-        "mrr": 0.0108,
+        "mrr": 0.0092,
         "oracle_symbols": 311,
         "precision": 0.67,
         "precision_at_k": {
           "10": 0.6,
           "100": 0.67,
-          "50": 0.9
+          "50": 0.72
         },
         "recall": 0.1254
       }
@@ -741,18 +1651,113 @@
         "unclear_warnings": 1
       },
       "note": "Metrics are computed over the variant's filtered or re-ranked warning list.",
+      "symbol_level_wrapper_prediction": {
+        "f1": 0.2113,
+        "matched_symbols": 39,
+        "mrr": 0.0092,
+        "oracle_symbols": 311,
+        "precision": 0.67,
+        "precision_at_k": {
+          "10": 0.6,
+          "100": 0.67,
+          "50": 0.72
+        },
+        "recall": 0.1254
+      },
+      "typed_wrapper_compatibility_prediction": {
+        "enforce_time": false,
+        "f1": 0.7634,
+        "fix_kind_distribution": {
+          "allocation": 6,
+          "error_mapping": 14,
+          "layout": 7,
+          "nullability": 5,
+          "ownership": 19,
+          "signature": 43,
+          "sleepability": 1
+        },
+        "global_oracle_rows": 832,
+        "head_date": "2026-05-03T15:25:47-07:00",
+        "matched_fix_kind_distribution": {
+          "allocation": 7,
+          "error_mapping": 24,
+          "layout": 9,
+          "nullability": 3,
+          "ownership": 35,
+          "signature": 71,
+          "sleepability": 1
+        },
+        "matched_oracle_rows": 86,
+        "matched_warnings": 66,
+        "mrr": 0.0868,
+        "note": "Typed wrapper oracle requires symbol and warning-type/fix-kind compatibility. The old_to_head time window accepts wrapper fixes after the warning old-version date and no later than the replay head date; compatibility mode is an auxiliary upper-bound.",
+        "oracle_rows": 95,
+        "precision": 0.66,
+        "precision_at_k": {
+          "10": 0.6,
+          "100": 0.66,
+          "50": 0.72
+        },
+        "recall": 0.9053,
+        "time_relation_distribution": {
+          "after_drift": 43,
+          "before_drift": 103,
+          "same_pair": 4
+        },
+        "time_window": "compatibility"
+      },
+      "typed_wrapper_prediction": {
+        "enforce_time": true,
+        "f1": 0.2725,
+        "fix_kind_distribution": {
+          "allocation": 6,
+          "error_mapping": 14,
+          "layout": 7,
+          "nullability": 5,
+          "ownership": 19,
+          "signature": 43,
+          "sleepability": 1
+        },
+        "global_oracle_rows": 832,
+        "head_date": "2026-05-03T15:25:47-07:00",
+        "matched_fix_kind_distribution": {
+          "allocation": 2,
+          "error_mapping": 7,
+          "layout": 2,
+          "nullability": 2,
+          "ownership": 18,
+          "signature": 16
+        },
+        "matched_oracle_rows": 34,
+        "matched_warnings": 22,
+        "mrr": 0.0404,
+        "note": "Typed wrapper oracle requires symbol and warning-type/fix-kind compatibility. The old_to_head time window accepts wrapper fixes after the warning old-version date and no later than the replay head date; compatibility mode is an auxiliary upper-bound.",
+        "oracle_rows": 95,
+        "precision": 0.22,
+        "precision_at_k": {
+          "10": 0.3,
+          "100": 0.22,
+          "50": 0.38
+        },
+        "recall": 0.3579,
+        "time_relation_distribution": {
+          "after_drift": 43,
+          "same_pair": 4
+        },
+        "time_window": "old_to_head"
+      },
       "variant": "NoCommitText",
       "warning_count": 100,
       "wrapper_fix_prediction": {
         "f1": 0.2113,
         "matched_symbols": 39,
-        "mrr": 0.0108,
+        "mrr": 0.0092,
         "oracle_symbols": 311,
         "precision": 0.67,
         "precision_at_k": {
           "10": 0.6,
           "100": 0.67,
-          "50": 0.9
+          "50": 0.72
         },
         "recall": 0.1254
       }
@@ -812,18 +1817,113 @@
         "unclear_warnings": 1
       },
       "note": "Metrics are computed over the variant's filtered or re-ranked warning list.",
-      "variant": "NoBehaviorIndicator",
-      "warning_count": 100,
-      "wrapper_fix_prediction": {
+      "symbol_level_wrapper_prediction": {
         "f1": 0.2113,
         "matched_symbols": 39,
-        "mrr": 0.0108,
+        "mrr": 0.0092,
         "oracle_symbols": 311,
         "precision": 0.67,
         "precision_at_k": {
           "10": 0.6,
           "100": 0.67,
-          "50": 0.9
+          "50": 0.72
+        },
+        "recall": 0.1254
+      },
+      "typed_wrapper_compatibility_prediction": {
+        "enforce_time": false,
+        "f1": 0.7634,
+        "fix_kind_distribution": {
+          "allocation": 6,
+          "error_mapping": 14,
+          "layout": 7,
+          "nullability": 5,
+          "ownership": 19,
+          "signature": 43,
+          "sleepability": 1
+        },
+        "global_oracle_rows": 832,
+        "head_date": "2026-05-03T15:25:47-07:00",
+        "matched_fix_kind_distribution": {
+          "allocation": 7,
+          "error_mapping": 24,
+          "layout": 9,
+          "nullability": 3,
+          "ownership": 35,
+          "signature": 71,
+          "sleepability": 1
+        },
+        "matched_oracle_rows": 86,
+        "matched_warnings": 66,
+        "mrr": 0.0868,
+        "note": "Typed wrapper oracle requires symbol and warning-type/fix-kind compatibility. The old_to_head time window accepts wrapper fixes after the warning old-version date and no later than the replay head date; compatibility mode is an auxiliary upper-bound.",
+        "oracle_rows": 95,
+        "precision": 0.66,
+        "precision_at_k": {
+          "10": 0.6,
+          "100": 0.66,
+          "50": 0.72
+        },
+        "recall": 0.9053,
+        "time_relation_distribution": {
+          "after_drift": 43,
+          "before_drift": 103,
+          "same_pair": 4
+        },
+        "time_window": "compatibility"
+      },
+      "typed_wrapper_prediction": {
+        "enforce_time": true,
+        "f1": 0.2725,
+        "fix_kind_distribution": {
+          "allocation": 6,
+          "error_mapping": 14,
+          "layout": 7,
+          "nullability": 5,
+          "ownership": 19,
+          "signature": 43,
+          "sleepability": 1
+        },
+        "global_oracle_rows": 832,
+        "head_date": "2026-05-03T15:25:47-07:00",
+        "matched_fix_kind_distribution": {
+          "allocation": 2,
+          "error_mapping": 7,
+          "layout": 2,
+          "nullability": 2,
+          "ownership": 18,
+          "signature": 16
+        },
+        "matched_oracle_rows": 34,
+        "matched_warnings": 22,
+        "mrr": 0.0404,
+        "note": "Typed wrapper oracle requires symbol and warning-type/fix-kind compatibility. The old_to_head time window accepts wrapper fixes after the warning old-version date and no later than the replay head date; compatibility mode is an auxiliary upper-bound.",
+        "oracle_rows": 95,
+        "precision": 0.22,
+        "precision_at_k": {
+          "10": 0.3,
+          "100": 0.22,
+          "50": 0.38
+        },
+        "recall": 0.3579,
+        "time_relation_distribution": {
+          "after_drift": 43,
+          "same_pair": 4
+        },
+        "time_window": "old_to_head"
+      },
+      "variant": "NoBehaviorIndicator",
+      "warning_count": 100,
+      "wrapper_fix_prediction": {
+        "f1": 0.2113,
+        "matched_symbols": 39,
+        "mrr": 0.0092,
+        "oracle_symbols": 311,
+        "precision": 0.67,
+        "precision_at_k": {
+          "10": 0.6,
+          "100": 0.67,
+          "50": 0.72
         },
         "recall": 0.1254
       }

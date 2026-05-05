@@ -3,6 +3,8 @@ from __future__ import annotations
 from typing import Any
 
 from binddrift.config import Config
+from binddrift.db import connect, initialize
+from binddrift.evaluation.wrapper_oracle import classify_fix_kinds, compatible_fix_kind, replay_head_date, version_dates_from_db, wrapper_fix_in_time_window
 from binddrift.warnings import read_warnings, write_warnings
 
 
@@ -22,7 +24,11 @@ def _has_evidence_chain(warning: dict[str, Any]) -> bool:
     )
 
 
-def score_breakdown(warning: dict[str, Any]) -> dict[str, float]:
+def score_breakdown(
+    warning: dict[str, Any],
+    version_dates: dict[str, str] | None = None,
+    head_date: str | None = None,
+) -> dict[str, float]:
     rust_side = warning.get("rust_side", {})
     uses = rust_side.get("uses") or []
     safety_comments = rust_side.get("safety_comments") or []
@@ -42,7 +48,7 @@ def score_breakdown(warning: dict[str, Any]) -> dict[str, float]:
     contract_mapping = 1.0 if _has_any(error_mappings) or _has_any(lifetime_facts) else 0.0
     safety_comment = 1.0 if _has_any(safety_comments) else 0.0
     build_oracle = 1.0 if any(hit.get("oracle_type") == "build_breakage" for hit in oracle_hits if isinstance(hit, dict)) else 0.0
-    wrapper_oracle = 1.0 if any(hit.get("oracle_type") == "wrapper_fix" for hit in oracle_hits if isinstance(hit, dict)) else 0.0
+    wrapper_oracle = 1.0 if _has_typed_wrapper_oracle(warning, version_dates, head_date) else 0.0
     multi_version_consistency = 1.0 if len(warning.get("observed_pairs") or []) > 1 else 0.0
     indicator_confidence = max(0.0, min(float(warning.get("confidence", 0.0)), 1.0)) if warning.get("indicator_based") else 0.0
 
@@ -70,6 +76,32 @@ def score_breakdown(warning: dict[str, Any]) -> dict[str, float]:
 
 def score_warning(warning: dict[str, Any]) -> float:
     return round(sum(score_breakdown(warning).values()), 3)
+
+
+def _has_typed_wrapper_oracle(
+    warning: dict[str, Any],
+    version_dates: dict[str, str] | None,
+    head_date: str | None,
+) -> bool:
+    rust_side = warning.get("rust_side", {})
+    oracle_hits = rust_side.get("oracle_hits") or []
+    wrapper_hits = [hit for hit in oracle_hits if isinstance(hit, dict) and hit.get("oracle_type") == "wrapper_fix"]
+    if not wrapper_hits:
+        return False
+    if version_dates is None:
+        return True
+    symbol = warning.get("c_side", {}).get("symbol")
+    drift_type = str(warning.get("type") or "")
+    if not symbol:
+        return False
+    for hit in wrapper_hits:
+        changed_files = hit.get("changed_files") if isinstance(hit.get("changed_files"), list) else []
+        fix_kinds = classify_fix_kinds(str(hit.get("subject") or ""), changed_files, [str(symbol)])
+        if not any(compatible_fix_kind(drift_type, fix_kind) for fix_kind in fix_kinds):
+            continue
+        if wrapper_fix_in_time_window(hit.get("date"), warning, version_dates, head_date):
+            return True
+    return False
 
 
 def _is_promoted(warning: dict[str, Any]) -> bool:
@@ -108,9 +140,13 @@ def rank_warnings(cfg: Config) -> dict[str, Any]:
     input_warnings = read_warnings(cfg.warnings_jsonl)
     warnings = [warning for warning in input_warnings if _is_promoted(warning)]
     _annotate_observed_pairs(warnings)
+    conn = connect(cfg.database)
+    initialize(conn)
+    version_dates = version_dates_from_db(conn)
+    head_date = replay_head_date(warnings, version_dates)
     for warning in warnings:
         warning.setdefault("evidence_chain", [])
-        breakdown = score_breakdown(warning)
+        breakdown = score_breakdown(warning, version_dates=version_dates, head_date=head_date)
         warning["score_breakdown"] = breakdown
         warning["score"] = round(sum(breakdown.values()), 3)
         rust_side = warning.get("rust_side", {})

@@ -7,6 +7,7 @@ from binddrift.evaluation.diagnostics import diagnose_false_positives
 from binddrift.evaluation.evaluator import generate_manual_review, parse_build_log
 from binddrift.evaluation.metrics import label_for_warning, labeled_summary, load_manual_labels, manual_review_agreement, oracle_summary
 from binddrift.evaluation.review_merge import merge_manual_review
+from binddrift.evaluation.wrapper_oracle import classify_fix_kinds, replay_head_date, typed_wrapper_oracle_summary, wrapper_fix_events_from_warnings
 from binddrift.warnings import write_warnings
 
 
@@ -87,6 +88,140 @@ def test_oracle_summary_does_not_cross_match_reused_warning_ids():
     assert summary["recall"] == 1.0
     assert summary["precision"] == 0.3333
     assert summary["precision_at_k"]["3"] == 0.3333
+
+
+def test_typed_wrapper_oracle_requires_fix_kind_compatibility():
+    warnings = [
+        {"warning_id": "W-1", "type": "ErrorDrift", "old_version": "v1", "c_side": {"symbol": "ERR_PTR"}},
+        {"warning_id": "W-2", "type": "OwnershipRefcountDrift", "old_version": "v1", "c_side": {"symbol": "ERR_PTR"}},
+    ]
+    events = [
+        {
+            "commit": "c1",
+            "date": "2024-01-01",
+            "subject": "rust: error: Add Error::to_ptr()",
+            "changed_files": ["rust/kernel/error.rs"],
+            "matched_symbols": ["ERR_PTR"],
+            "likely_wrapper_fix": True,
+        }
+    ]
+
+    summary = typed_wrapper_oracle_summary(warnings, events, version_dates={"v1": "2023-01-01"})
+
+    assert "error_mapping" in classify_fix_kinds("rust: error: Add Error::to_ptr()", ["rust/kernel/error.rs"], ["ERR_PTR"])
+    assert summary["matched_warnings"] == 1
+    assert summary["precision_at_k"]["10"] == 0.5
+    assert summary["matched_fix_kind_distribution"]["error_mapping"] == 1
+
+
+def test_typed_wrapper_oracle_can_enforce_time_relation():
+    warnings = [{"warning_id": "W-1", "type": "SignatureDrift", "old_version": "v2", "c_side": {"symbol": "foo"}}]
+    events = [
+        {
+            "commit": "before",
+            "date": "2023-01-01",
+            "subject": "rust: bindings: add foo wrapper",
+            "changed_files": ["rust/kernel/foo.rs"],
+            "matched_symbols": ["foo"],
+            "likely_wrapper_fix": True,
+        },
+        {
+            "commit": "after",
+            "date": "2025-01-01",
+            "subject": "rust: bindings: fix foo wrapper",
+            "changed_files": ["rust/kernel/foo.rs"],
+            "matched_symbols": ["foo"],
+            "likely_wrapper_fix": True,
+        },
+    ]
+
+    summary = typed_wrapper_oracle_summary(warnings, events, version_dates={"v2": "2024-01-01"}, enforce_time=True)
+
+    assert summary["matched_warnings"] == 1
+    assert summary["matched_oracle_rows"] == 1
+    assert summary["time_relation_distribution"] == {"after_drift": 1}
+    assert summary["enforce_time"] is True
+    assert summary["time_window"] == "old_to_head"
+
+
+def test_typed_wrapper_oracle_old_to_new_window_rejects_late_fix():
+    warnings = [{"warning_id": "W-1", "type": "SignatureDrift", "old_version": "v1", "new_version": "v2", "c_side": {"symbol": "foo"}}]
+    events = [
+        {
+            "commit": "same-pair",
+            "date": "2024-06-01",
+            "subject": "rust: bindings: fix foo wrapper",
+            "changed_files": ["rust/kernel/foo.rs"],
+            "matched_symbols": ["foo"],
+            "likely_wrapper_fix": True,
+        },
+        {
+            "commit": "late",
+            "date": "2025-01-01",
+            "subject": "rust: bindings: fix foo wrapper",
+            "changed_files": ["rust/kernel/foo.rs"],
+            "matched_symbols": ["foo"],
+            "likely_wrapper_fix": True,
+        },
+    ]
+
+    summary = typed_wrapper_oracle_summary(
+        warnings,
+        events,
+        version_dates={"v1": "2024-01-01", "v2": "2024-07-01"},
+        time_window="old_to_new",
+    )
+
+    assert summary["matched_warnings"] == 1
+    assert summary["matched_oracle_rows"] == 1
+    assert summary["time_relation_distribution"] == {"same_pair": 1}
+
+
+def test_replay_head_date_prefers_canonical_head_pseudo_version():
+    warnings = [
+        {"new_version": "v7.0"},
+        {"new_version": "HEAD_abc123"},
+    ]
+    version_dates = {
+        "v7.0": "2026-04-01T00:00:00+00:00",
+        "HEAD_abc123": "2026-05-03T00:00:00+00:00",
+        "abc123": "2026-05-04T00:00:00+00:00",
+    }
+
+    assert replay_head_date(warnings, version_dates) == "2026-05-03T00:00:00+00:00"
+
+
+def test_wrapper_fix_events_from_warnings_normalizes_embedded_oracles():
+    warnings = [
+        {
+            "warning_id": "W-1",
+            "rust_side": {
+                "oracle_hits": [
+                    {
+                        "oracle_type": "wrapper_fix",
+                        "commit_id": "c1",
+                        "date": "2024-01-01",
+                        "subject": "rust: bindings: add foo wrapper",
+                        "changed_files": "[\"rust/kernel/foo.rs\"]",
+                        "matched_symbols": "[\"foo\"]",
+                    }
+                ]
+            },
+        }
+    ]
+
+    events = wrapper_fix_events_from_warnings(warnings)
+
+    assert events == [
+        {
+            "commit": "c1",
+            "date": "2024-01-01",
+            "subject": "rust: bindings: add foo wrapper",
+            "changed_files": ["rust/kernel/foo.rs"],
+            "matched_symbols": ["foo"],
+            "likely_wrapper_fix": True,
+        }
+    ]
 
 
 def test_manual_labels_prefer_adjudicated_label_and_report_agreement(tmp_path: Path):
