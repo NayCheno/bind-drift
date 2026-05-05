@@ -23,7 +23,10 @@ def _write_latest_run(tmp_path: Path) -> Config:
         "new_version": "v6.2",
         "promotion_status": "promoted",
         "type": "SignatureDrift",
+        "c_evidence_level": "c_source_diff",
+        "promotion_reasons": ["direct_binding_use"],
         "c_side": {"symbol": "foo", "old": "a", "new": "b"},
+        "rust_side": {"uses": [{"rust_file": "x.rs", "line": 1}]},
     }
     warning["warning_uid"] = make_warning_uid(warning)
     (run_dir / "warnings.jsonl").write_text(json.dumps(warning, sort_keys=True) + "\n", encoding="utf-8")

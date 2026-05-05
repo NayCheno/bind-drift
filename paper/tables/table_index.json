@@ -1,58 +1,62 @@
 {
   "ablation_strict_comparison": {
     "available": true,
-    "path": "/home/nya/workspace/bind-drift/paper/tables/ablation_strict_comparison.json"
+    "path": "paper/tables/ablation_strict_comparison.json"
   },
   "baseline_strict_comparison": {
     "available": true,
-    "path": "/home/nya/workspace/bind-drift/paper/tables/baseline_strict_comparison.json"
+    "path": "paper/tables/baseline_strict_comparison.json"
   },
   "baselines_ablations": {
     "available": true,
-    "path": "/home/nya/workspace/bind-drift/paper/tables/baselines_ablations.json"
+    "path": "paper/tables/baselines_ablations.json"
   },
   "evaluation_protocol": {
     "available": true,
-    "path": "/home/nya/workspace/bind-drift/data/replay/latest/evaluation_protocol.json"
+    "path": "data/replay/latest/evaluation_protocol.json"
   },
   "evaluation_summary": {
     "available": true,
-    "path": "/home/nya/workspace/bind-drift/paper/tables/evaluation_summary.json"
+    "path": "paper/tables/evaluation_summary.json"
   },
   "extractor_audit": {
     "available": true,
-    "path": "/home/nya/workspace/bind-drift/paper/tables/extractor_audit.json"
+    "path": "paper/tables/extractor_audit.json"
   },
   "fact_counts": {
     "available": true,
-    "path": "/home/nya/workspace/bind-drift/paper/tables/fact_counts.json"
+    "path": "paper/tables/fact_counts.json"
   },
   "manual_review_summary": {
     "available": true,
-    "path": "/home/nya/workspace/bind-drift/paper/tables/manual_review_summary.json"
+    "path": "paper/tables/manual_review_summary.json"
   },
   "ranking_pooled_evaluation": {
     "available": true,
-    "path": "/home/nya/workspace/bind-drift/paper/tables/ranking_pooled_evaluation.json"
+    "path": "paper/tables/ranking_pooled_evaluation.json"
+  },
+  "ranking_score_audit": {
+    "available": true,
+    "path": "paper/tables/ranking_score_audit.json"
   },
   "replay_summary": {
     "available": true,
-    "path": "/home/nya/workspace/bind-drift/paper/tables/replay_summary.json"
+    "path": "paper/tables/replay_summary.json"
   },
   "run_manifest": {
     "available": true,
-    "path": "/home/nya/workspace/bind-drift/data/replay/latest/run_manifest.json"
+    "path": "data/replay/latest/run_manifest.json"
   },
   "runtime_scalability": {
     "available": true,
-    "path": "/home/nya/workspace/bind-drift/paper/tables/runtime_scalability.json"
+    "path": "paper/tables/runtime_scalability.json"
   },
   "toolchain_matrix": {
     "available": true,
-    "path": "/home/nya/workspace/bind-drift/data/toolchain_matrix.json"
+    "path": "data/toolchain_matrix.json"
   },
   "warning_volume_reduction": {
     "available": true,
-    "path": "/home/nya/workspace/bind-drift/paper/tables/warning_volume_reduction.json"
+    "path": "paper/tables/warning_volume_reduction.json"
   }
 }

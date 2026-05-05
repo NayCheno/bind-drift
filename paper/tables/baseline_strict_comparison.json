@@ -29,6 +29,7 @@
     },
     "labeled_at_100": 100,
     "ndcg_at_20": 0.5218,
+    "oracle_blind": true,
     "p_at_10": 0.6,
     "p_at_100": 0.55,
     "p_at_20": 0.6,
@@ -61,7 +62,7 @@
     "deltas": {
       "ndcg_at_20": -0.3252,
       "p_at_20": -0.4,
-      "p_at_50": -0.32
+      "p_at_50": -0.4
     },
     "minimum_conditions_passed": 0,
     "paired_bootstrap_significance": {
@@ -88,10 +89,10 @@
         },
         "p_at_50": {
           "bootstrap_delta_ci": [
-            -0.46,
-            -0.16
+            -0.54,
+            -0.24
           ],
-          "observed_delta": -0.32,
+          "observed_delta": -0.4,
           "p_value_primary_not_better": 1.0,
           "significant_primary_better": false
         }
@@ -106,7 +107,7 @@
     "deltas": {
       "ndcg_at_20": -0.447,
       "p_at_20": -0.55,
-      "p_at_50": -0.4
+      "p_at_50": -0.48
     },
     "minimum_conditions_passed": 0,
     "paired_bootstrap_significance": {
@@ -133,10 +134,10 @@
         },
         "p_at_50": {
           "bootstrap_delta_ci": [
-            -0.56,
-            -0.22
+            -0.62,
+            -0.34
           ],
-          "observed_delta": -0.4,
+          "observed_delta": -0.48,
           "p_value_primary_not_better": 1.0,
           "significant_primary_better": false
         }
@@ -176,6 +177,7 @@
     },
     "labeled_at_100": 100,
     "ndcg_at_20": 0.6436,
+    "oracle_blind": true,
     "p_at_10": 0.6,
     "p_at_100": 0.58,
     "p_at_20": 0.75,
@@ -203,7 +205,7 @@
   },
   "rankers": [
     {
-      "auprc_on_pooled_review_set": 0.4231,
+      "auprc_on_pooled_review_set": 0.009,
       "bootstrap_ci": {
         "ndcg_at_20": [
           0.0373,
@@ -214,11 +216,11 @@
           0.4
         ],
         "p_at_50": [
-          0.06,
-          0.26
+          0.02,
+          0.16
         ]
       },
-      "candidate_count": 331,
+      "candidate_count": 39,
       "evaluated_pool_rows": 278,
       "evaluation_denominator": "complete_pooled_review_set",
       "kind": "primary",
@@ -230,28 +232,26 @@
         "TRUE_WRAPPER_FIX": 130,
         "UNCLEAR": 75
       },
-      "labeled_at_100": 100,
+      "labeled_at_100": 39,
       "ndcg_at_20": 0.1966,
+      "oracle_blind": true,
       "p_at_10": 0.3,
-      "p_at_100": 0.39,
+      "p_at_100": 0.04,
       "p_at_20": 0.2,
-      "p_at_50": 0.16,
+      "p_at_50": 0.08,
       "ranked_label_distribution": {
-        "BENIGN_DRIFT": 36,
-        "FALSE_POSITIVE": 32,
-        "TRUE_BUILD_BREAKAGE": 3,
+        "BENIGN_DRIFT": 26,
+        "FALSE_POSITIVE": 9,
         "TRUE_SEMANTIC_DRIFT": 2,
-        "TRUE_WRAPPER_FIX": 130,
-        "UNCLEAR": 75
+        "TRUE_WRAPPER_FIX": 2
       },
       "ranked_true_label_distribution": {
-        "TRUE_BUILD_BREAKAGE": 3,
         "TRUE_SEMANTIC_DRIFT": 2,
-        "TRUE_WRAPPER_FIX": 130
+        "TRUE_WRAPPER_FIX": 2
       },
       "ranker": "binddrift_oracle_blind",
-      "review_pool_covered": 1.0,
-      "review_pool_ranked_count": 278,
+      "review_pool_covered": 0.1403,
+      "review_pool_ranked_count": 39,
       "true_label_distribution": {
         "TRUE_BUILD_BREAKAGE": 3,
         "TRUE_SEMANTIC_DRIFT": 2,
@@ -289,6 +289,7 @@
       },
       "labeled_at_100": 100,
       "ndcg_at_20": 0.4413,
+      "oracle_blind": true,
       "p_at_10": 0.7,
       "p_at_100": 0.65,
       "p_at_20": 0.45,
@@ -344,6 +345,7 @@
       },
       "labeled_at_100": 100,
       "ndcg_at_20": 0.5218,
+      "oracle_blind": true,
       "p_at_10": 0.6,
       "p_at_100": 0.55,
       "p_at_20": 0.6,
@@ -401,6 +403,7 @@
       },
       "labeled_at_100": 0,
       "ndcg_at_20": 0.0,
+      "oracle_blind": true,
       "p_at_10": 0.0,
       "p_at_100": 0.0,
       "p_at_20": 0.0,
@@ -447,6 +450,7 @@
       },
       "labeled_at_100": 100,
       "ndcg_at_20": 0.1456,
+      "oracle_blind": true,
       "p_at_10": 0.1,
       "p_at_100": 0.55,
       "p_at_20": 0.2,
@@ -502,6 +506,7 @@
       },
       "labeled_at_100": 100,
       "ndcg_at_20": 0.22,
+      "oracle_blind": true,
       "p_at_10": 0.3,
       "p_at_100": 0.37,
       "p_at_20": 0.2,
@@ -557,6 +562,7 @@
       },
       "labeled_at_100": 100,
       "ndcg_at_20": 0.6436,
+      "oracle_blind": true,
       "p_at_10": 0.6,
       "p_at_100": 0.58,
       "p_at_20": 0.75,

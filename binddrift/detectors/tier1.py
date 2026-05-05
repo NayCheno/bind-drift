@@ -105,7 +105,7 @@ def _make_warning(idx: int, fact: dict[str, Any]) -> dict[str, Any]:
         "risk": "Medium",
         "score": 0.0,
         "promotion_reasons": fact.get("promotion_reasons") or ["c_source_diff"],
-        "demotion_reasons": [],
+        "demotion_reasons": list(fact.get("demotion_reasons") or []),
         "suggested_action": "Inspect the Rust safe abstraction and generated binding for stale assumptions.",
     }
     warning.setdefault("evidence_chain", [])

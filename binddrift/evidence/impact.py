@@ -224,7 +224,7 @@ def apply_impact_to_warning(warning: dict[str, Any], impact: dict[str, Any]) -> 
     warning["rust_impact_level"] = impact.get("impact_level", "none")
     warning["promotion_status"] = "promoted"
     warning["promotion_reasons"] = list(impact.get("reasons") or [])
-    warning["demotion_reasons"] = []
+    warning["demotion_reasons"] = sorted(set(warning.get("demotion_reasons") or []))
     chain = list(warning.get("evidence_chain") or [])
     for key in ("safety_comments", "error_mappings", "lifetime_facts", "oracle_hits"):
         chain.extend(impact.get(key) or [])

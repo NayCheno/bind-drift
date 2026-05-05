@@ -8,11 +8,12 @@ from pathlib import Path
 from typing import Any
 
 from binddrift.config import Config
+from binddrift.artifact_paths import sanitize_local_paths
 from binddrift.evaluation.baselines import _candidate_pool, _refresh_pool_scores, _variant_warnings
 from binddrift.evaluation.metrics import label_for_warning, load_manual_labels, manual_review_row_key
 from binddrift.evaluation.wrapper_oracle import replay_head_date, version_dates_from_db
 from binddrift.db import connect, initialize
-from binddrift.ranking.oracle_blind_scorer import rank_warnings_oracle_blind
+from binddrift.ranking.oracle_blind_scorer import rank_primary_warnings_oracle_blind
 from binddrift.run_manifest import canonical_run_dir, repo_relative, validate_run_manifest
 from binddrift.warnings import ensure_warning_uid, read_warnings, write_jsonl
 
@@ -93,6 +94,7 @@ def generate_pooled_review_set(
         row["ranker_sources"] = sorted(source_ranks.get(uid, {}))
         row["ranker_ranks"] = source_ranks.get(uid, {})
         row["pooled_review"] = True
+    rows = [sanitize_local_paths(row, cfg) for row in rows]
 
     write_jsonl(output, rows)
     label_summary = write_pooled_review_labels(
@@ -151,7 +153,8 @@ def ranker_output_details(
     out: dict[str, dict[str, Any]] = {}
     for name in rankers:
         if name == "binddrift_oracle_blind":
-            out[name] = {"ranked": rank_warnings_oracle_blind(pool), "candidate_count": len(pool), "warning_volume": len(pool)}
+            ranked = rank_primary_warnings_oracle_blind(pool)
+            out[name] = {"ranked": ranked, "candidate_count": len(ranked), "warning_volume": len(pool)}
         elif name == "binddrift_current":
             out[name] = {
                 "ranked": sorted(pool, key=lambda warning: (float(warning.get("score") or 0.0), str(warning.get("warning_uid"))), reverse=True),

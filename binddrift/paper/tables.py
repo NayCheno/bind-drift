@@ -10,8 +10,8 @@ from binddrift.db import connect, initialize
 from binddrift.evaluation.protocol import FORBIDDEN_PRIMARY_SCORE_COMPONENTS, load_evaluation_protocol
 from binddrift.evaluation.metrics import load_manual_labels, manual_review_agreement, warning_label_key
 from binddrift.paper.audit import generate_extractor_audit
-from binddrift.ranking.oracle_blind_scorer import rank_warnings_oracle_blind
-from binddrift.run_manifest import canonical_run_dir, manifest_exists, resolve_manifest_path, sha256_file, validate_run_manifest
+from binddrift.ranking.oracle_blind_scorer import rank_primary_warnings_oracle_blind
+from binddrift.run_manifest import canonical_run_dir, manifest_exists, repo_relative, resolve_manifest_path, sha256_file, validate_run_manifest
 from binddrift.warnings import read_warnings
 
 
@@ -46,6 +46,7 @@ def generate_paper_tables(cfg: Config) -> dict[str, object]:
         "manual_review_summary": manual_review,
         "runtime_scalability": runtime,
         "ranking_pooled_evaluation": tables_dir / "ranking_pooled_evaluation.json",
+        "ranking_score_audit": tables_dir / "ranking_score_audit.json",
         "baseline_strict_comparison": tables_dir / "baseline_strict_comparison.json",
         "ablation_strict_comparison": tables_dir / "ablation_strict_comparison.json",
         "warning_volume_reduction": tables_dir / "warning_volume_reduction.json",
@@ -54,7 +55,7 @@ def generate_paper_tables(cfg: Config) -> dict[str, object]:
         "toolchain_matrix": cfg.data_dir / "toolchain_matrix.json",
     }
     index = {
-        name: {"path": str(path), "available": path.exists()}
+        name: {"path": repo_relative(cfg, path), "available": path.exists()}
         for name, path in known.items()
     }
     out = tables_dir / "table_index.json"
@@ -241,7 +242,7 @@ def _validate_table_consistency(cfg: Config, manifest: dict[str, Any] | None) ->
         promoted = read_warnings(Path(manifest["resolved_paths"]["promoted_warnings"]))
         expected_oracle_blind_uids = [
             warning.get("warning_uid")
-            for warning in rank_warnings_oracle_blind(promoted)[: manifest["paper_topk"]]
+            for warning in rank_primary_warnings_oracle_blind(promoted)[: manifest["paper_topk"]]
         ]
         if primary.get("top_warning_uids") != expected_oracle_blind_uids:
             raise RuntimeError("evaluation_summary oracle_blind_primary_result does not match promoted oracle-blind top-k")
@@ -311,7 +312,7 @@ def _validate_table_consistency(cfg: Config, manifest: dict[str, Any] | None) ->
             promoted = read_warnings(Path(manifest["resolved_paths"]["promoted_warnings"]))
             expected_oracle_blind_uids = [
                 warning.get("warning_uid")
-                for warning in rank_warnings_oracle_blind(promoted)[: manifest["paper_topk"]]
+                for warning in rank_primary_warnings_oracle_blind(promoted)[: manifest["paper_topk"]]
             ]
         if main.get("top_warning_uids") != expected_oracle_blind_uids:
             raise RuntimeError("baselines_ablations main variant does not match promoted oracle-blind top-k")

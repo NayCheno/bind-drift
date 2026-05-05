@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from binddrift.config import Config
+from binddrift.artifact_paths import repo_relative
 from binddrift.warnings import eligible_for_main_warning, read_warnings
 
 
@@ -48,13 +49,6 @@ def count_csv_rows(path: Path) -> int:
         return 0
     with path.open(newline="", encoding="utf-8") as fh:
         return sum(1 for _ in csv.DictReader(fh))
-
-
-def repo_relative(cfg: Config, path: Path) -> str:
-    try:
-        return str(path.resolve().relative_to(cfg.repo_root))
-    except ValueError:
-        return str(path.resolve())
 
 
 def resolve_manifest_path(cfg: Config, value: str) -> Path:

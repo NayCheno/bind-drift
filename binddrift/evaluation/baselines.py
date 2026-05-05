@@ -6,8 +6,9 @@ from pathlib import Path
 from typing import Any
 
 from binddrift.config import Config
+from binddrift.artifact_paths import repo_relative
 from binddrift.db import connect, initialize
-from binddrift.ranking.oracle_blind_scorer import rank_warnings_oracle_blind
+from binddrift.ranking.oracle_blind_scorer import rank_primary_warnings_oracle_blind
 from binddrift.ranking.scorer import score_breakdown as ranking_score_breakdown
 from binddrift.warnings import read_warnings, split_main_and_single_version
 from .metrics import TRUE_LABELS, label_for_warning, labeled_summary, load_manual_labels, oracle_summary
@@ -48,13 +49,14 @@ def generate_baselines(
         "promoted_warning_pool": len(candidate_pool),
     }
     rows = []
-    oracle_blind_primary = rank_warnings_oracle_blind(candidate_pool)[:TOP_K]
+    oracle_blind_candidates = rank_primary_warnings_oracle_blind(candidate_pool)
+    oracle_blind_primary = oracle_blind_candidates[:TOP_K]
     rows.append(
         _variant_row(
             "BindDrift",
             "main",
             oracle_blind_primary,
-            len(candidate_pool),
+            len(oracle_blind_candidates),
             labels,
             build_symbols,
             wrapper_symbols,
@@ -120,10 +122,10 @@ def generate_baselines(
     path = cfg.repo_root / "paper/tables/baselines_ablations.json"
     path.parent.mkdir(parents=True, exist_ok=True)
     source = {
-        "warnings": str(warnings_path or cfg.warnings_jsonl),
-        "promoted_warnings": str(_promoted_warnings_path(cfg, run_manifest) or ""),
-        "manual_review": str(review_path or (cfg.data_dir / "manual_review.csv")),
-        "run_manifest": run_manifest,
+        "warnings": repo_relative(cfg, Path(warnings_path or cfg.warnings_jsonl)),
+        "promoted_warnings": repo_relative(cfg, _promoted_warnings_path(cfg, run_manifest)) if _promoted_warnings_path(cfg, run_manifest) else "",
+        "manual_review": repo_relative(cfg, Path(review_path or (cfg.data_dir / "manual_review.csv"))),
+        "run_manifest": repo_relative(cfg, Path(run_manifest)) if run_manifest else None,
         "score_source": "promoted warning candidates are rescored in memory with the current ranking scorer before baseline sorting",
     }
     comparison = _comparison_summary(rows)
@@ -219,7 +221,7 @@ def _variant_warnings(
         ranked = sorted(pool, key=lambda warning: (_rust_use_count(warning), str(warning.get("warning_uid"))), reverse=True)
         return ranked[:TOP_K], len(pool)
     if name == "OracleBlindBindDrift":
-        ranked = rank_warnings_oracle_blind(pool)
+        ranked = rank_primary_warnings_oracle_blind(pool)
         return ranked[:TOP_K], len(pool)
     if name == "NoRanking":
         return pool[:TOP_K], len(pool)
@@ -337,6 +339,8 @@ def _comparison_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
         (_metric(no_ranking, "manual_review", "precision_at_k", "10") or 0.0) >= (full_manual.get("10") or 0.0)
         and (_metric(no_ranking, "manual_review", "precision_at_k", "50") or 0.0) >= (full_manual.get("50") or 0.0)
     )
+    topk_gate = (full_manual.get("10") or 0.0) >= 0.50
+    ranking_claim_supported = (not hard_failure) and topk_gate
     return {
         "binddrift_manual_precision_at_k": full_manual,
         "binddrift_conservative_manual_precision_at_k": full_manual_cons,
@@ -347,8 +351,9 @@ def _comparison_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
         "primary_oracle_blind": full.get("oracle_blind") is True,
         "auxiliary_oracle_backed_typed_precision_at_k": ((full_auxiliary.get("typed_wrapper_prediction") or {}).get("precision_at_k") or {}),
         "no_ranking_hard_failure": hard_failure,
-        "ranking_claim_supported": not hard_failure,
-        "recommended_claim": "ranking improves prioritization" if not hard_failure else "evidence gate reduces warning volume",
+        "topk_minimum_gate": topk_gate,
+        "ranking_claim_supported": ranking_claim_supported,
+        "recommended_claim": "ranking improves prioritization" if ranking_claim_supported else "evidence gate reduces warning volume",
     }
 
 

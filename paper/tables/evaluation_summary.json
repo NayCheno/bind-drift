@@ -60,23 +60,16 @@
     "wrapper_fix_events": 226
   },
   "manual_review": {
-    "filtered_labeled_warnings": 95,
+    "filtered_labeled_warnings": 38,
     "label_distribution": {
-      "BENIGN_DRIFT": 35,
-      "FALSE_POSITIVE": 23,
+      "BENIGN_DRIFT": 26,
+      "FALSE_POSITIVE": 8,
       "TRUE_SEMANTIC_DRIFT": 2,
-      "TRUE_WRAPPER_FIX": 34,
-      "UNCLEAR": 1
+      "TRUE_WRAPPER_FIX": 2
     },
     "label_source_rows": 100,
-    "labeled_warnings": 95,
+    "labeled_warnings": 38,
     "per_type": {
-      "FieldDrift": {
-        "labeled_warnings": 22,
-        "precision": 0.4091,
-        "true_labeled_warnings": 9,
-        "warnings": 22
-      },
       "MacroConstDrift": {
         "labeled_warnings": 25,
         "precision": 0.0,
@@ -84,21 +77,21 @@
         "warnings": 26
       },
       "SignatureDrift": {
-        "labeled_warnings": 48,
-        "precision": 0.5625,
-        "true_labeled_warnings": 27,
-        "warnings": 52
+        "labeled_warnings": 13,
+        "precision": 0.3077,
+        "true_labeled_warnings": 4,
+        "warnings": 13
       }
     },
-    "precision": 0.3789,
+    "precision": 0.1053,
     "precision_at_k": {
       "10": 0.3,
-      "100": 0.3789,
+      "100": 0.1053,
       "20": 0.2,
-      "50": 0.1633
+      "50": 0.1053
     },
-    "true_labeled_warnings": 36,
-    "unclear_warnings": 1
+    "true_labeled_warnings": 4,
+    "unclear_warnings": 0
   },
   "manual_review_agreement": {
     "agreement_rate": 1.0,
@@ -108,23 +101,16 @@
   "note": "Build recall is sparse; symbol-level wrapper recall is an upper-bound, typed wrapper recall requires fix-kind compatibility plus an old-to-head time window, and semantic precision comes from manual labels.",
   "oracle_blind_primary_result": {
     "manual_review": {
-      "filtered_labeled_warnings": 95,
+      "filtered_labeled_warnings": 38,
       "label_distribution": {
-        "BENIGN_DRIFT": 35,
-        "FALSE_POSITIVE": 23,
+        "BENIGN_DRIFT": 26,
+        "FALSE_POSITIVE": 8,
         "TRUE_SEMANTIC_DRIFT": 2,
-        "TRUE_WRAPPER_FIX": 34,
-        "UNCLEAR": 1
+        "TRUE_WRAPPER_FIX": 2
       },
       "label_source_rows": 100,
-      "labeled_warnings": 95,
+      "labeled_warnings": 38,
       "per_type": {
-        "FieldDrift": {
-          "labeled_warnings": 22,
-          "precision": 0.4091,
-          "true_labeled_warnings": 9,
-          "warnings": 22
-        },
         "MacroConstDrift": {
           "labeled_warnings": 25,
           "precision": 0.0,
@@ -132,25 +118,26 @@
           "warnings": 26
         },
         "SignatureDrift": {
-          "labeled_warnings": 48,
-          "precision": 0.5625,
-          "true_labeled_warnings": 27,
-          "warnings": 52
+          "labeled_warnings": 13,
+          "precision": 0.3077,
+          "true_labeled_warnings": 4,
+          "warnings": 13
         }
       },
-      "precision": 0.3789,
+      "precision": 0.1053,
       "precision_at_k": {
         "10": 0.3,
-        "100": 0.3789,
+        "100": 0.1053,
         "20": 0.2,
-        "50": 0.1633
+        "50": 0.1053
       },
-      "true_labeled_warnings": 36,
-      "unclear_warnings": 1
+      "true_labeled_warnings": 4,
+      "unclear_warnings": 0
     },
     "oracle_blind": true,
+    "primary_candidate_count": 39,
     "ranker": "OracleBlindBindDrift",
-    "reported_top_k": 100,
+    "reported_top_k": 39,
     "score_component_keys": [
       "binding_diff",
       "c_source_diff",
@@ -164,8 +151,7 @@
       "weak_graph_only_penalty"
     ],
     "tier_distribution_top_k": {
-      "A": 39,
-      "C": 61
+      "A": 39
     },
     "top_warning_uids": [
       "5ec7e735433ea17d474dbc803baf4b16cb67fbddd317ec06ceaf246b4b06e33e",
@@ -206,68 +192,7 @@
       "1d1971c725b241bd7fd7c6df469c385b0aef4b6bb37532133301ec239e020b31",
       "13b89c36d23f9a50ec5173d30d90d736e3f828d7bf9695eb0d5262d384624fc0",
       "0fc81c351aa66bd36715941dbe581b13aa8c66f6f104aa360301d27241f5cacf",
-      "090dbc02e5a6d2502726518b3130cc21a6eea25a3cce8f8ea0f51fce4ed295e5",
-      "6349706efa7389e805a7c8f7ddcfdac58408b60d584bf6965eb1a679431a152d",
-      "4a687423f6942a1f923ca47534f404f4b2a91d6cea4bb503baba951b6d15b660",
-      "123ef188d45289c4c30a5f87427e1cd39adfc99b15af11e87b4bd1fd309b5d73",
-      "d8a8b6a3a16e833d8d47b8d4164dff971b6c69bc11ddb2d48d8385c6a002dac0",
-      "d4fd2d81c8ea1bd71aa9c8e51e75613ad2801a95df3ed67cf348c5f8fa04fe4c",
-      "a0fe0e1a6ffe2ebdbd03cb0152ffdbd5d1b9588ee76f6cb5250dfa35986f2dd7",
-      "9b0fab9032f10591b94c1553e93299be447812eb458702d58e7081b01787ba14",
-      "83d2a00a70509a59f69b3d3eee1ceadc52dfdf0b8d2121d70bd3e8467c587a5d",
-      "6c81911bd7f34f5f8dbe99f4ebfc2abc21565486bb9115dc31ac4a9cc0cee234",
-      "58a01dd294eb2ff57be67b6378972edf712bcfbdeac81adb6aafe51503486784",
-      "30e44b9dd8ba17e0a2152139307340078e8c73235ad9798be42a79a1cf587471",
-      "09fa197ba12caadb48fb6742d5bd6a0dca13c1b9db7283b393b80d56ae0f13c9",
-      "06019a77f11e5016bdc1096c82329530903aac7ad4fcf669003de9cc6e7327a3",
-      "015e28f63fcd1525dedaa392e73278a8de6d06699b9ef77911ed729a53b54f2c",
-      "c6fedd40f4293a2cf97cd21b46968e2da0844c4ef8fcd202fe3a2c9a3cc04e23",
-      "5fb86ab05279e99657c3896aed39fa6ebf523145363bcb285edf744d28085856",
-      "2e15a63557a56e9c72676ee06fa1f76149dcd00f7e55b59d61fd2a4a2d813ac4",
-      "c4db15ef412f4f82fb1709ab6fc668ce3ecdeb046df1d7f3cde9429b65f60b7c",
-      "fd7adb7aa151991c0fadce9167e16b157fdd69559e3aaba40a8ec27f668cded0",
-      "f8dcd9f2cd00551e7fcbf283302d8a99ffb5521ed87acb06c679f5224daad64e",
-      "a7b50f9e01fa519b3ca5429567469093b01a1a6e6aac05980f9c6eb72628692a",
-      "a3d89044e191c0409751d7986088db2623ef9ff2bb3853007fe5cd574b88a786",
-      "762ae9d89108b8018f94f2c47247c4de6e59c6d10b5187fca6d2d1b9bc69c0b7",
-      "4b538a23e5b7e22f2cc86f95ffea064b2634aa0ab97449ad304889083dc27efd",
-      "46b1fb124f9b8010a0bbad8532aec2f2ce82c1cb9537c8e6d0662155e5c3b565",
-      "399880825c439eb15d3e73aa711d383a87e7dbba9e9a3173f6a97bdef4e841b7",
-      "39859c860002f454586acf39f3d0df45a3189f1edc7868bad4cb189a795d4b8e",
-      "294099e6983e2b23170870a24c569e1b11781c73105816716babe3dd7be19618",
-      "25643bdc317201099f3996929534e461a5e3b66bab025ea361e57a28b7349365",
-      "d8f79e467f86c84e1f291c195f6e4cb94569fce965006cb105f6518d6dab57b3",
-      "d668e025ab0727df4a19529d3eaa4e08a0e8e04c23fa27b5dd2701fb50ba80c6",
-      "cf5cdf789fe1652aa879caa9631a946ab8ca6230c05c642a1c2fc5942e01c4f6",
-      "766106ed6eaed336d0656735e443dc9de1b0bf707559141278aabb3dd4ff9f64",
-      "619fc183747ad8095d328a64ad4dffb10c831cc475a5cc5f33de74ad0b4558ee",
-      "54225f142a952eea67a81b5b332ef77b7114b75ce97453c238d1110be97165d5",
-      "4be0f10410a82b17143a9815c512f6f6670896ddbda91713c0011fce8dcb611d",
-      "1b92c3dcbb993527e32be78558268bf4b4aadf57940b7d4e6e1605c1be80ab42",
-      "0217c5aca3beed930cd6cd613e9717d4a78ab28013cffd3881c7d5c7ab7db42a",
-      "c19cb71e527982293eb6cd548ace442bf00f6dfe460d7dd1b8d6137f2f753c96",
-      "f6741da33cd41c225aef023b1b2a71f2e315f0610d131c539603cbe7aedb8ec6",
-      "f22d6580a681102637a9fbfe2f5860f086e5b6f89f2a8ff9025e5e50b2019aa9",
-      "e84376739087219bcc38994e1c5a706e89c793f10d457b8fe7e447738ffabae9",
-      "dee765bcd2302ae60a2b8879f2ad930b8bdb343af3df1fd16c994112640d77c5",
-      "bf0239ecb4a8636d1f5d293b49540036874cdf6d0b0e0eb01432cc8aa046c516",
-      "9b85a80903051f937feb20f75aa41dcf43776b5937e2b13e4ee4b3a249821675",
-      "8c2f25a2f43cae63159baca641b091a3d1d0ef9a7c196e16ee21ec6db94a9e42",
-      "62b0c8d3f4200a34a01997d72d09f2ef14124af8139cf0f9ac0df1b3d585e12f",
-      "3534919045c8cb647fe4fa61dcb9216798053d0da77b186aadd19e11a2271f33",
-      "339034d13e5b54b7835e94c98504f8cbc6b3061ac81732d89bc79791620c64bc",
-      "3138a3da8567dd4603de043dc591c9ddcdb6aa5d68ca2bd35a8fb1b8a6e6fff8",
-      "243b1d99a06d77af10b06654340c84b9aac8c8dfff2f9623ee2ebdf7c7fe7a35",
-      "146b834d38a0ccd8443d43e2f7bdef1036c90edb04125b82bc87ce61c896801c",
-      "119a349c47af70cdf947384b3f4192ff68cc5ff01eabe524b0a66fbbcaf2a70a",
-      "01dd11450aa99f882f988059f9eb79b773dc7d0bc7326804d01ad5b92b812545",
-      "ae348361d574223a3384ab601ee8015a17248220b7e8ea67d54be20cfd450290",
-      "7b622777128724e9183fa37106812fce0809806260543c99914aa2e909ec1749",
-      "68c4411d3a719acc264cdacfc453bd523082c63ef689a88c31b468fc6149d74d",
-      "34cd2b28230e324c1c97d1fcd8b3c22618051a1f95de08599e8061defcb23084",
-      "ceec60364681244ca5b696b5e694638302c96fdf2b65b32ac43ecff8c29ae0ab",
-      "999c0a339e4ea1bb34b856ca89ae132278777e95a8a04203007ed49e46f33f02",
-      "6f343849efc7e34b3800ce1b64b2de12eed139f23a9af2df211b2362dac2fa63"
+      "090dbc02e5a6d2502726518b3130cc21a6eea25a3cce8f8ea0f51fce4ed295e5"
     ],
     "warning_count": 331
   },
@@ -276,123 +201,108 @@
   "protocol_version": "ccfb-strict-v1",
   "recall": {
     "build_breakage": null,
-    "typed_wrapper": 0.375,
-    "wrapper_fix": 0.1254
+    "typed_wrapper": 0.1818,
+    "wrapper_fix": 0.0161
   },
-  "run_manifest": "/home/nya/workspace/bind-drift/data/replay/latest/run_manifest.json",
+  "run_manifest": "data/replay/latest/run_manifest.json",
   "single_version_review_targets": 0,
   "symbol_level_wrapper_prediction": {
-    "f1": 0.2108,
-    "matched_symbols": 39,
-    "mrr": 0.0076,
+    "f1": 0.0286,
+    "matched_symbols": 5,
+    "mrr": 0.006,
     "oracle_symbols": 311,
-    "precision": 0.66,
+    "precision": 0.1282,
     "precision_at_k": {
       "10": 0.5,
-      "100": 0.66,
-      "50": 0.32
+      "100": 0.1282,
+      "50": 0.1282
     },
-    "recall": 0.1254
+    "recall": 0.0161
   },
   "typed_wrapper_compatibility_prediction": {
     "enforce_time": false,
-    "f1": 0.757,
+    "f1": 0.2247,
     "fix_kind_distribution": {
-      "allocation": 6,
-      "error_mapping": 14,
-      "layout": 7,
-      "nullability": 5,
-      "ownership": 21,
-      "signature": 41,
-      "sleepability": 2
+      "error_mapping": 4,
+      "layout": 1,
+      "signature": 5,
+      "sleepability": 1
     },
     "global_oracle_rows": 832,
     "head_date": "2026-05-03T15:25:47-07:00",
     "matched_fix_kind_distribution": {
-      "allocation": 7,
-      "error_mapping": 25,
-      "layout": 9,
-      "nullability": 3,
-      "ownership": 37,
-      "signature": 68,
-      "sleepability": 2
+      "error_mapping": 4,
+      "signature": 5,
+      "sleepability": 1
     },
-    "matched_oracle_rows": 87,
-    "matched_warnings": 65,
-    "mrr": 0.0586,
+    "matched_oracle_rows": 10,
+    "matched_warnings": 5,
+    "mrr": 0.4082,
     "note": "Typed wrapper oracle requires symbol and warning-type/fix-kind compatibility. The old_to_head time window accepts wrapper fixes after the warning old-version date and no later than the replay head date; compatibility mode is an auxiliary upper-bound.",
-    "oracle_rows": 96,
-    "precision": 0.65,
+    "oracle_rows": 11,
+    "precision": 0.1282,
     "precision_at_k": {
       "10": 0.5,
-      "100": 0.65,
-      "50": 0.32
+      "100": 0.1282,
+      "50": 0.1282
     },
-    "recall": 0.9062,
+    "recall": 0.9091,
     "time_relation_distribution": {
-      "after_drift": 43,
-      "before_drift": 102,
-      "same_pair": 6
+      "after_drift": 1,
+      "before_drift": 8,
+      "same_pair": 1
     },
     "time_window": "compatibility"
   },
   "typed_wrapper_prediction": {
     "enforce_time": true,
-    "f1": 0.2927,
+    "f1": 0.0449,
     "fix_kind_distribution": {
-      "allocation": 6,
-      "error_mapping": 14,
-      "layout": 7,
-      "nullability": 5,
-      "ownership": 21,
-      "signature": 41,
-      "sleepability": 2
+      "error_mapping": 4,
+      "layout": 1,
+      "signature": 5,
+      "sleepability": 1
     },
     "global_oracle_rows": 832,
     "head_date": "2026-05-03T15:25:47-07:00",
     "matched_fix_kind_distribution": {
-      "allocation": 2,
-      "error_mapping": 7,
-      "layout": 2,
-      "nullability": 2,
-      "ownership": 20,
-      "signature": 16
+      "error_mapping": 2
     },
-    "matched_oracle_rows": 36,
-    "matched_warnings": 24,
-    "mrr": 0.016,
+    "matched_oracle_rows": 2,
+    "matched_warnings": 1,
+    "mrr": 0.0909,
     "note": "Typed wrapper oracle requires symbol and warning-type/fix-kind compatibility. The old_to_head time window accepts wrapper fixes after the warning old-version date and no later than the replay head date; compatibility mode is an auxiliary upper-bound.",
-    "oracle_rows": 96,
-    "precision": 0.24,
+    "oracle_rows": 11,
+    "precision": 0.0256,
     "precision_at_k": {
       "10": 0.1,
-      "100": 0.24,
-      "50": 0.12
+      "100": 0.0256,
+      "50": 0.0256
     },
-    "recall": 0.375,
+    "recall": 0.1818,
     "time_relation_distribution": {
-      "after_drift": 43,
-      "same_pair": 6
+      "after_drift": 1,
+      "same_pair": 1
     },
     "time_window": "old_to_head"
   },
   "warnings": 100,
   "wrapper_fix_candidates": 226,
   "wrapper_fix_prediction": {
-    "f1": 0.2108,
-    "matched_symbols": 39,
-    "mrr": 0.0076,
+    "f1": 0.0286,
+    "matched_symbols": 5,
+    "mrr": 0.006,
     "oracle_symbols": 311,
-    "precision": 0.66,
+    "precision": 0.1282,
     "precision_at_k": {
       "10": 0.5,
-      "100": 0.66,
-      "50": 0.32
+      "100": 0.1282,
+      "50": 0.1282
     },
-    "recall": 0.1254
+    "recall": 0.0161
   },
   "wrapper_oracle_source": {
-    "database": "/home/nya/workspace/bind-drift/.binddrift/binddrift.sqlite3",
+    "database": ".binddrift/binddrift.sqlite3",
     "head_date": "2026-05-03T15:25:47-07:00",
     "likely_wrapper_fix_events": 226,
     "table": "wrapper_fix_events"

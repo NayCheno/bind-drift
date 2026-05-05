@@ -7,10 +7,11 @@ from pathlib import Path
 from typing import Any
 
 from binddrift.config import Config
+from binddrift.artifact_paths import repo_relative
 from binddrift.db import connect, initialize, upsert_many
 from binddrift.evaluation.protocol import load_evaluation_protocol, protocol_provenance
 from binddrift.gitutil import git_output
-from binddrift.ranking.oracle_blind_scorer import oracle_blind_result_summary, rank_warnings_oracle_blind
+from binddrift.ranking.oracle_blind_scorer import oracle_blind_result_summary, rank_primary_warnings_oracle_blind
 from binddrift.run_manifest import canonical_run_dir, manifest_exists, validate_run_manifest
 from binddrift.warnings import ensure_warning_uid, read_warnings, split_main_and_single_version
 from .baselines import generate_baselines
@@ -272,7 +273,7 @@ def run_evaluation(
     version_dates = version_dates_from_db(conn)
     head_date = replay_head_date(warnings, version_dates)
     oracle_blind_pool = read_warnings(Path(manifest["resolved_paths"]["promoted_warnings"])) if manifest else warnings
-    oracle_blind_ranked = rank_warnings_oracle_blind(oracle_blind_pool)
+    oracle_blind_ranked = rank_primary_warnings_oracle_blind(oracle_blind_pool)
     oracle_blind_top = oracle_blind_ranked[:top_k]
     metrics = labeled_summary(oracle_blind_top, labels, ks=(10, 20, 50, 100))
     metrics["filtered_labeled_warnings"] = metrics["labeled_warnings"]
@@ -305,7 +306,7 @@ def run_evaluation(
         "build_breakage_findings": len(build_findings),
         "wrapper_fix_candidates": sum(1 for row in db_wrapper_events if row["likely_wrapper_fix"]),
         "wrapper_oracle_source": {
-            "database": str(cfg.database),
+            "database": repo_relative(cfg, cfg.database),
             "table": "wrapper_fix_events",
             "likely_wrapper_fix_events": len(db_wrapper_events),
             "head_date": head_date,
@@ -319,7 +320,7 @@ def run_evaluation(
         "symbol_level_wrapper_prediction": wrapper_metrics,
         "typed_wrapper_prediction": typed_wrapper_metrics,
         "typed_wrapper_compatibility_prediction": compatibility_typed_wrapper_metrics,
-        "run_manifest": str(canonical_run_dir(cfg) / "run_manifest.json") if manifest else None,
+        "run_manifest": repo_relative(cfg, canonical_run_dir(cfg) / "run_manifest.json") if manifest else None,
         "recall": {
             "build_breakage": build_metrics["recall"],
             "wrapper_fix": wrapper_metrics["recall"],

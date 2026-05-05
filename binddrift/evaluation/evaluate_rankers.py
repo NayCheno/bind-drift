@@ -103,7 +103,7 @@ def evaluate_rankers(
             "minimum": 0.95,
             "passes": label_coverage["coverage"] >= 0.95,
         },
-        "claim_recommendation": _claim_recommendation(comparison, label_coverage),
+        "claim_recommendation": _claim_recommendation(comparison, label_coverage, primary),
     }
     if table["coverage_acceptance"]["passes"] is not True:
         raise RankerEvaluationError(f"pooled review label coverage below 95%: {label_coverage['coverage']}")
@@ -133,6 +133,7 @@ def _ranker_metrics(
     return {
         "ranker": name,
         "kind": _ranker_kind(name),
+        "oracle_blind": name != "binddrift_current",
         "warning_volume": warning_volume,
         "candidate_count": candidate_count,
         "evaluated_pool_rows": len(pool_rows),
@@ -365,10 +366,21 @@ def _paired_bootstrap_significance(
     }
 
 
-def _claim_recommendation(comparison: dict[str, Any], coverage: dict[str, Any]) -> str:
+def _minimum_topk_passes(primary: dict[str, Any] | None) -> bool:
+    primary = primary or {}
+    return bool(
+        (primary.get("p_at_10") or 0.0) >= 0.50
+        and (primary.get("p_at_20") or 0.0) >= 0.45
+        and (primary.get("p_at_50") or 0.0) >= 0.42
+        and (primary.get("p_at_100") or 0.0) >= 0.40
+        and (primary.get("ndcg_at_20") or 0.0) >= 0.55
+    )
+
+
+def _claim_recommendation(comparison: dict[str, Any], coverage: dict[str, Any], primary: dict[str, Any] | None) -> str:
     if coverage["coverage"] < 0.95:
         return "pooled labels incomplete; do not claim ranking improvement"
-    if comparison.get("passes_minimum_lift"):
+    if comparison.get("passes_minimum_lift") and _minimum_topk_passes(primary):
         return "ranking improvement claim supported on pooled labels"
     return "evidence gate claim only; ranking improvement not supported"
 
