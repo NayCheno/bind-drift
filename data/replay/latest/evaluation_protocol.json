@@ -1,0 +1,53 @@
+{
+  "baseline_metrics": [
+    "relative_lift_over_best_simple_baseline",
+    "absolute_lift_over_random",
+    "warning_volume_reduction"
+  ],
+  "claim_boundary": "evidence-backed warning prioritization",
+  "manual_review_policy": {
+    "adjudication_required": true,
+    "cohen_kappa_required": true,
+    "double_review": true,
+    "unclear_is_not_true_positive": true
+  },
+  "oracle_usage": {
+    "build_oracle": "labels_and_auxiliary_validation_only",
+    "not_allowed_in_primary_score": true,
+    "wrapper_fix_oracle": "labels_and_auxiliary_validation_only"
+  },
+  "primary_metrics": [
+    "P@10",
+    "P@20",
+    "P@50",
+    "P@100",
+    "NDCG@20",
+    "AUPRC_on_pooled_review_set"
+  ],
+  "primary_warning_set": "oracle_blind_ranked_warnings",
+  "protocol_version": "ccfb-strict-v1",
+  "splits": {
+    "dev_pairs": [
+      "latest-p002-v6.2-to-v6.3",
+      "latest-p003-v6.3-to-v6.4",
+      "latest-p004-v6.4-to-v6.5",
+      "latest-p006-v6.6-to-v6.7",
+      "latest-p007-v6.7-to-v6.8",
+      "latest-p010-v6.10-to-v6.11",
+      "latest-p011-v6.11-to-v6.12",
+      "latest-p012-v6.12-to-v6.13",
+      "latest-p013-v6.13-to-v6.14",
+      "latest-p014-v6.14-to-v6.15"
+    ],
+    "locked_test_pairs": [
+      "latest-p020-v7.0-to-HEAD_6d35786de281"
+    ],
+    "validation_pairs": [
+      "latest-p015-v6.15-to-v6.16",
+      "latest-p016-v6.16-to-v6.17",
+      "latest-p017-v6.17-to-v6.18",
+      "latest-p018-v6.18-to-v6.19",
+      "latest-p019-v6.19-to-v7.0"
+    ]
+  }
+}

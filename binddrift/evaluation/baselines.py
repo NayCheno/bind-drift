@@ -7,6 +7,7 @@ from typing import Any
 
 from binddrift.config import Config
 from binddrift.db import connect, initialize
+from binddrift.ranking.oracle_blind_scorer import rank_warnings_oracle_blind
 from binddrift.ranking.scorer import score_breakdown as ranking_score_breakdown
 from binddrift.warnings import read_warnings, split_main_and_single_version
 from .metrics import TRUE_LABELS, label_for_warning, labeled_summary, load_manual_labels, oracle_summary
@@ -15,7 +16,7 @@ from .wrapper_oracle import replay_head_date, typed_wrapper_oracle_summary, vers
 
 TOP_K = 100
 BASELINES = ["BindingDiffOnly", "CSignatureDiffOnly", "CIndicatorOnly", "RustUseOnly", "NoRanking", "Random"]
-ABLATIONS = ["OracleBlindBindDrift", "NoGraph", "NoImpactGate"]
+ABLATIONS = ["NoGraph", "NoImpactGate"]
 
 
 def generate_baselines(
@@ -47,10 +48,27 @@ def generate_baselines(
         "promoted_warning_pool": len(candidate_pool),
     }
     rows = []
+    oracle_blind_primary = rank_warnings_oracle_blind(candidate_pool)[:TOP_K]
     rows.append(
         _variant_row(
             "BindDrift",
             "main",
+            oracle_blind_primary,
+            len(candidate_pool),
+            labels,
+            build_symbols,
+            wrapper_symbols,
+            wrapper_events,
+            version_dates,
+            head_date,
+            "Primary oracle-blind BindDrift top-100 ranked warnings.",
+            oracle_blind=True,
+        )
+    )
+    rows.append(
+        _variant_row(
+            "FullBindDriftWithOracleAuxiliary",
+            "auxiliary",
             warnings,
             len(candidate_pool),
             labels,
@@ -59,7 +77,8 @@ def generate_baselines(
             wrapper_events,
             version_dates,
             head_date,
-            "Canonical paper top-100 ranked warnings.",
+            "Auxiliary validation only; this ranking may include wrapper/build oracle score components and is not a primary result.",
+            oracle_blind=False,
         )
     )
     for name in BASELINES:
@@ -77,6 +96,7 @@ def generate_baselines(
                 version_dates,
                 head_date,
                 "Baseline owns its top-100 candidate list from the promoted warning pool.",
+                oracle_blind=True,
             )
         )
     for name in ABLATIONS:
@@ -94,6 +114,7 @@ def generate_baselines(
                 version_dates,
                 head_date,
                 "Ablation re-ranks the promoted warning pool after removing one BindDrift signal.",
+                oracle_blind=True,
             )
         )
     path = cfg.repo_root / "paper/tables/baselines_ablations.json"
@@ -122,6 +143,7 @@ def _variant_row(
     version_dates: dict[str, str],
     head_date: str | None,
     note: str,
+    oracle_blind: bool,
 ) -> dict[str, Any]:
     manual = labeled_summary(candidates, labels)
     manual["review_coverage_at_k"] = _review_coverage_at_k(candidates, labels)
@@ -129,6 +151,9 @@ def _variant_row(
     return {
         "variant": name,
         "kind": kind,
+        "oracle_blind": oracle_blind,
+        "top_warning_uids": [warning.get("warning_uid") for warning in candidates],
+        "score_component_keys": sorted({key for warning in candidates for key in (warning.get("score_components") or {})}),
         "candidate_count": candidate_count,
         "warning_count": len(candidates),
         "manual_review": manual,
@@ -194,7 +219,7 @@ def _variant_warnings(
         ranked = sorted(pool, key=lambda warning: (_rust_use_count(warning), str(warning.get("warning_uid"))), reverse=True)
         return ranked[:TOP_K], len(pool)
     if name == "OracleBlindBindDrift":
-        ranked = sorted(pool, key=lambda warning: (_oracle_blind_score(warning), str(warning.get("warning_uid"))), reverse=True)
+        ranked = rank_warnings_oracle_blind(pool)
         return ranked[:TOP_K], len(pool)
     if name == "NoRanking":
         return pool[:TOP_K], len(pool)
@@ -256,18 +281,6 @@ def _promoted_warnings_path(cfg: Config, run_manifest: str | None) -> Path | Non
     return (cfg.repo_root / promoted).resolve() if not Path(promoted).is_absolute() else Path(promoted)
 
 
-def _score_breakdown(warning: dict[str, Any]) -> dict[str, float]:
-    return {str(key): float(value) for key, value in (warning.get("score_breakdown") or {}).items()}
-
-
-def _oracle_blind_score(warning: dict[str, Any]) -> float:
-    return sum(
-        value
-        for key, value in _score_breakdown(warning).items()
-        if key not in {"wrapper_fix_hit", "build_oracle_hit"}
-    )
-
-
 def _c_only_score(warning: dict[str, Any]) -> float:
     c_evidence = 3.0 if warning.get("c_evidence_level") in {"c_source_diff", "c_behavior_indicator"} else 0.0
     confidence = float(warning.get("confidence") or 0.0)
@@ -319,7 +332,7 @@ def _comparison_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
     full_manual_cons = ((full.get("manual_review") or {}).get("conservative_precision_at_k") or {})
     best_simple_manual_50 = max((_metric(row, "manual_review", "precision_at_k", "50") or 0.0) for row in simple) if simple else 0.0
     no_ranking = by_name.get("NoRanking", {})
-    oracle_blind = by_name.get("OracleBlindBindDrift", {})
+    full_auxiliary = by_name.get("FullBindDriftWithOracleAuxiliary", {})
     hard_failure = (
         (_metric(no_ranking, "manual_review", "precision_at_k", "10") or 0.0) >= (full_manual.get("10") or 0.0)
         and (_metric(no_ranking, "manual_review", "precision_at_k", "50") or 0.0) >= (full_manual.get("50") or 0.0)
@@ -331,10 +344,8 @@ def _comparison_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
         "best_simple_manual_p50": round(best_simple_manual_50, 4),
         "binddrift_manual_p10_gt_simple_baselines": all((full_manual.get("10") or 0.0) > (_metric(row, "manual_review", "precision_at_k", "10") or 0.0) for row in simple),
         "binddrift_manual_p50_ge_best_plus_005": (full_manual.get("50") or 0.0) >= best_simple_manual_50 + 0.05,
-        "oracle_blind_typed_lower_than_full": all(
-            (_metric(oracle_blind, "typed_wrapper_prediction", "precision_at_k", key) or 0.0) < (full_typed.get(key) or 0.0)
-            for key in ("10", "50")
-        ),
+        "primary_oracle_blind": full.get("oracle_blind") is True,
+        "auxiliary_oracle_backed_typed_precision_at_k": ((full_auxiliary.get("typed_wrapper_prediction") or {}).get("precision_at_k") or {}),
         "no_ranking_hard_failure": hard_failure,
         "ranking_claim_supported": not hard_failure,
         "recommended_claim": "ranking improves prioritization" if not hard_failure else "evidence gate reduces warning volume",

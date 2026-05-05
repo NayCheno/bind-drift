@@ -3,6 +3,7 @@ import json
 
 from binddrift.config import Config
 from binddrift.db import connect, initialize, upsert_many
+from binddrift.evaluation.protocol import write_default_evaluation_protocol
 from binddrift.paper.cases import generate_case_studies
 from binddrift.warnings import write_warnings
 
@@ -210,6 +211,7 @@ def test_case_studies_main_mode_fails_without_two_true_positive_cases(tmp_path: 
     )
     (run_dir / "drift_facts.jsonl").write_text('{"fact_id":"F-1"}\n', encoding="utf-8")
     (run_dir / "single_version_review_targets.jsonl").write_text("", encoding="utf-8")
+    write_default_evaluation_protocol(cfg)
     (run_dir / "run_manifest.json").write_text(
         json.dumps(
             {
@@ -219,6 +221,7 @@ def test_case_studies_main_mode_fails_without_two_true_positive_cases(tmp_path: 
                 "canonical_review_file": "data/replay/latest/manual_review.csv",
                 "canonical_drift_facts_file": "data/replay/latest/drift_facts.jsonl",
                 "canonical_single_version_review_targets_file": "data/replay/latest/single_version_review_targets.jsonl",
+                "canonical_evaluation_protocol_file": "data/replay/latest/evaluation_protocol.json",
                 "canonical_database": ".binddrift/binddrift.sqlite3",
                 "warning_count": 1,
                 "promoted_warning_count": 1,
@@ -232,6 +235,7 @@ def test_case_studies_main_mode_fails_without_two_true_positive_cases(tmp_path: 
                     "manual_review.csv": "",
                     "drift_facts.jsonl": "",
                     "single_version_review_targets.jsonl": "",
+                    "evaluation_protocol.json": "",
                 },
             },
             sort_keys=True,
@@ -248,6 +252,7 @@ def test_case_studies_main_mode_fails_without_two_true_positive_cases(tmp_path: 
         "manual_review.csv": sha256_file(run_dir / "manual_review.csv"),
         "drift_facts.jsonl": sha256_file(run_dir / "drift_facts.jsonl"),
         "single_version_review_targets.jsonl": sha256_file(run_dir / "single_version_review_targets.jsonl"),
+        "evaluation_protocol.json": sha256_file(run_dir / "evaluation_protocol.json"),
     }
     (run_dir / "run_manifest.json").write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 

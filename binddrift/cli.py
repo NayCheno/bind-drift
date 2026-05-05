@@ -14,6 +14,7 @@ from .detectors.tier2 import run_tier2, run_tier2_with_context
 from .environment import capture_environment, write_environment
 from .evaluation.evaluator import run_evaluation
 from .evaluation.evaluator import generate_manual_review
+from .evaluation.protocol import write_default_evaluation_protocol
 from .evaluation.label_join import check_label_join
 from .evaluation.diagnostics import diagnose_false_positives
 from .evaluation.review_merge import merge_manual_review
@@ -230,6 +231,8 @@ def cmd_eval_manifest(args: argparse.Namespace, cfg: Config) -> int:
     review = run_dir / "manual_review.csv"
     if args.refresh_review or not review.exists():
         generate_manual_review(run_cfg, warnings, top_k=args.top_k)
+    if not (run_dir / "evaluation_protocol.json").exists():
+        write_default_evaluation_protocol(cfg, run_id=args.run_id)
     manifest = write_run_manifest(cfg, run_id=args.run_id)
     print(json.dumps(manifest, indent=2, sort_keys=True))
     return 0

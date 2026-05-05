@@ -3,6 +3,10 @@
     "available": true,
     "path": "/home/nya/workspace/bind-drift/paper/tables/baselines_ablations.json"
   },
+  "evaluation_protocol": {
+    "available": true,
+    "path": "/home/nya/workspace/bind-drift/data/replay/latest/evaluation_protocol.json"
+  },
   "evaluation_summary": {
     "available": true,
     "path": "/home/nya/workspace/bind-drift/paper/tables/evaluation_summary.json"

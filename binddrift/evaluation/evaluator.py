@@ -8,7 +8,9 @@ from typing import Any
 
 from binddrift.config import Config
 from binddrift.db import connect, initialize, upsert_many
+from binddrift.evaluation.protocol import load_evaluation_protocol, protocol_provenance
 from binddrift.gitutil import git_output
+from binddrift.ranking.oracle_blind_scorer import oracle_blind_result_summary, rank_warnings_oracle_blind
 from binddrift.run_manifest import canonical_run_dir, manifest_exists, validate_run_manifest
 from binddrift.warnings import ensure_warning_uid, read_warnings, split_main_and_single_version
 from .baselines import generate_baselines
@@ -235,11 +237,13 @@ def run_evaluation(
 ) -> dict[str, Any]:
     cfg.ensure_dirs()
     manifest = None
+    protocol = None
     warnings_path = cfg.warnings_jsonl
     review_path: Path | None = None
     canonical_latest_exists = (canonical_run_dir(cfg) / "warnings.jsonl").exists()
     if pair_id is None and run_id in (None, "latest") and (manifest_exists(cfg) or canonical_latest_exists):
         manifest = validate_run_manifest(cfg)
+        protocol = load_evaluation_protocol(cfg)
         warnings_path = Path(manifest["resolved_paths"]["warnings"])
         review_path = Path(manifest["resolved_paths"]["manual_review"])
         run_id = str(manifest["run_id"])
@@ -259,7 +263,6 @@ def run_evaluation(
     if review_path is None:
         review_path = generate_manual_review(cfg, warnings, top_k=top_k)
     labels = load_manual_labels(review_path, uid_only=bool(manifest))
-    metrics = labeled_summary(warnings, labels)
     agreement = manual_review_agreement(review_path)
     conn = connect(cfg.database)
     initialize(conn)
@@ -268,20 +271,37 @@ def run_evaluation(
     persisted["wrapper_fix_candidates"] = sum(1 for row in db_wrapper_events if row["likely_wrapper_fix"])
     version_dates = version_dates_from_db(conn)
     head_date = replay_head_date(warnings, version_dates)
-    build_metrics = oracle_summary(warnings, _build_symbols(build_findings))
-    wrapper_metrics = oracle_summary(warnings, _wrapper_symbols(db_wrapper_events))
-    typed_wrapper_metrics = typed_wrapper_oracle_summary(warnings, db_wrapper_events, version_dates=version_dates, head_date=head_date)
+    oracle_blind_pool = read_warnings(Path(manifest["resolved_paths"]["promoted_warnings"])) if manifest else warnings
+    oracle_blind_ranked = rank_warnings_oracle_blind(oracle_blind_pool)
+    oracle_blind_top = oracle_blind_ranked[:top_k]
+    metrics = labeled_summary(oracle_blind_top, labels, ks=(10, 20, 50, 100))
+    metrics["filtered_labeled_warnings"] = metrics["labeled_warnings"]
+    metrics["label_source_rows"] = len([label for label in labels.values() if label])
+    canonical_warning_file_metrics = labeled_summary(warnings, labels)
+    build_metrics = oracle_summary(oracle_blind_top, _build_symbols(build_findings))
+    wrapper_metrics = oracle_summary(oracle_blind_top, _wrapper_symbols(db_wrapper_events))
+    typed_wrapper_metrics = typed_wrapper_oracle_summary(oracle_blind_top, db_wrapper_events, version_dates=version_dates, head_date=head_date)
     compatibility_typed_wrapper_metrics = typed_wrapper_oracle_summary(
-        warnings,
+        oracle_blind_top,
         db_wrapper_events,
         version_dates=version_dates,
         head_date=head_date,
         enforce_time=False,
     )
+    oracle_blind_primary_result = {
+        **oracle_blind_result_summary(oracle_blind_pool, top_k=top_k),
+        "manual_review": {
+            **labeled_summary(oracle_blind_top, labels, ks=(10, 20, 50, 100)),
+            "filtered_labeled_warnings": metrics["filtered_labeled_warnings"],
+            "label_source_rows": metrics["label_source_rows"],
+        },
+    }
     table = {
+        **(protocol_provenance(protocol) if protocol else {}),
         "warnings": len(warnings),
         "promoted_replay_warnings": promoted_replay_warning_count,
         "single_version_review_targets": single_version_target_count,
+        "oracle_blind_primary_result": oracle_blind_primary_result,
         "build_breakage_findings": len(build_findings),
         "wrapper_fix_candidates": sum(1 for row in db_wrapper_events if row["likely_wrapper_fix"]),
         "wrapper_oracle_source": {
@@ -292,6 +312,7 @@ def run_evaluation(
         },
         "ground_truth_rows": persisted,
         "manual_review": metrics,
+        "canonical_warning_file_review": canonical_warning_file_metrics,
         "manual_review_agreement": agreement,
         "build_breakage_prediction": build_metrics,
         "wrapper_fix_prediction": wrapper_metrics,

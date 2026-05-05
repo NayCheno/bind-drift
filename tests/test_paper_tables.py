@@ -6,6 +6,7 @@ import pytest
 
 from binddrift.config import Config
 from binddrift.db import connect, initialize, upsert_many
+from binddrift.evaluation.protocol import write_default_evaluation_protocol
 from binddrift.paper.tables import generate_paper_tables
 from binddrift.run_manifest import ArtifactConsistencyError, write_run_manifest
 from binddrift.warnings import make_warning_uid
@@ -589,6 +590,7 @@ def test_manual_review_summary_prefers_canonical_latest_run(tmp_path: Path):
         )
     upsert_many(conn, "replay_runs", rows)
     upsert_many(conn, "replay_pairs", pair_rows)
+    write_default_evaluation_protocol(cfg)
     write_run_manifest(cfg)
 
     generate_paper_tables(cfg)
@@ -685,5 +687,6 @@ def test_manual_review_summary_rejects_stale_review_rows_without_warnings(tmp_pa
 
     (run_dir / "drift_facts.jsonl").write_text("", encoding="utf-8")
     (run_dir / "single_version_review_targets.jsonl").write_text("", encoding="utf-8")
+    write_default_evaluation_protocol(cfg)
     with pytest.raises(ArtifactConsistencyError, match="empty"):
         write_run_manifest(cfg)

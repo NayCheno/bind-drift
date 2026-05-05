@@ -92,10 +92,11 @@
     "database_path": "/home/nya/workspace/bind-drift/.binddrift/binddrift.sqlite3",
     "manifest_artifact_sha256": {
       "drift_facts.jsonl": "9e11b927fad503e87aafd1ee9e3aa0beb6ceb2866dabfd3bdc508c405c5d3f96",
+      "evaluation_protocol.json": "302a55e865b95f33f829a40cb817be5d6e8d6c38daec9ca9b4fcbaa93b875959",
       "manual_review.csv": "8fef42e73df2e898ab1f107b46cd6a8c8768d4777ebdb631a08e260acede3435",
       "promoted_warnings.jsonl": "22880471cc4b1e344279e13dc75fd13e293413b6fc57f9a326d5b25e008a9aaa",
       "single_version_review_targets.jsonl": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "warnings.jsonl": "6b800f272892529d3db61601ec6dbf61ba29e4f5cd5af82c44a3858733630370"
+      "warnings.jsonl": "2ffcc87b9713c7dd471929e775d93c88788cb57dfe4f2d3eea1600dcbaadad40"
     },
     "manifest_run_id": "latest",
     "review_label_sources": {

@@ -6,9 +6,12 @@ from typing import Any
 
 from binddrift.config import Config
 from binddrift.db import connect, initialize
+from binddrift.evaluation.protocol import FORBIDDEN_PRIMARY_SCORE_COMPONENTS, load_evaluation_protocol
 from binddrift.evaluation.metrics import load_manual_labels, manual_review_agreement, warning_label_key
 from binddrift.paper.audit import generate_extractor_audit
+from binddrift.ranking.oracle_blind_scorer import rank_warnings_oracle_blind
 from binddrift.run_manifest import canonical_run_dir, manifest_exists, validate_run_manifest
+from binddrift.warnings import read_warnings
 
 
 MAIN_REPLAY_STATUSES = {"completed", "completed_with_failures"}
@@ -19,8 +22,10 @@ def generate_paper_tables(cfg: Config) -> dict[str, object]:
     tables_dir = cfg.repo_root / "paper/tables"
     tables_dir.mkdir(parents=True, exist_ok=True)
     manifest = None
+    protocol = None
     if manifest_exists(cfg) or (canonical_run_dir(cfg) / "warnings.jsonl").exists():
         manifest = validate_run_manifest(cfg)
+        protocol = load_evaluation_protocol(cfg)
     replay_summary = tables_dir / "replay_summary.json"
     fact_counts = tables_dir / "fact_counts.json"
     manual_review = tables_dir / "manual_review_summary.json"
@@ -40,6 +45,7 @@ def generate_paper_tables(cfg: Config) -> dict[str, object]:
         "manual_review_summary": manual_review,
         "runtime_scalability": runtime,
         "run_manifest": canonical_run_dir(cfg) / "run_manifest.json",
+        "evaluation_protocol": Path(protocol["path"]) if protocol else canonical_run_dir(cfg) / "evaluation_protocol.json",
         "toolchain_matrix": cfg.data_dir / "toolchain_matrix.json",
     }
     index = {
@@ -202,6 +208,7 @@ def _validate_table_consistency(cfg: Config, manifest: dict[str, Any] | None) ->
     tables_dir = cfg.repo_root / "paper/tables"
     evaluation_path = tables_dir / "evaluation_summary.json"
     evaluation = None
+    expected_oracle_blind_uids: list[Any] | None = None
     if evaluation_path.exists():
         evaluation = json.loads(evaluation_path.read_text(encoding="utf-8"))
         if evaluation.get("warnings") != manifest["warning_count"]:
@@ -214,6 +221,27 @@ def _validate_table_consistency(cfg: Config, manifest: dict[str, Any] | None) ->
             raise RuntimeError(
                 f"evaluation_summary run_manifest {evaluation_manifest} != {expected_manifest}"
             )
+        if evaluation.get("protocol_version") != "ccfb-strict-v1":
+            raise RuntimeError("evaluation_summary missing protocol_version ccfb-strict-v1")
+        if evaluation.get("claim_boundary") != "evidence-backed warning prioritization":
+            raise RuntimeError("evaluation_summary missing claim_boundary")
+        if evaluation.get("primary_warning_set") != "oracle_blind_ranked_warnings":
+            raise RuntimeError("evaluation_summary missing oracle-blind primary_warning_set")
+        primary = evaluation.get("oracle_blind_primary_result") or {}
+        if primary.get("oracle_blind") is not True:
+            raise RuntimeError("evaluation_summary oracle_blind_primary_result is not oracle-blind")
+        leaked_score_keys = sorted(FORBIDDEN_PRIMARY_SCORE_COMPONENTS & set(primary.get("score_component_keys") or []))
+        if leaked_score_keys:
+            raise RuntimeError("evaluation_summary oracle_blind_primary_result leaks oracle score components: " + ", ".join(leaked_score_keys))
+        promoted = read_warnings(Path(manifest["resolved_paths"]["promoted_warnings"]))
+        expected_oracle_blind_uids = [
+            warning.get("warning_uid")
+            for warning in rank_warnings_oracle_blind(promoted)[: manifest["paper_topk"]]
+        ]
+        if primary.get("top_warning_uids") != expected_oracle_blind_uids:
+            raise RuntimeError("evaluation_summary oracle_blind_primary_result does not match promoted oracle-blind top-k")
+        if evaluation.get("manual_review") != primary.get("manual_review"):
+            raise RuntimeError("evaluation_summary manual_review is not the oracle-blind primary result")
     manual_path = tables_dir / "manual_review_summary.json"
     manual = None
     if manual_path.exists():
@@ -259,6 +287,29 @@ def _validate_table_consistency(cfg: Config, manifest: dict[str, Any] | None) ->
             raise RuntimeError(
                 f"baselines_ablations source.manual_review {source_review} != {expected_review}"
             )
+        main_variants = [row for row in baselines.get("variants", []) if row.get("kind") == "main"]
+        if len(main_variants) != 1 or main_variants[0].get("oracle_blind") is not True:
+            raise RuntimeError("baselines_ablations main variant must be oracle-blind")
+        for variant in baselines.get("variants", []):
+            if variant.get("kind") == "auxiliary":
+                continue
+            if variant.get("oracle_blind") is not True:
+                raise RuntimeError(f"baselines_ablations {variant.get('variant')} variant must be oracle-blind")
+            leaked_score_keys = sorted(FORBIDDEN_PRIMARY_SCORE_COMPONENTS & set(variant.get("score_component_keys") or []))
+            if leaked_score_keys:
+                raise RuntimeError(
+                    f"baselines_ablations {variant.get('variant')} variant leaks oracle score components: "
+                    + ", ".join(leaked_score_keys)
+                )
+        main = main_variants[0]
+        if expected_oracle_blind_uids is None:
+            promoted = read_warnings(Path(manifest["resolved_paths"]["promoted_warnings"]))
+            expected_oracle_blind_uids = [
+                warning.get("warning_uid")
+                for warning in rank_warnings_oracle_blind(promoted)[: manifest["paper_topk"]]
+            ]
+        if main.get("top_warning_uids") != expected_oracle_blind_uids:
+            raise RuntimeError("baselines_ablations main variant does not match promoted oracle-blind top-k")
 
 
 def _load_json(value: str | None, default: Any) -> Any:

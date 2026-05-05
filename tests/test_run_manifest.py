@@ -5,6 +5,7 @@ import pytest
 
 from binddrift.cli import main
 from binddrift.config import Config
+from binddrift.evaluation.protocol import write_default_evaluation_protocol
 from binddrift.paper.tables import generate_paper_tables
 from binddrift.run_manifest import ArtifactConsistencyError, validate_run_manifest, write_run_manifest
 from binddrift.warnings import make_warning_uid
@@ -38,6 +39,7 @@ def _write_latest_run(tmp_path: Path) -> Config:
         json.dumps({"run_id": "latest", "pairs": 1, "versions": 2}),
         encoding="utf-8",
     )
+    write_default_evaluation_protocol(cfg)
     return cfg
 
 
@@ -68,6 +70,7 @@ def test_run_manifest_rejects_empty_warning_file(tmp_path: Path):
         "warning_id,pair_id,reviewer1_label,reviewer2_label,adjudicated_label,label\n",
         encoding="utf-8",
     )
+    write_default_evaluation_protocol(cfg)
 
     with pytest.raises(ArtifactConsistencyError, match="empty"):
         write_run_manifest(cfg)
@@ -100,6 +103,7 @@ def test_run_manifest_rejects_single_version_warning_in_main_file(tmp_path: Path
         encoding="utf-8",
     )
     (run_dir / "single_version_review_targets.jsonl").write_text("", encoding="utf-8")
+    write_default_evaluation_protocol(cfg)
 
     with pytest.raises(ArtifactConsistencyError, match="non-main"):
         write_run_manifest(cfg)
@@ -161,6 +165,7 @@ def test_eval_uses_manifest_single_version_count(tmp_path: Path, capsys):
         f"{warning['warning_uid']},W-1,latest-p001,,,,\n",
         encoding="utf-8",
     )
+    write_default_evaluation_protocol(cfg)
     write_run_manifest(cfg)
 
     code = main(["--repo-root", str(tmp_path), "eval", "all"])
@@ -191,6 +196,16 @@ def test_paper_tables_fail_on_stale_manual_metrics(tmp_path: Path):
             {
                 "warnings": 1,
                 "run_manifest": str(tmp_path / "data/replay/latest/run_manifest.json"),
+                "protocol_version": "ccfb-strict-v1",
+                "claim_boundary": "evidence-backed warning prioritization",
+                "primary_warning_set": "oracle_blind_ranked_warnings",
+                "oracle_blind_primary_result": {
+                    "oracle_blind": True,
+                    "top_warning_uids": [
+                        json.loads((tmp_path / "data/replay/latest/warnings.jsonl").read_text(encoding="utf-8").splitlines()[0])["warning_uid"]
+                    ],
+                    "manual_review": {"labeled_warnings": 0},
+                },
                 "manual_review": {"labeled_warnings": 0},
             }
         )
@@ -248,4 +263,139 @@ def test_paper_tables_fail_on_stale_baseline_review_source(tmp_path: Path):
     )
 
     with pytest.raises(RuntimeError, match="source.manual_review"):
+        generate_paper_tables(cfg)
+
+
+def test_paper_tables_fail_when_baseline_main_is_not_oracle_blind(tmp_path: Path):
+    cfg = _write_latest_run(tmp_path)
+    write_run_manifest(cfg)
+    tables = tmp_path / "paper/tables"
+    tables.mkdir(parents=True)
+    run_dir = tmp_path / "data/replay/latest"
+    (tables / "baselines_ablations.json").write_text(
+        json.dumps(
+            {
+                "counts": {"warnings": 1},
+                "source": {
+                    "run_manifest": str(run_dir / "run_manifest.json"),
+                    "warnings": str(run_dir / "warnings.jsonl"),
+                    "manual_review": str(run_dir / "manual_review.csv"),
+                },
+                "variants": [{"variant": "BindDrift", "kind": "main", "oracle_blind": False}],
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(RuntimeError, match="main variant must be oracle-blind"):
+        generate_paper_tables(cfg)
+
+
+def test_paper_tables_fail_when_evaluation_primary_leaks_oracle_score_key(tmp_path: Path):
+    cfg = _write_latest_run(tmp_path)
+    write_run_manifest(cfg)
+    tables = tmp_path / "paper/tables"
+    tables.mkdir(parents=True)
+    run_dir = tmp_path / "data/replay/latest"
+    uid = json.loads((run_dir / "warnings.jsonl").read_text(encoding="utf-8").splitlines()[0])["warning_uid"]
+    manual = {"labeled_warnings": 1}
+    (tables / "evaluation_summary.json").write_text(
+        json.dumps(
+            {
+                "warnings": 1,
+                "run_manifest": str(run_dir / "run_manifest.json"),
+                "protocol_version": "ccfb-strict-v1",
+                "claim_boundary": "evidence-backed warning prioritization",
+                "primary_warning_set": "oracle_blind_ranked_warnings",
+                "manual_review": manual,
+                "oracle_blind_primary_result": {
+                    "oracle_blind": True,
+                    "top_warning_uids": [uid],
+                    "score_component_keys": ["wrapper_fix_hit"],
+                    "manual_review": manual,
+                },
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(RuntimeError, match="leaks oracle score components"):
+        generate_paper_tables(cfg)
+
+
+def test_paper_tables_fail_when_baseline_main_uid_order_is_not_oracle_blind(tmp_path: Path):
+    cfg = _write_latest_run(tmp_path)
+    write_run_manifest(cfg)
+    tables = tmp_path / "paper/tables"
+    tables.mkdir(parents=True)
+    run_dir = tmp_path / "data/replay/latest"
+    (tables / "baselines_ablations.json").write_text(
+        json.dumps(
+            {
+                "counts": {"warnings": 1},
+                "source": {
+                    "run_manifest": str(run_dir / "run_manifest.json"),
+                    "warnings": str(run_dir / "warnings.jsonl"),
+                    "manual_review": str(run_dir / "manual_review.csv"),
+                },
+                "variants": [
+                    {
+                        "variant": "BindDrift",
+                        "kind": "main",
+                        "oracle_blind": True,
+                        "top_warning_uids": ["wrong"],
+                        "score_component_keys": [],
+                    }
+                ],
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(RuntimeError, match="does not match promoted oracle-blind top-k"):
+        generate_paper_tables(cfg)
+
+
+def test_paper_tables_fail_when_non_auxiliary_baseline_leaks_oracle_score_key(tmp_path: Path):
+    cfg = _write_latest_run(tmp_path)
+    write_run_manifest(cfg)
+    tables = tmp_path / "paper/tables"
+    tables.mkdir(parents=True)
+    run_dir = tmp_path / "data/replay/latest"
+    uid = json.loads((run_dir / "warnings.jsonl").read_text(encoding="utf-8").splitlines()[0])["warning_uid"]
+    (tables / "baselines_ablations.json").write_text(
+        json.dumps(
+            {
+                "counts": {"warnings": 1},
+                "source": {
+                    "run_manifest": str(run_dir / "run_manifest.json"),
+                    "warnings": str(run_dir / "warnings.jsonl"),
+                    "manual_review": str(run_dir / "manual_review.csv"),
+                },
+                "variants": [
+                    {
+                        "variant": "BindDrift",
+                        "kind": "main",
+                        "oracle_blind": True,
+                        "top_warning_uids": [uid],
+                        "score_component_keys": [],
+                    },
+                    {
+                        "variant": "BindingDiffOnly",
+                        "kind": "baseline",
+                        "oracle_blind": True,
+                        "top_warning_uids": [uid],
+                        "score_component_keys": ["wrapper_fix_hit"],
+                    },
+                ],
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(RuntimeError, match="BindingDiffOnly variant leaks oracle score components"):
         generate_paper_tables(cfg)

@@ -95,6 +95,7 @@ def build_run_manifest(cfg: Config, run_id: str = REPLAY_RUN_ID) -> dict[str, An
     review_path = run_dir / "manual_review.csv"
     drift_facts_path = run_dir / "drift_facts.jsonl"
     single_version_path = run_dir / "single_version_review_targets.jsonl"
+    protocol_path = run_dir / "evaluation_protocol.json"
     summary = load_summary(run_dir)
 
     if not warnings_path.exists():
@@ -107,9 +108,12 @@ def build_run_manifest(cfg: Config, run_id: str = REPLAY_RUN_ID) -> dict[str, An
         raise ArtifactConsistencyError(f"missing canonical drift facts file: {drift_facts_path}")
     if not single_version_path.exists():
         raise ArtifactConsistencyError(f"missing canonical single-version target file: {single_version_path}")
+    if not protocol_path.exists():
+        raise ArtifactConsistencyError(f"missing canonical evaluation protocol file: {protocol_path}")
 
     warnings = read_warnings(warnings_path)
     promoted_warnings = read_warnings(promoted_path)
+    _validate_evaluation_protocol_splits(protocol_path, promoted_warnings)
     ineligible = [warning for warning in warnings + promoted_warnings if not eligible_for_main_warning(warning)]
     if ineligible:
         raise ArtifactConsistencyError(f"canonical warning file contains non-main warnings: {len(ineligible)}")
@@ -141,6 +145,7 @@ def build_run_manifest(cfg: Config, run_id: str = REPLAY_RUN_ID) -> dict[str, An
         "canonical_review_file": repo_relative(cfg, review_path),
         "canonical_drift_facts_file": repo_relative(cfg, drift_facts_path),
         "canonical_single_version_review_targets_file": repo_relative(cfg, single_version_path),
+        "canonical_evaluation_protocol_file": repo_relative(cfg, protocol_path),
         "canonical_database": repo_relative(cfg, cfg.database),
         "warning_count": warning_count,
         "promoted_warning_count": promoted_warning_count,
@@ -156,6 +161,7 @@ def build_run_manifest(cfg: Config, run_id: str = REPLAY_RUN_ID) -> dict[str, An
             "manual_review.csv": sha256_file(review_path),
             "drift_facts.jsonl": sha256_file(drift_facts_path),
             "single_version_review_targets.jsonl": sha256_file(single_version_path),
+            "evaluation_protocol.json": sha256_file(protocol_path),
         },
     }
     return manifest
@@ -183,6 +189,7 @@ def validate_run_manifest(cfg: Config, manifest: dict[str, Any] | None = None) -
     review_path = resolve_manifest_path(cfg, manifest["canonical_review_file"])
     drift_facts_path = resolve_manifest_path(cfg, manifest["canonical_drift_facts_file"])
     single_version_path = resolve_manifest_path(cfg, manifest.get("canonical_single_version_review_targets_file", "data/replay/latest/single_version_review_targets.jsonl"))
+    protocol_path = resolve_manifest_path(cfg, manifest.get("canonical_evaluation_protocol_file", "data/replay/latest/evaluation_protocol.json"))
     database_path = resolve_manifest_path(cfg, manifest["canonical_database"])
     if database_path != cfg.database.resolve():
         raise ArtifactConsistencyError(f"canonical_database {database_path} != configured database {cfg.database.resolve()}")
@@ -192,6 +199,7 @@ def validate_run_manifest(cfg: Config, manifest: dict[str, Any] | None = None) -
         "manual_review.csv": review_path,
         "drift_facts.jsonl": drift_facts_path,
         "single_version_review_targets.jsonl": single_version_path,
+        "evaluation_protocol.json": protocol_path,
     }
     missing = [str(path) for path in required.values() if not path.exists()]
     if missing:
@@ -227,6 +235,7 @@ def validate_run_manifest(cfg: Config, manifest: dict[str, Any] | None = None) -
         actual = sha256_file(path)
         checks.append((actual == expected, f"{name} sha256 {actual}!={expected}"))
     warnings = read_warnings(warnings_path) + read_warnings(promoted_path)
+    _validate_evaluation_protocol_splits(protocol_path, read_warnings(promoted_path))
     checks.append(
         (
             all(eligible_for_main_warning(warning) for warning in warnings),
@@ -244,9 +253,30 @@ def validate_run_manifest(cfg: Config, manifest: dict[str, Any] | None = None) -
             "manual_review": str(review_path),
             "drift_facts": str(drift_facts_path),
             "single_version_review_targets": str(single_version_path),
+            "evaluation_protocol": str(protocol_path),
         },
     }
 
 
 def manifest_exists(cfg: Config, run_id: str = REPLAY_RUN_ID) -> bool:
     return run_manifest_path(cfg, run_id).exists()
+
+
+def _validate_evaluation_protocol_splits(protocol_path: Path, promoted_warnings: list[dict[str, Any]]) -> None:
+    protocol = json.loads(protocol_path.read_text(encoding="utf-8"))
+    expected = {str(warning.get("pair_id")) for warning in promoted_warnings if warning.get("pair_id")}
+    if not expected:
+        return
+    splits = protocol.get("splits") or {}
+    actual = {
+        str(pair_id)
+        for key in ("dev_pairs", "validation_pairs", "locked_test_pairs")
+        for pair_id in (splits.get(key) or [])
+    }
+    if actual != expected:
+        missing = sorted(expected - actual)
+        extra = sorted(actual - expected)
+        raise ArtifactConsistencyError(
+            "evaluation_protocol split pair_ids do not match canonical warning pairs"
+            f"; missing={missing[:5]} extra={extra[:5]}"
+        )
