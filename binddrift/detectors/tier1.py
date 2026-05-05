@@ -6,7 +6,7 @@ from typing import Any
 from binddrift.config import Config
 from binddrift.db import connect, initialize, upsert_many
 from binddrift.kernel import default_version_id
-from binddrift.warnings import warning_id, write_warnings
+from binddrift.warnings import fact_id, warning_id, write_drift_facts, write_warnings
 
 
 def _available_versions(conn) -> list[str]:
@@ -49,19 +49,50 @@ def _graph_exposure(conn, version: str, symbol: str) -> dict[str, Any]:
     return {"edge_count": len(edges), "edges": [dict(row) for row in edges[:10]]}
 
 
-def _make_warning(idx: int, drift_type: str, symbol: str, old: Any, new: Any, exposure: dict[str, Any]) -> dict[str, Any]:
+def _make_drift_fact(
+    idx: int,
+    drift_type: str,
+    symbol: str,
+    old: Any,
+    new: Any,
+    exposure: dict[str, Any],
+    fact_source: str,
+    c_evidence_level: str,
+    rust_impact_level: str = "generated_binding",
+    demotion_reasons: list[str] | None = None,
+) -> dict[str, Any]:
     return {
-        "warning_id": warning_id(idx),
+        "fact_id": fact_id(idx),
+        "record_kind": "fact",
         "type": drift_type,
-        "risk": "Medium",
-        "score": 0.0,
         "c_side": {"symbol": symbol, "old": old, "new": new},
         "rust_side": {"exposure": exposure},
+        "promotion_status": "unpromoted",
+        "fact_source": fact_source,
+        "c_evidence_level": c_evidence_level,
+        "rust_impact_level": rust_impact_level,
+        "promotion_reasons": [],
+        "demotion_reasons": demotion_reasons or [],
         "evidence_chain": [],
         "explanation": f"{symbol} changed across the selected Linux versions.",
-        "suggested_action": "Inspect the Rust safe abstraction and generated binding for stale assumptions.",
         "confidence": 0.85,
     }
+
+
+def _make_warning(idx: int, fact: dict[str, Any]) -> dict[str, Any]:
+    warning = {
+        "warning_id": warning_id(idx),
+        **{key: value for key, value in fact.items() if key != "fact_id"},
+        "record_kind": "warning",
+        "promotion_status": "promoted",
+        "risk": "Medium",
+        "score": 0.0,
+        "promotion_reasons": fact.get("promotion_reasons") or ["c_source_diff"],
+        "demotion_reasons": [],
+        "suggested_action": "Inspect the Rust safe abstraction and generated binding for stale assumptions.",
+    }
+    warning.setdefault("evidence_chain", [])
+    return warning
 
 
 def _event(warning: dict[str, Any], old_version: str | None, new_version: str) -> dict[str, Any]:
@@ -79,17 +110,46 @@ def _event(warning: dict[str, Any], old_version: str | None, new_version: str) -
     }
 
 
-def _add_warning(
-    warnings: list[dict[str, Any]],
+def _add_fact(
+    facts: list[dict[str, Any]],
     idx: int,
     drift_type: str,
     symbol: str,
     old: Any,
     new: Any,
     exposure: dict[str, Any],
+    fact_source: str,
+    c_evidence_level: str,
+    rust_impact_level: str = "generated_binding",
+    demotion_reasons: list[str] | None = None,
 ) -> int:
-    warnings.append(_make_warning(idx, drift_type, symbol, old, new, exposure))
+    facts.append(
+        _make_drift_fact(
+            idx,
+            drift_type,
+            symbol,
+            old,
+            new,
+            exposure,
+            fact_source,
+            c_evidence_level,
+            rust_impact_level=rust_impact_level,
+            demotion_reasons=demotion_reasons,
+        )
+    )
     return idx + 1
+
+
+def _promote_tier1_facts(facts: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    warnings: list[dict[str, Any]] = []
+    warning_idx = 1
+    for fact in facts:
+        if fact.get("fact_source") in {"c_api_diff", "behavior_indicator_diff"} or (
+            fact.get("fact_source") == "macro_diff" and fact.get("c_evidence_level") == "c_source_diff"
+        ):
+            warnings.append(_make_warning(warning_idx, fact))
+            warning_idx += 1
+    return warnings
 
 
 def run_tier1(cfg: Config, old: str | None = None, new: str | None = None) -> dict[str, Any]:
@@ -112,15 +172,18 @@ def run_tier1_with_context(
         prior = [version for version in versions if version != selected_new]
         selected_old = prior[-1] if prior else None
     if not selected_old:
+        write_drift_facts(cfg, [])
         write_warnings(cfg, [])
         return {
+            "facts": 0,
+            "drift_facts_file": str(cfg.drift_facts_jsonl),
             "warnings": 0,
             "warning_file": str(cfg.warnings_jsonl),
             "status": "need_two_versions",
             "available_versions": versions,
         }
 
-    warnings: list[dict[str, Any]] = []
+    facts: list[dict[str, Any]] = []
     idx = 1
 
     old_funcs = _rows_by(conn, "binding_functions", selected_old, "rust_symbol")
@@ -129,35 +192,61 @@ def run_tier1_with_context(
         old_row = old_funcs.get(symbol)
         new_row = new_funcs.get(symbol)
         if old_row and not new_row:
-            idx = _add_warning(warnings, idx, "SignatureDrift", symbol, "present", "removed", _graph_exposure(conn, selected_new, symbol))
+            idx = _add_fact(
+                facts,
+                idx,
+                "SignatureDrift",
+                symbol,
+                "present",
+                "removed",
+                _graph_exposure(conn, selected_new, symbol),
+                "binding_diff",
+                "binding_only",
+                demotion_reasons=["generated_binding_only"],
+            )
         elif new_row and not old_row:
-            idx = _add_warning(warnings, idx, "SignatureDrift", symbol, "absent", "added", _graph_exposure(conn, selected_new, symbol))
+            idx = _add_fact(
+                facts,
+                idx,
+                "SignatureDrift",
+                symbol,
+                "absent",
+                "added",
+                _graph_exposure(conn, selected_new, symbol),
+                "binding_diff",
+                "binding_only",
+                demotion_reasons=["generated_binding_only", "added_symbol_without_old_c_evidence"],
+            )
         elif old_row and new_row and (old_row["params"], old_row["return_type"]) != (new_row["params"], new_row["return_type"]):
-            idx = _add_warning(
-                warnings,
+            idx = _add_fact(
+                facts,
                 idx,
                 "SignatureDrift",
                 symbol,
                 {"params": json.loads(old_row["params"]), "return_type": old_row["return_type"]},
                 {"params": json.loads(new_row["params"]), "return_type": new_row["return_type"]},
                 _graph_exposure(conn, selected_new, symbol),
+                "binding_diff",
+                "binding_only",
+                demotion_reasons=["generated_binding_only"],
             )
 
     old_structs = _rows_by(conn, "binding_structs", selected_old, "rust_type")
     new_structs = _rows_by(conn, "binding_structs", selected_new, "rust_type")
     for symbol in sorted(set(old_structs) & set(new_structs)):
         if old_structs[symbol]["fields"] != new_structs[symbol]["fields"]:
-            warnings.append(
-                _make_warning(
-                    idx,
-                    "FieldDrift",
-                    symbol,
-                    json.loads(old_structs[symbol]["fields"]),
-                    json.loads(new_structs[symbol]["fields"]),
-                    _graph_exposure(conn, selected_new, symbol),
-                )
+            idx = _add_fact(
+                facts,
+                idx,
+                "FieldDrift",
+                symbol,
+                json.loads(old_structs[symbol]["fields"]),
+                json.loads(new_structs[symbol]["fields"]),
+                _graph_exposure(conn, selected_new, symbol),
+                "layout_diff",
+                "binding_only",
+                demotion_reasons=["generated_binding_only"],
             )
-            idx += 1
 
     old_layouts = _layout_by(conn, selected_old)
     new_layouts = _layout_by(conn, selected_new)
@@ -167,51 +256,70 @@ def run_tier1_with_context(
         old_value = {key: old_row[key] for key in ("size", "align", "offset")}
         new_value = {key: new_row[key] for key in ("size", "align", "offset")}
         if old_value != new_value:
-            idx = _add_warning(warnings, idx, "LayoutDrift", symbol, old_value, new_value, _graph_exposure(conn, selected_new, old_row["rust_type"]))
+            idx = _add_fact(
+                facts,
+                idx,
+                "LayoutDrift",
+                symbol,
+                old_value,
+                new_value,
+                _graph_exposure(conn, selected_new, old_row["rust_type"]),
+                "layout_diff",
+                "binding_only",
+                demotion_reasons=["generated_binding_only"],
+            )
 
     old_consts = _rows_by(conn, "binding_consts", selected_old, "rust_name")
     new_consts = _rows_by(conn, "binding_consts", selected_new, "rust_name")
     for symbol in sorted(set(old_consts) & set(new_consts)):
         if old_consts[symbol]["value"] != new_consts[symbol]["value"]:
-            idx = _add_warning(
-                warnings,
+            idx = _add_fact(
+                facts,
                 idx,
                 "MacroConstDrift",
                 symbol,
                 old_consts[symbol]["value"],
                 new_consts[symbol]["value"],
                 _graph_exposure(conn, selected_new, symbol),
+                "macro_diff",
+                "binding_only",
+                demotion_reasons=["generated_binding_only"],
             )
 
     old_macros = _rows_by(conn, "c_macros", selected_old, "name")
     new_macros = _rows_by(conn, "c_macros", selected_new, "name")
     for symbol in sorted(set(old_macros) & set(new_macros)):
         if old_macros[symbol]["value"] != new_macros[symbol]["value"]:
-            idx = _add_warning(
-                warnings,
+            idx = _add_fact(
+                facts,
                 idx,
                 "MacroConstDrift",
                 symbol,
                 old_macros[symbol]["value"],
                 new_macros[symbol]["value"],
                 _graph_exposure(conn, selected_new, symbol),
+                "macro_diff",
+                "c_source_diff",
+                rust_impact_level="none",
+                demotion_reasons=["needs_rust_impact_evidence"],
             )
 
     old_c = _rows_by(conn, "c_functions", selected_old, "c_symbol")
     new_c = _rows_by(conn, "c_functions", selected_new, "c_symbol")
     for symbol in sorted(set(old_c) & set(new_c)):
         if old_c[symbol]["params"] != new_c[symbol]["params"] or old_c[symbol]["return_type"] != new_c[symbol]["return_type"]:
-            warnings.append(
-                _make_warning(
-                    idx,
-                    "SignatureDrift",
-                    symbol,
-                    {"params": json.loads(old_c[symbol]["params"]), "return_type": old_c[symbol]["return_type"]},
-                    {"params": json.loads(new_c[symbol]["params"]), "return_type": new_c[symbol]["return_type"]},
-                    _graph_exposure(conn, selected_new, symbol),
-                )
+            idx = _add_fact(
+                facts,
+                idx,
+                "SignatureDrift",
+                symbol,
+                {"params": json.loads(old_c[symbol]["params"]), "return_type": old_c[symbol]["return_type"]},
+                {"params": json.loads(new_c[symbol]["params"]), "return_type": new_c[symbol]["return_type"]},
+                _graph_exposure(conn, selected_new, symbol),
+                "c_api_diff",
+                "c_source_diff",
+                rust_impact_level="none",
             )
-            idx += 1
 
     old_indicators = _indicator_sets(conn, selected_old)
     new_indicators = _indicator_sets(conn, selected_new)
@@ -224,16 +332,28 @@ def run_tier1_with_context(
     }
     for symbol in sorted(helper_symbols & set(old_indicators) & set(new_indicators)):
         if old_indicators[symbol] != new_indicators[symbol]:
-            idx = _add_warning(
-                warnings,
+            idx = _add_fact(
+                facts,
                 idx,
                 "HelperDrift",
                 symbol,
                 sorted(old_indicators[symbol]),
                 sorted(new_indicators[symbol]),
                 _graph_exposure(conn, selected_new, symbol),
+                "behavior_indicator_diff",
+                "c_behavior_indicator",
+                rust_impact_level="none",
             )
 
+    for fact in facts:
+        fact["run_id"] = run_id
+        fact["pair_id"] = pair_id
+        fact["old_version"] = selected_old
+        fact["new_version"] = selected_new
+        fact.setdefault("c_side", {})["old_version"] = selected_old
+        fact.setdefault("c_side", {})["new_version"] = selected_new
+
+    warnings = _promote_tier1_facts(facts)
     for warning in warnings:
         warning["run_id"] = run_id
         warning["pair_id"] = pair_id
@@ -242,9 +362,12 @@ def run_tier1_with_context(
         warning.setdefault("c_side", {})["old_version"] = selected_old
         warning.setdefault("c_side", {})["new_version"] = selected_new
 
+    write_drift_facts(cfg, facts)
     write_warnings(cfg, warnings)
     upsert_many(conn, "drift_events", [_event(warning, selected_old, selected_new) for warning in warnings])
     return {
+        "facts": len(facts),
+        "drift_facts_file": str(cfg.drift_facts_jsonl),
         "warnings": len(warnings),
         "warning_file": str(cfg.warnings_jsonl),
         "old_version": selected_old,

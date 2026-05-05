@@ -88,6 +88,7 @@ def _cfg_for_pair(cfg: Config, linux_tree: Path, pair_dir: Path) -> Config:
         linux_tree=linux_tree,
         data_dir=pair_dir,
         warnings_jsonl=pair_dir / "warnings.jsonl",
+        drift_facts_jsonl=pair_dir / "drift_facts.jsonl",
         report_md=pair_dir / "warnings.md",
     )
 

@@ -13,6 +13,7 @@ class Config:
     worktree_root: Path
     data_dir: Path
     database: Path
+    drift_facts_jsonl: Path
     warnings_jsonl: Path
     report_md: Path
 
@@ -36,6 +37,7 @@ class Config:
             worktree_root=state / "worktrees",
             data_dir=data,
             database=state / "binddrift.sqlite3",
+            drift_facts_jsonl=data / "drift_facts.jsonl",
             warnings_jsonl=data / "warnings.jsonl",
             report_md=data / "warnings.md",
         )

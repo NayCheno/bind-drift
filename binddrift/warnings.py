@@ -15,6 +15,14 @@ def write_warnings(cfg: Config, warnings: list[dict[str, Any]]) -> Path:
     return cfg.warnings_jsonl
 
 
+def write_drift_facts(cfg: Config, facts: list[dict[str, Any]]) -> Path:
+    cfg.ensure_dirs()
+    with cfg.drift_facts_jsonl.open("w", encoding="utf-8") as fh:
+        for fact in facts:
+            fh.write(json.dumps(fact, sort_keys=True) + "\n")
+    return cfg.drift_facts_jsonl
+
+
 def read_warnings(path: Path) -> list[dict[str, Any]]:
     if not path.exists():
         return []
@@ -23,3 +31,7 @@ def read_warnings(path: Path) -> list[dict[str, Any]]:
 
 def warning_id(index: int) -> str:
     return f"W-{index:06d}"
+
+
+def fact_id(index: int) -> str:
+    return f"F-{index:06d}"
