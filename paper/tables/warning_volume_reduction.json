@@ -1,0 +1,15 @@
+{
+  "primary_warning_volume": 331,
+  "ranker_warning_volumes": {
+    "binddrift_current": 331,
+    "binddrift_oracle_blind": 331,
+    "binding_diff": 291,
+    "c_indicator": 0,
+    "c_signature": 280,
+    "no_graph": 331,
+    "no_impact_gate": 331,
+    "no_ranking": 331,
+    "random": 331,
+    "rust_use": 331
+  }
+}

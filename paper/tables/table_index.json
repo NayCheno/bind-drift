@@ -1,4 +1,12 @@
 {
+  "ablation_strict_comparison": {
+    "available": true,
+    "path": "/home/nya/workspace/bind-drift/paper/tables/ablation_strict_comparison.json"
+  },
+  "baseline_strict_comparison": {
+    "available": true,
+    "path": "/home/nya/workspace/bind-drift/paper/tables/baseline_strict_comparison.json"
+  },
   "baselines_ablations": {
     "available": true,
     "path": "/home/nya/workspace/bind-drift/paper/tables/baselines_ablations.json"
@@ -23,6 +31,10 @@
     "available": true,
     "path": "/home/nya/workspace/bind-drift/paper/tables/manual_review_summary.json"
   },
+  "ranking_pooled_evaluation": {
+    "available": true,
+    "path": "/home/nya/workspace/bind-drift/paper/tables/ranking_pooled_evaluation.json"
+  },
   "replay_summary": {
     "available": true,
     "path": "/home/nya/workspace/bind-drift/paper/tables/replay_summary.json"
@@ -38,5 +50,9 @@
   "toolchain_matrix": {
     "available": true,
     "path": "/home/nya/workspace/bind-drift/data/toolchain_matrix.json"
+  },
+  "warning_volume_reduction": {
+    "available": true,
+    "path": "/home/nya/workspace/bind-drift/paper/tables/warning_volume_reduction.json"
   }
 }

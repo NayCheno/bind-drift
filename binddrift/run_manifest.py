@@ -96,6 +96,9 @@ def build_run_manifest(cfg: Config, run_id: str = REPLAY_RUN_ID) -> dict[str, An
     drift_facts_path = run_dir / "drift_facts.jsonl"
     single_version_path = run_dir / "single_version_review_targets.jsonl"
     protocol_path = run_dir / "evaluation_protocol.json"
+    pooled_set_path = run_dir / "pooled_review_set.jsonl"
+    pooled_labels_path = run_dir / "pooled_review_labels.csv"
+    pooled_manifest_path = run_dir / "pooled_review_manifest.json"
     summary = load_summary(run_dir)
 
     if not warnings_path.exists():
@@ -164,6 +167,27 @@ def build_run_manifest(cfg: Config, run_id: str = REPLAY_RUN_ID) -> dict[str, An
             "evaluation_protocol.json": sha256_file(protocol_path),
         },
     }
+    pooled_paths = [pooled_set_path, pooled_labels_path, pooled_manifest_path]
+    if any(path.exists() for path in pooled_paths):
+        missing = [str(path) for path in pooled_paths if not path.exists()]
+        if missing:
+            raise ArtifactConsistencyError("missing pooled review files: " + ", ".join(missing))
+        manifest.update(
+            {
+                "canonical_pooled_review_set_file": repo_relative(cfg, pooled_set_path),
+                "canonical_pooled_review_labels_file": repo_relative(cfg, pooled_labels_path),
+                "canonical_pooled_review_manifest_file": repo_relative(cfg, pooled_manifest_path),
+                "pooled_review_set_count": count_jsonl(pooled_set_path),
+                "pooled_review_label_count": count_csv_rows(pooled_labels_path),
+            }
+        )
+        manifest["sha256"].update(
+            {
+                "pooled_review_set.jsonl": sha256_file(pooled_set_path),
+                "pooled_review_labels.csv": sha256_file(pooled_labels_path),
+                "pooled_review_manifest.json": sha256_file(pooled_manifest_path),
+            }
+        )
     return manifest
 
 
@@ -201,6 +225,22 @@ def validate_run_manifest(cfg: Config, manifest: dict[str, Any] | None = None) -
         "single_version_review_targets.jsonl": single_version_path,
         "evaluation_protocol.json": protocol_path,
     }
+    optional_resolved: dict[str, Path] = {}
+    optional_manifest_keys = {
+        "pooled_review_set.jsonl": "canonical_pooled_review_set_file",
+        "pooled_review_labels.csv": "canonical_pooled_review_labels_file",
+        "pooled_review_manifest.json": "canonical_pooled_review_manifest_file",
+    }
+    present_optional_keys = [key for key in optional_manifest_keys.values() if key in manifest]
+    if present_optional_keys:
+        missing_keys = [key for key in optional_manifest_keys.values() if key not in manifest]
+        if missing_keys:
+            raise ArtifactConsistencyError("manifest has incomplete pooled review files: " + ", ".join(missing_keys))
+        optional_resolved = {
+            name: resolve_manifest_path(cfg, manifest[key])
+            for name, key in optional_manifest_keys.items()
+        }
+        required.update(optional_resolved)
     missing = [str(path) for path in required.values() if not path.exists()]
     if missing:
         raise ArtifactConsistencyError("missing canonical files: " + ", ".join(missing))
@@ -210,6 +250,8 @@ def validate_run_manifest(cfg: Config, manifest: dict[str, Any] | None = None) -
     drift_fact_count = count_jsonl(drift_facts_path)
     single_version_count = count_jsonl(single_version_path)
     reviewed_warning_count = count_csv_rows(review_path)
+    pooled_set_count = count_jsonl(optional_resolved["pooled_review_set.jsonl"]) if optional_resolved else None
+    pooled_label_count = count_csv_rows(optional_resolved["pooled_review_labels.csv"]) if optional_resolved else None
     checks = [
         (warning_count > 0, "canonical warning file is empty"),
         (warning_count == manifest.get("warning_count"), f"warning_count {warning_count}!={manifest.get('warning_count')}"),
@@ -230,6 +272,19 @@ def validate_run_manifest(cfg: Config, manifest: dict[str, Any] | None = None) -
             f"single_version_review_targets {single_version_count}!={manifest.get('single_version_review_targets', 0)}",
         ),
     ]
+    if optional_resolved:
+        checks.extend(
+            [
+                (
+                    pooled_set_count == manifest.get("pooled_review_set_count"),
+                    f"pooled_review_set_count {pooled_set_count}!={manifest.get('pooled_review_set_count')}",
+                ),
+                (
+                    pooled_label_count == manifest.get("pooled_review_label_count"),
+                    f"pooled_review_label_count {pooled_label_count}!={manifest.get('pooled_review_label_count')}",
+                ),
+            ]
+        )
     for name, path in required.items():
         expected = (manifest.get("sha256") or {}).get(name)
         actual = sha256_file(path)
@@ -254,6 +309,15 @@ def validate_run_manifest(cfg: Config, manifest: dict[str, Any] | None = None) -
             "drift_facts": str(drift_facts_path),
             "single_version_review_targets": str(single_version_path),
             "evaluation_protocol": str(protocol_path),
+            **(
+                {
+                    "pooled_review_set": str(optional_resolved["pooled_review_set.jsonl"]),
+                    "pooled_review_labels": str(optional_resolved["pooled_review_labels.csv"]),
+                    "pooled_review_manifest": str(optional_resolved["pooled_review_manifest.json"]),
+                }
+                if optional_resolved
+                else {}
+            ),
         },
     }
 

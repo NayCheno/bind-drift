@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import csv
 from pathlib import Path
 from typing import Any
 
@@ -10,7 +11,7 @@ from binddrift.evaluation.protocol import FORBIDDEN_PRIMARY_SCORE_COMPONENTS, lo
 from binddrift.evaluation.metrics import load_manual_labels, manual_review_agreement, warning_label_key
 from binddrift.paper.audit import generate_extractor_audit
 from binddrift.ranking.oracle_blind_scorer import rank_warnings_oracle_blind
-from binddrift.run_manifest import canonical_run_dir, manifest_exists, validate_run_manifest
+from binddrift.run_manifest import canonical_run_dir, manifest_exists, resolve_manifest_path, sha256_file, validate_run_manifest
 from binddrift.warnings import read_warnings
 
 
@@ -44,6 +45,10 @@ def generate_paper_tables(cfg: Config) -> dict[str, object]:
         "fact_counts": fact_counts,
         "manual_review_summary": manual_review,
         "runtime_scalability": runtime,
+        "ranking_pooled_evaluation": tables_dir / "ranking_pooled_evaluation.json",
+        "baseline_strict_comparison": tables_dir / "baseline_strict_comparison.json",
+        "ablation_strict_comparison": tables_dir / "ablation_strict_comparison.json",
+        "warning_volume_reduction": tables_dir / "warning_volume_reduction.json",
         "run_manifest": canonical_run_dir(cfg) / "run_manifest.json",
         "evaluation_protocol": Path(protocol["path"]) if protocol else canonical_run_dir(cfg) / "evaluation_protocol.json",
         "toolchain_matrix": cfg.data_dir / "toolchain_matrix.json",
@@ -310,15 +315,90 @@ def _validate_table_consistency(cfg: Config, manifest: dict[str, Any] | None) ->
             ]
         if main.get("top_warning_uids") != expected_oracle_blind_uids:
             raise RuntimeError("baselines_ablations main variant does not match promoted oracle-blind top-k")
+    ranking_path = tables_dir / "ranking_pooled_evaluation.json"
+    if ranking_path.exists():
+        ranking = json.loads(ranking_path.read_text(encoding="utf-8"))
+        pool_path = _resolve_table_path(cfg, ranking.get("pool"))
+        labels_path = _resolve_table_path(cfg, ranking.get("labels"))
+        if not pool_path.exists() or not labels_path.exists():
+            raise RuntimeError("ranking_pooled_evaluation points to missing pool or labels file")
+        if ranking.get("pool_sha256") != sha256_file(pool_path):
+            raise RuntimeError("ranking_pooled_evaluation pool_sha256 does not match current pool file")
+        if ranking.get("labels_sha256") != sha256_file(labels_path):
+            raise RuntimeError("ranking_pooled_evaluation labels_sha256 does not match current labels file")
+        if manifest.get("resolved_paths", {}).get("pooled_review_set"):
+            expected_pool = Path(manifest["resolved_paths"]["pooled_review_set"]).resolve()
+            expected_labels = Path(manifest["resolved_paths"]["pooled_review_labels"]).resolve()
+            if pool_path.resolve() != expected_pool:
+                raise RuntimeError(f"ranking_pooled_evaluation pool {pool_path} != run_manifest pooled review set {expected_pool}")
+            if labels_path.resolve() != expected_labels:
+                raise RuntimeError(f"ranking_pooled_evaluation labels {labels_path} != run_manifest pooled review labels {expected_labels}")
+        coverage = _strict_pooled_label_coverage(pool_path, labels_path)
+        if coverage["coverage"] < 0.95:
+            raise RuntimeError(f"ranking_pooled_evaluation label coverage below 95%: {coverage['coverage']}")
+        reported = ranking.get("label_coverage") or {}
+        if reported.get("coverage") != coverage["coverage"] or reported.get("labeled_rows") != coverage["labeled_rows"]:
+            raise RuntimeError("ranking_pooled_evaluation label_coverage does not match current pool and labels")
+        if (ranking.get("coverage_acceptance") or {}).get("passes") is not True:
+            raise RuntimeError(f"ranking_pooled_evaluation label coverage below 95%: {coverage['coverage']}")
+        for row in ranking.get("rankers", []):
+            if row.get("evaluated_pool_rows") != coverage["pool_rows"]:
+                raise RuntimeError(f"ranking_pooled_evaluation {row.get('ranker')} does not use the full pooled review set")
+            if row.get("label_distribution") != coverage["label_distribution"]:
+                raise RuntimeError(f"ranking_pooled_evaluation {row.get('ranker')} label distribution is not the pooled label distribution")
 
 
 def _load_json(value: str | None, default: Any) -> Any:
     if not value:
         return default
     try:
-        return json.loads(value)
+        parsed = json.loads(value)
+        return default if parsed is None else parsed
     except json.JSONDecodeError:
         return default
+
+
+def _resolve_table_path(cfg: Config, value: Any) -> Path:
+    if not value:
+        return Path("__missing__")
+    return resolve_manifest_path(cfg, str(value))
+
+
+def _strict_pooled_label_coverage(pool_path: Path, labels_path: Path) -> dict[str, Any]:
+    rows_by_uid: dict[str, dict[str, str]] = {}
+    with labels_path.open(newline="", encoding="utf-8") as fh:
+        for row in csv.DictReader(fh):
+            uid = row.get("warning_uid", "").strip()
+            if uid:
+                rows_by_uid[uid] = row
+    pool_rows = read_warnings(pool_path)
+    reviewed = 0
+    excluded_conservative = 0
+    label_distribution: dict[str, int] = {}
+    for warning in pool_rows:
+        row = rows_by_uid.get(str(warning.get("warning_uid"))) or {}
+        label = row.get("adjudicated_label", "").strip()
+        if label:
+            label_distribution[label] = label_distribution.get(label, 0) + 1
+        source = row.get("label_source", "")
+        complete = bool(
+            row.get("reviewer1_label", "").strip()
+            and row.get("reviewer2_label", "").strip()
+            and row.get("adjudicated_label", "").strip()
+            and row.get("adjudication_notes", "").strip()
+        )
+        if "conservative" in source.lower():
+            excluded_conservative += 1
+            continue
+        if complete:
+            reviewed += 1
+    return {
+        "labeled_rows": reviewed,
+        "pool_rows": len(pool_rows),
+        "coverage": round(reviewed / len(pool_rows), 4) if pool_rows else 0.0,
+        "excluded_conservative_backfill_rows": excluded_conservative,
+        "label_distribution": label_distribution,
+    }
 
 
 def _read_warning_ids(path: Path) -> tuple[int, set[str], set[str]]:

@@ -7,7 +7,7 @@ from binddrift.cli import main
 from binddrift.config import Config
 from binddrift.evaluation.protocol import write_default_evaluation_protocol
 from binddrift.paper.tables import generate_paper_tables
-from binddrift.run_manifest import ArtifactConsistencyError, validate_run_manifest, write_run_manifest
+from binddrift.run_manifest import ArtifactConsistencyError, sha256_file, validate_run_manifest, write_run_manifest
 from binddrift.warnings import make_warning_uid
 
 
@@ -55,6 +55,35 @@ def test_run_manifest_validates_counts_and_sha(tmp_path: Path):
     warnings = tmp_path / "data/replay/latest/warnings.jsonl"
     warnings.write_text(warnings.read_text(encoding="utf-8") + '{"warning_id":"W-2"}\n', encoding="utf-8")
     with pytest.raises(ArtifactConsistencyError, match="warning_count"):
+        validate_run_manifest(cfg)
+
+
+def test_run_manifest_tracks_pooled_review_artifacts_when_present(tmp_path: Path):
+    cfg = _write_latest_run(tmp_path)
+    run_dir = tmp_path / "data/replay/latest"
+    warning = json.loads((run_dir / "warnings.jsonl").read_text(encoding="utf-8").splitlines()[0])
+    (run_dir / "pooled_review_set.jsonl").write_text(json.dumps(warning, sort_keys=True) + "\n", encoding="utf-8")
+    (run_dir / "pooled_review_labels.csv").write_text(
+        "warning_uid,warning_id,pair_id,ranker_source,type,symbol,reviewer1_label,reviewer1_notes,reviewer2_label,reviewer2_notes,adjudicated_label,adjudication_notes,label_source\n"
+        f"{warning['warning_uid']},W-1,latest-p001,binddrift_oracle_blind,SignatureDrift,foo,TRUE_WRAPPER_FIX,r1,TRUE_WRAPPER_FIX,r2,TRUE_WRAPPER_FIX,adj,manual_review.csv\n",
+        encoding="utf-8",
+    )
+    (run_dir / "pooled_review_manifest.json").write_text('{"pool_rows": 1}\n', encoding="utf-8")
+
+    manifest = write_run_manifest(cfg)
+    validated = validate_run_manifest(cfg)
+
+    assert manifest["pooled_review_set_count"] == 1
+    assert manifest["pooled_review_label_count"] == 1
+    assert "pooled_review_set.jsonl" in manifest["sha256"]
+    assert Path(validated["resolved_paths"]["pooled_review_labels"]).exists()
+
+    (run_dir / "pooled_review_labels.csv").write_text(
+        (run_dir / "pooled_review_labels.csv").read_text(encoding="utf-8")
+        + f"{warning['warning_uid']},W-1,latest-p001,random,SignatureDrift,foo,UNCLEAR,r1,UNCLEAR,r2,UNCLEAR,adj,manual_review.csv\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(ArtifactConsistencyError, match="pooled_review_label_count"):
         validate_run_manifest(cfg)
 
 
@@ -398,4 +427,86 @@ def test_paper_tables_fail_when_non_auxiliary_baseline_leaks_oracle_score_key(tm
     )
 
     with pytest.raises(RuntimeError, match="BindingDiffOnly variant leaks oracle score components"):
+        generate_paper_tables(cfg)
+
+
+def test_paper_tables_fail_when_pooled_label_coverage_is_low(tmp_path: Path):
+    cfg = _write_latest_run(tmp_path)
+    write_run_manifest(cfg)
+    run_dir = tmp_path / "data/replay/latest"
+    warning = json.loads((run_dir / "warnings.jsonl").read_text(encoding="utf-8").splitlines()[0])
+    pool = run_dir / "pooled_review_set.jsonl"
+    labels = run_dir / "pooled_review_labels.csv"
+    pool.write_text(json.dumps(warning, sort_keys=True) + "\n", encoding="utf-8")
+    labels.write_text(
+        "warning_uid,warning_id,pair_id,ranker_source,type,symbol,reviewer1_label,reviewer1_notes,reviewer2_label,reviewer2_notes,adjudicated_label,adjudication_notes,label_source\n"
+        f"{warning['warning_uid']},W-1,latest-p001,binddrift_oracle_blind,SignatureDrift,foo,,,TRUE_WRAPPER_FIX,,TRUE_WRAPPER_FIX,,manual_review.csv\n",
+        encoding="utf-8",
+    )
+    tables = tmp_path / "paper/tables"
+    tables.mkdir(parents=True)
+    (tables / "ranking_pooled_evaluation.json").write_text(
+        json.dumps(
+            {
+                "pool": str(pool),
+                "pool_sha256": sha256_file(pool),
+                "labels": str(labels),
+                "labels_sha256": sha256_file(labels),
+                "label_coverage": {"coverage": 1.0, "labeled_rows": 1, "pool_rows": 1},
+                "coverage_acceptance": {"minimum": 0.95, "passes": True},
+                "rankers": [
+                    {
+                        "ranker": "binddrift_oracle_blind",
+                        "evaluated_pool_rows": 1,
+                        "label_distribution": {"TRUE_WRAPPER_FIX": 1},
+                    }
+                ],
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(RuntimeError, match="label coverage below 95%"):
+        generate_paper_tables(cfg)
+
+
+def test_paper_tables_fail_when_pooled_ranking_hash_is_stale(tmp_path: Path):
+    cfg = _write_latest_run(tmp_path)
+    write_run_manifest(cfg)
+    run_dir = tmp_path / "data/replay/latest"
+    warning = json.loads((run_dir / "warnings.jsonl").read_text(encoding="utf-8").splitlines()[0])
+    pool = run_dir / "pooled_review_set.jsonl"
+    labels = run_dir / "pooled_review_labels.csv"
+    pool.write_text(json.dumps(warning, sort_keys=True) + "\n", encoding="utf-8")
+    labels.write_text(
+        "warning_uid,warning_id,pair_id,ranker_source,type,symbol,reviewer1_label,reviewer1_notes,reviewer2_label,reviewer2_notes,adjudicated_label,adjudication_notes,label_source\n"
+        f"{warning['warning_uid']},W-1,latest-p001,binddrift_oracle_blind,SignatureDrift,foo,TRUE_WRAPPER_FIX,r1,TRUE_WRAPPER_FIX,r2,TRUE_WRAPPER_FIX,adj,manual_review.csv\n",
+        encoding="utf-8",
+    )
+    tables = tmp_path / "paper/tables"
+    tables.mkdir(parents=True)
+    (tables / "ranking_pooled_evaluation.json").write_text(
+        json.dumps(
+            {
+                "pool": str(pool),
+                "pool_sha256": "stale",
+                "labels": str(labels),
+                "labels_sha256": sha256_file(labels),
+                "label_coverage": {"coverage": 1.0, "labeled_rows": 1, "pool_rows": 1},
+                "coverage_acceptance": {"minimum": 0.95, "passes": True},
+                "rankers": [
+                    {
+                        "ranker": "binddrift_oracle_blind",
+                        "evaluated_pool_rows": 1,
+                        "label_distribution": {"TRUE_WRAPPER_FIX": 1},
+                    }
+                ],
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(RuntimeError, match="pool_sha256"):
         generate_paper_tables(cfg)

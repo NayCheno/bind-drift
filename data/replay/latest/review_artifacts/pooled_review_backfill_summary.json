@@ -1,0 +1,5 @@
+{
+  "backfilled_unclear_rows": 0,
+  "binddrift_review_completed_rows": 17,
+  "policy": "Pending pooled rows were completed through binddrift-review evidence collection, two independent reviewers, adjudication, and CSV merger; no conservative unclear backfill remains for these rows."
+}
