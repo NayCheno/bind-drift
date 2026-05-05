@@ -3,9 +3,9 @@ from pathlib import Path
 from binddrift.config import Config
 from binddrift.db import connect, initialize, upsert_many
 from binddrift.detectors.tier2 import run_tier2
-from binddrift.extractors.c_api import _parse_file as _parse_c_file
+from binddrift.extractors.c_api import _parse_file as _parse_c_file, extract_c_api
 from binddrift.extractors.bindgen import _parse_file
-from binddrift.extractors.rust_usage import _parse_file as _parse_rust_file
+from binddrift.extractors.rust_usage import _parse_file as _parse_rust_file, extract_rust_usage
 from binddrift.ranking.scorer import _markdown, rank_warnings, score_breakdown, score_warning
 from binddrift.warnings import read_warnings, write_warnings
 
@@ -401,7 +401,8 @@ impl Drop for Device {
         unsafe { bindings::put_device(self.as_ptr()) };
     }
 }
-impl Device {
+impl Device
+{
     pub fn get(&self) -> Result<Option<Self>> {
         // SAFETY: C returns NULL on failure.
         let ptr = unsafe { bindings::get_device(self.as_ptr()) };
@@ -417,9 +418,82 @@ impl Device {
     assert {use["binding_symbol"] for use in uses} == {"put_device", "get_device"}
     assert all(use["enclosing_unsafe_block"] == 1 for use in uses)
     assert any(api["api_name"] == "Device::get" for api in apis)
+    assert next(use for use in uses if use["binding_symbol"] == "get_device")["enclosing_impl"] == "Device"
     assert any(fact["fact_type"] == "IMPL_DROP" for fact in lifetime_facts)
     assert any(mapping["mapping_type"] == "NONNULL_MAPPING" for mapping in error_mappings)
     assert comments[0]["nearby_binding_symbol"] == "get_device"
+
+
+def test_rust_usage_parser_keeps_impl_receiver_through_where_clause(tmp_path: Path):
+    rust = tmp_path / "boxed.rs"
+    rust.write_text(
+        """
+pub struct Boxed<T> {
+    raw: *mut bindings::device,
+}
+impl<T> Boxed<T>
+where
+    T: ?Sized,
+{
+    pub fn into_raw(self) -> *mut bindings::device {
+        self.raw
+    }
+}
+""",
+        encoding="utf-8",
+    )
+
+    uses, apis, _comments, _lifetime_facts, _error_mappings = _parse_rust_file(rust, "v-test")
+
+    api = next(api for api in apis if api["api_name"] == "Boxed<T>::into_raw")
+    assert api["receiver_type"] == "Boxed<T>"
+    use = next(use for use in uses if use["binding_symbol"] == "device" and use["enclosing_function"] == "Boxed<T>::into_raw")
+    assert use["enclosing_impl"] == "Boxed<T>"
+    assert use["enclosing_type"] == "Boxed<T>"
+
+
+def test_extractors_commit_empty_refresh_after_delete(tmp_path: Path):
+    cfg = Config.from_args(repo_root=tmp_path)
+    cfg.linux_tree.mkdir(parents=True)
+    conn = connect(cfg.database)
+    initialize(conn)
+    upsert_many(
+        conn,
+        "c_functions",
+        [
+            {
+                "version_id": "v-test",
+                "c_symbol": "stale",
+                "return_type": "int",
+                "params": "[]",
+                "header_file": "stale.h",
+                "definition_file": "",
+                "line": 1,
+            }
+        ],
+    )
+    upsert_many(
+        conn,
+        "rust_binding_uses",
+        [
+            {
+                "version_id": "v-test",
+                "rust_file": "stale.rs",
+                "line": 1,
+                "binding_symbol": "stale",
+                "enclosing_unsafe_block": 0,
+                "enclosing_function": None,
+                "enclosing_impl": None,
+                "enclosing_type": None,
+            }
+        ],
+    )
+
+    extract_c_api(cfg, roots=["missing"], version_id="v-test")
+    extract_rust_usage(cfg, version_id="v-test")
+
+    assert conn.execute("SELECT COUNT(*) AS n FROM c_functions WHERE version_id='v-test'").fetchone()["n"] == 0
+    assert conn.execute("SELECT COUNT(*) AS n FROM rust_binding_uses WHERE version_id='v-test'").fetchone()["n"] == 0
 
 
 def test_c_parser_handles_multiline_function_and_indicators(tmp_path: Path):
@@ -452,4 +526,5 @@ foo_get(struct foo *foo,
     assert structs[0]["c_type"] == "foo"
     assert macros[0]["name"] == "FOO_FLAG"
     indicator_types = {item["indicator_type"] for item in indicators if item["c_symbol"] == "foo_get"}
-    assert {"ERR_PTR_RETURN", "ERROR_CODE", "REFCOUNT_GET", "MAY_SLEEP"} <= indicator_types
+    assert {"ERR_PTR_RETURN", "REFCOUNT_GET", "MAY_SLEEP"} <= indicator_types
+    assert "ERROR_CODE" not in indicator_types

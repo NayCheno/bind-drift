@@ -7,6 +7,10 @@
     "available": true,
     "path": "/home/nya/workspace/bind-drift/paper/tables/evaluation_summary.json"
   },
+  "extractor_audit": {
+    "available": true,
+    "path": "/home/nya/workspace/bind-drift/paper/tables/extractor_audit.json"
+  },
   "fact_counts": {
     "available": true,
     "path": "/home/nya/workspace/bind-drift/paper/tables/fact_counts.json"

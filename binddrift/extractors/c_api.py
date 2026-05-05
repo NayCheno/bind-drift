@@ -11,28 +11,35 @@ from binddrift.kernel import default_version_id
 
 
 FUNC_RE = re.compile(
-    r"^\s*(?P<ret>(?:(?:static|extern|inline|const|struct|enum|unsigned|signed|long|short|void|int|char|bool|"
+    r"^[ \t]*(?P<ret>(?:(?:static|extern|inline|const|struct|enum|unsigned|signed|long|short|void|int|char|bool|"
     r"[A-Za-z_][A-Za-z0-9_]*)[\s\*]+)+?)"
     r"(?P<name>[A-Za-z_][A-Za-z0-9_]*)\s*\((?P<params>[^;{}]*)\)\s*(?P<end>[;{])",
     re.DOTALL | re.MULTILINE,
 )
-STRUCT_RE = re.compile(r"^\s*struct\s+(?P<name>[A-Za-z_][A-Za-z0-9_]*)\s*\{")
-FIELD_RE = re.compile(r"^\s*(?P<ty>[A-Za-z_][A-Za-z0-9_\s\*\[\]]+)\s+(?P<name>[A-Za-z_][A-Za-z0-9_]*)(?:\[[^]]+\])?;")
-MACRO_RE = re.compile(r"^\s*#\s*define\s+(?P<name>[A-Za-z_][A-Za-z0-9_]*)(?:\([^)]*\))?\s*(?P<value>.*)$")
-INCLUDE_RE = re.compile(r"^\s*#\s*include\s+[<\"](?P<path>[^>\"]+)[>\"]")
+STRUCT_RE = re.compile(r"^[ \t]*struct\s+(?P<name>[A-Za-z_][A-Za-z0-9_]*)\s*\{")
+FIELD_RE = re.compile(r"^[ \t]*(?P<ty>[A-Za-z_][A-Za-z0-9_\s\*\[\]]+)\s+(?P<name>[A-Za-z_][A-Za-z0-9_]*)(?:\[[^]]+\])?;")
+MACRO_RE = re.compile(r"^[ \t]*#\s*define\s+(?P<name>[A-Za-z_][A-Za-z0-9_]*)(?:\([^)]*\))?\s*(?P<value>.*)$")
+INCLUDE_RE = re.compile(r"^[ \t]*#\s*include\s+[<\"](?P<path>[^>\"]+)[>\"]")
 CONTROL_NAMES = {"if", "for", "while", "switch", "return", "sizeof"}
+INVALID_RETURN_PREFIXES = ("return", "else", "case", "if ", "for ", "while ", "switch ", "typedef", "#")
 
-INDICATORS: dict[str, list[str]] = {
-    "NULL_RETURN": ["return NULL"],
-    "ERR_PTR_RETURN": ["ERR_PTR(", "return ERR_CAST"],
-    "IS_ERR_CHECK": ["IS_ERR(", "PTR_ERR("],
-    "ERROR_CODE": ["-ENOMEM", "-EINVAL", "-EAGAIN", "-EBUSY", "-ENODEV", "-ENOENT", "-EPERM", "-EFAULT"],
-    "REFCOUNT_GET": ["kref_get", "refcount_inc", "get_device", "_get("],
-    "REFCOUNT_PUT": ["kref_put", "refcount_dec", "put_device", "_put("],
-    "ALLOC": ["kmalloc", "kzalloc", "vmalloc", "_alloc(", "_create(", "_new("],
-    "FREE": ["kfree", "vfree", "_free(", "_destroy(", "_release("],
-    "MAY_SLEEP": ["might_sleep", "mutex_lock", "wait_event", "schedule(", "GFP_KERNEL", "down_read", "down_write"],
-    "ATOMIC_CONTEXT": ["spin_lock", "rcu_read_lock", "GFP_ATOMIC"],
+INDICATORS: dict[str, list[re.Pattern[str]]] = {
+    "NULL_RETURN": [re.compile(r"\breturn\s+NULL\b")],
+    "ERR_PTR_RETURN": [re.compile(r"\bERR_PTR\s*\("), re.compile(r"\breturn\s+ERR_CAST\b")],
+    "IS_ERR_CHECK": [re.compile(r"\bIS_ERR\s*\("), re.compile(r"\bPTR_ERR\s*\(")],
+    "ERROR_CODE": [re.compile(r"\breturn\s+-E[A-Z0-9_]+\b")],
+    "REFCOUNT_GET": [re.compile(r"\b(?:kref_get|refcount_inc(?:_not_zero)?|get_device|[A-Za-z0-9_]+_get)\s*\(")],
+    "REFCOUNT_PUT": [re.compile(r"\b(?:kref_put|refcount_dec|put_device|[A-Za-z0-9_]+_put)\s*\(")],
+    "ALLOC": [
+        re.compile(r"\b(?:[A-Za-z0-9_]*alloc[A-Za-z0-9_]*|[A-Za-z0-9_]*zalloc[A-Za-z0-9_]*|[A-Za-z0-9_]*create[A-Za-z0-9_]*)\s*\("),
+        re.compile(r"\b(?:kmalloc|kzalloc|kcalloc|kvmalloc|vmalloc)[A-Za-z0-9_]*\s*\("),
+    ],
+    "FREE": [re.compile(r"\b(?:kfree[A-Za-z0-9_]*|vfree|[A-Za-z0-9_]+_free|[A-Za-z0-9_]+_destroy)\s*\(")],
+    "MAY_SLEEP": [
+        re.compile(r"\b(?:might_sleep|mutex_lock|wait_event[A-Za-z0-9_]*|schedule|down_read|down_write)\s*\("),
+        re.compile(r"\bGFP_KERNEL\b"),
+    ],
+    "ATOMIC_CONTEXT": [re.compile(r"\b(?:spin_lock|raw_spin_lock|rcu_read_lock)\s*\("), re.compile(r"\bGFP_ATOMIC\b")],
 }
 
 
@@ -115,6 +122,39 @@ def _parse_params(params: str) -> list[str]:
     return [" ".join(part.split()) for part in _split_top_level(params)]
 
 
+def _looks_like_function_match(match: re.Match[str]) -> bool:
+    name = match.group("name")
+    ret = " ".join(match.group("ret").split())
+    params = match.group("params")
+    matched = match.group(0)
+    if name in CONTROL_NAMES:
+        return False
+    if not ret or ret.lower().startswith(INVALID_RETURN_PREFIXES):
+        return False
+    if "(*" in matched or ")(" in matched:
+        return False
+    if re.search(r"\)\s*(?:[A-Za-z_][A-Za-z0-9_]*|\*)", params):
+        return False
+    if "return " in params or "\\\\" in params:
+        return False
+    if name in {"bool", "void", "int", "char"} and "typedef" in ret:
+        return False
+    return True
+
+
+def _is_comment_line(stripped: str) -> bool:
+    return stripped.startswith(("//", "/*", "*"))
+
+
+def _indicator_matches(indicator_type: str, raw: str) -> bool:
+    code = raw.split("//", 1)[0]
+    if indicator_type == "ERROR_CODE" and "ERR_PTR" in code:
+        return False
+    if indicator_type == "ATOMIC_CONTEXT" and re.search(r"\b(?:spin_lock_init|__spin_lock_init|__raw_spin_lock_init)\s*\(", code):
+        return False
+    return any(pattern.search(code) for pattern in INDICATORS[indicator_type])
+
+
 def _parse_file(path: Path, version_id: str) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
     text = path.read_text(encoding="utf-8", errors="replace")
     lines = text.splitlines()
@@ -127,7 +167,7 @@ def _parse_file(path: Path, version_id: str) -> tuple[list[dict[str, Any]], list
 
     for match in FUNC_RE.finditer(text):
         name = match.group("name")
-        if name in CONTROL_NAMES:
+        if not _looks_like_function_match(match):
             continue
         start_line = _line_for_offset(text, match.start())
         row = {
@@ -151,7 +191,7 @@ def _parse_file(path: Path, version_id: str) -> tuple[list[dict[str, Any]], list
             current_function = (body_start_by_line[idx], 0)
         if match := FUNC_RE.match(raw):
             name = match.group("name")
-            if name not in CONTROL_NAMES and match.group("end") == "{":
+            if _looks_like_function_match(match) and match.group("end") == "{":
                 current_function = (name, 0)
         if match := MACRO_RE.match(raw):
             macros.append(
@@ -183,19 +223,20 @@ def _parse_file(path: Path, version_id: str) -> tuple[list[dict[str, Any]], list
                 }
             )
         symbol = current_function[0] if current_function else "<file>"
-        for indicator_type, needles in INDICATORS.items():
-            if any(needle in raw for needle in needles):
-                indicators.append(
-                    {
-                        "version_id": version_id,
-                        "c_symbol": symbol,
-                        "indicator_type": indicator_type,
-                        "evidence_file": str(path),
-                        "evidence_line": idx,
-                        "evidence_text": raw.strip()[:500],
-                        "confidence": 0.7 if symbol != "<file>" else 0.4,
-                    }
-                )
+        if current_function and not _is_comment_line(line):
+            for indicator_type in INDICATORS:
+                if _indicator_matches(indicator_type, raw):
+                    indicators.append(
+                        {
+                            "version_id": version_id,
+                            "c_symbol": symbol,
+                            "indicator_type": indicator_type,
+                            "evidence_file": str(path),
+                            "evidence_line": idx,
+                            "evidence_text": raw.strip()[:500],
+                            "confidence": 0.7,
+                        }
+                    )
         if current_function:
             depth = current_function[1] + raw.count("{") - raw.count("}")
             current_function = (current_function[0], depth) if depth > 0 else None
@@ -221,6 +262,9 @@ def extract_c_api(cfg: Config, roots: list[str] | None = None, version_id: str |
         all_indicators.extend(indicators)
     conn = connect(cfg.database)
     initialize(conn)
+    for table in ("c_functions", "c_structs", "c_macros", "c_behavior_indicators"):
+        conn.execute(f"DELETE FROM {table} WHERE version_id=?", (vid,))
+    conn.commit()
     upsert_many(conn, "c_functions", all_functions)
     upsert_many(conn, "c_structs", all_structs)
     upsert_many(conn, "c_macros", all_macros)

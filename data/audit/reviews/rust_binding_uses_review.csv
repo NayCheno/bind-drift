@@ -1,0 +1,101 @@
+sample_id,is_correct,error_type,notes
+rust_binding_uses-001,true,,line calls bindings::copy_to_user
+rust_binding_uses-002,true,,macro const uses $crate::bindings::BUGFLAG_WARNING
+rust_binding_uses-003,true,,line exposes Opaque<bindings::configfs_subsystem>
+rust_binding_uses-004,true,,initializer uses bindings::USB_DEVICE_ID_MATCH_DEV_INFO
+rust_binding_uses-005,true,,initializer uses kernel::bindings::kunit_speed_KUNIT_SPEED_NORMAL
+rust_binding_uses-006,true,,line calls bindings::kunmap_local
+rust_binding_uses-007,true,,line declares *mut bindings::config_group
+rust_binding_uses-008,true,,struct wraps Opaque<bindings::cpufreq_frequency_table>
+rust_binding_uses-009,true,,HrTimerMode const uses bindings::hrtimer_mode
+rust_binding_uses-010,true,,enum value maps to bindings::PCI_CLASS_WIRELESS_RF_CONTROLLER
+rust_binding_uses-011,true,,enum value maps to bindings::PCI_VENDOR_ID_CHELSIO
+rust_binding_uses-012,true,,struct field exposes Opaque<bindings::refcount_t>
+rust_binding_uses-013,true,,line calls bindings::acpi_match_device
+rust_binding_uses-014,true,,line calls bindings::dev_pm_opp_sync_regulators
+rust_binding_uses-015,true,,const maps to bindings::DMA_ATTR_FORCE_CONTIGUOUS
+rust_binding_uses-016,true,,iterator setup calls bindings::rb_first
+rust_binding_uses-017,true,,line uses bindings::system_freezable_power_efficient_wq
+rust_binding_uses-018,true,,file_operations slot uses bindings::drm_open
+rust_binding_uses-019,true,,const maps to bindings::PHY_POLL_CABLE_TEST
+rust_binding_uses-020,true,,function parameter exposes *mut bindings::kiocb
+rust_binding_uses-021,true,,match arm maps to bindings::PCI_IRQ_INTX
+rust_binding_uses-022,true,,line calls bindings::rb_next_postorder
+rust_binding_uses-023,true,,const maps to bindings::VM_NOHUGEPAGE
+rust_binding_uses-024,true,,function parameter exposes bindings::ktime_t
+rust_binding_uses-025,true,,container_of uses bindings::pci_dev
+rust_binding_uses-026,true,,enum value maps to bindings::PCI_VENDOR_ID_TITAN
+rust_binding_uses-027,true,,static initializer uses bindings::KERN_CONT
+rust_binding_uses-028,true,,enum value maps to bindings::PCI_CLASS_DOCKING_GENERIC
+rust_binding_uses-029,true,,enum value maps to bindings::PCI_VENDOR_ID_TRIDENT
+rust_binding_uses-030,true,,line calls bindings::drm_gem_object_put
+rust_binding_uses-031,true,,return type exposes *mut bindings::sg_table
+rust_binding_uses-032,true,,line calls bindings::phy_read_mmd
+rust_binding_uses-033,true,,return type exposes *const bindings::config_item_type
+rust_binding_uses-034,true,,file_operations slot uses bindings::single_release
+rust_binding_uses-035,true,,allocator call uses bindings::GFP_KERNEL
+rust_binding_uses-036,true,,line calls bindings::i2c_unregister_device
+rust_binding_uses-037,true,,parameter exposes *mut bindings::lock_class_key
+rust_binding_uses-038,true,,callback return type exposes bindings::hrtimer_restart
+rust_binding_uses-039,true,,line calls bindings::clk_put
+rust_binding_uses-040,true,,line uses bindings::system_power_efficient_wq
+rust_binding_uses-041,true,,line calls bindings::cpu_relax
+rust_binding_uses-042,true,,callback parameter exposes *mut bindings::device
+rust_binding_uses-043,true,,const maps to bindings::IRQF_TRIGGER_FALLING
+rust_binding_uses-044,true,,ioctl fallback uses bindings::compat_ptr_ioctl
+rust_binding_uses-045,true,,return type exposes *mut bindings::module
+rust_binding_uses-046,true,,enum value maps to bindings::PCI_VENDOR_ID_ARIMA
+rust_binding_uses-047,true,,const maps to bindings::drm_ioctl_flags_DRM_MASTER
+rust_binding_uses-048,true,,line calls bindings::security_release_secctx
+rust_binding_uses-049,true,,line calls bindings::generic_file_open
+rust_binding_uses-050,true,,callback parameter exposes *mut bindings::phy_device
+rust_binding_uses-051,true,,line includes bindings::USB_DEVICE_ID_MATCH_INT_NUMBER
+rust_binding_uses-052,true,,const maps to bindings::NSEC_PER_SEC
+rust_binding_uses-053,true,,local pointer exposes *mut bindings::cpumask
+rust_binding_uses-054,true,,line calls bindings::memchr
+rust_binding_uses-055,true,,line calls bindings::auxiliary_driver_unregister
+rust_binding_uses-056,true,,enum value maps to bindings::PCI_VENDOR_ID_ELSA
+rust_binding_uses-057,true,,lifetime marker exposes bindings::poll_table
+rust_binding_uses-058,true,,enum value maps to bindings::PCI_VENDOR_ID_O2
+rust_binding_uses-059,true,,static initializer uses bindings::KERN_CONT
+rust_binding_uses-060,true,,line calls bindings::blk_mq_rq_to_pdu
+rust_binding_uses-061,true,,line uses bindings::system_highpri_wq
+rust_binding_uses-062,true,,line calls bindings::_printk
+rust_binding_uses-063,true,,const maps to bindings::O_CLOEXEC
+rust_binding_uses-064,true,,enum value maps to bindings::PCI_CLASS_COMMUNICATION_OTHER
+rust_binding_uses-065,true,,parameter exposes *mut bindings::lock_class_key
+rust_binding_uses-066,true,,line uses bindings::KERN_DEBUG
+rust_binding_uses-067,true,,enum value maps to bindings::hrtimer_restart_HRTIMER_RESTART
+rust_binding_uses-068,true,,line calls bindings::genphy_suspend
+rust_binding_uses-069,true,,line calls bindings::get_pid_ns
+rust_binding_uses-070,true,,line calls bindings::memchr
+rust_binding_uses-071,true,,container_of uses bindings::io_pgtable
+rust_binding_uses-072,true,,associated type exposes bindings::pci_driver
+rust_binding_uses-073,true,,line calls bindings::prepare_to_wait_exclusive
+rust_binding_uses-074,true,,line calls bindings::mutex_trylock
+rust_binding_uses-075,true,,enum value maps to bindings::PCI_VENDOR_ID_BCM_GVC
+rust_binding_uses-076,true,,enum value maps to bindings::PCI_VENDOR_ID_MICRO_MEMORY
+rust_binding_uses-077,true,,function bound exposes *mut bindings::work_struct
+rust_binding_uses-078,true,,const maps to bindings::VM_LOCKONFAULT
+rust_binding_uses-079,true,,allocation flags use bindings::__GFP_ZERO
+rust_binding_uses-080,true,,parameter exposes *mut bindings::lock_class_key
+rust_binding_uses-081,true,,struct wraps Opaque<bindings::request>
+rust_binding_uses-082,true,,line calls bindings::_copy_from_user
+rust_binding_uses-083,true,,callback return type exposes *mut bindings::config_group
+rust_binding_uses-084,true,,enum value maps to bindings::PCI_VENDOR_ID_GIGABYTE
+rust_binding_uses-085,true,,line calls bindings::_printk
+rust_binding_uses-086,true,,line calls bindings::prepare_to_wait_exclusive
+rust_binding_uses-087,true,,callback parameter exposes *mut bindings::pci_dev
+rust_binding_uses-088,true,,const maps to bindings::TASK_NORMAL
+rust_binding_uses-089,true,,const maps to bindings::O_NONBLOCK
+rust_binding_uses-090,true,,const maps to bindings::hrtimer_mode_HRTIMER_MODE_REL_SOFT
+rust_binding_uses-091,true,,callback parameter exposes *mut bindings::hrtimer
+rust_binding_uses-092,true,,line calls bindings::strncpy_from_user
+rust_binding_uses-093,true,,struct field exposes Opaque<bindings::file>
+rust_binding_uses-094,true,,line calls bindings::_printk
+rust_binding_uses-095,true,,line calls bindings::__init_waitqueue_head
+rust_binding_uses-096,true,,line selects bindings::release_mem_region
+rust_binding_uses-097,true,,callback parameter exposes *const bindings::blk_mq_queue_data
+rust_binding_uses-098,true,,const maps to bindings::O_NOFOLLOW
+rust_binding_uses-099,true,,callback parameter exposes *mut bindings::cpufreq_policy
+rust_binding_uses-100,true,,container_of uses bindings::platform_device

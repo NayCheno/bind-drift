@@ -2,149 +2,149 @@
   "by_version": [
     {
       "binding_functions": 1318,
-      "c_functions": 76,
+      "c_functions": 25,
       "graph_edges": 6490,
       "rust_binding_uses": 18,
       "version_id": "v6.1"
     },
     {
       "binding_functions": 1340,
-      "c_functions": 79,
+      "c_functions": 25,
       "graph_edges": 6635,
       "rust_binding_uses": 27,
       "version_id": "v6.2"
     },
     {
       "binding_functions": 1346,
-      "c_functions": 108,
+      "c_functions": 44,
       "graph_edges": 6751,
       "rust_binding_uses": 31,
       "version_id": "v6.3"
     },
     {
       "binding_functions": 1546,
-      "c_functions": 325,
+      "c_functions": 232,
       "graph_edges": 8959,
-      "rust_binding_uses": 80,
+      "rust_binding_uses": 67,
       "version_id": "v6.4"
     },
     {
       "binding_functions": 1551,
-      "c_functions": 328,
+      "c_functions": 235,
       "graph_edges": 9033,
-      "rust_binding_uses": 81,
+      "rust_binding_uses": 68,
       "version_id": "v6.5"
     },
     {
       "binding_functions": 3853,
-      "c_functions": 4394,
+      "c_functions": 266,
       "graph_edges": 11177,
-      "rust_binding_uses": 90,
+      "rust_binding_uses": 77,
       "version_id": "v6.6"
     },
     {
       "binding_functions": 5760,
-      "c_functions": 4519,
+      "c_functions": 327,
       "graph_edges": 14033,
-      "rust_binding_uses": 113,
+      "rust_binding_uses": 98,
       "version_id": "v6.7"
     },
     {
       "binding_functions": 4612,
-      "c_functions": 806,
+      "c_functions": 647,
       "graph_edges": 18659,
-      "rust_binding_uses": 167,
+      "rust_binding_uses": 148,
       "version_id": "v6.8"
     },
     {
       "binding_functions": 10493,
-      "c_functions": 5017,
+      "c_functions": 683,
       "graph_edges": 21379,
-      "rust_binding_uses": 169,
+      "rust_binding_uses": 150,
       "version_id": "v6.9"
     },
     {
       "binding_functions": 10402,
-      "c_functions": 5038,
+      "c_functions": 691,
       "graph_edges": 21457,
-      "rust_binding_uses": 176,
+      "rust_binding_uses": 157,
       "version_id": "v6.10"
     },
     {
       "binding_functions": 11035,
-      "c_functions": 5465,
+      "c_functions": 1037,
       "graph_edges": 23358,
-      "rust_binding_uses": 269,
+      "rust_binding_uses": 231,
       "version_id": "v6.11"
     },
     {
       "binding_functions": 11081,
-      "c_functions": 5511,
+      "c_functions": 1069,
       "graph_edges": 23779,
-      "rust_binding_uses": 312,
+      "rust_binding_uses": 273,
       "version_id": "v6.12"
     },
     {
       "binding_functions": 11293,
-      "c_functions": 6985,
+      "c_functions": 2345,
       "graph_edges": 25146,
-      "rust_binding_uses": 432,
+      "rust_binding_uses": 383,
       "version_id": "v6.13"
     },
     {
       "binding_functions": 12428,
-      "c_functions": 7807,
+      "c_functions": 3062,
       "graph_edges": 30269,
-      "rust_binding_uses": 502,
+      "rust_binding_uses": 436,
       "version_id": "v6.14"
     },
     {
       "binding_functions": 12451,
-      "c_functions": 8193,
+      "c_functions": 3269,
       "graph_edges": 30870,
-      "rust_binding_uses": 573,
+      "rust_binding_uses": 501,
       "version_id": "v6.15"
     },
     {
       "binding_functions": 13265,
-      "c_functions": 9085,
+      "c_functions": 4075,
       "graph_edges": 34804,
-      "rust_binding_uses": 994,
+      "rust_binding_uses": 885,
       "version_id": "v6.16"
     },
     {
       "binding_functions": 14870,
-      "c_functions": 9778,
+      "c_functions": 4634,
       "graph_edges": 38928,
-      "rust_binding_uses": 1128,
+      "rust_binding_uses": 1011,
       "version_id": "v6.17"
     },
     {
       "binding_functions": 15309,
-      "c_functions": 11250,
+      "c_functions": 5770,
       "graph_edges": 41156,
-      "rust_binding_uses": 1726,
+      "rust_binding_uses": 1600,
       "version_id": "v6.18"
     },
     {
       "binding_functions": 16620,
-      "c_functions": 11903,
+      "c_functions": 6236,
       "graph_edges": 43503,
-      "rust_binding_uses": 1862,
+      "rust_binding_uses": 1721,
       "version_id": "v6.19"
     },
     {
       "binding_functions": 16880,
-      "c_functions": 12097,
+      "c_functions": 6312,
       "graph_edges": 44149,
-      "rust_binding_uses": 1877,
+      "rust_binding_uses": 1739,
       "version_id": "v7.0"
     },
     {
       "binding_functions": 17037,
-      "c_functions": 12213,
+      "c_functions": 6444,
       "graph_edges": 44634,
-      "rust_binding_uses": 1934,
+      "rust_binding_uses": 1783,
       "version_id": "HEAD_6d35786de281"
     },
     {
@@ -160,16 +160,16 @@
     "binding_functions": 194490,
     "binding_structs": 65241,
     "build_breakage_events": 0,
-    "c_behavior_indicators": 26356,
-    "c_functions": 183645,
-    "c_macros": 474635,
-    "c_structs": 31491,
+    "c_behavior_indicators": 11906,
+    "c_functions": 110096,
+    "c_macros": 264081,
+    "c_structs": 15943,
     "drift_events": 31519,
     "graph_edges": 522190,
     "layout_facts": 0,
-    "rust_binding_uses": 14495,
-    "rust_error_mappings": 6600,
-    "rust_lifetime_facts": 11920,
+    "rust_binding_uses": 13338,
+    "rust_error_mappings": 3751,
+    "rust_lifetime_facts": 8682,
     "rust_safe_apis": 6250,
     "rust_safety_comments": 180469,
     "versions": 22,
@@ -178,149 +178,149 @@
   "main_by_version": [
     {
       "binding_functions": 1318,
-      "c_functions": 76,
+      "c_functions": 25,
       "graph_edges": 6490,
       "rust_binding_uses": 18,
       "version_id": "v6.1"
     },
     {
       "binding_functions": 1340,
-      "c_functions": 79,
+      "c_functions": 25,
       "graph_edges": 6635,
       "rust_binding_uses": 27,
       "version_id": "v6.2"
     },
     {
       "binding_functions": 1346,
-      "c_functions": 108,
+      "c_functions": 44,
       "graph_edges": 6751,
       "rust_binding_uses": 31,
       "version_id": "v6.3"
     },
     {
       "binding_functions": 1546,
-      "c_functions": 325,
+      "c_functions": 232,
       "graph_edges": 8959,
-      "rust_binding_uses": 80,
+      "rust_binding_uses": 67,
       "version_id": "v6.4"
     },
     {
       "binding_functions": 1551,
-      "c_functions": 328,
+      "c_functions": 235,
       "graph_edges": 9033,
-      "rust_binding_uses": 81,
+      "rust_binding_uses": 68,
       "version_id": "v6.5"
     },
     {
       "binding_functions": 3853,
-      "c_functions": 4394,
+      "c_functions": 266,
       "graph_edges": 11177,
-      "rust_binding_uses": 90,
+      "rust_binding_uses": 77,
       "version_id": "v6.6"
     },
     {
       "binding_functions": 5760,
-      "c_functions": 4519,
+      "c_functions": 327,
       "graph_edges": 14033,
-      "rust_binding_uses": 113,
+      "rust_binding_uses": 98,
       "version_id": "v6.7"
     },
     {
       "binding_functions": 4612,
-      "c_functions": 806,
+      "c_functions": 647,
       "graph_edges": 18659,
-      "rust_binding_uses": 167,
+      "rust_binding_uses": 148,
       "version_id": "v6.8"
     },
     {
       "binding_functions": 10493,
-      "c_functions": 5017,
+      "c_functions": 683,
       "graph_edges": 21379,
-      "rust_binding_uses": 169,
+      "rust_binding_uses": 150,
       "version_id": "v6.9"
     },
     {
       "binding_functions": 10402,
-      "c_functions": 5038,
+      "c_functions": 691,
       "graph_edges": 21457,
-      "rust_binding_uses": 176,
+      "rust_binding_uses": 157,
       "version_id": "v6.10"
     },
     {
       "binding_functions": 11035,
-      "c_functions": 5465,
+      "c_functions": 1037,
       "graph_edges": 23358,
-      "rust_binding_uses": 269,
+      "rust_binding_uses": 231,
       "version_id": "v6.11"
     },
     {
       "binding_functions": 11081,
-      "c_functions": 5511,
+      "c_functions": 1069,
       "graph_edges": 23779,
-      "rust_binding_uses": 312,
+      "rust_binding_uses": 273,
       "version_id": "v6.12"
     },
     {
       "binding_functions": 11293,
-      "c_functions": 6985,
+      "c_functions": 2345,
       "graph_edges": 25146,
-      "rust_binding_uses": 432,
+      "rust_binding_uses": 383,
       "version_id": "v6.13"
     },
     {
       "binding_functions": 12428,
-      "c_functions": 7807,
+      "c_functions": 3062,
       "graph_edges": 30269,
-      "rust_binding_uses": 502,
+      "rust_binding_uses": 436,
       "version_id": "v6.14"
     },
     {
       "binding_functions": 12451,
-      "c_functions": 8193,
+      "c_functions": 3269,
       "graph_edges": 30870,
-      "rust_binding_uses": 573,
+      "rust_binding_uses": 501,
       "version_id": "v6.15"
     },
     {
       "binding_functions": 13265,
-      "c_functions": 9085,
+      "c_functions": 4075,
       "graph_edges": 34804,
-      "rust_binding_uses": 994,
+      "rust_binding_uses": 885,
       "version_id": "v6.16"
     },
     {
       "binding_functions": 14870,
-      "c_functions": 9778,
+      "c_functions": 4634,
       "graph_edges": 38928,
-      "rust_binding_uses": 1128,
+      "rust_binding_uses": 1011,
       "version_id": "v6.17"
     },
     {
       "binding_functions": 15309,
-      "c_functions": 11250,
+      "c_functions": 5770,
       "graph_edges": 41156,
-      "rust_binding_uses": 1726,
+      "rust_binding_uses": 1600,
       "version_id": "v6.18"
     },
     {
       "binding_functions": 16620,
-      "c_functions": 11903,
+      "c_functions": 6236,
       "graph_edges": 43503,
-      "rust_binding_uses": 1862,
+      "rust_binding_uses": 1721,
       "version_id": "v6.19"
     },
     {
       "binding_functions": 16880,
-      "c_functions": 12097,
+      "c_functions": 6312,
       "graph_edges": 44149,
-      "rust_binding_uses": 1877,
+      "rust_binding_uses": 1739,
       "version_id": "v7.0"
     },
     {
       "binding_functions": 17037,
-      "c_functions": 12213,
+      "c_functions": 6444,
       "graph_edges": 44634,
-      "rust_binding_uses": 1934,
+      "rust_binding_uses": 1783,
       "version_id": "HEAD_6d35786de281"
     }
   ],

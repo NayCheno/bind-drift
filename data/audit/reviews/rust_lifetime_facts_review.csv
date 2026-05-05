@@ -1,0 +1,51 @@
+sample_id,is_correct,error_type,notes
+rust_lifetime_facts-001,true,,Arc::from_raw is called on the evidence line inside ListArc<T>
+rust_lifetime_facts-002,true,,ForeignOwnable bound on MapleTree<T> impl is on the evidence line
+rust_lifetime_facts-003,true,,Adapter registration assigns T::ID_TABLE.as_ptr on the evidence line
+rust_lifetime_facts-004,true,,Arc::from_raw is called on the evidence line
+rust_lifetime_facts-005,true,,Drop impl for Guard is declared on the evidence line
+rust_lifetime_facts-006,true,,Opaque<bindings::usb_interface> is on the evidence line
+rust_lifetime_facts-007,true,,Firmware as_raw returns self.0.as_ptr and nearby signature names bindings::firmware
+rust_lifetime_facts-008,true,,Task::euid calls bindings::task_euid with self.as_ptr on the evidence line
+rust_lifetime_facts-009,true,,Doc invariant states gendisk queuedata is initialized by ForeignOwnable::into_foreign
+rust_lifetime_facts-010,true,,LocalFile reads f_cred through self.as_ptr on the evidence line
+rust_lifetime_facts-011,true,,Bitmap set_bit call uses bindings::set_bit with self.as_ptr
+rust_lifetime_facts-012,true,,ForeignOwnable docs state matching from_foreign has not yet been called
+rust_lifetime_facts-013,true,,Request<T>::end_ok takes and returns ARef values
+rust_lifetime_facts-014,true,,Task::tgid_nr_ns call uses bindings::task_tgid_nr_ns with self.as_ptr
+rust_lifetime_facts-015,true,,Adapter<T> callback constructs Device::from_raw on the evidence line
+rust_lifetime_facts-016,true,,Arc<T> drop path uses self.ptr.as_ptr on the evidence line
+rust_lifetime_facts-017,true,,Arc<T> drop path calls KBox::from_raw on the evidence line
+rust_lifetime_facts-018,true,,Module docs explicitly discuss an Opaque<T> field
+rust_lifetime_facts-019,true,,ARef<T> impl method takes an ARef<U> argument on the evidence line
+rust_lifetime_facts-020,true,,ARef<T>::into_raw is declared on the evidence line
+rust_lifetime_facts-021,true,,File<T>::from_raw is called and nearby parameter names bindings::drm_file
+rust_lifetime_facts-022,true,,ForeignOwnable docs describe values borrowed between ownership transfers
+rust_lifetime_facts-023,true,,LockClassKey wraps Opaque<bindings::lock_class_key> on the evidence line
+rust_lifetime_facts-024,true,,HrTimerCallbackContext::from_raw is declared with lifetime context
+rust_lifetime_facts-025,true,,File docs discuss ARef<File> lifetime and refcount ownership
+rust_lifetime_facts-026,true,,Box::from_raw reconstructs a Box from raw on the evidence line
+rust_lifetime_facts-027,true,,Safety comment states ptr came from Box::into_raw
+rust_lifetime_facts-028,true,,auxiliary_device binding and obj.cast().as_ptr are on the evidence line
+rust_lifetime_facts-029,true,,Invariant states self.inner comes from a Box::into_raw call
+rust_lifetime_facts-030,true,,Vec<T> raw-parts conversion uses ManuallyDrop::new on the evidence line
+rust_lifetime_facts-031,true,,CondVar stores Opaque<bindings::wait_queue_head> on the evidence line
+rust_lifetime_facts-032,true,,Safety comment states self.inner came from Box::into_raw
+rust_lifetime_facts-033,true,,ForeignOwnable impl for unit returns dangling().as_ptr
+rust_lifetime_facts-034,true,,ItemType stores Opaque<bindings::config_item_type> on the evidence line
+rust_lifetime_facts-035,true,,Macro body implements conversion to $crate::types::ARef<$device>
+rust_lifetime_facts-036,true,,Subsystem<Data> initializer passes static_lock_class().as_ptr to __mutex_init
+rust_lifetime_facts-037,true,,CursorMut removal calls KBox::from_raw on the evidence line
+rust_lifetime_facts-038,true,,ThisModule::as_ptr returns a pointer to bindings::module
+rust_lifetime_facts-039,true,,Registration AsRef constructs Device::from_raw from the embedded device pointer
+rust_lifetime_facts-040,true,,Docs discuss ARef<MmWithUserAsync> destructor safety and refcount
+rust_lifetime_facts-041,false,REGEX_ARTIFACT,from_raw_parts appears only in a null-pointer comment and does not state ownership or lifetime
+rust_lifetime_facts-042,true,,Mm::mmget_not_zero creates ARef::from_raw after taking a refcount
+rust_lifetime_facts-043,true,,Region has an explicit Drop impl on the evidence line
+rust_lifetime_facts-044,true,,TableBox deref calls Self::Target::from_raw on the evidence line
+rust_lifetime_facts-045,true,,Config stores a required device as an ARef<Device> field
+rust_lifetime_facts-046,true,,Revocable stores data as Opaque<T> on the evidence line
+rust_lifetime_facts-047,false,FALSE_INDICATOR,ForeignOwnable appears only in a use import line
+rust_lifetime_facts-048,true,,PidNamespace::as_ptr returns a pointer to bindings::pid_namespace
+rust_lifetime_facts-049,true,,ForeignOwnable bound on XArray<T> impl is on the evidence line
+rust_lifetime_facts-050,true,,Box assume_init calls Self::into_raw on the evidence line

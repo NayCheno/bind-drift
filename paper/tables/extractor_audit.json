@@ -1,0 +1,227 @@
+{
+  "acceptance": {
+    "c_behavior_indicators": {
+      "minimum_precision": 0.75,
+      "observed_precision": 0.96,
+      "passes": true,
+      "pending": 0,
+      "review_complete": true,
+      "reviewed": 100,
+      "sample_size_passes": true,
+      "sampled": 100,
+      "target_sample": 100
+    },
+    "c_functions": {
+      "minimum_precision": 0.9,
+      "observed_precision": 1.0,
+      "passes": true,
+      "pending": 0,
+      "review_complete": true,
+      "reviewed": 100,
+      "sample_size_passes": true,
+      "sampled": 100,
+      "target_sample": 100
+    },
+    "promoted_warning_evidence": {
+      "minimum_precision": 0.3,
+      "observed_precision": 0.7,
+      "passes": true,
+      "pending": 0,
+      "review_complete": true,
+      "reviewed": 50,
+      "sample_size_passes": true,
+      "sampled": 50,
+      "target_sample": 50
+    },
+    "rust_binding_uses": {
+      "minimum_precision": 0.9,
+      "observed_precision": 1.0,
+      "passes": true,
+      "pending": 0,
+      "review_complete": true,
+      "reviewed": 100,
+      "sample_size_passes": true,
+      "sampled": 100,
+      "target_sample": 100
+    },
+    "rust_error_mappings": {
+      "minimum_precision": 0.8,
+      "observed_precision": 0.84,
+      "passes": true,
+      "pending": 0,
+      "review_complete": true,
+      "reviewed": 50,
+      "sample_size_passes": true,
+      "sampled": 50,
+      "target_sample": 50
+    },
+    "rust_lifetime_facts": {
+      "minimum_precision": 0.75,
+      "observed_precision": 0.96,
+      "passes": true,
+      "pending": 0,
+      "review_complete": true,
+      "reviewed": 50,
+      "sample_size_passes": true,
+      "sampled": 50,
+      "target_sample": 50
+    }
+  },
+  "all_minimums_pass": true,
+  "error_types": [
+    "BINDGEN_ARTIFACT",
+    "FALSE_INDICATOR",
+    "MISSING_CONTEXT",
+    "OTHER",
+    "REGEX_ARTIFACT",
+    "WRONG_LINE",
+    "WRONG_SCOPE",
+    "WRONG_SYMBOL"
+  ],
+  "metrics": {
+    "c_behavior_indicators_precision": 0.96,
+    "c_functions_precision": 1.0,
+    "promoted_warning_evidence_precision": 0.7,
+    "promoted_warnings_precision": 0.7,
+    "rust_binding_uses_precision": 1.0,
+    "rust_error_mappings_precision": 0.84,
+    "rust_lifetime_facts_precision": 0.96
+  },
+  "note": "Extractor audit samples are deterministic and unfiltered. Precision is computed only from reviewed CSV rows with explicit is_correct labels; pending rows are not counted as passing.",
+  "provenance": {
+    "database_path": "/home/nya/workspace/bind-drift/.binddrift/binddrift.sqlite3",
+    "manifest_artifact_sha256": {
+      "drift_facts.jsonl": "9e11b927fad503e87aafd1ee9e3aa0beb6ceb2866dabfd3bdc508c405c5d3f96",
+      "manual_review.csv": "8fef42e73df2e898ab1f107b46cd6a8c8768d4777ebdb631a08e260acede3435",
+      "promoted_warnings.jsonl": "22880471cc4b1e344279e13dc75fd13e293413b6fc57f9a326d5b25e008a9aaa",
+      "single_version_review_targets.jsonl": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "warnings.jsonl": "6b800f272892529d3db61601ec6dbf61ba29e4f5cd5af82c44a3858733630370"
+    },
+    "manifest_run_id": "latest",
+    "review_label_sources": {
+      "previous_sample_labels_transferred": 0,
+      "previous_sample_rows": 450,
+      "split_review_labels_transferred": 450,
+      "split_sources": [
+        {
+          "path": "/home/nya/workspace/bind-drift/data/audit/reviews/c_functions_review.csv",
+          "rows": 100,
+          "table": "c_functions",
+          "target_count_present": true,
+          "target_rows": 100
+        },
+        {
+          "path": "/home/nya/workspace/bind-drift/data/audit/reviews/rust_binding_uses_review.csv",
+          "rows": 100,
+          "table": "rust_binding_uses",
+          "target_count_present": true,
+          "target_rows": 100
+        },
+        {
+          "path": "/home/nya/workspace/bind-drift/data/audit/reviews/c_behavior_indicators_review.csv",
+          "rows": 100,
+          "table": "c_behavior_indicators",
+          "target_count_present": true,
+          "target_rows": 100
+        },
+        {
+          "path": "/home/nya/workspace/bind-drift/data/audit/reviews/rust_error_mappings_review.csv",
+          "rows": 50,
+          "table": "rust_error_mappings",
+          "target_count_present": true,
+          "target_rows": 50
+        },
+        {
+          "path": "/home/nya/workspace/bind-drift/data/audit/reviews/rust_lifetime_facts_review.csv",
+          "rows": 50,
+          "table": "rust_lifetime_facts",
+          "target_count_present": true,
+          "target_rows": 50
+        },
+        {
+          "path": "/home/nya/workspace/bind-drift/data/audit/reviews/promoted_warnings_review.csv",
+          "rows": 50,
+          "table": "promoted_warnings",
+          "target_count_present": true,
+          "target_rows": 50
+        }
+      ],
+      "stale_or_unmatched_previous_rows": 0,
+      "stale_or_unmatched_split_rows": 0
+    },
+    "sample_hash": "6871209c753117342d4bc86803ff4b88de922d25e3fc35d6f9700578fe60a7e9",
+    "sampled_rows": 450,
+    "sampler_version": "extractor-audit-v2"
+  },
+  "sample_csv": "/home/nya/workspace/bind-drift/data/audit/extractor_sample.csv",
+  "tables": {
+    "c_behavior_indicators": {
+      "correct": 96,
+      "error_type_distribution": {
+        "REGEX_ARTIFACT": 4
+      },
+      "pending": 0,
+      "precision": 0.96,
+      "reviewed": 100,
+      "sampled": 100,
+      "target_sample": 100
+    },
+    "c_functions": {
+      "correct": 100,
+      "error_type_distribution": {},
+      "pending": 0,
+      "precision": 1.0,
+      "reviewed": 100,
+      "sampled": 100,
+      "target_sample": 100
+    },
+    "promoted_warnings": {
+      "correct": 35,
+      "error_type_distribution": {
+        "BINDGEN_ARTIFACT": 6,
+        "FALSE_INDICATOR": 2,
+        "WRONG_LINE": 4,
+        "WRONG_SCOPE": 3
+      },
+      "pending": 0,
+      "precision": 0.7,
+      "reviewed": 50,
+      "sampled": 50,
+      "target_sample": 50
+    },
+    "rust_binding_uses": {
+      "correct": 100,
+      "error_type_distribution": {},
+      "pending": 0,
+      "precision": 1.0,
+      "reviewed": 100,
+      "sampled": 100,
+      "target_sample": 100
+    },
+    "rust_error_mappings": {
+      "correct": 42,
+      "error_type_distribution": {
+        "FALSE_INDICATOR": 1,
+        "WRONG_SCOPE": 5,
+        "WRONG_SYMBOL": 2
+      },
+      "pending": 0,
+      "precision": 0.84,
+      "reviewed": 50,
+      "sampled": 50,
+      "target_sample": 50
+    },
+    "rust_lifetime_facts": {
+      "correct": 48,
+      "error_type_distribution": {
+        "FALSE_INDICATOR": 1,
+        "REGEX_ARTIFACT": 1
+      },
+      "pending": 0,
+      "precision": 0.96,
+      "reviewed": 50,
+      "sampled": 50,
+      "target_sample": 50
+    }
+  }
+}

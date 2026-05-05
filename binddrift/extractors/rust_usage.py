@@ -14,11 +14,9 @@ BINDING_RE = re.compile(r"(?:crate::|\$crate::)?bindings::(?P<name>[A-Za-z_][A-Z
 PUB_FN_RE = re.compile(
     r"(?P<vis>pub(?:\([^)]*\))?)?\s*(?:unsafe\s+)?fn\s+(?P<name>[A-Za-z_][A-Za-z0-9_]*)\s*\((?P<params>[^)]*)\)\s*(?:->\s*(?P<ret>[^{;]+))?"
 )
-IMPL_RE = re.compile(r"impl(?:<[^>]+>)?\s+(?:(?P<trait>Drop|Clone)\s+for\s+)?(?P<ty>[A-Za-z_][A-Za-z0-9_:<>]*)")
+IMPL_RE = re.compile(r"impl\b")
 STRUCT_RE = re.compile(r"pub\s+struct\s+(?P<name>[A-Za-z_][A-Za-z0-9_]*)")
 ERROR_MAPPING_PATTERNS = {
-    "RESULT_RETURN": "Result<",
-    "OPTION_RETURN": "Option<",
     "ERR_PTR_MAPPING": "from_err_ptr",
     "TO_RESULT_MAPPING": "to_result",
     "NONNULL_MAPPING": "NonNull::new",
@@ -52,6 +50,59 @@ def _nearest_binding(uses: list[dict[str, Any]], line_no: int) -> str | None:
     return near[-1]["binding_symbol"] if near else None
 
 
+def _is_comment_line(stripped: str) -> bool:
+    return stripped.startswith(("///", "//!","//", "/*", "*"))
+
+
+def _is_import_line(stripped: str) -> bool:
+    return stripped.startswith("use ") or stripped.startswith("pub use ")
+
+
+def _return_mapping_type(ret: str | None) -> str | None:
+    if not ret:
+        return None
+    if "Result" in ret:
+        return "RESULT_RETURN"
+    if "Option" in ret:
+        return "OPTION_RETURN"
+    return None
+
+
+def _matching_angle_end(value: str, start: int) -> int | None:
+    depth = 0
+    for idx in range(start, len(value)):
+        char = value[idx]
+        if char == "<":
+            depth += 1
+        elif char == ">":
+            depth -= 1
+            if depth == 0:
+                return idx
+    return None
+
+
+def _parse_impl_type(stripped: str) -> tuple[str, str | None] | None:
+    if not stripped.startswith("impl"):
+        return None
+    rest = stripped[len("impl") :].strip()
+    if rest.startswith("<"):
+        end = _matching_angle_end(rest, 0)
+        if end is None:
+            return None
+        rest = rest[end + 1 :].strip()
+    rest = rest.split("{", 1)[0].strip()
+    rest = rest.split(" where ", 1)[0].strip()
+    if not rest:
+        return None
+    trait = None
+    ty = rest
+    if " for " in rest:
+        trait, ty = rest.rsplit(" for ", 1)
+        trait = trait.strip()
+        ty = ty.strip()
+    return ty, trait
+
+
 def _parse_file(
     path: Path, version_id: str
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
@@ -64,33 +115,76 @@ def _parse_file(
     error_mappings: list[dict[str, Any]] = []
     unsafe_depth = 0
     impl_stack: list[tuple[str, int]] = []
+    struct_stack: list[tuple[str, int]] = []
+    pending_impls: list[tuple[str, str | None]] = []
+    pending_structs: list[str] = []
     current_fn: tuple[str, int] | None = None
-    current_type: str | None = None
 
     for idx, line in enumerate(lines, start=1):
         stripped = line.strip()
+        code_line = bool(stripped) and not _is_comment_line(stripped) and not _is_import_line(stripped)
+        delta = _brace_delta(stripped)
         if match := STRUCT_RE.search(stripped):
-            current_type = match.group("name")
-        if match := IMPL_RE.match(stripped):
-            ty = match.group("ty")
-            if match.group("trait"):
-                ty = f"{match.group('trait')} for {ty}"
+            pending_structs.append(match.group("name"))
+        if parsed_impl := _parse_impl_type(stripped):
+            ty, trait = parsed_impl
+            if trait in {"Drop", "Clone"}:
                 lifetime_facts.append(
                     {
                         "version_id": version_id,
                         "rust_file": rel,
                         "line": idx,
-                        "fact_type": f"IMPL_{match.group('trait').upper()}",
-                        "rust_type": match.group("ty"),
+                        "fact_type": f"IMPL_{trait.upper()}",
+                        "rust_type": ty,
                         "uses_bindings": "[]",
                         "evidence_text": stripped[:500],
                     }
                 )
-            impl_stack.append((ty, max(1, _brace_delta(stripped))))
-            current_type = ty
+            pending_impls.append((ty, trait))
+        if "{" in stripped:
+            while pending_structs:
+                struct_stack.append((pending_structs.pop(), 0))
+            while pending_impls:
+                ty, _trait = pending_impls.pop()
+                impl_stack.append((ty, 0))
         line_starts_unsafe = bool(re.search(r"\bunsafe\s*\{", stripped))
+        active_type = impl_stack[-1][0] if impl_stack else (struct_stack[-1][0] if struct_stack else None)
 
-        for match in BINDING_RE.finditer(line):
+        if match := PUB_FN_RE.search(stripped):
+            if match.group("vis"):
+                name = match.group("name")
+                api_name = f"{impl_stack[-1][0]}::{name}" if impl_stack else name
+                current_fn = (api_name, max(1, _brace_delta(stripped)))
+                ret = (match.group("ret") or "()").strip()
+                apis.append(
+                    {
+                        "version_id": version_id,
+                        "rust_file": rel,
+                        "api_name": api_name,
+                        "receiver_type": impl_stack[-1][0] if impl_stack else None,
+                        "visibility": match.group("vis"),
+                        "return_type": ret,
+                        "params": json.dumps(match.group("params").strip()),
+                        "uses_bindings": "[]",
+                        "line": idx,
+                    }
+                )
+                if code_line and (mapping_type := _return_mapping_type(ret)):
+                    error_mappings.append(
+                        {
+                            "version_id": version_id,
+                            "rust_file": rel,
+                            "line": idx,
+                            "mapping_type": mapping_type,
+                            "text": stripped[:500],
+                            "nearby_binding_symbol": None,
+                            "nearby_api": api_name,
+                        }
+                    )
+            else:
+                current_fn = (match.group("name"), max(1, _brace_delta(stripped)))
+
+        for match in BINDING_RE.finditer(line if code_line else ""):
             uses.append(
                 {
                     "version_id": version_id,
@@ -100,32 +194,33 @@ def _parse_file(
                     "enclosing_unsafe_block": int(unsafe_depth > 0 or line_starts_unsafe),
                     "enclosing_function": current_fn[0] if current_fn else None,
                     "enclosing_impl": impl_stack[-1][0] if impl_stack else None,
-                    "enclosing_type": current_type,
+                    "enclosing_type": active_type,
                 }
             )
 
         for mapping_type, needle in ERROR_MAPPING_PATTERNS.items():
             if needle in stripped:
-                error_mappings.append(
-                    {
-                        "version_id": version_id,
-                        "rust_file": rel,
-                        "line": idx,
-                        "mapping_type": mapping_type,
-                        "text": stripped[:500],
-                        "nearby_binding_symbol": None,
-                        "nearby_api": None,
-                    }
-                )
+                if code_line:
+                    error_mappings.append(
+                        {
+                            "version_id": version_id,
+                            "rust_file": rel,
+                            "line": idx,
+                            "mapping_type": mapping_type,
+                            "text": stripped[:500],
+                            "nearby_binding_symbol": None,
+                            "nearby_api": current_fn[0] if current_fn else None,
+                        }
+                    )
         for fact_type, needle in LIFETIME_PATTERNS.items():
-            if needle in stripped:
+            if needle in stripped and not _is_import_line(stripped):
                 lifetime_facts.append(
                     {
                         "version_id": version_id,
                         "rust_file": rel,
                         "line": idx,
                         "fact_type": fact_type,
-                        "rust_type": current_type,
+                        "rust_type": active_type,
                         "uses_bindings": "[]",
                         "evidence_text": stripped[:500],
                     }
@@ -143,28 +238,6 @@ def _parse_file(
                 }
             )
 
-        if match := PUB_FN_RE.search(stripped):
-            if match.group("vis"):
-                name = match.group("name")
-                api_name = f"{impl_stack[-1][0]}::{name}" if impl_stack else name
-                current_fn = (api_name, max(1, _brace_delta(stripped)))
-                apis.append(
-                    {
-                        "version_id": version_id,
-                        "rust_file": rel,
-                        "api_name": api_name,
-                        "receiver_type": impl_stack[-1][0] if impl_stack else None,
-                        "visibility": match.group("vis"),
-                        "return_type": (match.group("ret") or "()").strip(),
-                        "params": json.dumps(match.group("params").strip()),
-                        "uses_bindings": "[]",
-                        "line": idx,
-                    }
-                )
-            else:
-                current_fn = (match.group("name"), max(1, _brace_delta(stripped)))
-
-        delta = _brace_delta(stripped)
         if current_fn:
             current_fn = (current_fn[0], current_fn[1] + delta)
             if current_fn[1] <= 0:
@@ -176,6 +249,13 @@ def _parse_file(
                 impl_stack.pop()
             else:
                 impl_stack[-1] = (ty, depth)
+        if struct_stack:
+            ty, depth = struct_stack[-1]
+            depth += delta
+            if depth <= 0:
+                struct_stack.pop()
+            else:
+                struct_stack[-1] = (ty, depth)
         if line_starts_unsafe:
             unsafe_depth = max(0, unsafe_depth + delta)
         elif unsafe_depth:
@@ -193,7 +273,7 @@ def _parse_file(
         comment["nearby_api"] = _nearest_api(apis, comment["line"])
     for mapping in error_mappings:
         mapping["nearby_binding_symbol"] = _nearest_binding(uses, mapping["line"])
-        mapping["nearby_api"] = _nearest_api(apis, mapping["line"])
+        mapping["nearby_api"] = mapping.get("nearby_api") or _nearest_api(apis, mapping["line"])
     uses_by_line: dict[int, set[str]] = {}
     for use in uses:
         uses_by_line.setdefault(use["line"], set()).add(use["binding_symbol"])
@@ -223,6 +303,9 @@ def extract_rust_usage(cfg: Config, version_id: str | None = None) -> dict[str, 
         all_error_mappings.extend(error_mappings)
     conn = connect(cfg.database)
     initialize(conn)
+    for table in ("rust_binding_uses", "rust_safe_apis", "rust_safety_comments", "rust_lifetime_facts", "rust_error_mappings"):
+        conn.execute(f"DELETE FROM {table} WHERE version_id=?", (vid,))
+    conn.commit()
     upsert_many(conn, "rust_binding_uses", all_uses)
     upsert_many(conn, "rust_safe_apis", all_apis)
     upsert_many(conn, "rust_safety_comments", all_comments)
