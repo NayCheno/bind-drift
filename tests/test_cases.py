@@ -93,7 +93,13 @@ def test_case_studies_only_use_true_labels_with_strong_evidence(tmp_path: Path):
     assert not stale.exists()
     assert files[0].name.startswith("case-01-nullabilitydrift-foo_get")
     text = files[0].read_text(encoding="utf-8")
-    assert "Oracle label: `TRUE_SEMANTIC_DRIFT`" in text
+    assert "Adjudicated label: `TRUE_SEMANTIC_DRIFT`" in text
+    assert "## Old Version Evidence" in text
+    assert "## New Version Evidence" in text
+    assert "## C-Side Diff Or Indicator Change" in text
+    assert "## Rust Wrapper Or Safe API Dependency" in text
+    assert "## Reviewer Adjudicated Label" in text
+    assert "## Why This Is Not Generated-Binding-Only" in text
     assert "adjudicated true-positive contract evidence" in text
     assert "ERR_PTR_MAPPING" in text
 
@@ -162,5 +168,90 @@ def test_case_studies_use_replay_adjacent_review_and_structured_diff(tmp_path: P
 
     assert result["cases"] == 1
     assert result["manual_review"] == str(run_dir / "manual_review.csv")
-    assert "Oracle label: `TRUE_WRAPPER_FIX`" in text
+    assert "Adjudicated label: `TRUE_WRAPPER_FIX`" in text
     assert "wrapper validates flags" in text
+
+
+def test_case_studies_main_mode_fails_without_two_true_positive_cases(tmp_path: Path):
+    cfg = Config.from_args(repo_root=tmp_path)
+    run_dir = tmp_path / "data/replay/latest"
+    run_dir.mkdir(parents=True)
+    warning = {
+        "warning_id": "W-000001",
+        "run_id": "latest",
+        "pair_id": "latest-p001",
+        "old_version": "old",
+        "new_version": "new",
+        "type": "NullabilityDrift",
+        "promotion_status": "promoted",
+        "risk": "High",
+        "score": 12.0,
+        "c_evidence_level": "c_behavior_indicator",
+        "c_side": {
+            "symbol": "foo_get",
+            "old_indicators": ["NULL_RETURN"],
+            "new_indicators": ["ERR_PTR_RETURN"],
+            "old_version": "old",
+            "new_version": "new",
+            "evidence": [{"evidence_file": "foo.c", "evidence_line": 1, "evidence_text": "return ERR_PTR(-ENOMEM);"}],
+        },
+        "rust_side": {
+            "uses": [{"rust_file": "device.rs", "line": 10, "enclosing_function": "Device::get"}],
+            "error_mappings": [{"rust_file": "device.rs", "line": 11, "mapping_type": "ERR_PTR_MAPPING"}],
+        },
+    }
+    warning["warning_uid"] = "uid-1"
+    for name in ("warnings.jsonl", "promoted_warnings.jsonl"):
+        (run_dir / name).write_text(json.dumps(warning, sort_keys=True) + "\n", encoding="utf-8")
+    (run_dir / "manual_review.csv").write_text(
+        "warning_uid,warning_id,pair_id,reviewer1_label,reviewer2_label,adjudicated_label,label\n"
+        "uid-1,W-000001,latest-p001,,,TRUE_SEMANTIC_DRIFT,\n",
+        encoding="utf-8",
+    )
+    (run_dir / "drift_facts.jsonl").write_text('{"fact_id":"F-1"}\n', encoding="utf-8")
+    (run_dir / "single_version_review_targets.jsonl").write_text("", encoding="utf-8")
+    (run_dir / "run_manifest.json").write_text(
+        json.dumps(
+            {
+                "run_id": "latest",
+                "canonical_warning_file": "data/replay/latest/warnings.jsonl",
+                "canonical_promoted_warnings_file": "data/replay/latest/promoted_warnings.jsonl",
+                "canonical_review_file": "data/replay/latest/manual_review.csv",
+                "canonical_drift_facts_file": "data/replay/latest/drift_facts.jsonl",
+                "canonical_single_version_review_targets_file": "data/replay/latest/single_version_review_targets.jsonl",
+                "canonical_database": ".binddrift/binddrift.sqlite3",
+                "warning_count": 1,
+                "promoted_warning_count": 1,
+                "paper_topk": 1,
+                "drift_fact_count": 1,
+                "reviewed_warning_count": 1,
+                "single_version_review_targets": 0,
+                "sha256": {
+                    "warnings.jsonl": "",
+                    "promoted_warnings.jsonl": "",
+                    "manual_review.csv": "",
+                    "drift_facts.jsonl": "",
+                    "single_version_review_targets.jsonl": "",
+                },
+            },
+            sort_keys=True,
+        ),
+        encoding="utf-8",
+    )
+
+    from binddrift.run_manifest import sha256_file
+
+    manifest = json.loads((run_dir / "run_manifest.json").read_text(encoding="utf-8"))
+    manifest["sha256"] = {
+        "warnings.jsonl": sha256_file(run_dir / "warnings.jsonl"),
+        "promoted_warnings.jsonl": sha256_file(run_dir / "promoted_warnings.jsonl"),
+        "manual_review.csv": sha256_file(run_dir / "manual_review.csv"),
+        "drift_facts.jsonl": sha256_file(run_dir / "drift_facts.jsonl"),
+        "single_version_review_targets.jsonl": sha256_file(run_dir / "single_version_review_targets.jsonl"),
+    }
+    (run_dir / "run_manifest.json").write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    import pytest
+
+    with pytest.raises(RuntimeError, match="Fewer than 2"):
+        generate_case_studies(cfg)
