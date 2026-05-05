@@ -299,6 +299,167 @@ def test_tier1_tier2_append_keeps_warning_ids_unique_after_demoted_facts(tmp_pat
     assert warning_ids == ["W-000001", "W-000002"]
 
 
+def test_tier1_keeps_binding_only_added_removed_and_changed_symbols_as_facts_even_with_direct_use(tmp_path: Path):
+    cfg = Config.from_args(repo_root=tmp_path)
+    conn = connect(cfg.database)
+    initialize(conn)
+    upsert_many(
+        conn,
+        "binding_functions",
+        [
+            {
+                "version_id": "old",
+                "rust_symbol": "generated_removed",
+                "c_symbol": "generated_removed",
+                "params": "[]",
+                "return_type": "void",
+                "is_unsafe": 1,
+                "source_file": "old.rs",
+                "line": 1,
+            },
+            {
+                "version_id": "old",
+                "rust_symbol": "generated_changed",
+                "c_symbol": "generated_changed",
+                "params": "[]",
+                "return_type": "void",
+                "is_unsafe": 1,
+                "source_file": "old.rs",
+                "line": 2,
+            },
+            {
+                "version_id": "new",
+                "rust_symbol": "generated_added",
+                "c_symbol": "generated_added",
+                "params": "[]",
+                "return_type": "void",
+                "is_unsafe": 1,
+                "source_file": "new.rs",
+                "line": 1,
+            },
+            {
+                "version_id": "new",
+                "rust_symbol": "generated_changed",
+                "c_symbol": "generated_changed",
+                "params": json.dumps([{"name": "x", "type": "int"}]),
+                "return_type": "void",
+                "is_unsafe": 1,
+                "source_file": "new.rs",
+                "line": 2,
+            },
+        ],
+    )
+    upsert_many(
+        conn,
+        "rust_binding_uses",
+        [
+            {
+                "version_id": "new",
+                "rust_file": "wrapper.rs",
+                "line": 10,
+                "binding_symbol": "generated_added",
+                "enclosing_unsafe_block": 1,
+                "enclosing_function": "Device::new",
+                "enclosing_impl": "Device",
+                "enclosing_type": "Device",
+            },
+            {
+                "version_id": "new",
+                "rust_file": "wrapper.rs",
+                "line": 11,
+                "binding_symbol": "generated_removed",
+                "enclosing_unsafe_block": 1,
+                "enclosing_function": "Device::drop",
+                "enclosing_impl": "Device",
+                "enclosing_type": "Device",
+            },
+            {
+                "version_id": "new",
+                "rust_file": "wrapper.rs",
+                "line": 12,
+                "binding_symbol": "generated_changed",
+                "enclosing_unsafe_block": 1,
+                "enclosing_function": "Device::changed",
+                "enclosing_impl": "Device",
+                "enclosing_type": "Device",
+            },
+        ],
+    )
+
+    result = run_tier1(cfg, old="old", new="new")
+    facts = read_warnings(cfg.drift_facts_jsonl)
+    warnings = read_warnings(cfg.warnings_jsonl)
+
+    assert result["facts"] == 3
+    assert warnings == []
+    assert {fact["c_side"]["symbol"] for fact in facts} == {
+        "generated_added",
+        "generated_changed",
+        "generated_removed",
+    }
+    for fact in facts:
+        assert fact["record_kind"] == "fact"
+        assert fact["promotion_status"] == "unpromoted"
+        assert fact["c_evidence_level"] == "binding_only"
+        assert "binding_only_without_oracle" in fact["demotion_reasons"]
+        assert fact["rust_impact_level"] == "direct_unsafe_call"
+
+
+def test_tier1_promotes_c_source_signature_diff_with_rust_impact(tmp_path: Path):
+    cfg = Config.from_args(repo_root=tmp_path)
+    conn = connect(cfg.database)
+    initialize(conn)
+    upsert_many(
+        conn,
+        "c_functions",
+        [
+            {
+                "version_id": "old",
+                "c_symbol": "foo_get",
+                "return_type": "int",
+                "params": json.dumps([{"name": "dev", "type": "struct device *"}]),
+                "header_file": "foo.h",
+                "definition_file": "foo.c",
+                "line": 1,
+            },
+            {
+                "version_id": "new",
+                "c_symbol": "foo_get",
+                "return_type": "long",
+                "params": json.dumps([{"name": "dev", "type": "struct device *"}]),
+                "header_file": "foo.h",
+                "definition_file": "foo.c",
+                "line": 1,
+            },
+        ],
+    )
+    upsert_many(
+        conn,
+        "rust_binding_uses",
+        [
+            {
+                "version_id": "new",
+                "rust_file": "wrapper.rs",
+                "line": 10,
+                "binding_symbol": "foo_get",
+                "enclosing_unsafe_block": 1,
+                "enclosing_function": "Device::get",
+                "enclosing_impl": "Device",
+                "enclosing_type": "Device",
+            },
+        ],
+    )
+
+    run_tier1(cfg, old="old", new="new")
+    warnings = read_warnings(cfg.warnings_jsonl)
+
+    assert len(warnings) == 1
+    assert warnings[0]["record_kind"] == "warning"
+    assert warnings[0]["type"] == "SignatureDrift"
+    assert warnings[0]["c_evidence_level"] == "c_source_diff"
+    assert warnings[0]["rust_impact_level"] == "direct_unsafe_call"
+
+
 def test_tier2_promotes_oracle_confirmed_nullability_without_mapping(tmp_path: Path):
     cfg = Config.from_args(repo_root=tmp_path)
     conn = connect(cfg.database)
