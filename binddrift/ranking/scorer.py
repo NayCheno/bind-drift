@@ -10,6 +10,18 @@ def _has_any(items: Any) -> bool:
     return bool(items) if isinstance(items, list) else False
 
 
+def _has_evidence_chain(warning: dict[str, Any]) -> bool:
+    rust_side = warning.get("rust_side", {})
+    return bool(
+        rust_side.get("uses")
+        or rust_side.get("safe_apis")
+        or rust_side.get("safety_comments")
+        or rust_side.get("error_mappings")
+        or rust_side.get("lifetime_facts")
+        or rust_side.get("oracle_hits")
+    )
+
+
 def score_breakdown(warning: dict[str, Any]) -> dict[str, float]:
     rust_side = warning.get("rust_side", {})
     uses = rust_side.get("uses") or []
@@ -31,6 +43,7 @@ def score_breakdown(warning: dict[str, Any]) -> dict[str, float]:
     safety_comment = 1.0 if _has_any(safety_comments) else 0.0
     build_oracle = 1.0 if any(hit.get("oracle_type") == "build_breakage" for hit in oracle_hits if isinstance(hit, dict)) else 0.0
     wrapper_oracle = 1.0 if any(hit.get("oracle_type") == "wrapper_fix" for hit in oracle_hits if isinstance(hit, dict)) else 0.0
+    multi_version_consistency = 1.0 if len(warning.get("observed_pairs") or []) > 1 else 0.0
     indicator_confidence = max(0.0, min(float(warning.get("confidence", 0.0)), 1.0)) if warning.get("indicator_based") else 0.0
 
     binding_only = 1.0 if warning.get("c_evidence_level") == "binding_only" else 0.0
@@ -46,6 +59,7 @@ def score_breakdown(warning: dict[str, Any]) -> dict[str, float]:
         "c_source_diff_strength": 3.0 * c_source_evidence,
         "build_oracle_hit": 5.0 * build_oracle,
         "wrapper_fix_hit": 4.0 * wrapper_oracle,
+        "multi_version_consistency": 2.0 * multi_version_consistency,
         "indicator_confidence": round(indicator_confidence, 3),
         "binding_only_penalty": -5.0 * binding_only,
         "added_symbol_without_old_c_evidence_penalty": -3.0 * added_without_old,
@@ -59,14 +73,41 @@ def score_warning(warning: dict[str, Any]) -> float:
 
 
 def _is_promoted(warning: dict[str, Any]) -> bool:
-    if warning.get("promotion_status") == "unpromoted":
+    if warning.get("promotion_status") != "promoted":
         return False
-    return warning.get("promotion_status") == "promoted" or bool(warning.get("promotion_reasons"))
+    if not _has_evidence_chain(warning):
+        return False
+    return True
+
+
+def _warning_consistency_key(warning: dict[str, Any]) -> tuple[str, str] | None:
+    symbol = warning.get("c_side", {}).get("symbol")
+    drift_type = warning.get("type")
+    if not symbol or not drift_type:
+        return None
+    return str(drift_type), str(symbol)
+
+
+def _annotate_observed_pairs(warnings: list[dict[str, Any]]) -> None:
+    pairs_by_key: dict[tuple[str, str], set[str]] = {}
+    for warning in warnings:
+        key = _warning_consistency_key(warning)
+        pair_id = warning.get("pair_id")
+        if key and pair_id:
+            pairs_by_key.setdefault(key, set()).add(str(pair_id))
+    for warning in warnings:
+        key = _warning_consistency_key(warning)
+        if not key:
+            continue
+        observed = sorted(pairs_by_key.get(key, set()))
+        if len(observed) > 1:
+            warning["observed_pairs"] = observed
 
 
 def rank_warnings(cfg: Config) -> dict[str, Any]:
     input_warnings = read_warnings(cfg.warnings_jsonl)
     warnings = [warning for warning in input_warnings if _is_promoted(warning)]
+    _annotate_observed_pairs(warnings)
     for warning in warnings:
         warning.setdefault("evidence_chain", [])
         breakdown = score_breakdown(warning)
@@ -77,7 +118,6 @@ def rank_warnings(cfg: Config) -> dict[str, Any]:
             rust_side.get("safe_apis")
             or rust_side.get("error_mappings")
             or rust_side.get("lifetime_facts")
-            or rust_side.get("safety_comments")
             or rust_side.get("oracle_hits")
         )
         if warning.get("score", 0) >= 12 and has_high_evidence:

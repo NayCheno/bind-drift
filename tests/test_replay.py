@@ -6,7 +6,7 @@ from binddrift import replay as replay_module
 from binddrift.config import Config
 from binddrift.db import connect, initialize
 from binddrift.replay import ReplayStageError, mark_stale_replay_runs, run_version_replay
-from binddrift.warnings import read_warnings
+from binddrift.warnings import read_warnings, write_warnings
 
 
 def _git(repo: Path, *args: str) -> None:
@@ -171,6 +171,78 @@ def test_mark_stale_replay_runs_closes_interrupted_rows(tmp_path: Path):
     assert stale == {"runs": 1, "pairs": 1}
     assert conn.execute("SELECT status FROM replay_runs WHERE run_id='old-run'").fetchone()["status"] == "stale"
     assert conn.execute("SELECT status FROM replay_pairs WHERE pair_id='old-pair'").fetchone()["status"] == "stale"
+
+
+def test_version_replay_reranks_aggregate_for_multi_version_consistency(monkeypatch, tmp_path: Path):
+    cfg = Config.from_args(repo_root=tmp_path)
+    (tmp_path / "vendor/linux").mkdir(parents=True)
+    versions = [
+        {"version_id": "v1", "git_commit": "1" * 40, "tag": "v1", "date": None, "arch": None, "config_hash": None, "rustc_version": None, "clang_version": None, "bindgen_version": None},
+        {"version_id": "v2", "git_commit": "2" * 40, "tag": "v2", "date": None, "arch": None, "config_hash": None, "rustc_version": None, "clang_version": None, "bindgen_version": None},
+        {"version_id": "v3", "git_commit": "3" * 40, "tag": "v3", "date": None, "arch": None, "config_hash": None, "rustc_version": None, "clang_version": None, "bindgen_version": None},
+    ]
+    monkeypatch.setattr(replay_module, "select_versions", lambda *args, **kwargs: {"refs": ["v1", "v2", "v3"], "version_rows": versions})
+    monkeypatch.setattr(replay_module, "write_toolchain_matrix", lambda *args, **kwargs: {"entries": []})
+    monkeypatch.setattr(
+        replay_module,
+        "_extract_version",
+        lambda cfg, version, **kwargs: {"worktree": {"path": str(tmp_path / "vendor/linux")}, "toolchain": {"required": {}}},
+    )
+    monkeypatch.setattr(
+        replay_module,
+        "run_tier1_with_context",
+        lambda pair_cfg, **kwargs: {"warnings": 0, "warning_file": str(pair_cfg.warnings_jsonl)},
+    )
+
+    def write_pair_warning(pair_cfg, old=None, new=None, append=False, run_id=None, pair_id=None):
+        write_warnings(
+            pair_cfg,
+            [
+                {
+                    "warning_id": "W-000001",
+                    "run_id": run_id,
+                    "pair_id": pair_id,
+                    "old_version": old,
+                    "new_version": new,
+                    "type": "ErrorDrift",
+                    "promotion_status": "promoted",
+                    "c_evidence_level": "c_behavior_indicator",
+                    "confidence": 0.8,
+                    "c_side": {
+                        "symbol": "foo_get",
+                        "old_indicators": ["NULL_RETURN"],
+                        "new_indicators": ["ERROR_CODE"],
+                    },
+                    "rust_side": {
+                        "uses": [
+                            {
+                                "rust_file": "device.rs",
+                                "line": 2,
+                                "enclosing_function": "Device::get",
+                                "enclosing_unsafe_block": 1,
+                            }
+                        ],
+                    },
+                    "evidence_chain": [{"evidence_file": "foo.c", "evidence_line": 1, "evidence_text": "return -EINVAL;"}],
+                }
+            ],
+        )
+        return {"warnings": 1, "new_warnings": 1, "warning_file": str(pair_cfg.warnings_jsonl)}
+
+    monkeypatch.setattr(replay_module, "run_tier2_with_context", write_pair_warning)
+    monkeypatch.setattr(
+        replay_module,
+        "run_evaluation",
+        lambda pair_cfg, **kwargs: {"summary": {"warnings": len(read_warnings(pair_cfg.warnings_jsonl))}},
+    )
+
+    summary = run_version_replay(cfg, start="v1", include_head=False, toolchain="off")
+    warnings = read_warnings(Path(summary["aggregate_warnings"]))
+
+    assert summary["pairs"] == 2
+    assert summary["ranking"]["warnings"] == 2
+    assert all(len(warning["observed_pairs"]) == 2 for warning in warnings)
+    assert all(warning["score_breakdown"]["multi_version_consistency"] == 2.0 for warning in warnings)
 
 
 def test_version_replay_records_classified_stage_failure(monkeypatch, tmp_path: Path):

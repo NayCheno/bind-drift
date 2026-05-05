@@ -72,6 +72,150 @@ def test_rank_warnings_filters_unpromoted_and_keeps_score_breakdown(tmp_path: Pa
     assert ranked[0]["score_breakdown"].get("binding_only_penalty") == -0.0
 
 
+def test_rank_warnings_drops_promoted_binding_only_without_evidence_chain(tmp_path: Path):
+    cfg = Config.from_args(repo_root=tmp_path)
+    write_warnings(
+        cfg,
+        [
+            {
+                "warning_id": "W-000001",
+                "type": "SignatureDrift",
+                "promotion_status": "promoted",
+                "promotion_reasons": ["direct_binding_use"],
+                "c_evidence_level": "binding_only",
+                "c_side": {"symbol": "generated_only", "old": "absent", "new": "added"},
+                "rust_side": {"exposure": {"edge_count": 50}},
+                "evidence_chain": [],
+            },
+            {
+                "warning_id": "W-000002",
+                "type": "ErrorDrift",
+                "promotion_status": "promoted",
+                "c_evidence_level": "c_behavior_indicator",
+                "confidence": 0.8,
+                "c_side": {"symbol": "foo_get", "old_indicators": ["NULL_RETURN"], "new_indicators": ["ERROR_CODE"]},
+                "rust_side": {
+                    "uses": [{"rust_file": "device.rs", "line": 2, "enclosing_function": "Device::get", "enclosing_unsafe_block": 1}],
+                },
+                "evidence_chain": [{"evidence_file": "foo.c", "evidence_line": 1, "evidence_text": "return -EINVAL;"}],
+            },
+        ],
+    )
+
+    result = rank_warnings(cfg)
+    ranked = read_warnings(cfg.warnings_jsonl)
+
+    assert result["dropped_unpromoted"] == 1
+    assert [warning["warning_id"] for warning in ranked] == ["W-000002"]
+
+
+def test_rank_warnings_drops_any_promoted_row_without_real_rust_evidence(tmp_path: Path):
+    cfg = Config.from_args(repo_root=tmp_path)
+    write_warnings(
+        cfg,
+        [
+            {
+                "warning_id": "W-000001",
+                "type": "SignatureDrift",
+                "promotion_status": "promoted",
+                "promotion_reasons": ["exposes_safe_api"],
+                "c_evidence_level": "c_source_diff",
+                "c_side": {"symbol": "generated_only", "old": "int foo(void)", "new": "long foo(void)"},
+                "rust_side": {"exposure": {"edge_count": 50}},
+                "evidence_chain": [],
+            },
+            {
+                "warning_id": "W-000002",
+                "type": "ErrorDrift",
+                "promotion_status": "promoted",
+                "c_evidence_level": "c_behavior_indicator",
+                "confidence": 0.8,
+                "c_side": {"symbol": "foo_get", "old_indicators": ["NULL_RETURN"], "new_indicators": ["ERROR_CODE"]},
+                "rust_side": {
+                    "uses": [{"rust_file": "device.rs", "line": 2, "enclosing_function": "Device::get", "enclosing_unsafe_block": 1}],
+                },
+                "evidence_chain": [{"evidence_file": "foo.c", "evidence_line": 1, "evidence_text": "return -EINVAL;"}],
+            },
+        ],
+    )
+
+    result = rank_warnings(cfg)
+    ranked = read_warnings(cfg.warnings_jsonl)
+
+    assert result["dropped_unpromoted"] == 1
+    assert [warning["warning_id"] for warning in ranked] == ["W-000002"]
+
+
+def test_rank_warnings_safety_comment_only_does_not_become_high(tmp_path: Path):
+    cfg = Config.from_args(repo_root=tmp_path)
+    write_warnings(
+        cfg,
+        [
+            {
+                "warning_id": "W-000001",
+                "type": "SignatureDrift",
+                "promotion_status": "promoted",
+                "c_evidence_level": "c_source_diff",
+                "c_side": {"symbol": "foo_get", "old": "int foo(void)", "new": "long foo(void)"},
+                "rust_side": {
+                    "uses": [{"rust_file": "device.rs", "line": 2, "enclosing_function": "Device::get", "enclosing_unsafe_block": 1}],
+                    "safety_comments": [{"rust_file": "device.rs", "line": 1, "text": "SAFETY: foo_get is checked"}],
+                },
+                "evidence_chain": [{"rust_file": "device.rs", "line": 1, "text": "SAFETY: foo_get is checked"}],
+                "observed_pairs": ["p1", "p2"],
+            },
+        ],
+    )
+
+    rank_warnings(cfg)
+    ranked = read_warnings(cfg.warnings_jsonl)
+
+    assert ranked[0]["score"] >= 12
+    assert ranked[0]["risk"] == "Medium"
+
+
+def test_score_breakdown_rewards_multi_version_consistency():
+    warning = {
+        "type": "ErrorDrift",
+        "promotion_status": "promoted",
+        "c_evidence_level": "c_behavior_indicator",
+        "observed_pairs": ["p1", "p2"],
+        "rust_side": {
+            "uses": [{"enclosing_unsafe_block": 1}],
+        },
+    }
+
+    assert score_breakdown(warning)["multi_version_consistency"] == 2.0
+
+
+def test_rank_warnings_populates_multi_version_consistency_from_pair_ids(tmp_path: Path):
+    cfg = Config.from_args(repo_root=tmp_path)
+    base_warning = {
+        "type": "ErrorDrift",
+        "promotion_status": "promoted",
+        "c_evidence_level": "c_behavior_indicator",
+        "confidence": 0.8,
+        "c_side": {"symbol": "foo_get", "old_indicators": ["NULL_RETURN"], "new_indicators": ["ERROR_CODE"]},
+        "rust_side": {
+            "uses": [{"rust_file": "device.rs", "line": 2, "enclosing_function": "Device::get", "enclosing_unsafe_block": 1}],
+        },
+        "evidence_chain": [{"evidence_file": "foo.c", "evidence_line": 1, "evidence_text": "return -EINVAL;"}],
+    }
+    write_warnings(
+        cfg,
+        [
+            {"warning_id": "W-000001", "pair_id": "p1", **base_warning},
+            {"warning_id": "W-000002", "pair_id": "p2", **base_warning},
+        ],
+    )
+
+    rank_warnings(cfg)
+    ranked = read_warnings(cfg.warnings_jsonl)
+
+    assert all(warning["observed_pairs"] == ["p1", "p2"] for warning in ranked)
+    assert all(warning["score_breakdown"]["multi_version_consistency"] == 2.0 for warning in ranked)
+
+
 def test_rank_warnings_scores_tier2_error_mappings_as_contract(tmp_path: Path):
     cfg = Config.from_args(repo_root=tmp_path)
     conn = connect(cfg.database)

@@ -93,6 +93,16 @@ def _cfg_for_pair(cfg: Config, linux_tree: Path, pair_dir: Path) -> Config:
     )
 
 
+def _cfg_for_replay_run(cfg: Config, run_dir: Path) -> Config:
+    return replace(
+        cfg,
+        data_dir=run_dir,
+        warnings_jsonl=run_dir / "warnings.jsonl",
+        drift_facts_jsonl=run_dir / "drift_facts.jsonl",
+        report_md=run_dir / "warnings.md",
+    )
+
+
 def _persist_run(cfg: Config, row: dict[str, Any]) -> None:
     conn = connect(cfg.database)
     initialize(conn)
@@ -455,6 +465,7 @@ def run_version_replay(
 
     completed = sum(1 for pair in pairs if pair["status"] == "completed")
     failed = sum(1 for pair in pairs if pair["status"] != "completed")
+    aggregate_ranking = rank_warnings(_cfg_for_replay_run(cfg, run_dir))
     summary = {
         "run_id": run_id,
         "versions": len(versions),
@@ -462,6 +473,7 @@ def run_version_replay(
         "completed_pairs": completed,
         "failed_pairs": failed,
         "warnings": sum(pair["warning_count"] for pair in pairs),
+        "ranking": aggregate_ranking,
         "duration_seconds": round(time.time() - started, 3),
         "aggregate_warnings": str(aggregate_warnings),
         "run_dir": str(run_dir),
