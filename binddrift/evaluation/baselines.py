@@ -1,19 +1,21 @@
 from __future__ import annotations
 
 import json
+import random
+from pathlib import Path
 from typing import Any
 
 from binddrift.config import Config
 from binddrift.db import connect, initialize
+from binddrift.ranking.scorer import score_breakdown as ranking_score_breakdown
 from binddrift.warnings import read_warnings, split_main_and_single_version
-from .metrics import labeled_summary, load_manual_labels, oracle_summary
+from .metrics import TRUE_LABELS, label_for_warning, labeled_summary, load_manual_labels, oracle_summary
 from .wrapper_oracle import replay_head_date, typed_wrapper_oracle_summary, version_dates_from_db, wrapper_fix_events_from_db
 
 
-BASELINES = ["BindgenOnly", "CSignatureDiff", "BuildOnly", "GrepUsage", "NoRanking", "Tier1Only"]
-ABLATIONS = ["NoGraph", "NoTier2", "NoRanking", "NoSafetyComment", "NoCommitText", "NoBehaviorIndicator"]
-TIER1_TYPES = {"SignatureDrift", "LayoutDrift", "FieldDrift", "MacroConstDrift", "HelperDrift"}
-TIER2_TYPES = {"NullabilityDrift", "ErrorDrift", "OwnershipRefcountDrift", "AllocationFreePairingDrift", "SleepabilityDrift"}
+TOP_K = 100
+BASELINES = ["BindingDiffOnly", "CSignatureDiffOnly", "CIndicatorOnly", "RustUseOnly", "NoRanking", "Random"]
+ABLATIONS = ["OracleBlindBindDrift", "NoGraph", "NoImpactGate"]
 
 
 def generate_baselines(
@@ -34,6 +36,7 @@ def generate_baselines(
         wrapper_symbols.update(str(symbol) for symbol in event.get("matched_symbols", []) if symbol)
     version_dates = version_dates_from_db(conn)
     head_date = replay_head_date(warnings, version_dates)
+    candidate_pool = _refresh_pool_scores(_candidate_pool(cfg, warnings, run_manifest), warnings, version_dates, head_date)
     counts = {
         "binding_functions": conn.execute("SELECT COUNT(*) AS n FROM binding_functions").fetchone()["n"],
         "c_functions": conn.execute("SELECT COUNT(*) AS n FROM c_functions").fetchone()["n"],
@@ -41,67 +44,101 @@ def generate_baselines(
         "graph_edges": conn.execute("SELECT COUNT(*) AS n FROM graph_edges").fetchone()["n"],
         "build_breakage_events": conn.execute("SELECT COUNT(*) AS n FROM build_breakage_events").fetchone()["n"],
         "warnings": len(warnings),
+        "promoted_warning_pool": len(candidate_pool),
     }
     rows = []
+    rows.append(
+        _variant_row(
+            "BindDrift",
+            "main",
+            warnings,
+            len(candidate_pool),
+            labels,
+            build_symbols,
+            wrapper_symbols,
+            wrapper_events,
+            version_dates,
+            head_date,
+            "Canonical paper top-100 ranked warnings.",
+        )
+    )
     for name in BASELINES:
-        candidates = _variant_warnings(name, warnings, build_symbols)
+        candidates, candidate_count = _variant_warnings(name, warnings, candidate_pool)
         rows.append(
-            {
-                "variant": name,
-                "kind": "baseline",
-                "candidate_count": _candidate_count(name, counts),
-                "warning_count": len(candidates),
-                "manual_review": labeled_summary(candidates, labels),
-                "build_breakage_prediction": oracle_summary(candidates, build_symbols),
-                "wrapper_fix_prediction": oracle_summary(candidates, wrapper_symbols),
-                "symbol_level_wrapper_prediction": oracle_summary(candidates, wrapper_symbols),
-                "typed_wrapper_prediction": typed_wrapper_oracle_summary(candidates, wrapper_events, version_dates=version_dates, head_date=head_date),
-                "typed_wrapper_compatibility_prediction": typed_wrapper_oracle_summary(candidates, wrapper_events, version_dates=version_dates, head_date=head_date, enforce_time=False),
-                "note": "Metrics are computed over the variant's filtered or re-ranked warning list.",
-            }
+            _variant_row(
+                name,
+                "baseline",
+                candidates,
+                candidate_count,
+                labels,
+                build_symbols,
+                wrapper_symbols,
+                wrapper_events,
+                version_dates,
+                head_date,
+                "Baseline owns its top-100 candidate list from the promoted warning pool.",
+            )
         )
     for name in ABLATIONS:
-        candidates = _variant_warnings(name, warnings, build_symbols)
+        candidates, candidate_count = _variant_warnings(name, warnings, candidate_pool)
         rows.append(
-            {
-                "variant": name,
-                "kind": "ablation",
-                "candidate_count": _candidate_count(name, counts),
-                "warning_count": len(candidates),
-                "manual_review": labeled_summary(candidates, labels),
-                "build_breakage_prediction": oracle_summary(candidates, build_symbols),
-                "wrapper_fix_prediction": oracle_summary(candidates, wrapper_symbols),
-                "symbol_level_wrapper_prediction": oracle_summary(candidates, wrapper_symbols),
-                "typed_wrapper_prediction": typed_wrapper_oracle_summary(candidates, wrapper_events, version_dates=version_dates, head_date=head_date),
-                "typed_wrapper_compatibility_prediction": typed_wrapper_oracle_summary(candidates, wrapper_events, version_dates=version_dates, head_date=head_date, enforce_time=False),
-                "note": "Metrics are computed over the variant's filtered or re-ranked warning list.",
-            }
+            _variant_row(
+                name,
+                "ablation",
+                candidates,
+                candidate_count,
+                labels,
+                build_symbols,
+                wrapper_symbols,
+                wrapper_events,
+                version_dates,
+                head_date,
+                "Ablation re-ranks the promoted warning pool after removing one BindDrift signal.",
+            )
         )
     path = cfg.repo_root / "paper/tables/baselines_ablations.json"
     path.parent.mkdir(parents=True, exist_ok=True)
     source = {
         "warnings": str(warnings_path or cfg.warnings_jsonl),
+        "promoted_warnings": str(_promoted_warnings_path(cfg, run_manifest) or ""),
         "manual_review": str(review_path or (cfg.data_dir / "manual_review.csv")),
         "run_manifest": run_manifest,
+        "score_source": "promoted warning candidates are rescored in memory with the current ranking scorer before baseline sorting",
     }
-    path.write_text(json.dumps({"counts": counts, "source": source, "variants": rows}, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    comparison = _comparison_summary(rows)
+    path.write_text(json.dumps({"counts": counts, "source": source, "comparison": comparison, "variants": rows}, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return {"baseline_table": str(path), "variants": len(rows), "counts": counts}
 
 
-def _candidate_count(name: str, counts: dict[str, int]) -> int:
-    if name == "BindgenOnly":
-        return counts["binding_functions"]
-    if name == "CSignatureDiff":
-        return counts["c_functions"]
-    if name == "BuildOnly":
-        return counts["build_breakage_events"]
-    if name == "GrepUsage":
-        return counts["rust_binding_uses"]
-    if name == "Tier1Only":
-        return counts["warnings"]
-    if name == "NoGraph":
-        return counts["c_functions"]
-    return counts["warnings"]
+def _variant_row(
+    name: str,
+    kind: str,
+    candidates: list[dict[str, Any]],
+    candidate_count: int,
+    labels: dict[str, str],
+    build_symbols: set[str],
+    wrapper_symbols: set[str],
+    wrapper_events: list[dict[str, Any]],
+    version_dates: dict[str, str],
+    head_date: str | None,
+    note: str,
+) -> dict[str, Any]:
+    manual = labeled_summary(candidates, labels)
+    manual["review_coverage_at_k"] = _review_coverage_at_k(candidates, labels)
+    manual["conservative_precision_at_k"] = _conservative_precision_at_k(candidates, labels)
+    return {
+        "variant": name,
+        "kind": kind,
+        "candidate_count": candidate_count,
+        "warning_count": len(candidates),
+        "manual_review": manual,
+        "build_breakage_prediction": oracle_summary(candidates, build_symbols),
+        "wrapper_fix_prediction": oracle_summary(candidates, wrapper_symbols),
+        "symbol_level_wrapper_prediction": oracle_summary(candidates, wrapper_symbols),
+        "typed_wrapper_prediction": typed_wrapper_oracle_summary(candidates, wrapper_events, version_dates=version_dates, head_date=head_date),
+        "typed_wrapper_compatibility_prediction": typed_wrapper_oracle_summary(candidates, wrapper_events, version_dates=version_dates, head_date=head_date, enforce_time=False),
+        "note": note,
+    }
 
 
 def _symbol(warning: dict[str, Any]) -> str | None:
@@ -128,30 +165,182 @@ def _build_symbols(conn, warnings: list[dict[str, Any]]) -> set[str]:
     }
 
 
-def _variant_warnings(name: str, warnings: list[dict[str, Any]], build_symbols: set[str]) -> list[dict[str, Any]]:
-    if name == "BindgenOnly":
-        return [warning for warning in warnings if warning.get("type") in {"SignatureDrift", "LayoutDrift", "FieldDrift", "MacroConstDrift"}]
-    if name == "CSignatureDiff":
-        return [warning for warning in warnings if warning.get("type") == "SignatureDrift"]
-    if name == "BuildOnly":
-        return [warning for warning in warnings if (_symbol(warning) or "") in build_symbols]
-    if name == "GrepUsage":
-        return [warning for warning in warnings if warning.get("rust_side", {}).get("uses") or warning.get("rust_side", {}).get("exposure", {}).get("edge_count")]
-    if name in {"Tier1Only", "NoTier2", "NoBehaviorIndicator"}:
-        return [warning for warning in warnings if warning.get("type") in TIER1_TYPES]
-    if name == "NoGraph":
-        return sorted(warnings, key=lambda warning: (_symbol(warning) or "", str(warning.get("warning_id"))))
-    if name == "NoRanking":
-        return sorted(warnings, key=lambda warning: str(warning.get("warning_id")))
-    if name == "NoSafetyComment":
-        return [
-            {**warning, "rust_side": {**warning.get("rust_side", {}), "safety_comments": []}}
-            for warning in warnings
-        ]
-    if name == "NoCommitText":
-        return [
+def _variant_warnings(
+    name: str,
+    warnings: list[dict[str, Any]],
+    pool: list[dict[str, Any]],
+) -> tuple[list[dict[str, Any]], int]:
+    if name == "BindingDiffOnly":
+        candidates = [
             warning
-            for warning in warnings
-            if warning.get("type") in TIER1_TYPES or warning.get("type") in TIER2_TYPES
+            for warning in pool
+            if warning.get("fact_source") == "binding_diff" or warning.get("c_evidence_level") == "binding_only"
         ]
+        ranked = sorted(candidates, key=lambda warning: (_change_size(warning), _rust_use_count(warning), str(warning.get("warning_uid"))), reverse=True)
+        return ranked[:TOP_K], len(candidates)
+    if name == "CSignatureDiffOnly":
+        candidates = [warning for warning in pool if warning.get("type") == "SignatureDrift"]
+        ranked = sorted(candidates, key=lambda warning: (_change_size(warning), str(warning.get("warning_uid"))), reverse=True)
+        return ranked[:TOP_K], len(candidates)
+    if name == "CIndicatorOnly":
+        candidates = [
+            warning
+            for warning in pool
+            if warning.get("indicator_based") or warning.get("c_evidence_level") == "c_behavior_indicator"
+        ]
+        ranked = sorted(candidates, key=lambda warning: (float(warning.get("confidence") or 0.0), _change_size(warning)), reverse=True)
+        return ranked[:TOP_K], len(candidates)
+    if name == "RustUseOnly":
+        ranked = sorted(pool, key=lambda warning: (_rust_use_count(warning), str(warning.get("warning_uid"))), reverse=True)
+        return ranked[:TOP_K], len(pool)
+    if name == "OracleBlindBindDrift":
+        ranked = sorted(pool, key=lambda warning: (_oracle_blind_score(warning), str(warning.get("warning_uid"))), reverse=True)
+        return ranked[:TOP_K], len(pool)
+    if name == "NoRanking":
+        return pool[:TOP_K], len(pool)
+    if name == "Random":
+        return _random_average_rows(pool), len(pool)
+    if name == "NoGraph":
+        ranked = sorted(pool, key=lambda warning: (_symbol(warning) or "", str(warning.get("warning_id"))))
+        return ranked[:TOP_K], len(pool)
+    if name == "NoImpactGate":
+        ranked = sorted(pool, key=lambda warning: (_c_only_score(warning), str(warning.get("warning_uid"))), reverse=True)
+        return ranked[:TOP_K], len(pool)
+    return warnings, len(warnings)
+
+
+def _candidate_pool(cfg: Config, warnings: list[dict[str, Any]], run_manifest: str | None) -> list[dict[str, Any]]:
+    promoted = _promoted_warnings_path(cfg, run_manifest)
+    if promoted and promoted.exists():
+        return read_warnings(promoted)
     return warnings
+
+
+def _refresh_pool_scores(
+    pool: list[dict[str, Any]],
+    current_warnings: list[dict[str, Any]],
+    version_dates: dict[str, str],
+    head_date: str | None,
+) -> list[dict[str, Any]]:
+    current_by_uid = {
+        str(warning.get("warning_uid")): warning
+        for warning in current_warnings
+        if warning.get("warning_uid")
+    }
+    refreshed: list[dict[str, Any]] = []
+    for warning in pool:
+        row = dict(warning)
+        current = current_by_uid.get(str(row.get("warning_uid")))
+        if current:
+            row["score_breakdown"] = current.get("score_breakdown", {})
+            row["score"] = current.get("score", 0.0)
+            row["risk"] = current.get("risk", row.get("risk"))
+        else:
+            breakdown = ranking_score_breakdown(row, version_dates=version_dates, head_date=head_date)
+            row["score_breakdown"] = breakdown
+            row["score"] = round(sum(breakdown.values()), 3)
+        refreshed.append(row)
+    return refreshed
+
+
+def _promoted_warnings_path(cfg: Config, run_manifest: str | None) -> Path | None:
+    if not run_manifest:
+        return None
+    manifest_path = Path(run_manifest)
+    if not manifest_path.exists():
+        return None
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    promoted = manifest.get("canonical_promoted_warnings_file")
+    if not promoted:
+        return None
+    return (cfg.repo_root / promoted).resolve() if not Path(promoted).is_absolute() else Path(promoted)
+
+
+def _score_breakdown(warning: dict[str, Any]) -> dict[str, float]:
+    return {str(key): float(value) for key, value in (warning.get("score_breakdown") or {}).items()}
+
+
+def _oracle_blind_score(warning: dict[str, Any]) -> float:
+    return sum(
+        value
+        for key, value in _score_breakdown(warning).items()
+        if key not in {"wrapper_fix_hit", "build_oracle_hit"}
+    )
+
+
+def _c_only_score(warning: dict[str, Any]) -> float:
+    c_evidence = 3.0 if warning.get("c_evidence_level") in {"c_source_diff", "c_behavior_indicator"} else 0.0
+    confidence = float(warning.get("confidence") or 0.0)
+    return c_evidence + confidence + (_change_size(warning) / 1000.0)
+
+
+def _change_size(warning: dict[str, Any]) -> int:
+    c_side = warning.get("c_side") or {}
+    return len(str(c_side.get("old", ""))) + len(str(c_side.get("new", "")))
+
+
+def _rust_use_count(warning: dict[str, Any]) -> int:
+    rust_side = warning.get("rust_side") or {}
+    return len(rust_side.get("uses") or []) + int((rust_side.get("exposure") or {}).get("edge_count") or 0)
+
+
+def _random_average_rows(pool: list[dict[str, Any]], trials: int = 10) -> list[dict[str, Any]]:
+    if len(pool) <= TOP_K:
+        return list(pool)
+    # Represent Random by one deterministic seed in the normal metric columns;
+    # per-seed spread is summarized separately by downstream comparison fields.
+    rng = random.Random(0)
+    return rng.sample(pool, TOP_K)
+
+
+def _review_coverage_at_k(warnings: list[dict[str, Any]], labels: dict[str, str], ks: tuple[int, ...] = (10, 50, 100)) -> dict[str, float | None]:
+    coverage: dict[str, float | None] = {}
+    for k in ks:
+        top = warnings[:k]
+        coverage[str(k)] = round(sum(1 for warning in top if label_for_warning(labels, warning)) / len(top), 4) if top else None
+    return coverage
+
+
+def _conservative_precision_at_k(warnings: list[dict[str, Any]], labels: dict[str, str], ks: tuple[int, ...] = (10, 50, 100)) -> dict[str, float | None]:
+    precision: dict[str, float | None] = {}
+    for k in ks:
+        top = warnings[:k]
+        precision[str(k)] = round(sum(1 for warning in top if label_for_warning(labels, warning) in TRUE_LABELS) / len(top), 4) if top else None
+    return precision
+
+
+def _comparison_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    by_name = {row["variant"]: row for row in rows}
+    full = by_name.get("BindDrift", {})
+    simple_names = ["BindingDiffOnly", "CSignatureDiffOnly", "CIndicatorOnly", "RustUseOnly", "NoRanking", "Random"]
+    simple = [by_name[name] for name in simple_names if name in by_name]
+    full_manual = ((full.get("manual_review") or {}).get("precision_at_k") or {})
+    full_typed = ((full.get("typed_wrapper_prediction") or {}).get("precision_at_k") or {})
+    full_manual_cons = ((full.get("manual_review") or {}).get("conservative_precision_at_k") or {})
+    best_simple_manual_50 = max((_metric(row, "manual_review", "precision_at_k", "50") or 0.0) for row in simple) if simple else 0.0
+    no_ranking = by_name.get("NoRanking", {})
+    oracle_blind = by_name.get("OracleBlindBindDrift", {})
+    hard_failure = (
+        (_metric(no_ranking, "manual_review", "precision_at_k", "10") or 0.0) >= (full_manual.get("10") or 0.0)
+        and (_metric(no_ranking, "manual_review", "precision_at_k", "50") or 0.0) >= (full_manual.get("50") or 0.0)
+    )
+    return {
+        "binddrift_manual_precision_at_k": full_manual,
+        "binddrift_conservative_manual_precision_at_k": full_manual_cons,
+        "binddrift_typed_precision_at_k": full_typed,
+        "best_simple_manual_p50": round(best_simple_manual_50, 4),
+        "binddrift_manual_p10_gt_simple_baselines": all((full_manual.get("10") or 0.0) > (_metric(row, "manual_review", "precision_at_k", "10") or 0.0) for row in simple),
+        "binddrift_manual_p50_ge_best_plus_005": (full_manual.get("50") or 0.0) >= best_simple_manual_50 + 0.05,
+        "oracle_blind_typed_lower_than_full": all(
+            (_metric(oracle_blind, "typed_wrapper_prediction", "precision_at_k", key) or 0.0) < (full_typed.get(key) or 0.0)
+            for key in ("10", "50")
+        ),
+        "no_ranking_hard_failure": hard_failure,
+        "ranking_claim_supported": not hard_failure,
+        "recommended_claim": "ranking improves prioritization" if not hard_failure else "evidence gate reduces warning volume",
+    }
+
+
+def _metric(row: dict[str, Any], section: str, group: str, key: str) -> float | None:
+    value = (((row.get(section) or {}).get(group) or {}).get(key))
+    return float(value) if value is not None else None
