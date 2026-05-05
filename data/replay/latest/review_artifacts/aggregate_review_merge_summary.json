@@ -1,0 +1,90 @@
+{
+  "acceptance": {
+    "checks": {
+      "agreement_rate_ge_075": true,
+      "all_top_warnings_labeled": true,
+      "double_labeled_ge_50": true,
+      "manual_precision_at_100_ge_010": true,
+      "manual_precision_at_10_ge_030": true,
+      "manual_precision_at_50_ge_015": true,
+      "reviewed_warnings_ge_50": true,
+      "true_labeled_warnings_ge_5": true,
+      "unclear_le_30pct": true
+    },
+    "passed": true,
+    "unclear_rate": 0.01
+  },
+  "agreement": {
+    "agreement_rate": 1.0,
+    "agreements": 100,
+    "double_labeled": 100
+  },
+  "label_distribution": {
+    "BENIGN_DRIFT": 35,
+    "FALSE_POSITIVE": 27,
+    "TRUE_SEMANTIC_DRIFT": 2,
+    "TRUE_WRAPPER_FIX": 35,
+    "UNCLEAR": 1
+  },
+  "label_join": {
+    "label_distribution": {
+      "BENIGN_DRIFT": 35,
+      "FALSE_POSITIVE": 27,
+      "TRUE_SEMANTIC_DRIFT": 2,
+      "TRUE_WRAPPER_FIX": 35,
+      "UNCLEAR": 1
+    },
+    "matched_review_rows": 100,
+    "orphan_review_rows": [],
+    "review_rows": 100,
+    "unmatched_warnings": [],
+    "warnings": 100
+  },
+  "manual_review": {
+    "label_distribution": {
+      "BENIGN_DRIFT": 35,
+      "FALSE_POSITIVE": 27,
+      "TRUE_SEMANTIC_DRIFT": 2,
+      "TRUE_WRAPPER_FIX": 35,
+      "UNCLEAR": 1
+    },
+    "labeled_warnings": 100,
+    "per_type": {
+      "FieldDrift": {
+        "labeled_warnings": 22,
+        "precision": 0.4091,
+        "true_labeled_warnings": 9,
+        "warnings": 22
+      },
+      "MacroConstDrift": {
+        "labeled_warnings": 25,
+        "precision": 0.0,
+        "true_labeled_warnings": 0,
+        "warnings": 25
+      },
+      "SignatureDrift": {
+        "labeled_warnings": 53,
+        "precision": 0.5283,
+        "true_labeled_warnings": 28,
+        "warnings": 53
+      }
+    },
+    "precision": 0.37,
+    "precision_at_k": {
+      "10": 0.3,
+      "100": 0.37,
+      "50": 0.36
+    },
+    "true_labeled_warnings": 37,
+    "unclear_warnings": 1
+  },
+  "manual_review_csv": "/home/nya/workspace/bind-drift/data/replay/latest/manual_review.csv",
+  "missing_sources": [],
+  "override_rows": 39,
+  "review_rows": 100,
+  "run_dir": "/home/nya/workspace/bind-drift/data/replay/latest",
+  "top_warning_rows": 100,
+  "true_labeled_warnings": 37,
+  "updated_rows": 4,
+  "warnings": 100
+}

@@ -98,8 +98,9 @@ def _round(value: float | None) -> float | None:
 
 
 def labeled_summary(warnings: list[dict[str, Any]], labels: dict[str, str], ks: tuple[int, ...] = (10, 50, 100)) -> dict[str, Any]:
-    labeled_count = sum(1 for warning in warnings if label_for_warning(labels, warning))
-    true_count = sum(1 for warning in warnings if label_for_warning(labels, warning) in TRUE_LABELS)
+    warning_labels = [label_for_warning(labels, warning) for warning in warnings]
+    labeled_count = sum(1 for label in warning_labels if label)
+    true_count = sum(1 for label in warning_labels if label in TRUE_LABELS)
     per_type: dict[str, dict[str, Any]] = {}
     by_type: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for warning in warnings:
@@ -118,9 +119,9 @@ def labeled_summary(warnings: list[dict[str, Any]], labels: dict[str, str], ks: 
         "true_labeled_warnings": true_count,
         "precision": round(true_count / labeled_count, 4) if labeled_count else None,
         "precision_at_k": {str(k): precision_at_k(warnings, labels, k) for k in ks},
-        "label_distribution": dict(Counter(label for label in labels.values() if label)),
+        "label_distribution": dict(Counter(label for label in warning_labels if label)),
         "per_type": per_type,
-        "unclear_warnings": sum(1 for label in labels.values() if label == "UNCLEAR"),
+        "unclear_warnings": sum(1 for label in warning_labels if label == "UNCLEAR"),
     }
 
 

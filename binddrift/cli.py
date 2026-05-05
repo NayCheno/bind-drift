@@ -16,6 +16,7 @@ from .evaluation.evaluator import run_evaluation
 from .evaluation.evaluator import generate_manual_review
 from .evaluation.label_join import check_label_join
 from .evaluation.diagnostics import diagnose_false_positives
+from .evaluation.review_merge import merge_manual_review
 from .extractors.bindgen import extract_bindings
 from .extractors.c_api import extract_c_api
 from .extractors.rust_usage import extract_rust_usage
@@ -254,6 +255,18 @@ def cmd_eval_check_label_join(args: argparse.Namespace, cfg: Config) -> int:
     return 0
 
 
+def cmd_eval_merge_manual_review(args: argparse.Namespace, cfg: Config) -> int:
+    run_dir = Path(args.run_dir).resolve() if args.run_dir else canonical_run_dir(cfg, args.run_id)
+    result = merge_manual_review(
+        run_dir=run_dir,
+        warnings_jsonl=Path(args.warnings).resolve() if args.warnings else run_dir / "warnings.jsonl",
+        aggregate_review=Path(args.manual_review).resolve() if args.manual_review else run_dir / "manual_review.csv",
+        override_jsonl=Path(args.override_jsonl).resolve() if args.override_jsonl else None,
+    )
+    print(json.dumps(result, indent=2, sort_keys=True))
+    return 0
+
+
 def cmd_replay(args: argparse.Namespace, cfg: Config) -> int:
     if args.replay_command == "versions":
         result = run_version_replay(
@@ -468,6 +481,13 @@ def build_parser() -> argparse.ArgumentParser:
     check_join.add_argument("--warnings", required=True, help="Warnings JSONL used by the manual review CSV.")
     check_join.add_argument("--manual-review", required=True, help="Manual review CSV to join against warnings.")
     _set(check_join, cmd_eval_check_label_join)
+    merge_review = eval_sub.add_parser("merge-manual-review", help="Merge per-pair review CSV rows into the canonical review CSV.")
+    merge_review.add_argument("--run-id", default="latest", help="Canonical replay run id.")
+    merge_review.add_argument("--run-dir", help="Replay run directory; defaults to data/replay/<run-id>.")
+    merge_review.add_argument("--warnings", help="Canonical warnings JSONL; defaults to <run-dir>/warnings.jsonl.")
+    merge_review.add_argument("--manual-review", help="Canonical manual review CSV; defaults to <run-dir>/manual_review.csv.")
+    merge_review.add_argument("--override-jsonl", help="Optional JSONL rows that override merged reviewer/adjudicator fields.")
+    _set(merge_review, cmd_eval_merge_manual_review)
 
     paper = sub.add_parser("paper", help="Paper artifact commands.")
     paper_sub = paper.add_subparsers(dest="paper_command", required=True)

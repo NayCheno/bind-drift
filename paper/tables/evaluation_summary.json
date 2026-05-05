@@ -18,41 +18,47 @@
     "wrapper_fix_events": 200
   },
   "manual_review": {
-    "label_distribution": {},
-    "labeled_warnings": 0,
+    "label_distribution": {
+      "BENIGN_DRIFT": 35,
+      "FALSE_POSITIVE": 27,
+      "TRUE_SEMANTIC_DRIFT": 2,
+      "TRUE_WRAPPER_FIX": 35,
+      "UNCLEAR": 1
+    },
+    "labeled_warnings": 100,
     "per_type": {
       "FieldDrift": {
-        "labeled_warnings": 0,
-        "precision": null,
-        "true_labeled_warnings": 0,
+        "labeled_warnings": 22,
+        "precision": 0.4091,
+        "true_labeled_warnings": 9,
         "warnings": 22
       },
       "MacroConstDrift": {
-        "labeled_warnings": 0,
-        "precision": null,
+        "labeled_warnings": 25,
+        "precision": 0.0,
         "true_labeled_warnings": 0,
         "warnings": 25
       },
       "SignatureDrift": {
-        "labeled_warnings": 0,
-        "precision": null,
-        "true_labeled_warnings": 0,
+        "labeled_warnings": 53,
+        "precision": 0.5283,
+        "true_labeled_warnings": 28,
         "warnings": 53
       }
     },
-    "precision": null,
+    "precision": 0.37,
     "precision_at_k": {
-      "10": null,
-      "100": null,
-      "50": null
+      "10": 0.3,
+      "100": 0.37,
+      "50": 0.36
     },
-    "true_labeled_warnings": 0,
-    "unclear_warnings": 0
+    "true_labeled_warnings": 37,
+    "unclear_warnings": 1
   },
   "manual_review_agreement": {
-    "agreement_rate": null,
-    "agreements": 0,
-    "double_labeled": 0
+    "agreement_rate": 1.0,
+    "agreements": 100,
+    "double_labeled": 100
   },
   "note": "Build and wrapper-fix recall are symbol-level replay-oracle estimates; semantic precision comes from manual labels.",
   "promoted_replay_warnings": 331,

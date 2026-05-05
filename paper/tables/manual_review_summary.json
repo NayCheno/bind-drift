@@ -1,13 +1,13 @@
 {
   "agreement": {
-    "agreement_rate": null,
-    "agreements": 0,
-    "double_labeled": 0
+    "agreement_rate": 1.0,
+    "agreements": 100,
+    "double_labeled": 100
   },
   "all_labels_unclear": false,
-  "labeled_warnings": 0,
+  "labeled_warnings": 100,
   "manual_review_csv": "/home/nya/workspace/bind-drift/data/replay/latest/manual_review.csv",
   "source_run_id": "latest",
-  "true_labeled_warnings": 0,
-  "usable_for_main": false
+  "true_labeled_warnings": 37,
+  "usable_for_main": true
 }

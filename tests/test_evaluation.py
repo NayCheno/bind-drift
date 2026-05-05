@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 from binddrift.config import Config
@@ -5,6 +6,7 @@ from binddrift.cli import main
 from binddrift.evaluation.diagnostics import diagnose_false_positives
 from binddrift.evaluation.evaluator import generate_manual_review, parse_build_log
 from binddrift.evaluation.metrics import label_for_warning, labeled_summary, load_manual_labels, manual_review_agreement, oracle_summary
+from binddrift.evaluation.review_merge import merge_manual_review
 from binddrift.warnings import write_warnings
 
 
@@ -45,6 +47,16 @@ def test_labeled_summary_does_not_cross_match_reused_warning_ids():
     assert summary["labeled_warnings"] == 1
     assert summary["true_labeled_warnings"] == 1
     assert summary["precision_at_k"]["2"] == 1.0
+
+
+def test_labeled_summary_distribution_is_scoped_to_warning_subset():
+    warnings = [{"warning_id": "W-1"}]
+    labels = {"W-1": "FALSE_POSITIVE", "W-2": "UNCLEAR"}
+
+    summary = labeled_summary(warnings, labels, ks=(1,))
+
+    assert summary["label_distribution"] == {"FALSE_POSITIVE": 1}
+    assert summary["unclear_warnings"] == 0
 
 
 def test_oracle_summary_reports_symbol_recall_and_mrr():
@@ -266,3 +278,85 @@ def test_check_label_join_cli_reports_unmatched_and_orphans(tmp_path: Path, caps
     assert '"matched_review_rows": 1' in captured.out
     assert '"orphan_review_rows": [' in captured.out
     assert "TRUE_WRAPPER_FIX" in captured.out
+
+
+def test_merge_manual_review_copies_pair_rows_and_codes_reasons(tmp_path: Path):
+    run_dir = tmp_path / "data/replay/latest"
+    pair_dir = run_dir / "latest-p001-v6.1-to-v6.2"
+    pair_dir.mkdir(parents=True)
+    warning = {
+        "warning_id": "W-1",
+        "warning_uid": "uid-1",
+        "run_id": "latest",
+        "pair_id": "latest-p001-v6.1-to-v6.2",
+        "old_version": "v6.1",
+        "new_version": "v6.2",
+        "type": "SignatureDrift",
+        "c_evidence_level": "c_source_diff",
+        "c_side": {"symbol": "foo", "old": "a", "new": "b"},
+        "rust_side": {"oracle_hits": [{"oracle_type": "wrapper_fix"}]},
+    }
+    (run_dir / "warnings.jsonl").write_text(json.dumps(warning) + "\n", encoding="utf-8")
+    (run_dir / "manual_review.csv").write_text(
+        "warning_uid,run_id,pair_id,warning_id,type,symbol,reviewer1_label,reviewer1_notes,"
+        "reviewer2_label,reviewer2_notes,adjudicated_label,adjudication_notes,true_reason,"
+        "false_reason,label,reviewer_notes\n"
+        "uid-1,latest,latest-p001-v6.1-to-v6.2,W-1,SignatureDrift,foo,,,,,,,,,legacy,note\n",
+        encoding="utf-8",
+    )
+    (pair_dir / "manual_review.csv").write_text(
+        "warning_id,pair_id,type,risk,score,symbol,reviewer1_label,reviewer1_notes,"
+        "reviewer2_label,reviewer2_notes,adjudicated_label,adjudication_notes,label,reviewer_notes\n"
+        "W-1,latest-p001-v6.1-to-v6.2,SignatureDrift,High,1.0,foo,"
+        "TRUE_WRAPPER_FIX,r1,TRUE_WRAPPER_FIX,r2,TRUE_WRAPPER_FIX,adj,,\n",
+        encoding="utf-8",
+    )
+
+    result = merge_manual_review(run_dir)
+    labels = load_manual_labels(run_dir / "manual_review.csv", uid_only=True)
+    merged = (run_dir / "manual_review.csv").read_text(encoding="utf-8")
+
+    assert result["updated_rows"] == 1
+    assert result["label_distribution"] == {"TRUE_WRAPPER_FIX": 1}
+    assert result["missing_sources"] == []
+    assert labels == {"uid-1": "TRUE_WRAPPER_FIX"}
+    assert "WRAPPER_FIX_COMMIT_MATCH" in merged
+    assert "legacy,note" not in merged
+
+
+def test_merge_manual_review_supports_non_latest_pair_dirs(tmp_path: Path):
+    run_dir = tmp_path / "data/replay/replay-1"
+    pair_dir = run_dir / "replay-1-p001-v6.1-to-v6.2"
+    pair_dir.mkdir(parents=True)
+    warning = {
+        "warning_id": "W-1",
+        "warning_uid": "uid-1",
+        "run_id": "replay-1",
+        "pair_id": "replay-1-p001-v6.1-to-v6.2",
+        "old_version": "v6.1",
+        "new_version": "v6.2",
+        "type": "SignatureDrift",
+        "c_side": {"symbol": "foo", "old": "a", "new": "b"},
+    }
+    (run_dir / "warnings.jsonl").write_text(json.dumps(warning) + "\n", encoding="utf-8")
+    (run_dir / "manual_review.csv").write_text(
+        "warning_uid,run_id,pair_id,warning_id,type,symbol,reviewer1_label,reviewer1_notes,"
+        "reviewer2_label,reviewer2_notes,adjudicated_label,adjudication_notes,true_reason,"
+        "false_reason,label,reviewer_notes\n"
+        "uid-1,replay-1,replay-1-p001-v6.1-to-v6.2,W-1,SignatureDrift,foo,,,,,,,,,,\n",
+        encoding="utf-8",
+    )
+    (pair_dir / "manual_review.csv").write_text(
+        "warning_id,pair_id,type,risk,score,symbol,reviewer1_label,reviewer1_notes,"
+        "reviewer2_label,reviewer2_notes,adjudicated_label,adjudication_notes,label,reviewer_notes\n"
+        "W-1,replay-1-p001-v6.1-to-v6.2,SignatureDrift,High,1.0,foo,"
+        "FALSE_POSITIVE,parser artifact,FALSE_POSITIVE,parser artifact,FALSE_POSITIVE,parser artifact,,\n",
+        encoding="utf-8",
+    )
+
+    result = merge_manual_review(run_dir)
+    merged = (run_dir / "manual_review.csv").read_text(encoding="utf-8")
+
+    assert result["updated_rows"] == 1
+    assert result["missing_sources"] == []
+    assert "EXTRACTOR_ERROR" in merged
