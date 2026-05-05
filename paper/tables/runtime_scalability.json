@@ -124,7 +124,7 @@
       "drift_facts": 17867,
       "duration_seconds": 568.001,
       "pairs": 20,
-      "paper_topk": 331,
+      "paper_topk": 100,
       "promoted_warnings": 331,
       "run_id": "latest",
       "single_version_review_targets": 0,

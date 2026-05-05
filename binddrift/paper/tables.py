@@ -64,7 +64,7 @@ def _write_replay_summary(cfg: Config, path: Path) -> None:
         )
     ]
     path.write_text(
-        json.dumps({"runs": runs, "pairs": pairs, "main_evidence_gate": _main_replay_gate(conn)}, indent=2, sort_keys=True) + "\n",
+        json.dumps({"runs": runs, "pairs": pairs, "main_evidence_gate": _main_replay_gate(conn, cfg)}, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
 
@@ -107,7 +107,7 @@ def _write_fact_counts(cfg: Config, path: Path) -> None:
             """
         )
     ]
-    gate = _main_replay_gate(conn)
+    gate = _main_replay_gate(conn, cfg)
     main_versions = set(gate["version_ids"])
     main_by_version = [row for row in by_version if row["version_id"] in main_versions]
     path.write_text(
@@ -126,7 +126,7 @@ def _write_manual_review_summary(cfg: Config, path: Path, manifest: dict[str, An
     initialize(conn)
     source_run_id = None
     review_path = cfg.data_dir / "manual_review.csv"
-    gate = _main_replay_gate(conn)
+    gate = _main_replay_gate(conn, cfg)
     if manifest:
         review_path = Path(manifest["resolved_paths"]["manual_review"])
         source_run_id = str(manifest["run_id"])
@@ -188,7 +188,7 @@ def _write_runtime_scalability(cfg: Config, path: Path, manifest: dict[str, Any]
             item["promoted_warnings"] = summary.get("warnings")
         rows.append(item)
     path.write_text(
-        json.dumps({"runs": rows, "main_evidence_gate": _main_replay_gate(conn)}, indent=2, sort_keys=True) + "\n",
+        json.dumps({"runs": rows, "main_evidence_gate": _main_replay_gate(conn, cfg)}, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
 
@@ -291,7 +291,7 @@ def _manual_review_warning_ids(path: Path) -> set[str]:
     return set(labels)
 
 
-def _main_replay_gate(conn) -> dict[str, Any]:
+def _main_replay_gate(conn, cfg: Config | None = None) -> dict[str, Any]:
     """Identify replay outputs strong enough for main paper tables.
 
     Main-result rows must come from completed version replay pairs with
@@ -313,10 +313,22 @@ def _main_replay_gate(conn) -> dict[str, Any]:
         if len(refs) < 2:
             reasons.append("single_version")
         summary = _load_json(run["summary"], {})
+        manifest = None
+        if cfg is not None and run_id == MAIN_REPLAY_RUN_ID and manifest_exists(cfg):
+            try:
+                manifest = validate_run_manifest(cfg)
+            except Exception as exc:
+                reasons.append(f"invalid_run_manifest:{type(exc).__name__}")
         run_dir = summary.get("run_dir")
+        if manifest:
+            run_dir = str(canonical_run_dir(cfg))
         if not run_dir or not Path(run_dir).exists():
             reasons.append("missing_replay_dir")
-        aggregate_warnings = summary.get("aggregate_warnings")
+        aggregate_warnings = (
+            manifest.get("resolved_paths", {}).get("promoted_warnings")
+            if manifest
+            else summary.get("aggregate_promoted_warnings") or summary.get("aggregate_warnings")
+        )
         aggregate_warning_count = None
         aggregate_warning_ids: set[str] | None = None
         aggregate_warning_keys: set[str] | None = None

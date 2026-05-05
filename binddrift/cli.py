@@ -212,13 +212,18 @@ def cmd_eval_manifest(args: argparse.Namespace, cfg: Config) -> int:
         drift_facts_jsonl=run_dir / "drift_facts.jsonl",
         report_md=run_dir / "warnings.md",
     )
+    paper_top_k = args.top_k
     drift_facts = run_dir / "drift_facts.jsonl"
     if args.refresh or not drift_facts.exists():
         aggregate_pair_jsonl(run_dir, "drift_facts.jsonl", drift_facts)
     existing_single_version = read_warnings(run_dir / "single_version_review_targets.jsonl")
-    warnings = read_warnings(run_cfg.warnings_jsonl) + existing_single_version
+    promoted_path = run_dir / "promoted_warnings.jsonl"
+    source_warnings = read_warnings(promoted_path) or read_warnings(run_cfg.warnings_jsonl)
+    warnings = source_warnings + existing_single_version
     main_warnings, single_version = split_main_and_single_version(warnings)
-    write_warnings(run_cfg, main_warnings)
+    write_jsonl(promoted_path, main_warnings)
+    paper_warnings = main_warnings[:paper_top_k]
+    write_warnings(run_cfg, paper_warnings)
     write_jsonl(run_dir / "single_version_review_targets.jsonl", single_version)
     warnings = read_warnings(run_cfg.warnings_jsonl)
     review = run_dir / "manual_review.csv"
@@ -450,7 +455,7 @@ def build_parser() -> argparse.ArgumentParser:
     _set(eval_all, cmd_eval)
     manifest = eval_sub.add_parser("manifest", help="Generate the canonical replay run manifest.")
     manifest.add_argument("--run-id", default="latest", help="Replay run id to manifest.")
-    manifest.add_argument("--top-k", type=int, default=100, help="Top warnings to include in a generated review skeleton.")
+    manifest.add_argument("--top-k", type=int, default=100, help="Top warnings to include in the paper warning set and review skeleton.")
     manifest.add_argument("--refresh", action="store_true", help="Rebuild aggregate drift_facts.jsonl before writing the manifest.")
     manifest.add_argument("--refresh-review", action="store_true", help="Regenerate the canonical manual_review.csv skeleton.")
     _set(manifest, cmd_eval_manifest)

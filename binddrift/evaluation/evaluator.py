@@ -248,6 +248,11 @@ def run_evaluation(
         if manifest
         else len(single_version_targets)
     )
+    promoted_replay_warning_count = (
+        int(manifest.get("promoted_warning_count", len(warnings)))
+        if manifest
+        else len(warnings)
+    )
     build_findings = parse_build_log(build_log) if build_log else []
     wrapper_fixes = mine_wrapper_fixes(cfg)
     persisted = persist_ground_truth(cfg, build_log, build_findings, wrapper_fixes, run_id=run_id, pair_id=pair_id)
@@ -260,7 +265,7 @@ def run_evaluation(
     wrapper_metrics = oracle_summary(warnings, _wrapper_symbols(wrapper_fixes))
     table = {
         "warnings": len(warnings),
-        "promoted_replay_warnings": len(warnings),
+        "promoted_replay_warnings": promoted_replay_warning_count,
         "single_version_review_targets": single_version_target_count,
         "build_breakage_findings": len(build_findings),
         "wrapper_fix_candidates": sum(1 for row in wrapper_fixes if row["likely_wrapper_fix"]),

@@ -1,23 +1,25 @@
 {
   "canonical_database": ".binddrift/binddrift.sqlite3",
   "canonical_drift_facts_file": "data/replay/latest/drift_facts.jsonl",
+  "canonical_promoted_warnings_file": "data/replay/latest/promoted_warnings.jsonl",
   "canonical_review_file": "data/replay/latest/manual_review.csv",
   "canonical_single_version_review_targets_file": "data/replay/latest/single_version_review_targets.jsonl",
   "canonical_warning_file": "data/replay/latest/warnings.jsonl",
   "drift_fact_count": 17867,
   "pair_count": 20,
-  "paper_topk": 331,
+  "paper_topk": 100,
   "promoted_warning_count": 331,
-  "reviewed_warning_count": 331,
+  "reviewed_warning_count": 100,
   "run_dir": "data/replay/latest",
   "run_id": "latest",
   "sha256": {
     "drift_facts.jsonl": "9e11b927fad503e87aafd1ee9e3aa0beb6ceb2866dabfd3bdc508c405c5d3f96",
-    "manual_review.csv": "8a62561591ce30c57c60f690d981d2180dca9676852486458b5592528f0691ba",
+    "manual_review.csv": "dbe398e1c03dc71f3a683c90862fbb6b095a7e7dbe90526e5fb7aef625ecaf6a",
+    "promoted_warnings.jsonl": "22880471cc4b1e344279e13dc75fd13e293413b6fc57f9a326d5b25e008a9aaa",
     "single_version_review_targets.jsonl": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "warnings.jsonl": "22880471cc4b1e344279e13dc75fd13e293413b6fc57f9a326d5b25e008a9aaa"
+    "warnings.jsonl": "2ffcc87b9713c7dd471929e775d93c88788cb57dfe4f2d3eea1600dcbaadad40"
   },
   "single_version_review_targets": 0,
   "version_count": 21,
-  "warning_count": 331
+  "warning_count": 100
 }

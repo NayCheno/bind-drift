@@ -260,6 +260,7 @@ def test_manual_review_summary_prefers_canonical_latest_run(tmp_path: Path):
         }
         warning["warning_uid"] = make_warning_uid(warning)
         (run_dir / "warnings.jsonl").write_text(json.dumps(warning, sort_keys=True) + "\n", encoding="utf-8")
+        (run_dir / "promoted_warnings.jsonl").write_text(json.dumps(warning, sort_keys=True) + "\n", encoding="utf-8")
         (run_dir / "drift_facts.jsonl").write_text('{"fact_id":"F-1"}\n', encoding="utf-8")
         (run_dir / "single_version_review_targets.jsonl").write_text("", encoding="utf-8")
         (run_dir / "manual_review.csv").write_text(
@@ -332,6 +333,7 @@ def test_manual_review_summary_rejects_stale_review_rows_without_warnings(tmp_pa
     run_dir = tmp_path / "data/replay/latest"
     run_dir.mkdir(parents=True)
     (run_dir / "warnings.jsonl").write_text("", encoding="utf-8")
+    (run_dir / "promoted_warnings.jsonl").write_text("", encoding="utf-8")
     (run_dir / "manual_review.csv").write_text(
         "warning_id,reviewer1_label,reviewer2_label,adjudicated_label,label\n"
         "W-stale,,,BENIGN_DRIFT,\n",

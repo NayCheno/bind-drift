@@ -91,6 +91,7 @@ def load_summary(run_dir: Path) -> dict[str, Any]:
 def build_run_manifest(cfg: Config, run_id: str = REPLAY_RUN_ID) -> dict[str, Any]:
     run_dir = canonical_run_dir(cfg, run_id)
     warnings_path = run_dir / "warnings.jsonl"
+    promoted_path = run_dir / "promoted_warnings.jsonl"
     review_path = run_dir / "manual_review.csv"
     drift_facts_path = run_dir / "drift_facts.jsonl"
     single_version_path = run_dir / "single_version_review_targets.jsonl"
@@ -98,6 +99,8 @@ def build_run_manifest(cfg: Config, run_id: str = REPLAY_RUN_ID) -> dict[str, An
 
     if not warnings_path.exists():
         raise ArtifactConsistencyError(f"missing canonical warning file: {warnings_path}")
+    if not promoted_path.exists():
+        raise ArtifactConsistencyError(f"missing canonical promoted warning file: {promoted_path}")
     if not review_path.exists():
         raise ArtifactConsistencyError(f"missing canonical review file: {review_path}")
     if not drift_facts_path.exists():
@@ -106,7 +109,8 @@ def build_run_manifest(cfg: Config, run_id: str = REPLAY_RUN_ID) -> dict[str, An
         raise ArtifactConsistencyError(f"missing canonical single-version target file: {single_version_path}")
 
     warnings = read_warnings(warnings_path)
-    ineligible = [warning for warning in warnings if not eligible_for_main_warning(warning)]
+    promoted_warnings = read_warnings(promoted_path)
+    ineligible = [warning for warning in warnings + promoted_warnings if not eligible_for_main_warning(warning)]
     if ineligible:
         raise ArtifactConsistencyError(f"canonical warning file contains non-main warnings: {len(ineligible)}")
     warning_count = len(warnings)
@@ -117,7 +121,9 @@ def build_run_manifest(cfg: Config, run_id: str = REPLAY_RUN_ID) -> dict[str, An
     reviewed_warning_count = count_csv_rows(review_path)
     if reviewed_warning_count > warning_count:
         raise ArtifactConsistencyError(f"reviewed_warning_count {reviewed_warning_count}>{warning_count}")
-    promoted_warning_count = sum(1 for warning in warnings if warning.get("promotion_status") == "promoted")
+    promoted_warning_count = len(promoted_warnings)
+    if warning_count > promoted_warning_count:
+        raise ArtifactConsistencyError(f"paper_topk {warning_count}>{promoted_warning_count}")
     version_ids = sorted(
         {
             str(value)
@@ -131,6 +137,7 @@ def build_run_manifest(cfg: Config, run_id: str = REPLAY_RUN_ID) -> dict[str, An
         "run_id": run_id,
         "run_dir": repo_relative(cfg, run_dir),
         "canonical_warning_file": repo_relative(cfg, warnings_path),
+        "canonical_promoted_warnings_file": repo_relative(cfg, promoted_path),
         "canonical_review_file": repo_relative(cfg, review_path),
         "canonical_drift_facts_file": repo_relative(cfg, drift_facts_path),
         "canonical_single_version_review_targets_file": repo_relative(cfg, single_version_path),
@@ -145,6 +152,7 @@ def build_run_manifest(cfg: Config, run_id: str = REPLAY_RUN_ID) -> dict[str, An
         "version_count": int(summary.get("versions") or len(version_ids)),
         "sha256": {
             "warnings.jsonl": sha256_file(warnings_path),
+            "promoted_warnings.jsonl": sha256_file(promoted_path),
             "manual_review.csv": sha256_file(review_path),
             "drift_facts.jsonl": sha256_file(drift_facts_path),
             "single_version_review_targets.jsonl": sha256_file(single_version_path),
@@ -171,6 +179,7 @@ def load_run_manifest(cfg: Config, run_id: str = REPLAY_RUN_ID) -> dict[str, Any
 def validate_run_manifest(cfg: Config, manifest: dict[str, Any] | None = None) -> dict[str, Any]:
     manifest = manifest or load_run_manifest(cfg)
     warnings_path = resolve_manifest_path(cfg, manifest["canonical_warning_file"])
+    promoted_path = resolve_manifest_path(cfg, manifest["canonical_promoted_warnings_file"])
     review_path = resolve_manifest_path(cfg, manifest["canonical_review_file"])
     drift_facts_path = resolve_manifest_path(cfg, manifest["canonical_drift_facts_file"])
     single_version_path = resolve_manifest_path(cfg, manifest.get("canonical_single_version_review_targets_file", "data/replay/latest/single_version_review_targets.jsonl"))
@@ -179,6 +188,7 @@ def validate_run_manifest(cfg: Config, manifest: dict[str, Any] | None = None) -
         raise ArtifactConsistencyError(f"canonical_database {database_path} != configured database {cfg.database.resolve()}")
     required = {
         "warnings.jsonl": warnings_path,
+        "promoted_warnings.jsonl": promoted_path,
         "manual_review.csv": review_path,
         "drift_facts.jsonl": drift_facts_path,
         "single_version_review_targets.jsonl": single_version_path,
@@ -188,12 +198,22 @@ def validate_run_manifest(cfg: Config, manifest: dict[str, Any] | None = None) -
         raise ArtifactConsistencyError("missing canonical files: " + ", ".join(missing))
 
     warning_count = count_jsonl(warnings_path)
+    promoted_warning_count = count_jsonl(promoted_path)
     drift_fact_count = count_jsonl(drift_facts_path)
     single_version_count = count_jsonl(single_version_path)
     reviewed_warning_count = count_csv_rows(review_path)
     checks = [
         (warning_count > 0, "canonical warning file is empty"),
         (warning_count == manifest.get("warning_count"), f"warning_count {warning_count}!={manifest.get('warning_count')}"),
+        (
+            promoted_warning_count == manifest.get("promoted_warning_count"),
+            f"promoted_warning_count {promoted_warning_count}!={manifest.get('promoted_warning_count')}",
+        ),
+        (
+            warning_count == manifest.get("paper_topk"),
+            f"paper_topk {warning_count}!={manifest.get('paper_topk')}",
+        ),
+        (warning_count <= promoted_warning_count, f"paper_topk {warning_count}>{promoted_warning_count}"),
         (drift_fact_count == manifest.get("drift_fact_count"), f"drift_fact_count {drift_fact_count}!={manifest.get('drift_fact_count')}"),
         (reviewed_warning_count == manifest.get("reviewed_warning_count"), f"reviewed_warning_count {reviewed_warning_count}!={manifest.get('reviewed_warning_count')}"),
         (reviewed_warning_count <= warning_count, f"reviewed_warning_count {reviewed_warning_count}>{warning_count}"),
@@ -206,7 +226,7 @@ def validate_run_manifest(cfg: Config, manifest: dict[str, Any] | None = None) -
         expected = (manifest.get("sha256") or {}).get(name)
         actual = sha256_file(path)
         checks.append((actual == expected, f"{name} sha256 {actual}!={expected}"))
-    warnings = read_warnings(warnings_path)
+    warnings = read_warnings(warnings_path) + read_warnings(promoted_path)
     checks.append(
         (
             all(eligible_for_main_warning(warning) for warning in warnings),
@@ -220,6 +240,7 @@ def validate_run_manifest(cfg: Config, manifest: dict[str, Any] | None = None) -
         **manifest,
         "resolved_paths": {
             "warnings": str(warnings_path),
+            "promoted_warnings": str(promoted_path),
             "manual_review": str(review_path),
             "drift_facts": str(drift_facts_path),
             "single_version_review_targets": str(single_version_path),

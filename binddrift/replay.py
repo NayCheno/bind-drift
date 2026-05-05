@@ -347,6 +347,7 @@ def run_version_replay(
     processed: dict[str, dict[str, Any]] = {}
     pairs: list[dict[str, Any]] = []
     aggregate_warnings = run_dir / "warnings.jsonl"
+    aggregate_promoted_warnings = run_dir / "promoted_warnings.jsonl"
     aggregate_drift_facts = run_dir / "drift_facts.jsonl"
     started = time.time()
 
@@ -470,11 +471,12 @@ def run_version_replay(
     drift_fact_count = aggregate_pair_jsonl(run_dir, "drift_facts.jsonl", aggregate_drift_facts)
     aggregate_ranking = rank_warnings(_cfg_for_replay_run(cfg, run_dir))
     main_warnings, single_version_targets = split_main_and_single_version(read_warnings(aggregate_warnings))
-    write_jsonl(aggregate_warnings, main_warnings)
+    write_jsonl(aggregate_promoted_warnings, main_warnings)
+    write_jsonl(aggregate_warnings, main_warnings[:100])
     write_jsonl(run_dir / "single_version_review_targets.jsonl", single_version_targets)
     aggregate_review = generate_manual_review(
         _cfg_for_replay_run(cfg, run_dir),
-        main_warnings,
+        main_warnings[:100],
         top_k=100,
     )
     should_write_manifest = bool(completed and failed == 0 and aggregate_ranking["warnings"] > 0)
@@ -484,8 +486,10 @@ def run_version_replay(
         "pairs": len(pairs),
         "completed_pairs": completed,
         "failed_pairs": failed,
-        "warnings": sum(pair["warning_count"] for pair in pairs),
+        "warnings": min(len(main_warnings), 100),
         "promoted_replay_warnings": len(main_warnings),
+        "aggregate_promoted_warnings": str(aggregate_promoted_warnings),
+        "paper_topk": min(len(main_warnings), 100),
         "single_version_review_targets": len(single_version_targets),
         "ranking": aggregate_ranking,
         "duration_seconds": round(time.time() - started, 3),

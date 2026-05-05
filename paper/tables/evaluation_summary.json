@@ -25,19 +25,19 @@
         "labeled_warnings": 0,
         "precision": null,
         "true_labeled_warnings": 0,
-        "warnings": 25
+        "warnings": 22
       },
       "MacroConstDrift": {
         "labeled_warnings": 0,
         "precision": null,
         "true_labeled_warnings": 0,
-        "warnings": 26
+        "warnings": 25
       },
       "SignatureDrift": {
         "labeled_warnings": 0,
         "precision": null,
         "true_labeled_warnings": 0,
-        "warnings": 280
+        "warnings": 53
       }
     },
     "precision": null,
@@ -58,23 +58,23 @@
   "promoted_replay_warnings": 331,
   "recall": {
     "build_breakage": null,
-    "wrapper_fix": 0.5172
+    "wrapper_fix": 0.1379
   },
   "run_manifest": "/home/nya/workspace/bind-drift/data/replay/latest/run_manifest.json",
   "single_version_review_targets": 0,
-  "warnings": 331,
+  "warnings": 100,
   "wrapper_fix_candidates": 24,
   "wrapper_fix_prediction": {
-    "f1": 0.0934,
-    "matched_symbols": 15,
-    "mrr": 0.005,
+    "f1": 0.062,
+    "matched_symbols": 4,
+    "mrr": 0.0023,
     "oracle_symbols": 29,
-    "precision": 0.0514,
+    "precision": 0.04,
     "precision_at_k": {
       "10": 0.0,
       "100": 0.04,
       "50": 0.02
     },
-    "recall": 0.5172
+    "recall": 0.1379
   }
 }
