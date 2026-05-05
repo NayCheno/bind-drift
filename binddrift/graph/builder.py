@@ -9,9 +9,13 @@ from binddrift.db import connect, initialize, upsert_many
 from binddrift.kernel import default_version_id
 
 
+def canonical_node_id(node_type: str, label: str) -> str:
+    return f"{node_type}:{label}"
+
+
 def _node(node_type: str, label: str, properties: dict[str, Any] | None = None) -> dict[str, Any]:
     return {
-        "node_id": f"{node_type}:{label}",
+        "node_id": canonical_node_id(node_type, label),
         "node_type": node_type,
         "label": label,
         "properties": json.dumps(properties or {}, sort_keys=True),
@@ -155,20 +159,20 @@ def query_graph(
         ]
     else:
         node_ids = [
-            f"CFunction:{target}",
-            f"RustBindingFunction:{target}",
-            f"CStruct:{target}",
-            f"RustBindingStruct:{target}",
-            f"CMacro:{target}",
-            f"RustBindingConst:{target}",
-            f"RustSafeAPI:{target}",
+            canonical_node_id("CFunction", target),
+            canonical_node_id("RustBindingFunction", target),
+            canonical_node_id("CStruct", target),
+            canonical_node_id("RustBindingStruct", target),
+            canonical_node_id("CMacro", target),
+            canonical_node_id("RustBindingConst", target),
+            canonical_node_id("RustSafeAPI", target),
         ]
         placeholders = ",".join("?" for _ in node_ids)
         nodes = [
             dict(row)
             for row in conn.execute(
-                f"SELECT * FROM graph_nodes WHERE version_id=? AND (label=? OR node_id IN ({placeholders})) LIMIT 100",
-                (vid, target, *node_ids),
+                f"SELECT * FROM graph_nodes WHERE version_id=? AND node_id IN ({placeholders}) LIMIT 100",
+                (vid, *node_ids),
             )
         ]
     node_ids = [row["node_id"] for row in nodes]

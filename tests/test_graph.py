@@ -3,7 +3,7 @@ from pathlib import Path
 from binddrift.config import Config
 from binddrift.db import connect, initialize, upsert_many
 from binddrift.evidence.impact import compute_rust_impact
-from binddrift.graph.builder import build_graph, evidence_chain, query_graph
+from binddrift.graph.builder import build_graph, canonical_node_id, evidence_chain, query_graph
 
 
 def test_graph_materializes_evidence_chain(tmp_path: Path):
@@ -102,3 +102,45 @@ def test_no_substring_symbol_match_for_impact_or_graph_query(tmp_path: Path):
     assert impact["eligible"] is False
     assert {node["node_id"] for node in exact["nodes"]} == {"CFunction:d_alloc"}
     assert "RustUnsafeCall:alloc.rs:20:dealloc" in {node["node_id"] for node in fuzzy["nodes"]}
+
+
+def test_exact_graph_query_does_not_return_label_only_nodes(tmp_path: Path):
+    cfg = Config.from_args(repo_root=tmp_path)
+    conn = connect(cfg.database)
+    initialize(conn)
+    upsert_many(
+        conn,
+        "c_functions",
+        [
+            {
+                "version_id": "v-test",
+                "c_symbol": "foo",
+                "return_type": "void",
+                "params": "[]",
+                "header_file": "foo.h",
+                "definition_file": "foo.c",
+                "line": 1,
+            },
+        ],
+    )
+    build_graph(cfg, version_id="v-test")
+    upsert_many(
+        conn,
+        "graph_nodes",
+        [
+            {
+                "version_id": "v-test",
+                "node_id": "RustSafeAPI:other",
+                "node_type": "RustSafeAPI",
+                "label": "foo",
+                "properties": "{}",
+            }
+        ],
+    )
+
+    exact = query_graph(cfg, symbol="foo", version_id="v-test")
+    fuzzy = query_graph(cfg, symbol="foo", version_id="v-test", fuzzy=True)
+
+    assert canonical_node_id("CFunction", "foo") in {node["node_id"] for node in exact["nodes"]}
+    assert "RustSafeAPI:other" not in {node["node_id"] for node in exact["nodes"]}
+    assert "RustSafeAPI:other" in {node["node_id"] for node in fuzzy["nodes"]}

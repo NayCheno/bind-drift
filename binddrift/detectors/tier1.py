@@ -6,6 +6,7 @@ from typing import Any
 from binddrift.config import Config
 from binddrift.db import connect, initialize, upsert_many
 from binddrift.evidence.impact import apply_impact_to_warning, compute_rust_impact
+from binddrift.graph.builder import canonical_node_id
 from binddrift.kernel import default_version_id
 from binddrift.warnings import fact_id, warning_id, write_drift_facts, write_warnings
 
@@ -44,12 +45,12 @@ def _indicator_sets(conn, version: str) -> dict[str, set[str]]:
 
 def _graph_exposure(conn, version: str, symbol: str) -> dict[str, Any]:
     node_ids = [
-        f"CFunction:{symbol}",
-        f"RustBindingFunction:{symbol}",
-        f"CStruct:{symbol}",
-        f"RustBindingStruct:{symbol}",
-        f"CMacro:{symbol}",
-        f"RustBindingConst:{symbol}",
+        canonical_node_id("CFunction", symbol),
+        canonical_node_id("RustBindingFunction", symbol),
+        canonical_node_id("CStruct", symbol),
+        canonical_node_id("RustBindingStruct", symbol),
+        canonical_node_id("CMacro", symbol),
+        canonical_node_id("RustBindingConst", symbol),
     ]
     placeholders = ",".join("?" for _ in node_ids)
     edges = conn.execute(
