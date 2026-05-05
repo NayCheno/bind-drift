@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+import csv
 from pathlib import Path
 
 from binddrift.config import Config
 from binddrift.db import connect, initialize
-from binddrift.evaluation.metrics import label_for_warning, load_manual_labels, warning_key
+from binddrift.evaluation.metrics import TRUE_LABELS, label_for_warning, warning_label_key, warning_key
 from binddrift.warnings import read_warnings
 
 
@@ -23,18 +24,22 @@ CASE_TYPES = [
 def generate_case_studies(cfg: Config) -> dict[str, object]:
     warning_source = _case_warning_source(cfg)
     warnings = read_warnings(warning_source)
-    labels = load_manual_labels(cfg.data_dir / "manual_review.csv")
+    review_source = _case_review_source(cfg, warning_source)
+    labels = _load_adjudicated_labels(review_source)
     cases_dir = cfg.repo_root / "paper/cases"
     cases_dir.mkdir(parents=True, exist_ok=True)
+    for stale in cases_dir.glob("case-*.md"):
+        stale.unlink()
     created = []
-    selected = _select_cases(warnings)
+    selected = _select_cases(warnings, labels)
     for idx, warning in enumerate(selected, start=1):
         case_type = warning.get("type", "Warning")
         symbol = warning.get("c_side", {}).get("symbol", "unknown")
         path = cases_dir / f"case-{idx:02d}-{case_type.lower()}-{symbol.lower()}.md"
         path.write_text(_case_template(case_type, warning, label_for_warning(labels, warning)), encoding="utf-8")
         created.append(str(path))
-    return {"cases": len(created), "files": created, "warning_source": str(warning_source)}
+    note = "only adjudicated true positives with C and Rust evidence are used"
+    return {"cases": len(created), "files": created, "warning_source": str(warning_source), "manual_review": str(review_source), "note": note}
 
 
 def _case_warning_source(cfg: Config) -> Path:
@@ -52,13 +57,20 @@ def _case_warning_source(cfg: Config) -> Path:
     return cfg.warnings_jsonl
 
 
-def _select_cases(warnings: list[dict]) -> list[dict]:
+def _case_review_source(cfg: Config, warning_source: Path) -> Path:
+    adjacent = warning_source.parent / "manual_review.csv"
+    if adjacent.exists():
+        return adjacent
+    return cfg.data_dir / "manual_review.csv"
+
+
+def _select_cases(warnings: list[dict], labels: dict[str, str]) -> list[dict]:
     selected: list[dict] = []
     used_ids: set[str] = set()
     for case_type in CASE_TYPES:
         for warning in warnings:
             key = warning_key(warning)
-            if warning.get("type") == case_type and key not in used_ids:
+            if warning.get("type") == case_type and key not in used_ids and _case_is_valid(warning, label_for_warning(labels, warning)):
                 selected.append(warning)
                 used_ids.add(key)
                 break
@@ -66,10 +78,55 @@ def _select_cases(warnings: list[dict]) -> list[dict]:
         if len(selected) >= 8:
             break
         key = warning_key(warning)
-        if key not in used_ids:
+        if key not in used_ids and _case_is_valid(warning, label_for_warning(labels, warning)):
             selected.append(warning)
             used_ids.add(key)
     return selected[:8]
+
+
+def _case_is_valid(warning: dict, label: str | None) -> bool:
+    return bool(label in TRUE_LABELS and _has_c_evidence(warning) and _has_rust_impact(warning))
+
+
+def _load_adjudicated_labels(path: Path) -> dict[str, str]:
+    if not path.exists():
+        return {}
+    labels: dict[str, str] = {}
+    with path.open(newline="", encoding="utf-8") as fh:
+        for row in csv.DictReader(fh):
+            warning_id = row.get("warning_id")
+            label = row.get("adjudicated_label", "").strip()
+            if warning_id and label:
+                labels[warning_label_key(warning_id, row.get("pair_id", "").strip() or None)] = label
+    return labels
+
+
+def _has_c_evidence(warning: dict) -> bool:
+    c_side = warning.get("c_side", {})
+    structured_diff = c_side.get("old") is not None and c_side.get("new") is not None
+    return bool(
+        c_side.get("evidence")
+        or c_side.get("old_indicators")
+        or c_side.get("new_indicators")
+        or (structured_diff and warning.get("c_evidence_level") != "binding_only")
+        or warning.get("c_evidence_level") in {"c_source_diff", "c_behavior_indicator", "build_oracle", "wrapper_fix"}
+    )
+
+
+def _has_rust_impact(warning: dict) -> bool:
+    rust_side = warning.get("rust_side", {})
+    has_rust_reach = bool(
+        rust_side.get("uses")
+        or rust_side.get("safe_apis")
+        or warning.get("rust_impact_level") in {"direct_unsafe_call", "safe_api", "contract_mapping", "oracle_confirmed"}
+    )
+    has_contract_or_oracle = bool(
+        rust_side.get("safety_comments")
+        or rust_side.get("error_mappings")
+        or rust_side.get("lifetime_facts")
+        or rust_side.get("oracle_hits")
+    )
+    return has_rust_reach and has_contract_or_oracle
 
 
 def _case_template(case_type: str, warning: dict, oracle_label: str | None = None) -> str:
@@ -86,11 +143,12 @@ def _case_template(case_type: str, warning: dict, oracle_label: str | None = Non
         if old_version is None
         else f"Historical warning from `{old_version}` to `{c_side.get('new_version')}`."
     )
+    summary = _case_summary(symbol, warning_id, rust_side)
     return f"""# {case_type} Case Study
 
 ## One-Line Summary
 
-`{symbol}` produced `{warning_id}` because C-side contract evidence reaches Rust-for-Linux wrapper code.
+{summary}
 
 ## C-Side Change
 
@@ -100,7 +158,7 @@ BindDrift observed `{case_type}` evidence for `{symbol}`.
 
 ## Rust-Side Dependency
 
-The symbol is used through Rust binding calls or nearby wrapper code.
+BindDrift attached the following Rust impact evidence.
 
 {rust_evidence}
 
@@ -132,6 +190,18 @@ Safe Rust APIs can depend on C-side contracts that are not represented in the Ru
 """
 
 
+def _case_summary(symbol: str, warning_id: str, rust_side: dict) -> str:
+    if rust_side.get("oracle_hits"):
+        evidence = "oracle evidence"
+    elif rust_side.get("error_mappings") or rust_side.get("lifetime_facts") or rust_side.get("safety_comments"):
+        evidence = "contract evidence"
+    elif rust_side.get("safe_apis"):
+        evidence = "safe API exposure"
+    else:
+        evidence = "direct Rust binding use"
+    return f"`{symbol}` produced `{warning_id}` with adjudicated true-positive {evidence}."
+
+
 def _format_c_evidence(c_side: dict) -> str:
     evidence = c_side.get("evidence") or []
     lines = [f"- Old indicators/value: `{c_side.get('old', c_side.get('old_indicators', []))}`", f"- New indicators/value: `{c_side.get('new', c_side.get('new_indicators', []))}`"]
@@ -149,7 +219,16 @@ def _format_rust_evidence(rust_side: dict) -> str:
     for item in (rust_side.get("safety_comments") or [])[:3]:
         if isinstance(item, dict):
             lines.append(f"- `{item.get('rust_file')}:{item.get('line')}`: `{item.get('text', '')}`")
+    for item in (rust_side.get("error_mappings") or [])[:3]:
+        if isinstance(item, dict):
+            lines.append(f"- `{item.get('rust_file')}:{item.get('line')}` error mapping `{item.get('mapping_type')}`")
     for item in (rust_side.get("lifetime_facts") or [])[:3]:
         if isinstance(item, dict):
             lines.append(f"- `{item.get('rust_file')}:{item.get('line')}` lifetime fact `{item.get('fact_type')}`")
+    for item in (rust_side.get("safe_apis") or [])[:3]:
+        if isinstance(item, dict):
+            lines.append(f"- safe API `{item.get('api_name')}`")
+    for item in (rust_side.get("oracle_hits") or [])[:3]:
+        if isinstance(item, dict):
+            lines.append(f"- {item.get('oracle_type')}: `{item.get('symbol', item.get('commit_id', 'oracle'))}`")
     return "\n".join(lines) if lines else "- No Rust-side evidence was attached to this warning."
