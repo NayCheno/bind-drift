@@ -15,11 +15,17 @@ TIER1_TYPES = {"SignatureDrift", "LayoutDrift", "FieldDrift", "MacroConstDrift",
 TIER2_TYPES = {"NullabilityDrift", "ErrorDrift", "OwnershipRefcountDrift", "AllocationFreePairingDrift", "SleepabilityDrift"}
 
 
-def generate_baselines(cfg: Config, warnings_path=None, review_path=None, run_manifest: str | None = None) -> dict[str, Any]:
+def generate_baselines(
+    cfg: Config,
+    warnings_path=None,
+    review_path=None,
+    run_manifest: str | None = None,
+    uid_only_labels: bool = False,
+) -> dict[str, Any]:
     conn = connect(cfg.database)
     initialize(conn)
     warnings = read_warnings(warnings_path or cfg.warnings_jsonl)
-    labels = load_manual_labels(review_path or (cfg.data_dir / "manual_review.csv"))
+    labels = load_manual_labels(review_path or (cfg.data_dir / "manual_review.csv"), uid_only=uid_only_labels)
     build_symbols = _build_symbols(conn, warnings)
     wrapper_symbols: set[str] = set()
     for row in conn.execute("SELECT matched_symbols FROM wrapper_fix_events WHERE likely_wrapper_fix=1"):

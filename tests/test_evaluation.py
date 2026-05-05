@@ -4,7 +4,7 @@ from binddrift.config import Config
 from binddrift.cli import main
 from binddrift.evaluation.diagnostics import diagnose_false_positives
 from binddrift.evaluation.evaluator import generate_manual_review, parse_build_log
-from binddrift.evaluation.metrics import labeled_summary, load_manual_labels, manual_review_agreement, oracle_summary
+from binddrift.evaluation.metrics import label_for_warning, labeled_summary, load_manual_labels, manual_review_agreement, oracle_summary
 from binddrift.warnings import write_warnings
 
 
@@ -124,8 +124,22 @@ def test_generate_manual_review_migrates_legacy_rows_by_warning_shape(tmp_path: 
     review = generate_manual_review(cfg, warnings, top_k=2)
     labels = load_manual_labels(review)
 
-    assert labels["p1:W-1"] == "TRUE_SEMANTIC_DRIFT"
-    assert labels["p2:W-1"] == ""
+    assert label_for_warning(labels, warnings[0]) == "TRUE_SEMANTIC_DRIFT"
+    assert label_for_warning(labels, warnings[1]) == ""
+
+
+def test_manual_labels_prefer_warning_uid(tmp_path: Path):
+    review = tmp_path / "manual_review.csv"
+    review.write_text(
+        "warning_uid,warning_id,pair_id,adjudicated_label,label\n"
+        "uid-1,W-1,p1,TRUE_SEMANTIC_DRIFT,\n",
+        encoding="utf-8",
+    )
+    warning = {"warning_uid": "uid-1", "pair_id": "p2", "warning_id": "W-1"}
+
+    labels = load_manual_labels(review)
+
+    assert label_for_warning(labels, warning) == "TRUE_SEMANTIC_DRIFT"
 
 
 def test_diagnose_false_positives_writes_hard_negative_and_true_positive_csvs(tmp_path: Path):
@@ -211,3 +225,44 @@ def test_diagnose_false_positives_cli(tmp_path: Path, capsys):
     assert code == 0
     assert "BINDING_ONLY" in captured.out
     assert (output_dir / "hard_negatives.csv").exists()
+
+
+def test_check_label_join_cli_reports_unmatched_and_orphans(tmp_path: Path, capsys):
+    cfg = Config.from_args(repo_root=tmp_path)
+    warning = {
+        "warning_id": "W-1",
+        "run_id": "latest",
+        "pair_id": "latest-p001",
+        "old_version": "v6.1",
+        "new_version": "v6.2",
+        "type": "SignatureDrift",
+        "c_side": {"symbol": "foo", "old": "a", "new": "b"},
+    }
+    write_warnings(cfg, [warning])
+    uid = cfg.warnings_jsonl.read_text(encoding="utf-8").split('"warning_uid": "')[1].split('"')[0]
+    review = tmp_path / "manual_review.csv"
+    review.write_text(
+        "warning_uid,warning_id,pair_id,adjudicated_label,label\n"
+        f"{uid},W-1,latest-p001,TRUE_WRAPPER_FIX,\n"
+        "missing,W-2,latest-p001,FALSE_POSITIVE,\n",
+        encoding="utf-8",
+    )
+
+    code = main(
+        [
+            "--repo-root",
+            str(tmp_path),
+            "eval",
+            "check-label-join",
+            "--warnings",
+            str(cfg.warnings_jsonl),
+            "--manual-review",
+            str(review),
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert code == 0
+    assert '"matched_review_rows": 1' in captured.out
+    assert '"orphan_review_rows": [' in captured.out
+    assert "TRUE_WRAPPER_FIX" in captured.out

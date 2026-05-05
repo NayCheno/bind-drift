@@ -14,6 +14,7 @@ from .detectors.tier2 import run_tier2, run_tier2_with_context
 from .environment import capture_environment, write_environment
 from .evaluation.evaluator import run_evaluation
 from .evaluation.evaluator import generate_manual_review
+from .evaluation.label_join import check_label_join
 from .evaluation.diagnostics import diagnose_false_positives
 from .extractors.bindgen import extract_bindings
 from .extractors.c_api import extract_c_api
@@ -25,7 +26,7 @@ from .paper.cases import generate_case_studies
 from .paper.tables import generate_paper_tables
 from .replay import run_pilot_replay, run_version_replay
 from .run_manifest import aggregate_pair_jsonl, canonical_run_dir, write_run_manifest
-from .warnings import read_warnings
+from .warnings import read_warnings, write_warnings
 from .toolchain import bootstrap_toolchain, check_toolchain
 from .toolchain_matrix import write_toolchain_matrix
 from .versions import ensure_worktree, select_versions
@@ -214,9 +215,12 @@ def cmd_eval_manifest(args: argparse.Namespace, cfg: Config) -> int:
     drift_facts = run_dir / "drift_facts.jsonl"
     if args.refresh or not drift_facts.exists():
         aggregate_pair_jsonl(run_dir, "drift_facts.jsonl", drift_facts)
+    warnings = read_warnings(run_cfg.warnings_jsonl)
+    write_warnings(run_cfg, warnings)
+    warnings = read_warnings(run_cfg.warnings_jsonl)
     review = run_dir / "manual_review.csv"
     if args.refresh_review or not review.exists():
-        generate_manual_review(run_cfg, read_warnings(run_cfg.warnings_jsonl), top_k=args.top_k)
+        generate_manual_review(run_cfg, warnings, top_k=args.top_k)
     manifest = write_run_manifest(cfg, run_id=args.run_id)
     print(json.dumps(manifest, indent=2, sort_keys=True))
     return 0
@@ -228,6 +232,15 @@ def cmd_eval_diagnose_false_positives(args: argparse.Namespace, cfg: Config) -> 
         manual_review=Path(args.manual_review).resolve(),
         warnings_jsonl=Path(args.warnings).resolve(),
         output_dir=output_dir,
+    )
+    print(json.dumps(result, indent=2, sort_keys=True))
+    return 0
+
+
+def cmd_eval_check_label_join(args: argparse.Namespace, cfg: Config) -> int:
+    result = check_label_join(
+        warnings_jsonl=Path(args.warnings).resolve(),
+        manual_review=Path(args.manual_review).resolve(),
     )
     print(json.dumps(result, indent=2, sort_keys=True))
     return 0
@@ -443,6 +456,10 @@ def build_parser() -> argparse.ArgumentParser:
     diagnose.add_argument("--warnings", required=True, help="Warnings JSONL used by the manual review CSV.")
     diagnose.add_argument("--output-dir", help="Directory for hard_negatives.csv and true_positives.csv; defaults to data/manual.")
     _set(diagnose, cmd_eval_diagnose_false_positives)
+    check_join = eval_sub.add_parser("check-label-join", help="Check manual review rows join to warning identities.")
+    check_join.add_argument("--warnings", required=True, help="Warnings JSONL used by the manual review CSV.")
+    check_join.add_argument("--manual-review", required=True, help="Manual review CSV to join against warnings.")
+    _set(check_join, cmd_eval_check_label_join)
 
     paper = sub.add_parser("paper", help="Paper artifact commands.")
     paper_sub = paper.add_subparsers(dest="paper_command", required=True)

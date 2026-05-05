@@ -10,9 +10,9 @@ from binddrift.config import Config
 from binddrift.db import connect, initialize, upsert_many
 from binddrift.gitutil import git_output
 from binddrift.run_manifest import canonical_run_dir, manifest_exists, validate_run_manifest
-from binddrift.warnings import read_warnings
+from binddrift.warnings import ensure_warning_uid, read_warnings
 from .baselines import generate_baselines
-from .metrics import labeled_summary, load_manual_labels, manual_review_agreement, oracle_summary, warning_key
+from .metrics import labeled_summary, load_manual_labels, manual_review_agreement, oracle_summary, warning_key, warning_label_key
 
 
 BUILD_ERROR_RE = re.compile(r"(bindings::(?P<binding>[A-Za-z_][A-Za-z0-9_]*)|missing field|mismatched types|layout)")
@@ -109,20 +109,25 @@ def generate_manual_review(cfg: Config, warnings: list[dict[str, Any]], top_k: i
             for row in csv.DictReader(fh):
                 if not row.get("warning_id"):
                     continue
+                if row.get("warning_uid"):
+                    existing[row["warning_uid"]] = row
                 if row.get("pair_id"):
-                    existing[f"{row['pair_id']}:{row['warning_id']}"] = row
+                    existing.setdefault(f"{row['pair_id']}:{row['warning_id']}", row)
                 else:
-                    existing[_legacy_review_key(row)] = row
+                    existing.setdefault(_legacy_review_key(row), row)
                     existing.setdefault(row["warning_id"], row)
     with path.open("w", newline="", encoding="utf-8") as fh:
         writer = csv.DictWriter(
             fh,
             lineterminator="\n",
             fieldnames=[
+                "warning_uid",
+                "run_id",
                 "warning_id",
                 "pair_id",
                 "type",
                 "risk",
+                "rank",
                 "score",
                 "symbol",
                 "reviewer1_label",
@@ -131,6 +136,8 @@ def generate_manual_review(cfg: Config, warnings: list[dict[str, Any]], top_k: i
                 "reviewer2_notes",
                 "adjudicated_label",
                 "adjudication_notes",
+                "true_reason",
+                "false_reason",
                 "label",
                 "reviewer_notes",
             ],
@@ -138,16 +145,21 @@ def generate_manual_review(cfg: Config, warnings: list[dict[str, Any]], top_k: i
         writer.writeheader()
         selected = _manual_review_sample(warnings, top_k=top_k)
         for warning in selected:
-            prior = existing.get(warning_key(warning)) or existing.get(_legacy_warning_key(warning))
+            uid = ensure_warning_uid(warning)
+            pair_key = warning_label_key(warning.get("warning_id"), warning.get("pair_id"))
+            prior = existing.get(uid) or existing.get(pair_key) or existing.get(_legacy_warning_key(warning))
             if not prior and not warning.get("pair_id"):
                 prior = existing.get(str(warning.get("warning_id")))
             prior = prior or {}
             writer.writerow(
                 {
+                    "warning_uid": uid,
+                    "run_id": warning.get("run_id", ""),
                     "warning_id": warning.get("warning_id"),
                     "pair_id": warning.get("pair_id", ""),
                     "type": warning.get("type"),
                     "risk": warning.get("risk"),
+                    "rank": warning.get("rank", ""),
                     "score": warning.get("score"),
                     "symbol": warning.get("c_side", {}).get("symbol"),
                     "reviewer1_label": prior.get("reviewer1_label", ""),
@@ -156,6 +168,8 @@ def generate_manual_review(cfg: Config, warnings: list[dict[str, Any]], top_k: i
                     "reviewer2_notes": prior.get("reviewer2_notes", ""),
                     "adjudicated_label": prior.get("adjudicated_label", ""),
                     "adjudication_notes": prior.get("adjudication_notes", ""),
+                    "true_reason": prior.get("true_reason", ""),
+                    "false_reason": prior.get("false_reason", ""),
                     "label": prior.get("label", ""),
                     "reviewer_notes": prior.get("reviewer_notes", ""),
                 }
@@ -234,7 +248,7 @@ def run_evaluation(
     persisted = persist_ground_truth(cfg, build_log, build_findings, wrapper_fixes, run_id=run_id, pair_id=pair_id)
     if review_path is None:
         review_path = generate_manual_review(cfg, warnings, top_k=top_k)
-    labels = load_manual_labels(review_path)
+    labels = load_manual_labels(review_path, uid_only=bool(manifest))
     metrics = labeled_summary(warnings, labels)
     agreement = manual_review_agreement(review_path)
     build_metrics = oracle_summary(warnings, _build_symbols(build_findings))
@@ -258,7 +272,13 @@ def run_evaluation(
     tables_dir = cfg.repo_root / "paper/tables"
     tables_dir.mkdir(parents=True, exist_ok=True)
     (tables_dir / "evaluation_summary.json").write_text(json.dumps(table, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    baselines = generate_baselines(cfg, warnings_path=warnings_path, review_path=review_path, run_manifest=table["run_manifest"])
+    baselines = generate_baselines(
+        cfg,
+        warnings_path=warnings_path,
+        review_path=review_path,
+        run_manifest=table["run_manifest"],
+        uid_only_labels=bool(manifest),
+    )
     return {
         "summary": table,
         "baselines": baselines,

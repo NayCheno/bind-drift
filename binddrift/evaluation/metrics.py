@@ -5,6 +5,8 @@ from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any
 
+from binddrift.warnings import make_warning_uid
+
 
 TRUE_LABELS = {"TRUE_BUILD_BREAKAGE", "TRUE_WRAPPER_FIX", "TRUE_SEMANTIC_DRIFT"}
 FALSE_LABELS = {"BENIGN_DRIFT", "FALSE_POSITIVE", "UNCLEAR"}
@@ -17,27 +19,44 @@ def warning_label_key(warning_id: object, pair_id: object | None = None) -> str:
 
 
 def warning_key(warning: dict[str, Any]) -> str:
+    if warning.get("warning_uid"):
+        return str(warning["warning_uid"])
     return warning_label_key(warning.get("warning_id"), warning.get("pair_id"))
 
 
 def label_for_warning(labels: dict[str, str], warning: dict[str, Any]) -> str:
-    key = warning_key(warning)
-    if key in labels:
-        return labels[key]
+    uid = str(warning.get("warning_uid") or make_warning_uid(warning))
+    if uid in labels:
+        return labels[uid]
+    pair_key = warning_label_key(warning.get("warning_id"), warning.get("pair_id"))
+    if pair_key in labels:
+        return labels[pair_key]
     return labels.get(str(warning.get("warning_id")), "")
 
 
-def load_manual_labels(path: Path) -> dict[str, str]:
+def manual_review_row_key(row: dict[str, str], uid_only: bool = False) -> str | None:
+    warning_uid = row.get("warning_uid", "").strip()
+    if warning_uid:
+        return warning_uid
+    if uid_only:
+        return None
+    warning_id = row.get("warning_id")
+    if not warning_id:
+        return None
+    return warning_label_key(warning_id, row.get("pair_id", "").strip() or None)
+
+
+def load_manual_labels(path: Path, uid_only: bool = False) -> dict[str, str]:
     if not path.exists():
         return {}
     with path.open(newline="", encoding="utf-8") as fh:
         labels: dict[str, str] = {}
         for row in csv.DictReader(fh):
-            warning_id = row.get("warning_id")
-            if not warning_id:
+            key = manual_review_row_key(row, uid_only=uid_only)
+            if not key:
                 continue
             label = row.get("adjudicated_label", "").strip() or row.get("label", "").strip()
-            labels[warning_label_key(warning_id, row.get("pair_id", "").strip() or None)] = label
+            labels[key] = label
         return labels
 
 

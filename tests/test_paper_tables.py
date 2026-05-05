@@ -7,6 +7,7 @@ from binddrift.config import Config
 from binddrift.db import connect, initialize, upsert_many
 from binddrift.paper.tables import generate_paper_tables
 from binddrift.run_manifest import ArtifactConsistencyError, write_run_manifest
+from binddrift.warnings import make_warning_uid
 
 
 def test_paper_tables_exclude_stale_and_zero_binding_replays(tmp_path: Path):
@@ -247,11 +248,21 @@ def test_manual_review_summary_prefers_canonical_latest_run(tmp_path: Path):
     for run_id, started_at in (("newer-timestamp-run", "2026-05-04T00:02:00+00:00"), ("latest", "2026-05-04T00:01:00+00:00")):
         run_dir = tmp_path / f"data/replay/{run_id}"
         run_dir.mkdir(parents=True)
-        (run_dir / "warnings.jsonl").write_text('{"warning_id":"W-1"}\n', encoding="utf-8")
+        warning = {
+            "warning_id": "W-1",
+            "run_id": run_id,
+            "pair_id": f"{run_id}-pair",
+            "old_version": "v6.1",
+            "new_version": "v6.2",
+            "type": "SignatureDrift",
+            "c_side": {"symbol": "foo", "old": "a", "new": "b"},
+        }
+        warning["warning_uid"] = make_warning_uid(warning)
+        (run_dir / "warnings.jsonl").write_text(json.dumps(warning, sort_keys=True) + "\n", encoding="utf-8")
         (run_dir / "drift_facts.jsonl").write_text('{"fact_id":"F-1"}\n', encoding="utf-8")
         (run_dir / "manual_review.csv").write_text(
-            "warning_id,reviewer1_label,reviewer2_label,adjudicated_label,label\n"
-            "W-1,,,TRUE_WRAPPER_FIX,\n",
+            "warning_uid,warning_id,pair_id,reviewer1_label,reviewer2_label,adjudicated_label,label\n"
+            f"{warning['warning_uid']},W-1,{run_id}-pair,,,TRUE_WRAPPER_FIX,\n",
             encoding="utf-8",
         )
         rows.append(

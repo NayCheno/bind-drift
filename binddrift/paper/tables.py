@@ -139,7 +139,7 @@ def _write_manual_review_summary(cfg: Config, path: Path, manifest: dict[str, An
                 review_path = candidate
                 source_run_id = run_id
                 break
-    labels = load_manual_labels(review_path)
+    labels = load_manual_labels(review_path, uid_only=bool(manifest))
     labeled = [label for label in labels.values() if label]
     all_unclear = bool(labeled) and set(labeled) == {"UNCLEAR"}
     agreement = manual_review_agreement(review_path)
@@ -280,6 +280,8 @@ def _read_warning_ids(path: Path) -> tuple[int, set[str], set[str]]:
             if warning_id:
                 ids.add(str(warning_id))
                 keys.add(warning_label_key(warning_id, row.get("pair_id")))
+            if row.get("warning_uid"):
+                keys.add(str(row["warning_uid"]))
     return count, ids, keys
 
 
