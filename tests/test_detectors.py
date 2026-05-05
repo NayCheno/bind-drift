@@ -533,6 +533,41 @@ def test_tier2_ownership_promotes_on_direct_use_not_weak_lifetime_reason(tmp_pat
     assert "direct_binding_use" in warning["promotion_reasons"]
 
 
+def test_tier2_does_not_promote_on_non_unsafe_binding_use_alone(tmp_path: Path):
+    cfg = Config.from_args(repo_root=tmp_path)
+    conn = connect(cfg.database)
+    initialize(conn)
+    upsert_many(
+        conn,
+        "c_behavior_indicators",
+        [
+            {"version_id": "old", "c_symbol": "foo_get", "indicator_type": "NULL_RETURN", "evidence_file": "foo.c", "evidence_line": 1, "evidence_text": "return NULL;", "confidence": 0.7},
+            {"version_id": "new", "c_symbol": "foo_get", "indicator_type": "ERR_PTR_RETURN", "evidence_file": "foo.c", "evidence_line": 2, "evidence_text": "return ERR_PTR(-ENOMEM);", "confidence": 0.8},
+        ],
+    )
+    upsert_many(
+        conn,
+        "rust_binding_uses",
+        [
+            {
+                "version_id": "new",
+                "rust_file": "device.rs",
+                "line": 10,
+                "binding_symbol": "foo_get",
+                "enclosing_unsafe_block": 0,
+                "enclosing_function": "Device::get",
+                "enclosing_impl": "Device",
+                "enclosing_type": "Device",
+            }
+        ],
+    )
+
+    result = run_tier2(cfg, old="old", new="new")
+
+    assert result["new_warnings"] == 0
+    assert read_warnings(cfg.warnings_jsonl) == []
+
+
 def test_tier2_promotes_oracle_confirmed_ownership_without_lifetime_fact(tmp_path: Path):
     cfg = Config.from_args(repo_root=tmp_path)
     conn = connect(cfg.database)

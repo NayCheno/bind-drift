@@ -90,6 +90,16 @@ def _wrapper_oracle_hits(conn, symbol: str) -> list[dict[str, Any]]:
     return hits
 
 
+def _unsafe_direct_uses(direct_uses: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return [row for row in direct_uses if bool(row.get("enclosing_unsafe_block"))]
+
+
+def _promoting_direct_uses(direct_uses: list[dict[str, Any]], drift_type: str) -> list[dict[str, Any]]:
+    if drift_type == "MacroConstDrift":
+        return direct_uses
+    return _unsafe_direct_uses(direct_uses)
+
+
 def compute_rust_impact(conn, version: str, symbol: str, drift_type: str, pair_id: str | None = None) -> dict[str, Any]:
     direct_uses = _rows(
         conn.execute(
@@ -147,9 +157,11 @@ def compute_rust_impact(conn, version: str, symbol: str, drift_type: str, pair_i
         {"oracle_type": "wrapper_fix", **row}
         for row in wrapper_oracles
     ]
+    unsafe_direct_uses = _unsafe_direct_uses(direct_uses)
+    promoting_direct_uses = _promoting_direct_uses(direct_uses, drift_type)
 
     reasons: list[str] = []
-    if direct_uses:
+    if promoting_direct_uses:
         reasons.append("direct_binding_use")
     if safe_apis:
         reasons.append("exposes_safe_api")
@@ -168,8 +180,10 @@ def compute_rust_impact(conn, version: str, symbol: str, drift_type: str, pair_i
         impact_level = "contract_mapping"
     elif safe_apis:
         impact_level = "safe_api"
-    elif direct_uses:
+    elif unsafe_direct_uses:
         impact_level = "direct_unsafe_call"
+    elif promoting_direct_uses:
+        impact_level = "generated_binding"
     else:
         impact_level = "none"
 
@@ -177,6 +191,7 @@ def compute_rust_impact(conn, version: str, symbol: str, drift_type: str, pair_i
         "eligible": bool(reasons),
         "impact_level": impact_level,
         "direct_uses": direct_uses,
+        "unsafe_direct_uses": unsafe_direct_uses,
         "safe_apis": safe_apis,
         "safety_comments": safety_comments,
         "error_mappings": error_mappings,
