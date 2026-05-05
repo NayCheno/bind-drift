@@ -497,7 +497,7 @@ def test_manual_review_summary_prefers_latest_eligible_replay_csv(tmp_path: Path
 
     summary = json.loads((tmp_path / "paper/tables/manual_review_summary.json").read_text(encoding="utf-8"))
     assert summary["source_run_id"] == "main-run"
-    assert summary["manual_review_csv"] == str(run_dir / "manual_review.csv")
+    assert summary["manual_review_csv"] == "data/replay/main-run/manual_review.csv"
     assert summary["true_labeled_warnings"] == 1
 
 

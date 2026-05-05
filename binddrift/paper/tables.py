@@ -1,10 +1,12 @@
 from __future__ import annotations
 
-import json
 import csv
+import json
+from collections import Counter
 from pathlib import Path
 from typing import Any
 
+from binddrift.artifact_paths import sanitize_local_paths
 from binddrift.config import Config
 from binddrift.db import connect, initialize
 from binddrift.evaluation.protocol import FORBIDDEN_PRIMARY_SCORE_COMPONENTS, load_evaluation_protocol
@@ -17,6 +19,26 @@ from binddrift.warnings import read_warnings
 
 MAIN_REPLAY_STATUSES = {"completed", "completed_with_failures"}
 MAIN_REPLAY_RUN_ID = "latest"
+REVIEW_LABELS = [
+    "TRUE_BUILD_BREAKAGE",
+    "TRUE_WRAPPER_FIX",
+    "TRUE_SEMANTIC_DRIFT",
+    "BENIGN_DRIFT",
+    "FALSE_POSITIVE",
+    "UNCLEAR",
+]
+MANUAL_REVIEW_QUALITY_COLUMNS = [
+    "warning_uid",
+    "pair_id",
+    "warning_id",
+    "ranker_source",
+    "type",
+    "symbol",
+    "reviewer1_label",
+    "reviewer2_label",
+    "adjudicated_label",
+    "adjudication_notes",
+]
 
 
 def generate_paper_tables(cfg: Config) -> dict[str, object]:
@@ -30,10 +52,15 @@ def generate_paper_tables(cfg: Config) -> dict[str, object]:
     replay_summary = tables_dir / "replay_summary.json"
     fact_counts = tables_dir / "fact_counts.json"
     manual_review = tables_dir / "manual_review_summary.json"
+    manual_quality = tables_dir / "manual_review_quality.json"
+    disagreement_examples = cfg.repo_root / "paper/analysis/reviewer_disagreement_examples.md"
     runtime = tables_dir / "runtime_scalability.json"
     _write_replay_summary(cfg, replay_summary)
     _write_fact_counts(cfg, fact_counts)
     _write_manual_review_summary(cfg, manual_review, manifest=manifest)
+    manual_quality_summary = _write_manual_review_quality(cfg, manual_quality, disagreement_examples, manifest=manifest)
+    if manual_quality_summary["strict_gate_active"] and not manual_quality_summary["acceptance"]["minimum_passes"]:
+        raise RuntimeError("manual_review_quality strict gate failed")
     _write_runtime_scalability(cfg, runtime, manifest=manifest)
     audit = generate_extractor_audit(cfg, manifest=manifest)
     strict_audit = generate_strict_extractor_audit(cfg, manifest=manifest)
@@ -46,6 +73,8 @@ def generate_paper_tables(cfg: Config) -> dict[str, object]:
         "replay_summary": replay_summary,
         "fact_counts": fact_counts,
         "manual_review_summary": manual_review,
+        "manual_review_quality": manual_quality,
+        "reviewer_disagreement_examples": disagreement_examples,
         "runtime_scalability": runtime,
         "ranking_pooled_evaluation": tables_dir / "ranking_pooled_evaluation.json",
         "ranking_score_audit": tables_dir / "ranking_score_audit.json",
@@ -80,10 +109,8 @@ def _write_replay_summary(cfg: Config, path: Path) -> None:
             """
         )
     ]
-    path.write_text(
-        json.dumps({"runs": runs, "pairs": pairs, "main_evidence_gate": _main_replay_gate(conn, cfg)}, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
+    payload = sanitize_local_paths({"runs": runs, "pairs": pairs, "main_evidence_gate": _main_replay_gate(conn, cfg)}, cfg)
+    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
 def _write_fact_counts(cfg: Config, path: Path) -> None:
@@ -127,15 +154,8 @@ def _write_fact_counts(cfg: Config, path: Path) -> None:
     gate = _main_replay_gate(conn, cfg)
     main_versions = set(gate["version_ids"])
     main_by_version = [row for row in by_version if row["version_id"] in main_versions]
-    path.write_text(
-        json.dumps(
-            {"counts": counts, "by_version": by_version, "main_by_version": main_by_version, "main_evidence_gate": gate},
-            indent=2,
-            sort_keys=True,
-        )
-        + "\n",
-        encoding="utf-8",
-    )
+    payload = {"counts": counts, "by_version": by_version, "main_by_version": main_by_version, "main_evidence_gate": gate}
+    path.write_text(json.dumps(sanitize_local_paths(payload, cfg), indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
 def _write_manual_review_summary(cfg: Config, path: Path, manifest: dict[str, Any] | None = None) -> None:
@@ -160,23 +180,162 @@ def _write_manual_review_summary(cfg: Config, path: Path, manifest: dict[str, An
     labeled = [label for label in labels.values() if label]
     all_unclear = bool(labeled) and set(labeled) == {"UNCLEAR"}
     agreement = manual_review_agreement(review_path)
-    path.write_text(
-        json.dumps(
-            {
-                "manual_review_csv": str(review_path),
-                "source_run_id": source_run_id,
-                "labeled_warnings": len(labeled),
-                "true_labeled_warnings": sum(1 for label in labels.values() if label.startswith("TRUE_")),
-                "agreement": agreement,
-                "all_labels_unclear": all_unclear,
-                "usable_for_main": bool(labeled) and not all_unclear,
-            },
-            indent=2,
-            sort_keys=True,
-        )
-        + "\n",
-        encoding="utf-8",
+    payload = {
+        "manual_review_csv": str(review_path),
+        "source_run_id": source_run_id,
+        "labeled_warnings": len(labeled),
+        "true_labeled_warnings": sum(1 for label in labels.values() if label.startswith("TRUE_")),
+        "agreement": agreement,
+        "all_labels_unclear": all_unclear,
+        "usable_for_main": bool(labeled) and not all_unclear,
+    }
+    path.write_text(json.dumps(sanitize_local_paths(payload, cfg), indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def _write_manual_review_quality(cfg: Config, path: Path, examples_path: Path, manifest: dict[str, Any] | None = None) -> dict[str, Any]:
+    review_path, source_is_pooled, strict_gate_active = _manual_quality_source(cfg, manifest)
+    rows, columns = _read_review_rows(review_path)
+    total = len(rows)
+    double_labeled = [
+        row
+        for row in rows
+        if row.get("reviewer1_label", "").strip() and row.get("reviewer2_label", "").strip()
+    ]
+    adjudicated = [row for row in rows if row.get("adjudicated_label", "").strip()]
+    disagreements = [
+        row
+        for row in double_labeled
+        if row.get("reviewer1_label", "").strip() != row.get("reviewer2_label", "").strip()
+    ]
+    label_distribution = Counter(row.get("adjudicated_label", "").strip() for row in adjudicated)
+    notes_missing = [row for row in adjudicated if not row.get("adjudication_notes", "").strip()]
+    kappa = _cohen_kappa(
+        [(row.get("reviewer1_label", "").strip(), row.get("reviewer2_label", "").strip()) for row in double_labeled]
     )
+    examples = _write_disagreement_examples(cfg, examples_path, review_path, disagreements)
+    missing_columns = [column for column in MANUAL_REVIEW_QUALITY_COLUMNS if column not in columns]
+    label_leakage_findings = _label_leakage_findings(rows)
+    coverage = round(len(adjudicated) / total, 4) if total else 0.0
+    notes_missing_rate = round(len(notes_missing) / len(adjudicated), 4) if adjudicated else 0.0
+    summary = {
+        "source_csv": repo_relative(cfg, review_path),
+        "strict_gate_active": strict_gate_active,
+        "pooled_review_labels_primary_source": source_is_pooled,
+        "reviewed_warnings": total,
+        "reviewers": 2 if double_labeled else 0,
+        "adjudicated": bool(total and len(adjudicated) == total),
+        "label_coverage": coverage,
+        "double_labeled_warnings": len(double_labeled),
+        "agreement_rate": round(sum(1 for row in double_labeled if row.get("reviewer1_label", "").strip() == row.get("reviewer2_label", "").strip()) / len(double_labeled), 4)
+        if double_labeled
+        else None,
+        "cohen_kappa": kappa,
+        "disagreements": len(disagreements),
+        "unclear_count": label_distribution.get("UNCLEAR", 0),
+        "true_build_breakage_count": label_distribution.get("TRUE_BUILD_BREAKAGE", 0),
+        "true_wrapper_fix_count": label_distribution.get("TRUE_WRAPPER_FIX", 0),
+        "true_semantic_drift_count": label_distribution.get("TRUE_SEMANTIC_DRIFT", 0),
+        "label_distribution": {label: label_distribution.get(label, 0) for label in REVIEW_LABELS},
+        "unclear_is_true_positive": False,
+        "true_wrapper_fix_and_true_semantic_drift_reported_separately": True,
+        "wrapper_fix_oracle_usage": "auxiliary_validation_only",
+        "adjudication_notes_missing": len(notes_missing),
+        "adjudication_notes_missing_rate": notes_missing_rate,
+        "reviewer_disagreement_examples": {
+            "path": repo_relative(cfg, examples_path),
+            "examples": examples,
+            "minimum_required": 5,
+        },
+        "required_columns": MANUAL_REVIEW_QUALITY_COLUMNS,
+        "missing_columns": missing_columns,
+        "label_leakage_check": "passed" if not label_leakage_findings else "failed",
+        "label_leakage_findings": label_leakage_findings,
+    }
+    summary["acceptance"] = {
+        "required_columns_present": not missing_columns,
+        "all_main_labels_adjudicated": bool(total and len(adjudicated) == total),
+        "double_review_complete": bool(total and len(double_labeled) == total),
+        "cohen_kappa_reported": kappa is not None,
+        "adjudication_notes_missing_rate_ok": notes_missing_rate <= 0.20,
+        "pooled_label_coverage_ok": coverage >= 0.95,
+        "pooled_review_labels_primary_source": source_is_pooled,
+        "disagreement_examples_minimum": examples >= 5 if disagreements else True,
+        "label_leakage_check_passed": not label_leakage_findings,
+        "unclear_is_not_counted_as_true_positive": summary["unclear_is_true_positive"] is False,
+    }
+    summary["acceptance"]["minimum_passes"] = all(summary["acceptance"].values())
+    path.write_text(json.dumps(sanitize_local_paths(summary, cfg), indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return summary
+
+
+def _manual_quality_source(cfg: Config, manifest: dict[str, Any] | None) -> tuple[Path, bool, bool]:
+    pooled = canonical_run_dir(cfg) / "pooled_review_labels.csv"
+    strict_gate_active = pooled.exists() or bool(manifest and manifest.get("canonical_pooled_review_labels_file"))
+    if pooled.exists():
+        return pooled, True, strict_gate_active
+    if manifest:
+        return Path(manifest["resolved_paths"]["manual_review"]), False, strict_gate_active
+    return cfg.data_dir / "manual_review.csv", False, strict_gate_active
+
+
+def _read_review_rows(path: Path) -> tuple[list[dict[str, str]], list[str]]:
+    if not path.exists():
+        return [], []
+    with path.open(newline="", encoding="utf-8") as fh:
+        reader = csv.DictReader(fh)
+        return [dict(row) for row in reader], list(reader.fieldnames or [])
+
+
+def _cohen_kappa(pairs: list[tuple[str, str]]) -> float | None:
+    if not pairs:
+        return None
+    reviewer1 = Counter(first for first, _second in pairs)
+    reviewer2 = Counter(second for _first, second in pairs)
+    total = len(pairs)
+    observed = sum(1 for first, second in pairs if first == second) / total
+    expected = sum(reviewer1[label] * reviewer2[label] for label in set(reviewer1) | set(reviewer2)) / (total * total)
+    if expected == 1.0:
+        return 1.0 if observed == 1.0 else 0.0
+    return round((observed - expected) / (1.0 - expected), 4)
+
+
+def _write_disagreement_examples(cfg: Config, path: Path, source: Path, rows: list[dict[str, str]]) -> int:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    selected = sorted(rows, key=lambda row: (row.get("pair_id", ""), row.get("warning_id", ""), row.get("warning_uid", "")))[:5]
+    lines = [
+        "# Reviewer Disagreement Examples",
+        "",
+        f"Source: `{repo_relative(cfg, source)}`",
+        "",
+    ]
+    if not selected:
+        lines.extend(["No reviewer disagreements were present in the review source.", ""])
+    for index, row in enumerate(selected, start=1):
+        lines.extend(
+            [
+                f"## {index}. {row.get('warning_id', '')} {row.get('symbol', '')}",
+                "",
+                f"- Pair: `{row.get('pair_id', '')}`",
+                f"- Type: `{row.get('type', '')}`",
+                f"- Reviewer 1: `{row.get('reviewer1_label', '')}` - {row.get('reviewer1_notes', '')}",
+                f"- Reviewer 2: `{row.get('reviewer2_label', '')}` - {row.get('reviewer2_notes', '')}",
+                f"- Adjudicated: `{row.get('adjudicated_label', '')}`",
+                f"- Adjudication: {row.get('adjudication_notes', '')}",
+                "",
+            ]
+        )
+    text = "\n".join(lines)
+    path.write_text(sanitize_local_paths(text, cfg), encoding="utf-8")
+    return len(selected)
+
+
+def _label_leakage_findings(rows: list[dict[str, str]]) -> list[str]:
+    findings: list[str] = []
+    for row in rows:
+        label_source = row.get("label_source", "").lower()
+        if "oracle_score" in label_source or "ranker_score" in label_source:
+            findings.append(row.get("warning_uid") or warning_label_key(row.get("warning_id"), row.get("pair_id")))
+    return sorted(set(findings))
 
 
 def _write_runtime_scalability(cfg: Config, path: Path, manifest: dict[str, Any] | None = None) -> None:
@@ -204,10 +363,8 @@ def _write_runtime_scalability(cfg: Config, path: Path, manifest: dict[str, Any]
         else:
             item["promoted_warnings"] = summary.get("warnings")
         rows.append(item)
-    path.write_text(
-        json.dumps({"runs": rows, "main_evidence_gate": _main_replay_gate(conn, cfg)}, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
+    payload = {"runs": rows, "main_evidence_gate": _main_replay_gate(conn, cfg)}
+    path.write_text(json.dumps(sanitize_local_paths(payload, cfg), indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
 def _validate_table_consistency(cfg: Config, manifest: dict[str, Any] | None) -> None:

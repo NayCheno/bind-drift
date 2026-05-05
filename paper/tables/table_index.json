@@ -27,6 +27,10 @@
     "available": true,
     "path": "paper/tables/fact_counts.json"
   },
+  "manual_review_quality": {
+    "available": true,
+    "path": "paper/tables/manual_review_quality.json"
+  },
   "manual_review_summary": {
     "available": true,
     "path": "paper/tables/manual_review_summary.json"
@@ -42,6 +46,10 @@
   "replay_summary": {
     "available": true,
     "path": "paper/tables/replay_summary.json"
+  },
+  "reviewer_disagreement_examples": {
+    "available": true,
+    "path": "paper/analysis/reviewer_disagreement_examples.md"
   },
   "run_manifest": {
     "available": true,
