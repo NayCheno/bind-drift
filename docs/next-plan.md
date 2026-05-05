@@ -1,963 +1,718 @@
-# BindDrift 下一阶段整改计划
+# 下一步严格计划
 
-## 当前最大问题排序
+目标不是“继续堆功能”，而是把当前 56/100 左右的状态推进到 CCF-B borderline / weak accept 可能区间。计划按“阻断接收的风险优先级”排序。
 
-### 1. Ranking 目标失败
+当前必须承认的事实是：`evaluation_summary` 里主 warning 数是 11，`wrapper-fix` precision 已升到 0.7273、P@10 为 0.7，这是好消息；但 build oracle 为 0，manual review 在 evaluation summary 中没有读到任何 labeled warning。同时 `manual_review_summary` 又显示有 112 条双人标注、agreement 1.0，但 true labeled warnings 为 0。所以下一步的核心不是再增加 detector，而是把实验闭环做实。
 
-当前 high score / top warnings 大量是 false positive 或 benign drift。manual review 前几十条几乎都是 generated-binding-only、缺 source diff、缺 Rust contract evidence。
+## 总目标
 
-对 warning / prioritization paper 来说，top-K precision 比 total recall 更关键；现在 top-K 表现不能支撑 claim。
+下一轮完成后，评分目标应从 56/100 提升到至少：
 
-### 2. Exposure gate 太弱
+- 65/100：可以作为 CCF-B borderline workshop/system-track 风格投稿
+- 70/100：可以认真冲 CCF-B 正会
 
-Tier1 会对 generated bindings / C facts 的新增、删除、签名、字段、macro 变化直接出 warning，再用 graph exposure 加分。
+最低可接受目标：
 
-但 review 反复说明：generated binding edge alone 不足以说明 Rust safe abstraction 受到影响。应该把 generated-binding-only warning 降级为 fact report，而不是 high-risk warning。
+- artifact 自洽
+- manual review 能被 `evaluation_summary` 正确读取
+- 主 warning set 有非零人工真阳性
+- baseline/ablation 显示 BindDrift 明确优于简单基线
+- case study 全部来自 adjudicated true positives
 
-### 3. 提取器仍偏启发式
+## 阶段 0：先冻结主实验口径
 
-C parser 是正则；C behavior indicator 是 keyword list；Rust extractor 也是正则扫描 `bindings::`、`pub fn`、`SAFETY` comments、`Result` / `Option` / lifetime patterns。
+### 问题
 
-这可以作为 pilot，但 CCF-B 主实验需要更强的 validation，至少要证明这些 heuristic 的误差不会主导结果。
+现在最大隐患是：不同文件对“主结果”的说法不一致。`evaluation_summary` 说 warnings 是 11。`manual_review_summary` 说 112 条已双人标注但 0 true。runtime 表之前又显示 latest run 有 17,910 warnings。这个状态下，审稿人会先质疑实验口径，而不是讨论方法。
 
-### 4. Ground truth 不够强
+### 解决方案
 
-build breakage events 为 0，wrapper-fix precision 极低，人工真阳性只有 2。
+建立一个强制的 `run_manifest.json`，每次 paper build 只允许引用 manifest 中声明的文件。
 
-目前系统更像“发现大量 candidate drift facts”，而不是“有效发现 Rust-facing contract drift”。
+建议新增：
 
-## 总体策略
+```text
+data/replay/latest/run_manifest.json
+```
 
-当前系统的问题本质是：drift fact 层和 warning 层混在了一起。
-
-现在 Tier1 发现 binding / C facts 变化后会直接生成 warning。例如 `SignatureDrift` 对 binding function 的新增、删除、签名变化都会直接 `_add_warning`，只附上 graph exposure。`FieldDrift`、`LayoutDrift`、`MacroConstDrift` 也类似。而 graph exposure 当前又使用 `LIKE` 做模糊匹配，容易把不相关名字连上。
-
-整改核心：
-
-> 先产出 drift facts；只有通过 Rust-impact evidence gate 的 facts 才能升级成 paper warning。
-
-整改后应该形成两层输出：
-
-| 输出层 | 定义 | 论文用途 |
-| --- | --- | --- |
-| Drift Facts | 低门槛、完整记录 C / bindgen / API / layout / macro / indicator 的版本变化 | 可作为 appendix / reporting，不参与 precision 主指标 |
-| Rust-Impact Warnings | 高门槛，只保留确实触达 Rust unsafe call、safe API、safety comment、error / lifetime mapping、wrapper fix 或 build oracle 的 warning | 论文主指标只评估这一层 |
-
-## 方案一：把 Tier1 改成 fact producer
-
-### 当前问题
-
-Tier1 会把 binding function 新增/删除直接作为 `SignatureDrift` warning，例如 `old = absent`、`new = added` 也进入 warning。
-
-这正是 `up`、`down`、`force_sig` 这类 false positive 的来源：它们很多只是 generated binding 覆盖变化，而不是 Rust safe abstraction contract drift。
-
-### 修改方法
-
-新增一个中间结构：`drift_fact`。
-
-建议 warning dict 增加字段：
+内容必须包括：
 
 ```json
 {
-  "record_kind": "fact",
-  "promotion_status": "unpromoted",
-  "fact_source": "binding_diff | c_api_diff | layout_diff | macro_diff | behavior_indicator_diff",
-  "c_evidence_level": "binding_only | c_source_diff | c_behavior_indicator | build_oracle | wrapper_fix",
-  "rust_impact_level": "none | generated_binding | direct_unsafe_call | safe_api | contract_mapping | oracle_confirmed",
-  "promotion_reasons": [],
-  "demotion_reasons": []
-}
-```
-
-Tier1 改动原则：
-
-| Drift 类型 | 仍然记录 fact | 直接升级 warning 条件 |
-| --- | --- | --- |
-| `SignatureDrift` from `binding_functions` | 是 | 需要 C source signature diff 或 build / wrapper oracle；仅 binding absent / added 不升级 |
-| `SignatureDrift` from `c_functions` | 是 | 需要 direct Rust use 或 safe API exposure |
-| `FieldDrift` | 是 | 需要 Rust 侧字段 / layout 依赖证据；否则 fact only |
-| `LayoutDrift` | 是 | 需要 Rust 侧 type / layout / safety dependency；否则 fact only |
-| `MacroConstDrift` | 是 | 需要 Rust 侧 const use 或 safe API / safety comment；否则 fact only |
-| `HelperDrift` | 是 | helper symbol 被 Rust wrapper 使用时升级 |
-
-具体改法：
-
-在 `binddrift/detectors/tier1.py` 中，不要在 `_add_warning` 里直接写入最终 warnings。把 `_make_warning` 拆成两个函数：
-
-```python
-def _make_drift_fact(...):
-    return {
-        "record_kind": "fact",
-        "type": drift_type,
-        "c_side": {...},
-        "rust_side": {...},
-        "promotion_status": "unpromoted",
-        ...
-    }
-
-
-def _promote_fact_if_impactful(conn, fact, version):
-    impact = compute_rust_impact(conn, fact, version)
-    if impact["eligible"]:
-        return make_warning_from_fact(fact, impact)
-    return fact
-```
-
-然后 Tier1 输出两份：
-
-```text
-data/drift_facts.jsonl
-data/warnings.jsonl
-```
-
-论文主实验只用 `warnings.jsonl`。`drift_facts.jsonl` 可以作为 appendix / reporting，不参与 precision 主指标。
-
-### 接受标准
-
-这一步完成后，top warnings 中不应该再出现下面这种 warning：
-
-```text
-old = absent
-new = added
-rust_side 只有 graph_edges / generation edge
-```
-
-它们应该降级为 `fact_only`。
-
-## 方案二：重写 Rust-impact gate
-
-### 当前问题
-
-Tier2 已经比 Tier1 严一点：它要求 symbol 在 `rust_binding_uses` 中有 exposure；对 `Nullability` / `Error` 还要求 Rust mapping，对 `Ownership` / `Allocation` 要求 lifetime evidence。
-
-这个方向是对的，但 Tier1 没有类似 gate；ranking 还会把 graph edge count 当 Rust exposure 加分。
-
-### 修改方法
-
-新增统一模块：
-
-```text
-binddrift/evidence/impact.py
-```
-
-核心函数：
-
-```python
-def compute_rust_impact(conn, version: str, symbol: str, drift_type: str) -> dict:
-    ...
-```
-
-输出：
-
-```json
-{
-  "eligible": true,
-  "impact_level": "safe_api",
-  "direct_uses": [],
-  "safe_apis": [],
-  "safety_comments": [],
-  "error_mappings": [],
-  "lifetime_facts": [],
-  "oracle_hits": [],
-  "reasons": [
-    "direct_binding_use",
-    "exposes_safe_api",
-    "has_safety_comment"
-  ]
-}
-```
-
-### 统一 promotion rule
-
-一个 drift fact 只有满足下面至少一类证据，才能进入 warnings：
-
-- direct Rust unsafe call：`rust_binding_uses.binding_symbol == symbol`，并且不是 generated binding 文件本身。
-- safe API exposure：graph 中存在 `RustUnsafeCall -> RustSafeAPI`。
-- contract evidence：存在 safety comment、error mapping、lifetime fact。
-- oracle evidence：命中 build breakage 或 wrapper fix。
-- helper evidence：`rust/helpers` 改动且被 Rust wrapper 或 safe API 间接使用。
-
-不能作为 promotion 条件的证据：
-
-```text
-CFunction -> RustBindingFunction GENERATED_FROM
-```
-
-这个只能说明 bindgen 生成了 binding，不能说明 Rust safe abstraction 受影响。当前 graph builder 会为 binding functions 建 `GENERATED_FROM` 边。这类边应记为 background edge，而不是 Rust-impact evidence。
-
-### 分类型 gate
-
-#### `SignatureDrift`
-
-升级 warning 需要：
-
-```text
-C source signature changed
-AND
-Rust direct use OR safe API OR build / wrapper oracle
-```
-
-如果只是：
-
-```text
-binding absent -> added
-binding present -> removed
-```
-
-则默认 fact only。只有命中 build breakage 或 wrapper fix 才升级。
-
-#### `FieldDrift` / `LayoutDrift`
-
-升级 warning 需要：
-
-- Rust side depends on struct layout / field。
-- safe abstraction mentions the type。
-- wrapper fix / build failure references the type。
-
-否则就是 C / bindgen fact，不是 warning。
-
-#### `MacroConstDrift`
-
-升级 warning 需要：
-
-- Rust code actually uses the const / macro binding。
-- safe abstraction / safety comment / error mapping references it。
-
-否则 fact only。
-
-#### `NullabilityDrift` / `ErrorDrift`
-
-保留 Tier2 当前思路，但再加一条：
-
-```text
-C indicator changed across versions
-```
-
-不要只因为新版本扫描到了 `NULL_RETURN` / `ERROR_CODE` 就出 warning。当前 Tier2 使用 `changed = indicators - old_set`，方向是对的。但要排除 old version 缺失导致的伪变化，并把 indicator confidence 纳入 gate。
-
-#### `OwnershipRefcountDrift` / `AllocationFreePairingDrift`
-
-保留 lifetime evidence gate，但禁止只靠函数名模式。当前 `_rust_lifetime` 会在没有 facts 时回退到函数名包含 `drop`、`clone`、`get`、`put`、`new`、`free`、`release` 等模式。
-
-这个 fallback 可以保留，但只能作为 weak evidence，不能单独 promotion；必须搭配 direct use 或 safety comment。
-
-## 方案三：修复 symbol matching，禁止 substring 误连
-
-### 当前问题
-
-两个地方风险最大：
-
-- Tier1 `_graph_exposure` 用 `src LIKE ? OR dst LIKE ?`。
-- graph query 也用 `node_id LIKE "%:{target}%"`。
-
-其中 `dst LIKE "%:{symbol}%"` 会导致 substring 误连。这会导致 `d_alloc` 与 `dealloc` 这类名字相近但语义无关的误连。
-
-### 修改方法
-
-引入 canonical symbol key：
-
-```python
-@dataclass(frozen=True)
-class SymbolKey:
-    kind: Literal[
-        "c_function",
-        "c_struct",
-        "c_macro",
-        "rust_binding_fn",
-        "rust_binding_struct",
-        "rust_binding_const",
-    ]
-    name: str
-    namespace: str | None = None
-```
-
-统一编码：
-
-```text
-c_function:foo
-c_struct:struct foo
-c_macro:FOO
-rust_binding_fn:foo
-rust_binding_struct:foo
-rust_binding_const:FOO
-```
-
-graph `node_id` 不再直接拼 `node_type:label`，而是使用 canonical key：
-
-```python
-def canonical_node_id(node_type, label):
-    return f"{node_type}:{normalize_exact(label)}"
-```
-
-查询时只允许 exact match：
-
-```sql
-SELECT *
-FROM graph_nodes
-WHERE version_id = ?
-  AND node_id = ?
-```
-
-如果需要模糊搜索，只能在 CLI `query_graph` 中作为人工检索功能使用，不能进入 detector / ranking。
-
-### 具体替换
-
-把 Tier1 里的：
-
-```python
-_graph_exposure(conn, selected_new, symbol)
-```
-
-改成：
-
-```python
-_exact_graph_exposure(conn, selected_new, canonical_symbol_id(symbol))
-```
-
-把：
-
-```sql
-src LIKE ? OR dst LIKE ?
-```
-
-改成：
-
-```sql
-src = ? OR dst = ?
-```
-
-如果要找从 `CFunction` 到 `RustBindingFunction` 的路径，就显式查：
-
-```sql
-src = 'CFunction:<symbol>'
-OR dst = 'RustBindingFunction:<symbol>'
-```
-
-不要用 `%symbol%`。
-
-### 接受标准
-
-新增单元测试：
-
-```python
-def test_no_substring_symbol_match():
-    # d_alloc should not match dealloc
-    ...
-```
-
-测试里构造：
-
-```text
-CFunction:d_alloc
-RustSafeAPI:dealloc
-```
-
-期望：
-
-```python
-compute_rust_impact("d_alloc").eligible == False
-```
-
-## 方案四：重写 ranking，让 top-K 优先真实 Rust-impact
-
-### 当前问题
-
-当前 ranking 的公式会把 drift severity、edge count、unsafe、contract、helper、historical、build 等简单加权。问题是：
-
-- `SignatureDrift` 基础 severity 很高。
-- edge count 也能加 exposure 分。
-- `SignatureDrift` / `LayoutDrift` / `FieldDrift` 还有 build 分。
-- generated-binding-only 也可能被排到很前。
-
-这解释了为什么 top warnings 中大量 `old = absent`、`new = added` 被高排。
-
-### 修改方法
-
-改为 “gate first, score second”。
-
-第一层：eligibility。
-
-```python
-if not warning["promotion_status"] == "promoted":
-    continue
-```
-
-第二层：重新设计 score。
-
-```text
-score =
-    4.0 * direct_rust_use
-  + 4.0 * safe_api_exposure
-  + 3.0 * contract_mapping
-  + 3.0 * safety_comment
-  + 3.0 * c_source_diff_strength
-  + 5.0 * build_oracle_hit
-  + 4.0 * wrapper_fix_hit
-  + 2.0 * multi_version_consistency
-  + 1.0 * indicator_confidence
-  - 5.0 * binding_only_penalty
-  - 3.0 * added_symbol_without_old_c_evidence_penalty
-  - 3.0 * weak_name_match_penalty
-  - 2.0 * no_evidence_chain_penalty
-```
-
-风险等级：
-
-```text
-High:
-  score >= 12
-  and safe_api_exposure or contract_mapping or oracle_hit
-
-Medium:
-  score >= 8
-  and direct_rust_use
-
-Low:
-  promoted but only weak Rust evidence
-```
-
-重点惩罚项：
-
-```text
-binding_only_penalty = 1
-```
-
-当 warning 只有 `GENERATED_FROM` graph edge，没有 `rust_binding_uses`、safe API、safety comment、mapping、oracle 时，直接降级，不参与主 ranking。
-
-```text
-added_symbol_without_old_c_evidence_penalty = 1
-```
-
-对 `old = absent`、`new = added` 的 binding diff，如果没有 C source diff 或 Rust wrapper change，直接降级。
-
-### 接受标准
-
-重排后，manual review 的 top-50 应该满足：
-
-| 指标 | 目标 |
-| --- | --- |
-| P@10 | `>= 0.3` |
-| P@50 | `>= 0.15` |
-| P@100 | `>= 0.1` |
-
-这是比较保守的 CCF-B 最低线。现在 P@10 / P@50 / P@100 对 wrapper oracle 是 0，必须显著改善。
-
-## 方案五：把已有人工标注转成 hard negatives
-
-### 当前问题
-
-manual review 已经暴露了大量 false positives，但目前没有被反馈回系统。metrics 只是读 label、算 precision / precision@k。
-
-### 修改方法
-
-新增：
-
-```text
-data/manual/hard_negatives.csv
-data/manual/true_positives.csv
-```
-
-字段：
-
-```csv
-warning_id,symbol,type,pair_id,label,false_reason,required_fix
-```
-
-`false_reason` 建议标准化为：
-
-```text
-BINDING_ONLY
-NO_RUST_USE
-SUBSTRING_MISMATCH
-ADDED_SYMBOL_NO_OLD_EVIDENCE
-PLACEHOLDER_STRUCT_FIELDS
-NO_C_SOURCE_DIFF
-BENIGN_CONTRACT_CHANGE
-WEAK_INDICATOR
-```
-
-增加一个开发阶段命令：
-
-```bash
-uv run binddrift eval diagnose-false-positives \
-  --manual-review data/replay/.../manual_review.csv \
-  --warnings data/replay/.../warnings.jsonl
-```
-
-输出：
-
-```json
-{
-  "false_positive_reasons": {
-    "BINDING_ONLY": 42,
-    "NO_RUST_USE": 31,
-    "SUBSTRING_MISMATCH": 7
-  },
-  "recommended_gate_changes": []
-}
-```
-
-### 数据划分
-
-不要用全部人工标签直接调参后再报告同一批结果。建议：
-
-```text
-dev labels: 70%
-test labels: 30%
-```
-
-dev 用于调 gate / ranking，test 用于报告 final precision。
-
-如果样本太少，至少做 leave-one-pair-out：按 replay pair 留一组做 test。
-
-### 接受标准
-
-论文中能说清楚：
-
-> We used historical manual labels only to tune gates on the development split; all reported P@K numbers are from held-out pairs.
-
-这能显著提高 CCF-B 可信度。
-
-## 方案六：修复 case study 选择逻辑
-
-### 当前问题
-
-case study 生成器现在按类型从 warnings 中选第一条，不检查 label 是否为真阳性。模板还会固定写 “C-side contract evidence reaches Rust-for-Linux wrapper code”，即使没有 Rust-side evidence。
-
-这会把 false positive 自动包装成 case study。
-
-### 修改方法
-
-修改 `_select_cases`：
-
-```python
-TRUE_LABELS = {
-    "TRUE_BUILD_BREAKAGE",
-    "TRUE_WRAPPER_FIX",
-    "TRUE_SEMANTIC_DRIFT",
-}
-
-
-def _select_cases(warnings, labels):
-    candidates = [
-        w for w in warnings
-        if labels.get(str(w.get("warning_id"))) in TRUE_LABELS
-        and has_strong_evidence(w)
-    ]
-    ...
-```
-
-如果真阳性不足，不要强行凑满 8 个 case。宁可输出：
-
-```yaml
-cases: 2
-note: only adjudicated true positives are used
-```
-
-这比自动生成 8 个假 case 更可信。
-
-### Case 必须包含的证据
-
-每个 case study 至少包含：
-
-- C-side diff 或 behavior indicator evidence。
-- Rust direct call 或 safe API。
-- safety comment / mapping / lifetime fact / wrapper fix / build log 之一。
-- manual adjudicated label。
-- 为什么 compiler 不会捕获。
-
-没有这些证据的 warning 不能做 case study。
-
-### 接受标准
-
-生成 case 前先跑 validation：
-
-```python
-assert label in TRUE_LABELS
-assert has_c_evidence(warning)
-assert has_rust_impact(warning)
-```
-
-否则 fail fast，不生成 case。
-
-## 方案七：增加 parser 与 indicator 的抽样验证
-
-### 当前问题
-
-当前 C / Rust extractors 主要是 regex / heuristic。这个可以作为 artifact prototype，但 CCF-B 审稿会问：你扫出来的 facts 准吗？如果事实层错误很多，后面的 warning / ranking 都不可信。
-
-### 修改方法
-
-新增一个 validation workflow：
-
-```bash
-uv run binddrift eval audit-sample \
-  --sample c_functions:100 \
-  --sample rust_binding_uses:100 \
-  --sample c_behavior_indicators:100 \
-  --sample promoted_warnings:100
-```
-
-输出人工审查 CSV：
-
-```csv
-row_id,table,symbol,file,line,extracted_fact,is_correct,corrected_fact,notes
-```
-
-然后生成：
-
-```text
-paper/tables/extractor_audit.json
-```
-
-指标：
-
-```json
-{
-  "c_function_signature_precision": 0.93,
-  "rust_binding_use_precision": 0.90,
-  "indicator_precision": 0.78,
-  "promoted_warning_evidence_precision": 0.35
-}
-```
-
-这里的数字只是目标格式，不要伪造；真实跑完再填。
-
-### 最低接受线
-
-建议 CCF-B 前最低达到：
-
-| 指标 | 最低线 |
-| --- | --- |
-| C function extraction precision | `>= 0.90` |
-| Rust binding use precision | `>= 0.90` |
-| C behavior indicator precision | `>= 0.75` |
-| Promoted warning evidence precision | `>= 0.30` |
-
-如果 indicator precision 不高，就不要把 indicator 作为强证据，只能作为 weak signal。
-
-## 方案八：增强 oracle，而不是只靠 symbol-level wrapper fix
-
-### 当前问题
-
-当前 `oracle_summary` 是 symbol-level：warning 的 `c_side.symbol` 命中 oracle symbols 就算 matched。
-
-这个粒度太粗，既可能误伤，也很难支撑 semantic drift claim。build breakage 当前为 0，wrapper-fix precision 又很低。
-
-### 修改方法
-
-把 oracle 分成三类：
-
-```text
-build_oracle:
-  build log error references bindings::foo or Rust wrapper API
-
-wrapper_fix_oracle:
-  commit changes Rust wrapper/helper around bindings::foo
-  AND commit/diff mentions semantic adjustment, signature adjustment, null/error/ownership/layout fix
-
-semantic_review_oracle:
-  manual adjudicated TRUE_SEMANTIC_DRIFT
-```
-
-不要只记录 symbol。新增 oracle row：
-
-```json
-{
-  "oracle_type": "wrapper_fix",
-  "symbol": "foo",
-  "rust_file": "rust/kernel/...",
-  "commit": "...",
-  "fix_kind": "signature | nullability | ownership | layout | error | sleepability",
-  "evidence_text": "...",
-  "confidence": "strong | weak"
-}
-```
-
-评价时分开报告：
-
-- Build breakage recall。
-- Wrapper-fix recall。
-- Manual semantic precision。
-- Top-K promoted warning precision。
-
-不要把所有指标混在一起。
-
-### 接受标准
-
-至少报告：
-
-- P@10 / P@50 / P@100 on adjudicated manual labels。
-- Recall on wrapper-fix oracle。
-- Number of build-breakage events, even if zero。
-
-并明确：
-
-> Build breakage oracle is sparse; semantic precision is measured by manual review.
-
-这与项目 scope 保持一致：BindDrift 是 warning / prioritization artifact，不证明 soundness。scope 文档本来就已经这么写了。
-
-## 方案九：baseline / ablation 要围绕 ranking 改写
-
-### 当前问题
-
-目前最关键的主张应该是：
-
-> BindDrift ranks Rust-impactful drift warnings better than simple heuristics.
-
-所以 baseline 不能只是形式上存在，必须针对 ranking 失败点设计。
-
-### 建议 baseline
-
-至少保留四个：
-
-| Baseline | 定义 |
-| --- | --- |
-| `BindingDiffOnly` | 所有 binding diff 都作为 warning，按 severity 排 |
-| `CIndicatorOnly` | 只用 C behavior indicator，不看 Rust exposure |
-| `RustUseOnly` | 只要 Rust binding use 命中就排前，不看 contract evidence |
-| `NoRanking` / `Random` / `Chronological` | 作为下界 |
-
-BindDrift 应该证明：
-
-```text
-BindDrift P@K > BindingDiffOnly P@K
-BindDrift P@K > CIndicatorOnly P@K
-BindDrift P@K > RustUseOnly P@K
-```
-
-如果做不到，论文主张必须收窄。
-
-### Ablation
-
-建议做：
-
-- Full BindDrift。
-- no Rust-impact gate。
-- no exact symbol matching。
-- no contract evidence。
-- no oracle boost。
-- no binding-only penalty。
-
-重点证明两件事：
-
-- Rust-impact gate 显著提高 precision。
-- exact symbol matching 显著减少 false positives。
-
-## 方案十：论文 claim 边界也要相应改写
-
-当前 scope 已经比较稳：不声称证明 Rust abstraction soundness，只声称检测 C API change 可能 stale Rust binding / helper / unsafe wrapper / safe abstraction。
-
-但实验结果目前不支持“高精度检测”。整改后论文 claim 建议写成：
-
-> BindDrift is a replay-based warning prioritization system for Rust-for-Linux cross-language API and contract drift. It separates low-level drift facts from Rust-impact warnings and ranks warnings by evidence that a C-side change reaches Rust unsafe calls, safe abstractions, or documented safety/error/lifetime contracts.
-
-不要写：
-
-- detects bugs
-- proves soundness violations
-- finds all contract drift
-- guarantees safe abstraction stale
-
-应该写：
-
-- prioritizes review targets
-- surfaces Rust-impactful drift evidence
-- improves top-K precision over binding-only and indicator-only baselines
-
-## 推荐实施顺序
-
-### 第 1 阶段：先止血，减少明显误报
-
-改动文件：
-
-```text
-binddrift/detectors/tier1.py
-binddrift/graph/builder.py
-binddrift/ranking/scorer.py
-tests/
-```
-
-任务：
-
-- Tier1 输出 drift facts，不直接输出 high-risk warnings。
-- `GENERATED_FROM` 不算 Rust-impact evidence。
-- 替换 `LIKE` symbol matching 为 exact matching。
-- generated-binding-only 降级。
-- 新增 substring mismatch 测试。
-
-完成标准：
-
-```text
-top-20 不再出现无 Rust-side evidence 的 old absent / new added SignatureDrift
-```
-
-### 第 2 阶段：建立 Rust-impact gate
-
-新增：
-
-```text
-binddrift/evidence/impact.py
-```
-
-修改：
-
-```text
-binddrift/detectors/tier1.py
-binddrift/detectors/tier2.py
-```
-
-任务：
-
-- 统一 direct use / safe API / safety comment / error mapping / lifetime fact / oracle evidence。
-- 所有 warning 必须经过 `promote_fact_if_impactful`。
-- Tier2 的 weak lifetime naming pattern 不能单独 promotion。
-
-完成标准：
-
-- warnings 数量大幅下降。
-- 每条 warning 都能解释“为什么触达 Rust”。
-
-### 第 3 阶段：重写 ranking
-
-修改：
-
-```text
-binddrift/ranking/scorer.py
-```
-
-任务：
-
-- gate first, score second。
-- 加 binding-only penalty。
-- 加 oracle boost。
-- 加 source-diff / evidence-chain boost。
-- 输出 score breakdown。
-
-warning 中建议增加：
-
-```json
-{
-  "score_breakdown": {
-    "direct_rust_use": 4.0,
-    "safe_api": 4.0,
-    "contract_mapping": 3.0,
-    "binding_only_penalty": -5.0
+  "run_id": "latest",
+  "canonical_warning_file": "data/replay/latest/warnings.jsonl",
+  "canonical_review_file": "data/replay/latest/manual_review.csv",
+  "canonical_drift_facts_file": "data/replay/latest/drift_facts.jsonl",
+  "canonical_database": ".binddrift/binddrift.sqlite3",
+  "warning_count": 11,
+  "drift_fact_count": 17910,
+  "reviewed_warning_count": 11,
+  "pair_count": 20,
+  "version_count": 21,
+  "sha256": {
+    "warnings.jsonl": "...",
+    "manual_review.csv": "...",
+    "drift_facts.jsonl": "..."
   }
 }
 ```
 
-完成标准：
+同时修改 paper build 和 eval all，让以下文件都必须读取同一个 manifest：
 
-```text
-每个 top warning 的高分原因可解释
+- `paper/tables/evaluation_summary.json`
+- `paper/tables/manual_review_summary.json`
+- `paper/tables/runtime_scalability.json`
+- `paper/tables/baselines_ablations.json`
+
+新增 hard fail：
+
+```python
+assert evaluation_summary["warnings"] == run_manifest["warning_count"]
+assert manual_review_summary["source_run_id"] == run_manifest["run_id"]
+assert reviewed_warning_count <= warning_count
+assert warnings_jsonl_sha == manifest_sha
 ```
 
-### 第 4 阶段：用人工标签闭环
+如果有任何不一致，paper build 直接失败，不生成 paper tables。
+
+### 验收标准
+
+必须全部满足：
+
+1. `data/replay/latest/warnings.jsonl` 非空，且行数 = `evaluation_summary["warnings"]`
+2. `data/replay/latest/manual_review.csv` 存在
+3. `manual_review_summary["source_run_id"] == "latest"`
+4. `evaluation_summary.manual_review.labeled_warnings == manual_review_summary.labeled_warnings`，或者有明确字段解释 `filtered_labeled_warnings`
+5. `runtime_scalability.json` 中 `latest.warnings` 与 `evaluation_summary.warnings` 口径一致；如果一个是 drift facts，一个是 promoted warnings，必须字段改名为 `drift_facts` 与 `promoted_warnings`
+6. paper build 在上述任一条件不满足时失败
+
+通过标准：artifact consistency 100%。
+
+如果这一阶段不完成，不进入下一阶段。
+
+## 阶段 1：修复 manual review 读入与 warning identity
+
+### 问题
+
+`manual_review_summary` 能看到 112 条标注，但 `evaluation_summary` 的 manual review 是 0 条 labeled。这说明 label key、`pair_id`、`warning_id`、`run_id` 或 review CSV 路径至少有一个不一致。
+
+### 解决方案
+
+定义永久稳定的 warning identity，不再只依赖 `W-000001` 这种局部编号。
+
+新增字段：
+
+```json
+{
+  "warning_uid": "sha256(run_id|pair_id|old_version|new_version|type|symbol|indicator|old_value|new_value)",
+  "run_id": "latest",
+  "pair_id": "latest-p010-v6.10-to-v6.11",
+  "warning_id": "W-000001"
+}
+```
+
+manual review CSV 必须包含：
+
+```text
+warning_uid,run_id,pair_id,warning_id,type,symbol,rank,score,reviewer1_label,reviewer2_label,adjudicated_label,adjudication_notes
+```
+
+`load_manual_labels` 的优先级：
+
+```text
+warning_uid > pair_id:warning_id > warning_id
+```
+
+但 paper 主表只能使用 `warning_uid` 匹配。`warning_id` 只作为展示编号。
+
+同时新增诊断命令：
+
+```bash
+uv run binddrift eval check-label-join \
+  --warnings data/replay/latest/warnings.jsonl \
+  --manual-review data/replay/latest/manual_review.csv
+```
+
+输出：
+
+```json
+{
+  "warnings": 11,
+  "review_rows": 11,
+  "matched_review_rows": 11,
+  "unmatched_warnings": [],
+  "orphan_review_rows": [],
+  "label_distribution": {
+    "TRUE_WRAPPER_FIX": 3,
+    "TRUE_SEMANTIC_DRIFT": 2,
+    "BENIGN_DRIFT": 4,
+    "FALSE_POSITIVE": 2
+  }
+}
+```
+
+### 验收标准
+
+必须全部满足：
+
+1. `check-label-join.matched_review_rows == warning_count`
+2. `orphan_review_rows == []`
+3. `unmatched_warnings == []`
+4. `evaluation_summary.manual_review.labeled_warnings > 0`
+5. `evaluation_summary.manual_review.label_distribution` 非空
+6. `manual_review_summary.labeled_warnings` 与 `evaluation_summary.manual_review.labeled_warnings` 一致
+
+硬性目标：
+
+- 主 warning set 如果是 11 条，则至少 11/11 完成 adjudicated label
+
+如果仍然出现 `manual_review_summary` 有标签，但 `evaluation_summary` 读不到，这一阶段失败。
+
+## 阶段 2：禁止 single-version warning 进入 CCF-B 主实验
+
+### 问题
+
+你当前很多 single-version review 目标会被标成 UNCLEAR，理由是“no historical baseline”。这类 warning 可以作为 pilot，但不能作为 CCF-B 主实验主张。因为 BindDrift 的论文定位是 cross-version API/contract drift，不是单版本 risk scanner。
+
+当前 scope 说 BindDrift 是 warning/prioritization artifact，检测 Linux C API change 可能 stale Rust binding/helper/wrapper/safe abstraction。所以主实验必须有 old/new version comparison。
+
+### 解决方案
+
+增加 main evidence gate：
+
+```python
+def eligible_for_main_warning(w):
+    return (
+        w["old_version"] is not None
+        and w["new_version"] is not None
+        and w["old_version"] != w["new_version"]
+        and w["pair_id"] is not None
+        and w["promotion_status"] == "promoted"
+    )
+```
+
+所有 single-version warning：
+
+```text
+old_version = null
+pair_id = null
+```
+
+只进入：
+
+```text
+data/single_version_review_targets.jsonl
+```
+
+不进入：
+
+```text
+paper/tables/evaluation_summary.json
+paper/tables/manual_review_summary.json
+paper/cases/
+```
+
+如果你想保留 single-version 结果，可以在 appendix 中单独报告：
+
+```text
+Exploratory single-version review targets
+```
+
+不能放在主 precision / P@K 表里。
+
+### 验收标准
+
+必须全部满足：
+
+1. paper 主 warning set 中 `old_version` 非空
+2. paper 主 warning set 中 `pair_id` 非空
+3. `manual_review.csv` 中没有 “no historical baseline” 作为 adjudicated UNCLEAR 的主要原因
+4. `evaluation_summary` 中单独报告：
+   - `promoted_replay_warnings`
+   - `single_version_review_targets`
+5. 两者不能混算
+
+硬性目标：
+
+- 主 warning set 中 single-version warning 数 = 0
+
+## 阶段 3：重新构造主 warning set，目标不是 11 条，而是 top-100 可审
+
+### 问题
+
+现在 `evaluation_summary` 只有 11 条 warnings。数量太少，会带来两个问题：
+
+- P@10 看起来高，但样本太小
+- baseline 很容易和 BindDrift 选到同一批 warning，导致 ablation 没有区分度
+
+### 解决方案
+
+把输出分成三层：
+
+- `drift_facts`：所有版本变化事实，例如 17k/49k 级别
+- `promoted_warnings`：通过 Rust-impact gate 的 warning，例如 200-1000 条
+- `paper_topk`：排名前 100 条，用于人工 review 与 paper 主表
+
+当前 gate 可能过严，导致 promoted warnings 只有 11。建议调成：
+
+- Tier A：`oracle_confirmed`
+- Tier B：`c_source_diff + direct Rust unsafe use`
+- Tier C：`c_behavior_indicator change + contract mapping`
+- Tier D：`c_behavior_indicator change + safe API + safety comment`
+
+paper 主评估使用：
+
+```text
+Tier A + Tier B + Tier C + Tier D 的 top-100
+```
+
+不要只保留 oracle-confirmed，因为那会让结果变成“wrapper-fix lookup”，创新性不足。
+
+### 验收标准
+
+建议目标：
+
+- `drift_facts >= 10,000`
+- `promoted_warnings` between 100 and 2,000
+- `paper_topk = 100`
+- `manual_review_rows = 100`
+
+如果真实 promoted warnings 少于 100，也可以接受，但必须解释：
+
+```text
+BindDrift intentionally emits sparse high-confidence warnings.
+```
+
+但最低不能只有 11 条，除非 11 条全部人工真阳性或高度可信。
+
+硬性目标：
+
+- `paper_topk >= 50`
+
+## 阶段 4：重做人工 review，目标是非零真阳性和可解释负样本
+
+### 问题
+
+当前 112 条人工标注 true labeled warnings 为 0。这对 CCF-B 是致命问题。即使 wrapper-fix oracle precision 很高，人工没有真阳性也无法支撑 semantic precision。
+
+### 解决方案
+
+重新生成 review CSV，只 review 主 replay warnings，不 review single-version warnings。
+
+Review labels 保持：
+
+- `TRUE_BUILD_BREAKAGE`
+- `TRUE_WRAPPER_FIX`
+- `TRUE_SEMANTIC_DRIFT`
+- `BENIGN_DRIFT`
+- `FALSE_POSITIVE`
+- `UNCLEAR`
+
+但必须新增两个字段：
+
+```text
+false_reason,true_reason
+```
+
+`true_reason` 枚举：
+
+- `BUILD_LOG_MATCH`
+- `WRAPPER_FIX_COMMIT_MATCH`
+- `CONTRACT_CHANGE_REACHES_SAFE_API`
+- `ERROR_MAPPING_STALE`
+- `NULLABILITY_MAPPING_STALE`
+- `OWNERSHIP_LIFETIME_STALE`
+- `SLEEPABILITY_CONTEXT_STALE`
+
+`false_reason` 枚举：
+
+- `NO_VERSION_CHANGE`
+- `NO_RUST_IMPACT`
+- `BINDING_ONLY`
+- `BENIGN_CONTRACT_CHANGE`
+- `WEAK_INDICATOR`
+- `MISMATCHED_SYMBOL`
+- `EXTRACTOR_ERROR`
+- `INSUFFICIENT_EVIDENCE`
+
+人工 review 流程：
+
+1. reviewer1 独立标 top-100
+2. reviewer2 独立标 top-100
+3. adjudicator 只处理分歧
+4. 生成 `adjudicated_label`
+5. eval all 只用 `adjudicated_label`
+
+### 验收标准
+
+最低目标：
+
+- `reviewed_warnings >= 50`
+- `double_labeled >= 50`
+- `agreement_rate >= 0.75`
+- `UNCLEAR <= 30%`
+- `true_labeled_warnings >= 5`
+
+CCF-B 可投目标：
+
+- `reviewed_warnings = 100`
+- `double_labeled = 100`
+- `agreement_rate >= 0.80`
+- `UNCLEAR <= 20%`
+- `true_labeled_warnings >= 10`
+- `manual precision >= 0.10`
+- `P@10 >= 0.30`
+- `P@50 >= 0.15`
+- `P@100 >= 0.10`
+
+硬性失败条件：
+
+- `true_labeled_warnings == 0`
+
+只要真阳性仍为 0，就不能投。
+
+## 阶段 5：重构 wrapper-fix oracle，避免被审稿人认为是 symbol-level leakage
+
+### 问题
+
+当前 wrapper-fix prediction 很好：precision 0.7273、P@10 0.7。但它仍是 symbol-level oracle，审稿人会问：
+
+- 是不是只要 symbol 出现在 wrapper-fix commit 里就算命中？
+- 这个 fix 是否真的和 warning 的 drift type 相关？
+
+### 解决方案
+
+把 wrapper oracle 从 symbol-level 升级为 typed oracle。
+
+新增字段：
+
+```json
+{
+  "oracle_type": "wrapper_fix",
+  "symbol": "PTR_ERR",
+  "commit": "...",
+  "fix_kind": "error_mapping | nullability | ownership | layout | signature | allocation | sleepability",
+  "matched_warning_type": "ErrorDrift",
+  "rust_file": "rust/kernel/...",
+  "diff_hunk": "...",
+  "evidence_strength": "strong | weak",
+  "time_relation": "after_drift | before_drift | same_pair"
+}
+```
+
+命中规则：
+
+```text
+warning.symbol == oracle.symbol
+AND warning.type compatible with fix_kind
+AND oracle.commit_date after old_version_date
+AND oracle.commit_date <= new_version_or_head_date
+```
+
+例如：
+
+- `ErrorDrift` 只能匹配 `error_mapping/signature fix`
+- `NullabilityDrift` 只能匹配 `nullability/error pointer fix`
+- `OwnershipRefcountDrift` 只能匹配 `ownership/refcount/lifetime fix`
+
+### 验收标准
+
+必须报告两套指标：
+
+- symbol-level wrapper oracle
+- typed wrapper oracle
+
+最低目标：
+
+- `typed_wrapper_precision_at_10 >= 0.30`
+- `typed_wrapper_precision_at_50 >= 0.15`
+- `typed_wrapper_recall >= 0.10`
+
+硬性要求：
+
+- paper 主 claim 只能使用 typed oracle
+- symbol-level oracle 只能作为辅助/upper-bound
+
+## 阶段 6：重做 baseline / ablation，让它真的能回答“BindDrift 是否有用”
+
+### 问题
+
+当前 baseline 表危险：`BindgenOnly`、`CSignatureDiff`、`NoRanking` 等 baseline 的 wrapper precision 看起来不差，甚至可能高于 BindDrift。这会让审稿人认为你的 ranking 没有贡献。
+
+### 解决方案
+
+重新设计 baseline，使它们各自输出自己的 top-100，而不是在同一批 11 条 promoted warnings 上过滤。
+
+Baseline 应该是：
+
+- B1 `BindingDiffOnly`：所有 binding diff fact，按 diff severity 排
+- B2 `CSignatureDiffOnly`：所有 C signature diff，按 change size 排
+- B3 `CIndicatorOnly`：所有 behavior indicator change，按 indicator confidence 排
+- B4 `RustUseOnly`：所有触达 `rust_binding_uses` 的 symbol，按 use count 排
+- B5 `OracleBlindBindDrift`：BindDrift ranking，但去掉 wrapper/build oracle boost
+- B6 `NoRanking`：promoted warnings 原始顺序
+- B7 `Random`：random sample, run 10 seeds
+
+主比较指标：
+
+- manual P@10 / P@50 / P@100
+- typed wrapper P@10 / P@50 / P@100
+- MRR
+- AUC-style recall@K if possible
+
+### 验收标准
+
+最低目标：
+
+- BindDrift P@10 > every simple baseline P@10
+- BindDrift P@50 >= best baseline P@50 + 0.05
+- OracleBlindBindDrift < Full BindDrift on typed wrapper P@K
+- NoGraph / NoImpactGate 明显下降
+
+硬性失败条件：
+
+- NoRanking >= BindDrift on P@10 and P@50
+
+如果 NoRanking 仍然更好，你的 claim 必须改成：
+
+```text
+evidence gate reduces warning volume
+```
+
+而不能 claim：
+
+```text
+ranking improves prioritization
+```
+
+## 阶段 7：补 extractor / indicator audit
+
+### 问题
+
+当前实现仍然包含 regex/heuristic extraction。CCF-B 审稿人一定会问：C function、Rust use、indicator 的 precision 是多少？现在还没看到 extractor audit 表。
+
+### 解决方案
 
 新增：
 
 ```text
-binddrift/evaluation/diagnostics.py
-data/manual/hard_negatives.csv
-```
-
-任务：
-
-- 把已有 false positives 归因。
-- 用 hard negatives 调 gate。
-- dev / test split 或 leave-one-pair-out。
-- 重新报告 P@K。
-
-完成标准：
-
-```text
-报告 held-out P@10 / P@50 / P@100
-```
-
-### 第 5 阶段：修 case study
-
-修改：
-
-```text
-binddrift/paper/cases.py
-```
-
-任务：
-
-- 只选 adjudicated TRUE labels。
-- 每个 case 必须通过 evidence validation。
-- 真阳性不够时少生成，不硬凑。
-- 模板不要默认写 “contract evidence reaches wrapper code”，而要根据 evidence 实际生成。
-
-完成标准：
-
-```text
-case study 中没有 UNLABELED / FALSE_POSITIVE / BENIGN_DRIFT
-```
-
-### 第 6 阶段：补 extractor audit
-
-新增：
-
-```text
-binddrift/evaluation/audit.py
 paper/tables/extractor_audit.json
+data/audit/extractor_sample.csv
 ```
 
-任务：
+抽样对象：
 
-- 抽样 C signatures。
-- 抽样 Rust binding uses。
-- 抽样 C indicators。
-- 抽样 promoted warnings。
-- 报 precision。
+- `c_functions`: 100
+- `rust_binding_uses`: 100
+- `c_behavior_indicators`: 100
+- `rust_error_mappings`: 50
+- `rust_lifetime_facts`: 50
+- `promoted_warnings`: 50
 
-完成标准：
+CSV 字段：
 
 ```text
-论文能回答“regex extractor 准不准”
+sample_id,table,symbol,file,line,extracted_fact,is_correct,corrected_fact,error_type,notes
 ```
 
-## 最终应该追求的指标
+`error_type` 枚举：
 
-整改后，不要再以 “warnings 总数很多” 作为亮点。CCF-B 更看重：
+- `WRONG_SYMBOL`
+- `WRONG_SCOPE`
+- `WRONG_LINE`
+- `FALSE_INDICATOR`
+- `MISSING_CONTEXT`
+- `REGEX_ARTIFACT`
+- `BINDGEN_ARTIFACT`
+- `OTHER`
 
-- Top-K precision。
-- False-positive reduction。
-- Ablation improvement。
-- Case-study credibility。
-- Reproducible evidence chain。
+### 验收标准
 
-建议最低目标：
+最低目标：
 
-| 指标 | 最低目标 |
-| --- | --- |
-| promoted warning 数量 | 比当前 17k 大幅下降，最好 `< 2k` |
-| P@10 manual review | `>= 0.30` |
-| P@50 manual review | `>= 0.15` |
-| P@100 manual review | `>= 0.10` |
-| generated-binding-only in top-50 | `0` |
-| substring mismatch false positives | reviewed top-100 中为 `0` |
-| case study true / adjudicated | `100%` |
-| extractor audit precision | C / Rust uses `>= 0.90`，indicator `>= 0.75` |
+- c_functions precision >= 0.90
+- rust_binding_uses precision >= 0.90
+- c_behavior_indicators precision >= 0.75
+- rust_error_mappings precision >= 0.80
+- rust_lifetime_facts precision >= 0.75
+- promoted_warning_evidence precision >= 0.30
 
-如果这些达不到，论文主张要继续收缩为：
+CCF-B 可投目标：
 
-> fact extraction and exploratory review aid
+- c_functions precision >= 0.95
+- rust_binding_uses precision >= 0.95
+- c_behavior_indicators precision >= 0.80
+- promoted_warning_evidence precision >= 0.40
 
-如果这些达到了，才可以比较有底气地写成：
+硬性要求：
 
-> Rust-for-Linux cross-language drift warning prioritization system
+- `paper/tables/table_index.json` 必须包含 `extractor_audit`
 
-## 最小可执行版本
+## 阶段 8：case study 只允许来自真阳性
 
-最小版本不用大改全部 pipeline，只需要做这 5 件事：
+### 问题
 
-1. Tier1 generated-binding-only 不进 warnings，只进 `drift_facts`。
-2. 所有 warnings 必须有 direct Rust use / safe API / safety comment / mapping / oracle 之一。
-3. 所有 symbol matching 改成 exact match，禁止 detector / ranking 用 `LIKE "%symbol%"`。
-4. ranking 加 binding-only penalty 和 score breakdown。
-5. case study 只选 adjudicated true labels。
+你已经改了 case study selection，只选 TRUE_LABELS 且必须有 C/Rust evidence。这个方向正确。但现在 `manual_review_summary` 的 true labeled warnings 是 0。所以理论上当前不应该生成任何主 case study。
 
-这五件做完，当前最大 CCF-B 风险会明显下降。现在的问题不是系统缺模块，而是证据门槛太低；把门槛加上，BindDrift 才会从“噪声很大的 drift scanner”变成“可以投稿的 warning prioritization artifact”。
+### 解决方案
+
+case generation 加 hard fail：
+
+```python
+if main_paper_mode and len(selected_cases) == 0:
+    raise RuntimeError("No adjudicated true-positive case studies available")
+```
+
+每个 case 必须满足：
+
+- `adjudicated_label in TRUE_LABELS`
+- `old_version != null`
+- `new_version != null`
+- `pair_id != null`
+- has C evidence
+- has Rust impact evidence
+- has contract/oracle evidence
+
+每个 case markdown 必须包含：
+
+1. old version evidence
+2. new version evidence
+3. C-side diff or indicator change
+4. Rust wrapper/safe API dependency
+5. reviewer adjudicated label
+6. why compiler cannot catch it
+7. why this is not merely generated-binding-only
+
+### 验收标准
+
+最低目标：
+
+- case_studies >= 2
+- all case labels in TRUE_LABELS
+- 0 UNLABELED case
+- 0 FALSE_POSITIVE case
+- 0 BENIGN_DRIFT case
+- 0 single-version case
+
+CCF-B 可投目标：
+
+- case_studies >= 3
+- 覆盖至少 2 种 drift type
+- 至少 1 个 wrapper-fix-backed case
+- 至少 1 个 semantic-review-backed case
+
+## 阶段 9：重新定义最终论文 claim
+
+### 当前可以 claim 的内容
+
+如果阶段 0-8 都完成，可以 claim：
+
+```text
+BindDrift separates low-level cross-version drift facts from Rust-impact warnings and prioritizes warnings that reach Rust unsafe calls, safe APIs, or documented contract mappings.
+```
+
+可以 claim：
+
+```text
+BindDrift reduces the reviewable warning volume by separating low-level drift facts from Rust-impact warnings; the current baseline table does not support a broad ranking-superiority claim.
+```
+
+可以 claim：
+
+```text
+BindDrift surfaces wrapper-fix-related drift evidence with typed oracle validation.
+```
+
+### 仍然不能 claim 的内容
+
+不要 claim：
+
+- proves Rust abstraction unsoundness
+- finds all contract drift
+- detects real bugs automatically
+- guarantees semantic drift
+
+这和现有 scope 一致：项目明确说 Tier2 semantic findings 是 review targets，不是 confirmed bugs。
+
+### 验收标准
+
+论文 introduction / abstract / evaluation 中不得出现：
+
+- bug detector
+- soundness proof
+- complete detection
+- guaranteed stale abstraction
+
+必须出现：
+
+- warning prioritization
+- review target
+- evidence chain
+- cross-version replay
+- manual adjudication
+
+## 最终验收矩阵
+
+下面这张表是我建议你作为下一轮冲刺的“总验收标准”。
+
+| 模块 | 最低验收 | CCF-B 可投验收 |
+| --- | --- | --- |
+| Artifact consistency | 所有 paper tables 来自同一 manifest | paper build 自动检查，不一致直接失败 |
+| 主 warnings | >= 50 条 replay warnings | top-100 完整可审 |
+| Single-version leakage | 主结果中 0 条 | 主结果和 appendix 分离 |
+| Manual review | >= 50 条双人标注 | 100 条双人标注 |
+| Agreement | >= 0.75 | >= 0.80 |
+| True positives | >= 5 | >= 10 |
+| UNCLEAR 占比 | <= 30% | <= 20% |
+| Manual P@10 | >= 0.30 | >= 0.40 |
+| Manual P@50 | >= 0.15 | >= 0.25 |
+| Typed wrapper P@10 | >= 0.30 | >= 0.50 |
+| Build oracle | 可为 0，但必须解释 | 若仍为 0，不能作为主指标 |
+| Baseline | BindDrift 优于至少 3 个简单 baseline | BindDrift 优于所有主要 baseline |
+| Extractor audit | 有表，有人工抽样 | C/Rust extraction precision >= 0.90 |
+| Case studies | >= 2 个真阳性 | >= 3 个真阳性，覆盖 >= 2 drift types |
+
+## 推荐执行顺序
+
+严格按这个顺序做，不要跳：
+
+1. `run_manifest` + artifact hard fail
+2. `warning_uid` + label join 修复
+3. 禁止 single-version warning 进入主实验
+4. 重新生成 top-100 replay warning set
+5. 双人 manual review + adjudication
+6. typed wrapper oracle
+7. baseline/ablation 重算
+8. extractor audit
+9. case study 生成
+10. paper claim 收窄与重写
+
+## 下一轮评分目标
+
+如果只完成阶段 0-2：
+
+```text
+56 -> 60
+```
+
+如果完成阶段 0-5，并拿到非零人工真阳性：
+
+```text
+56 -> 65
+```
+
+如果完成阶段 0-8，且 baseline 证明 BindDrift 优于简单方法：
+
+```text
+56 -> 70+
+```
+
+现在最关键的不是再加 detector，而是让审稿人相信：
+
+1. 这些 warnings 是同一个 run 的结果
+2. 人工 review 确实评估了这些 warnings
+3. 真阳性不是 0
+4. BindDrift 比简单 baseline 更会排序
+5. case study 不是自动包装出来的 false positive
+
+这五点解决后，BindDrift 才真正进入 CCF-B 可投区间。
