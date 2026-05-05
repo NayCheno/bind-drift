@@ -15,6 +15,7 @@ from binddrift.detectors.tier1 import run_tier1, run_tier1_with_context
 from binddrift.detectors.tier2 import run_tier2, run_tier2_with_context
 from binddrift.environment import capture_environment, write_environment
 from binddrift.evaluation.evaluator import generate_manual_review, run_evaluation
+from binddrift.evaluation.protocol import write_default_evaluation_protocol
 from binddrift.extractors.bindgen import extract_bindings
 from binddrift.extractors.c_api import binding_closure_roots, extract_c_api
 from binddrift.extractors.rust_usage import extract_rust_usage
@@ -511,5 +512,6 @@ def run_version_replay(
     )
     _persist_run(cfg, run_row)
     if should_write_manifest:
+        write_default_evaluation_protocol(cfg, run_id=run_id)
         write_run_manifest(cfg, run_id=run_id)
     return summary

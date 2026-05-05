@@ -122,6 +122,8 @@ def test_version_replay_records_pair_outputs(tmp_path: Path):
     aggregate = Path(summary["aggregate_warnings"])
     assert aggregate.exists()
     assert aggregate.parent == stale_dir
+    assert (stale_dir / "evaluation_protocol.json").exists()
+    assert (stale_dir / "run_manifest.json").exists()
     assert not (stale_dir / "stale.txt").exists()
     warnings = read_warnings(aggregate)
     assert warnings[0]["run_id"] == summary["run_id"]
@@ -238,9 +240,12 @@ def test_version_replay_reranks_aggregate_for_multi_version_consistency(monkeypa
 
     summary = run_version_replay(cfg, start="v1", include_head=False, toolchain="off")
     warnings = read_warnings(Path(summary["aggregate_warnings"]))
+    run_dir = Path(summary["run_dir"])
 
     assert summary["pairs"] == 2
     assert summary["ranking"]["warnings"] == 2
+    assert (run_dir / "evaluation_protocol.json").exists()
+    assert (run_dir / "run_manifest.json").exists()
     assert all(len(warning["observed_pairs"]) == 2 for warning in warnings)
     assert all(warning["score_breakdown"]["multi_version_consistency"] == 2.0 for warning in warnings)
 
