@@ -24,12 +24,12 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.17/rust/kernel/device.rs:202 `Device<CoreInternal>::set_drvdata` unsafe=1
+- .binddrift/worktrees/v6.17/rust/kernel/device.rs:202 `Device<CoreInternal>::set_drvdata` unsafe=1
 - safe API `Device<CoreInternal>::set_drvdata`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.17/rust/kernel/device.rs:199 `/// Store a pointer to the bound driver's private data.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.17/rust/kernel/device.rs:201 `// SAFETY: By the type invariants, `self.as_raw()` is a valid pointer to a `struct device`.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.17/rust/kernel/device.rs:205 `/// Take ownership of the private data stored in this [`Device`].`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.17/rust/kernel/device.rs:200 `FOREIGN_OWNABLE`
+- .binddrift/worktrees/v6.17/rust/kernel/device.rs:199 `/// Store a pointer to the bound driver's private data.`
+- .binddrift/worktrees/v6.17/rust/kernel/device.rs:201 `// SAFETY: By the type invariants, `self.as_raw()` is a valid pointer to a `struct device`.`
+- .binddrift/worktrees/v6.17/rust/kernel/device.rs:205 `/// Take ownership of the private data stored in this [`Device`].`
+- .binddrift/worktrees/v6.17/rust/kernel/device.rs:200 `FOREIGN_OWNABLE`
 - wrapper_fix: `0242623384c767b1156b61b67894b4ecf6682b8b`
 
 ## W-000004 SignatureDrift
@@ -56,11 +56,11 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.17/rust/kernel/sync/poll.rs:61 `PollTable<'a>::register_wait` unsafe=1
+- .binddrift/worktrees/v6.17/rust/kernel/sync/poll.rs:61 `PollTable<'a>::register_wait` unsafe=1
 - safe API `PollTable<'a>::register_wait`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.17/rust/kernel/sync/poll.rs:65 `/// A wrapper around [`CondVar`] that makes it usable with [`PollTable`].`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.17/rust/kernel/sync/poll.rs:66 `///`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.17/rust/kernel/sync/poll.rs:61 `AS_PTR`
+- .binddrift/worktrees/v6.17/rust/kernel/sync/poll.rs:65 `/// A wrapper around [`CondVar`] that makes it usable with [`PollTable`].`
+- .binddrift/worktrees/v6.17/rust/kernel/sync/poll.rs:66 `///`
+- .binddrift/worktrees/v6.17/rust/kernel/sync/poll.rs:61 `AS_PTR`
 - wrapper_fix: `de747bd023c09b5b7f3bf5c952d7b1da77a9caaa`
 
 ## W-000007 SignatureDrift
@@ -87,12 +87,12 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.17/rust/kernel/regulator.rs:269 `Regulator<T>::get_voltage` unsafe=1
+- .binddrift/worktrees/v6.17/rust/kernel/regulator.rs:269 `Regulator<T>::get_voltage` unsafe=1
 - safe API `Regulator<T>::get_voltage`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.17/rust/kernel/regulator.rs:266 `/// Gets the current voltage of the regulator.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.17/rust/kernel/regulator.rs:268 `// SAFETY: Safe as per the type invariants of `Regulator`.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.17/rust/kernel/regulator.rs:267 `RESULT_RETURN`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.17/rust/kernel/regulator.rs:269 `AS_PTR`
+- .binddrift/worktrees/v6.17/rust/kernel/regulator.rs:266 `/// Gets the current voltage of the regulator.`
+- .binddrift/worktrees/v6.17/rust/kernel/regulator.rs:268 `// SAFETY: Safe as per the type invariants of `Regulator`.`
+- .binddrift/worktrees/v6.17/rust/kernel/regulator.rs:267 `RESULT_RETURN`
+- .binddrift/worktrees/v6.17/rust/kernel/regulator.rs:269 `AS_PTR`
 - wrapper_fix: `8121353a4bf8e38afee26299419a78ec108e14a6`
 
 ## W-000008 SignatureDrift
@@ -119,11 +119,11 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.17/rust/kernel/regulator.rs:383 `Regulator<T>::is_enabled` unsafe=1
+- .binddrift/worktrees/v6.17/rust/kernel/regulator.rs:383 `Regulator<T>::is_enabled` unsafe=1
 - safe API `Regulator<T>::is_enabled`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.17/rust/kernel/regulator.rs:380 `/// Checks if the regulator is enabled.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.17/rust/kernel/regulator.rs:382 `// SAFETY: Safe as per the type invariants of `Regulator`.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.17/rust/kernel/regulator.rs:383 `AS_PTR`
+- .binddrift/worktrees/v6.17/rust/kernel/regulator.rs:380 `/// Checks if the regulator is enabled.`
+- .binddrift/worktrees/v6.17/rust/kernel/regulator.rs:382 `// SAFETY: Safe as per the type invariants of `Regulator`.`
+- .binddrift/worktrees/v6.17/rust/kernel/regulator.rs:383 `AS_PTR`
 - wrapper_fix: `8121353a4bf8e38afee26299419a78ec108e14a6`
 
 ## W-000010 FieldDrift
@@ -148,9 +148,9 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.17/rust/kernel/block/mq/gen_disk.rs:97 `GenDiskBuilder::capacity_sectors` unsafe=1
+- .binddrift/worktrees/v6.17/rust/kernel/block/mq/gen_disk.rs:97 `GenDiskBuilder::capacity_sectors` unsafe=1
 - safe API `GenDiskBuilder::capacity_sectors`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.17/rust/kernel/block/mq/gen_disk.rs:96 `// SAFETY: `bindings::queue_limits` contain only fields that are valid when zeroed.`
+- .binddrift/worktrees/v6.17/rust/kernel/block/mq/gen_disk.rs:96 `// SAFETY: `bindings::queue_limits` contain only fields that are valid when zeroed.`
 - wrapper_fix: `5e3b7009f116f684ac6b93d8924506154f3b1f6d`
 
 ## W-000002 SignatureDrift
@@ -176,9 +176,9 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.17/rust/kernel/time/delay.rs:47 `fsleep` unsafe=1
+- .binddrift/worktrees/v6.17/rust/kernel/time/delay.rs:47 `fsleep` unsafe=1
 - safe API `fsleep`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.17/rust/kernel/time/delay.rs:42 `// SAFETY: It is always safe to call `fsleep()` with any duration.`
+- .binddrift/worktrees/v6.17/rust/kernel/time/delay.rs:42 `// SAFETY: It is always safe to call `fsleep()` with any duration.`
 - wrapper_fix: `d4b29ddf82a458935f1bd4909b8a7a13df9d3bdc`
 
 ## W-000005 SignatureDrift
@@ -204,15 +204,15 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.17/rust/kernel/regulator.rs:299 `disable_internal` unsafe=1
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.17/rust/kernel/regulator.rs:393 `drop` unsafe=1
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.17/rust/kernel/regulator.rs:298 `// SAFETY: Safe as per the type invariants of `Regulator`.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.17/rust/kernel/regulator.rs:304 `/// Obtains a [`Regulator`] instance from the system.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.17/rust/kernel/regulator.rs:390 `// SAFETY: By the type invariants, we know that `self` owns a`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.17/rust/kernel/regulator.rs:294 `TO_RESULT_MAPPING`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.17/rust/kernel/regulator.rs:299 `TO_RESULT_MAPPING`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.17/rust/kernel/regulator.rs:299 `AS_PTR`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.17/rust/kernel/regulator.rs:393 `AS_PTR`
+- .binddrift/worktrees/v6.17/rust/kernel/regulator.rs:299 `disable_internal` unsafe=1
+- .binddrift/worktrees/v6.17/rust/kernel/regulator.rs:393 `drop` unsafe=1
+- .binddrift/worktrees/v6.17/rust/kernel/regulator.rs:298 `// SAFETY: Safe as per the type invariants of `Regulator`.`
+- .binddrift/worktrees/v6.17/rust/kernel/regulator.rs:304 `/// Obtains a [`Regulator`] instance from the system.`
+- .binddrift/worktrees/v6.17/rust/kernel/regulator.rs:390 `// SAFETY: By the type invariants, we know that `self` owns a`
+- .binddrift/worktrees/v6.17/rust/kernel/regulator.rs:294 `TO_RESULT_MAPPING`
+- .binddrift/worktrees/v6.17/rust/kernel/regulator.rs:299 `TO_RESULT_MAPPING`
+- .binddrift/worktrees/v6.17/rust/kernel/regulator.rs:299 `AS_PTR`
+- .binddrift/worktrees/v6.17/rust/kernel/regulator.rs:393 `AS_PTR`
 - wrapper_fix: `8121353a4bf8e38afee26299419a78ec108e14a6`
 
 ## W-000006 SignatureDrift
@@ -238,9 +238,9 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.17/rust/kernel/regulator.rs:294 `enable_internal` unsafe=1
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.17/rust/kernel/regulator.rs:293 `// SAFETY: Safe as per the type invariants of `Regulator`.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.17/rust/kernel/regulator.rs:294 `AS_PTR`
+- .binddrift/worktrees/v6.17/rust/kernel/regulator.rs:294 `enable_internal` unsafe=1
+- .binddrift/worktrees/v6.17/rust/kernel/regulator.rs:293 `// SAFETY: Safe as per the type invariants of `Regulator`.`
+- .binddrift/worktrees/v6.17/rust/kernel/regulator.rs:294 `AS_PTR`
 - wrapper_fix: `8121353a4bf8e38afee26299419a78ec108e14a6`
 
 ## W-000009 SignatureDrift
@@ -266,11 +266,11 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.17/rust/kernel/regulator.rs:397 `drop` unsafe=1
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.17/rust/kernel/regulator.rs:395 `// SAFETY: By the type invariants, we know that `self` owns a reference,`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.17/rust/kernel/regulator.rs:401 `/// A voltage.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.17/rust/kernel/regulator.rs:402 `///`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.17/rust/kernel/regulator.rs:397 `AS_PTR`
+- .binddrift/worktrees/v6.17/rust/kernel/regulator.rs:397 `drop` unsafe=1
+- .binddrift/worktrees/v6.17/rust/kernel/regulator.rs:395 `// SAFETY: By the type invariants, we know that `self` owns a reference,`
+- .binddrift/worktrees/v6.17/rust/kernel/regulator.rs:401 `/// A voltage.`
+- .binddrift/worktrees/v6.17/rust/kernel/regulator.rs:402 `///`
+- .binddrift/worktrees/v6.17/rust/kernel/regulator.rs:397 `AS_PTR`
 - wrapper_fix: `8121353a4bf8e38afee26299419a78ec108e14a6`
 
 ## W-000003 SignatureDrift

@@ -23,10 +23,10 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/error.rs:295 `to_result` unsafe=1
+- .binddrift/worktrees/v6.13/rust/kernel/error.rs:295 `to_result` unsafe=1
 - safe API `to_result`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/error.rs:290 `/// ````
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/error.rs:291 `ERR_PTR_MAPPING`
+- .binddrift/worktrees/v6.13/rust/kernel/error.rs:290 `/// ````
+- .binddrift/worktrees/v6.13/rust/kernel/error.rs:291 `ERR_PTR_MAPPING`
 - wrapper_fix: `752417b3f0e7721f1d630f40da22d57e0dae043e`
 
 ## W-000003 SignatureDrift
@@ -52,12 +52,12 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/error.rs:297 `to_result` unsafe=1
+- .binddrift/worktrees/v6.13/rust/kernel/error.rs:297 `to_result` unsafe=1
 - safe API `to_result`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/error.rs:294 `// SAFETY: The FFI function does not deref the pointer.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/error.rs:296 `// SAFETY: The FFI function does not deref the pointer.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/error.rs:295 `IS_ERR_MAPPING`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/error.rs:297 `PTR_ERR_MAPPING`
+- .binddrift/worktrees/v6.13/rust/kernel/error.rs:294 `// SAFETY: The FFI function does not deref the pointer.`
+- .binddrift/worktrees/v6.13/rust/kernel/error.rs:296 `// SAFETY: The FFI function does not deref the pointer.`
+- .binddrift/worktrees/v6.13/rust/kernel/error.rs:295 `IS_ERR_MAPPING`
+- .binddrift/worktrees/v6.13/rust/kernel/error.rs:297 `PTR_ERR_MAPPING`
 - wrapper_fix: `752417b3f0e7721f1d630f40da22d57e0dae043e`
 
 ## W-000004 SignatureDrift
@@ -83,20 +83,20 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/sync/arc.rs:199 `Arc<T>::new` unsafe=1
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/sync/arc.rs:318 `Arc<T>::into_unique_or_drop` unsafe=1
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/sync/arc.rs:646 `UniqueArc<T>::new_uninit` unsafe=1
+- .binddrift/worktrees/v6.13/rust/kernel/sync/arc.rs:199 `Arc<T>::new` unsafe=1
+- .binddrift/worktrees/v6.13/rust/kernel/sync/arc.rs:318 `Arc<T>::into_unique_or_drop` unsafe=1
+- .binddrift/worktrees/v6.13/rust/kernel/sync/arc.rs:646 `UniqueArc<T>::new_uninit` unsafe=1
 - safe API `Arc<T>::new`
 - safe API `Arc<T>::into_unique_or_drop`
 - safe API `UniqueArc<T>::new_uninit`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/sync/arc.rs:194 `/// Constructs a new reference counted instance of `T`.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/sync/arc.rs:198 `// SAFETY: There are no safety requirements for this FFI call.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/sync/arc.rs:313 `// SAFETY: We own a refcount, so the pointer is not dangling.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/sync/arc.rs:195 `RESULT_RETURN`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/sync/arc.rs:641 `RESULT_RETURN`
-- weak lifetime name /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/sync/arc.rs:199 `LIFETIME_NAMING_PATTERN`
-- weak lifetime name /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/sync/arc.rs:318 `LIFETIME_NAMING_PATTERN`
-- weak lifetime name /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/sync/arc.rs:646 `LIFETIME_NAMING_PATTERN`
+- .binddrift/worktrees/v6.13/rust/kernel/sync/arc.rs:194 `/// Constructs a new reference counted instance of `T`.`
+- .binddrift/worktrees/v6.13/rust/kernel/sync/arc.rs:198 `// SAFETY: There are no safety requirements for this FFI call.`
+- .binddrift/worktrees/v6.13/rust/kernel/sync/arc.rs:313 `// SAFETY: We own a refcount, so the pointer is not dangling.`
+- .binddrift/worktrees/v6.13/rust/kernel/sync/arc.rs:195 `RESULT_RETURN`
+- .binddrift/worktrees/v6.13/rust/kernel/sync/arc.rs:641 `RESULT_RETURN`
+- weak lifetime name .binddrift/worktrees/v6.13/rust/kernel/sync/arc.rs:199 `LIFETIME_NAMING_PATTERN`
+- weak lifetime name .binddrift/worktrees/v6.13/rust/kernel/sync/arc.rs:318 `LIFETIME_NAMING_PATTERN`
+- weak lifetime name .binddrift/worktrees/v6.13/rust/kernel/sync/arc.rs:646 `LIFETIME_NAMING_PATTERN`
 - wrapper_fix: `bb38f35b35f9de0cebc4d62ea73482454e38cef3`
 - wrapper_fix: `076acb647c1f448177d8b3b0e4f33de959713d7d`
 - wrapper_fix: `9ba1aaf25ab7dadb910348b6857865e87b4c5689`
@@ -124,10 +124,10 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/block/mq/gen_disk.rs:160 `GenDiskBuilder::capacity_sectors` unsafe=1
+- .binddrift/worktrees/v6.13/rust/kernel/block/mq/gen_disk.rs:160 `GenDiskBuilder::capacity_sectors` unsafe=1
 - safe API `GenDiskBuilder::capacity_sectors`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/block/mq/gen_disk.rs:157 `// SAFETY: `gendisk` points to a valid and initialized instance of`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/block/mq/gen_disk.rs:156 `TO_RESULT_MAPPING`
+- .binddrift/worktrees/v6.13/rust/kernel/block/mq/gen_disk.rs:157 `// SAFETY: `gendisk` points to a valid and initialized instance of`
+- .binddrift/worktrees/v6.13/rust/kernel/block/mq/gen_disk.rs:156 `TO_RESULT_MAPPING`
 - wrapper_fix: `0c5928deada15a8d075516e6e0d9ee19011bb000`
 
 ## W-000017 SignatureDrift
@@ -153,13 +153,13 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/error.rs:167 `Error::name` unsafe=1
+- .binddrift/worktrees/v6.13/rust/kernel/error.rs:167 `Error::name` unsafe=1
 - safe API `Error::name`
 - safe API `Error::name`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/error.rs:163 `/// Returns a string representing the error, if one exists.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/error.rs:166 `// SAFETY: Just an FFI call, there are no extra safety requirements.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/error.rs:171 `// SAFETY: The string returned by `errname` is static and `NUL`-terminated.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/error.rs:165 `OPTION_RETURN`
+- .binddrift/worktrees/v6.13/rust/kernel/error.rs:163 `/// Returns a string representing the error, if one exists.`
+- .binddrift/worktrees/v6.13/rust/kernel/error.rs:166 `// SAFETY: Just an FFI call, there are no extra safety requirements.`
+- .binddrift/worktrees/v6.13/rust/kernel/error.rs:171 `// SAFETY: The string returned by `errname` is static and `NUL`-terminated.`
+- .binddrift/worktrees/v6.13/rust/kernel/error.rs:165 `OPTION_RETURN`
 - wrapper_fix: `d2e3115d717197cb2bc020dd1f06b06538474ac3`
 - wrapper_fix: `e9759c5b9ea555d09f426c70c880e9522e9b0576`
 
@@ -186,19 +186,19 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/device.rs:44 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/device.rs:57 `Device::get_device` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/device.rs:63 `Device::as_raw` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/device.rs:75 `Device::as_raw` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/firmware.rs:15 `None` unsafe=0
+- .binddrift/worktrees/v6.13/rust/kernel/device.rs:44 `None` unsafe=0
+- .binddrift/worktrees/v6.13/rust/kernel/device.rs:57 `Device::get_device` unsafe=0
+- .binddrift/worktrees/v6.13/rust/kernel/device.rs:63 `Device::as_raw` unsafe=0
+- .binddrift/worktrees/v6.13/rust/kernel/device.rs:75 `Device::as_raw` unsafe=0
+- .binddrift/worktrees/v6.13/rust/kernel/firmware.rs:15 `None` unsafe=0
 - safe API `Device::get_device`
 - safe API `Device::as_raw`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/device.rs:39 `/// that the allocation remains valid at least until the matching call to `put_device`.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/device.rs:40 `///`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/device.rs:41 `/// `bindings::device::release` is valid to be called from any thread, hence `ARef<Device>` can be`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/device.rs:41 `AREF`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/device.rs:44 `OPAQUE`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/device.rs:57 `AREF`
+- .binddrift/worktrees/v6.13/rust/kernel/device.rs:39 `/// that the allocation remains valid at least until the matching call to `put_device`.`
+- .binddrift/worktrees/v6.13/rust/kernel/device.rs:40 `///`
+- .binddrift/worktrees/v6.13/rust/kernel/device.rs:41 `/// `bindings::device::release` is valid to be called from any thread, hence `ARef<Device>` can be`
+- .binddrift/worktrees/v6.13/rust/kernel/device.rs:41 `AREF`
+- .binddrift/worktrees/v6.13/rust/kernel/device.rs:44 `OPAQUE`
+- .binddrift/worktrees/v6.13/rust/kernel/device.rs:57 `AREF`
 - wrapper_fix: `a23b018c3bf646274f02edd46bf448c20c826d94`
 - wrapper_fix: `7b948a2af6b5d64a25c14da8f63d8084ea527cd9`
 - wrapper_fix: `4d320e30ee04c25c660eca2bb33e846ebb71a79a`
@@ -226,16 +226,16 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/rbtree.rs:326 `raw_entry` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/rbtree.rs:725 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/rbtree.rs:874 `get_neighbor_raw` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/rbtree.rs:890 `get_neighbor_raw` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/rbtree.rs:901 `get_neighbor_raw` unsafe=0
+- .binddrift/worktrees/v6.13/rust/kernel/rbtree.rs:326 `raw_entry` unsafe=0
+- .binddrift/worktrees/v6.13/rust/kernel/rbtree.rs:725 `None` unsafe=0
+- .binddrift/worktrees/v6.13/rust/kernel/rbtree.rs:874 `get_neighbor_raw` unsafe=0
+- .binddrift/worktrees/v6.13/rust/kernel/rbtree.rs:890 `get_neighbor_raw` unsafe=0
+- .binddrift/worktrees/v6.13/rust/kernel/rbtree.rs:901 `get_neighbor_raw` unsafe=0
 - safe API `RBTreeNodeReservation<K, V>::into_node`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/rbtree.rs:327 `// SAFETY: `raw_self` is a valid pointer to the `RBTree` (created from `self` above).`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/rbtree.rs:331 `// SAFETY: All links fields we create are in a `Node<K, V>`.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/rbtree.rs:720 `///`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/rbtree.rs:915 `AS_PTR`
+- .binddrift/worktrees/v6.13/rust/kernel/rbtree.rs:327 `// SAFETY: `raw_self` is a valid pointer to the `RBTree` (created from `self` above).`
+- .binddrift/worktrees/v6.13/rust/kernel/rbtree.rs:331 `// SAFETY: All links fields we create are in a `Node<K, V>`.`
+- .binddrift/worktrees/v6.13/rust/kernel/rbtree.rs:720 `///`
+- .binddrift/worktrees/v6.13/rust/kernel/rbtree.rs:915 `AS_PTR`
 - wrapper_fix: `8333ff4d0799aafbe4275cddcbaf45e545e4efba`
 
 ## W-000038 FieldDrift
@@ -261,20 +261,20 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/block/mq/operations.rs:123 `complete_callback` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/block/mq/operations.rs:178 `complete_callback` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/block/mq/operations.rs:205 `complete_callback` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/block/mq/request.rs:56 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/block/mq/request.rs:68 `Request<T>::aref_from_raw` unsafe=0
+- .binddrift/worktrees/v6.13/rust/kernel/block/mq/operations.rs:123 `complete_callback` unsafe=0
+- .binddrift/worktrees/v6.13/rust/kernel/block/mq/operations.rs:178 `complete_callback` unsafe=0
+- .binddrift/worktrees/v6.13/rust/kernel/block/mq/operations.rs:205 `complete_callback` unsafe=0
+- .binddrift/worktrees/v6.13/rust/kernel/block/mq/request.rs:56 `None` unsafe=0
+- .binddrift/worktrees/v6.13/rust/kernel/block/mq/request.rs:68 `Request<T>::aref_from_raw` unsafe=0
 - safe API `Request<T>::aref_from_raw`
 - safe API `Request<T>::wrapper_ptr`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/block/mq/operations.rs:118 `/// implemented, and there is no way to exercise this code path.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/block/mq/operations.rs:119 `///`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/block/mq/operations.rs:120 `/// # Safety`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/block/mq/request.rs:72 `NONNULL_MAPPING`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/block/mq/request.rs:56 `OPAQUE`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/block/mq/request.rs:59 `AREF`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/block/mq/request.rs:68 `AREF`
+- .binddrift/worktrees/v6.13/rust/kernel/block/mq/operations.rs:118 `/// implemented, and there is no way to exercise this code path.`
+- .binddrift/worktrees/v6.13/rust/kernel/block/mq/operations.rs:119 `///`
+- .binddrift/worktrees/v6.13/rust/kernel/block/mq/operations.rs:120 `/// # Safety`
+- .binddrift/worktrees/v6.13/rust/kernel/block/mq/request.rs:72 `NONNULL_MAPPING`
+- .binddrift/worktrees/v6.13/rust/kernel/block/mq/request.rs:56 `OPAQUE`
+- .binddrift/worktrees/v6.13/rust/kernel/block/mq/request.rs:59 `AREF`
+- .binddrift/worktrees/v6.13/rust/kernel/block/mq/request.rs:68 `AREF`
 - wrapper_fix: `28e848386b92645f93b9f2fdba5882c3ca7fb3e2`
 - wrapper_fix: `a307bf1db5448eccd72a1d7857f7661c6330d5ad`
 
@@ -300,10 +300,10 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/error.rs:159 `Error::to_blk_status` unsafe=1
+- .binddrift/worktrees/v6.13/rust/kernel/error.rs:159 `Error::to_blk_status` unsafe=1
 - safe API `Error::to_blk_status`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/error.rs:154 `/// Returns the error encoded as a pointer.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/error.rs:157 `// SAFETY: `self.0` is a valid error due to its invariant.`
+- .binddrift/worktrees/v6.13/rust/kernel/error.rs:154 `/// Returns the error encoded as a pointer.`
+- .binddrift/worktrees/v6.13/rust/kernel/error.rs:157 `// SAFETY: `self.0` is a valid error due to its invariant.`
 - wrapper_fix: `c7e20faa5fcad7a177cf6c306138010343dd6d3e`
 - wrapper_fix: `7bc186731e87482662c4f86da455f435fe838fb6`
 - wrapper_fix: `e9759c5b9ea555d09f426c70c880e9522e9b0576`
@@ -332,11 +332,11 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/task.rs:347 `Kuid::current_euid` unsafe=1
+- .binddrift/worktrees/v6.13/rust/kernel/task.rs:347 `Kuid::current_euid` unsafe=1
 - safe API `Kuid::current_euid`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/task.rs:343 `/// Get the current euid.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/task.rs:346 `// SAFETY: Just an FFI call.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/task.rs:347 `FROM_RAW`
+- .binddrift/worktrees/v6.13/rust/kernel/task.rs:343 `/// Get the current euid.`
+- .binddrift/worktrees/v6.13/rust/kernel/task.rs:346 `// SAFETY: Just an FFI call.`
+- .binddrift/worktrees/v6.13/rust/kernel/task.rs:347 `FROM_RAW`
 - wrapper_fix: `8ad1a41f7e23287f07a3516c700bc32501d4f104`
 
 ## W-000018 SignatureDrift
@@ -361,9 +361,9 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/error.rs:151 `Error::to_blk_status` unsafe=1
+- .binddrift/worktrees/v6.13/rust/kernel/error.rs:151 `Error::to_blk_status` unsafe=1
 - safe API `Error::to_blk_status`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/error.rs:150 `// SAFETY: `self.0` is a valid error due to its invariant.`
+- .binddrift/worktrees/v6.13/rust/kernel/error.rs:150 `// SAFETY: `self.0` is a valid error due to its invariant.`
 - wrapper_fix: `e9759c5b9ea555d09f426c70c880e9522e9b0576`
 
 ## W-000029 SignatureDrift
@@ -390,12 +390,12 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/task.rs:284 `Task::euid` unsafe=1
+- .binddrift/worktrees/v6.13/rust/kernel/task.rs:284 `Task::euid` unsafe=1
 - safe API `Task::euid`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/task.rs:281 `/// Returns the effective UID of the given task.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/task.rs:283 `// SAFETY: It's always safe to call `task_euid` on a valid task.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/task.rs:284 `AS_PTR`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/task.rs:284 `FROM_RAW`
+- .binddrift/worktrees/v6.13/rust/kernel/task.rs:281 `/// Returns the effective UID of the given task.`
+- .binddrift/worktrees/v6.13/rust/kernel/task.rs:283 `// SAFETY: It's always safe to call `task_euid` on a valid task.`
+- .binddrift/worktrees/v6.13/rust/kernel/task.rs:284 `AS_PTR`
+- .binddrift/worktrees/v6.13/rust/kernel/task.rs:284 `FROM_RAW`
 - wrapper_fix: `8ad1a41f7e23287f07a3516c700bc32501d4f104`
 
 ## W-000030 SignatureDrift
@@ -422,10 +422,10 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/task.rs:318 `Task::tgid_nr_ns` unsafe=1
+- .binddrift/worktrees/v6.13/rust/kernel/task.rs:318 `Task::tgid_nr_ns` unsafe=1
 - safe API `Task::tgid_nr_ns`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/task.rs:314 `// SAFETY: By the type invariant, we know that `self.0` is valid. We received a valid`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/task.rs:318 `AS_PTR`
+- .binddrift/worktrees/v6.13/rust/kernel/task.rs:314 `// SAFETY: By the type invariant, we know that `self.0` is valid. We received a valid`
+- .binddrift/worktrees/v6.13/rust/kernel/task.rs:318 `AS_PTR`
 - wrapper_fix: `8ad1a41f7e23287f07a3516c700bc32501d4f104`
 
 ## W-000031 SignatureDrift
@@ -452,12 +452,12 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/task.rs:278 `Task::uid` unsafe=1
+- .binddrift/worktrees/v6.13/rust/kernel/task.rs:278 `Task::uid` unsafe=1
 - safe API `Task::uid`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/task.rs:275 `/// Returns the UID of the given task.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/task.rs:277 `// SAFETY: It's always safe to call `task_uid` on a valid task.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/task.rs:278 `AS_PTR`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/task.rs:278 `FROM_RAW`
+- .binddrift/worktrees/v6.13/rust/kernel/task.rs:275 `/// Returns the UID of the given task.`
+- .binddrift/worktrees/v6.13/rust/kernel/task.rs:277 `// SAFETY: It's always safe to call `task_uid` on a valid task.`
+- .binddrift/worktrees/v6.13/rust/kernel/task.rs:278 `AS_PTR`
+- .binddrift/worktrees/v6.13/rust/kernel/task.rs:278 `FROM_RAW`
 - wrapper_fix: `8ad1a41f7e23287f07a3516c700bc32501d4f104`
 
 ## W-000036 FieldDrift
@@ -482,9 +482,9 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/block/mq/gen_disk.rs:97 `GenDiskBuilder::capacity_sectors` unsafe=1
+- .binddrift/worktrees/v6.13/rust/kernel/block/mq/gen_disk.rs:97 `GenDiskBuilder::capacity_sectors` unsafe=1
 - safe API `GenDiskBuilder::capacity_sectors`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/block/mq/gen_disk.rs:96 `// SAFETY: `bindings::queue_limits` contain only fields that are valid when zeroed.`
+- .binddrift/worktrees/v6.13/rust/kernel/block/mq/gen_disk.rs:96 `// SAFETY: `bindings::queue_limits` contain only fields that are valid when zeroed.`
 - wrapper_fix: `5e3b7009f116f684ac6b93d8924506154f3b1f6d`
 
 ## W-000022 SignatureDrift
@@ -509,9 +509,9 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/net/phy/reg.rs:111 `read` unsafe=1
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/net/phy/reg.rs:107 `// SAFETY: `phydev` is pointing to a valid object by the type invariant of `Device`.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/net/phy/reg.rs:113 `TO_RESULT_MAPPING`
+- .binddrift/worktrees/v6.13/rust/kernel/net/phy/reg.rs:111 `read` unsafe=1
+- .binddrift/worktrees/v6.13/rust/kernel/net/phy/reg.rs:107 `// SAFETY: `phydev` is pointing to a valid object by the type invariant of `Device`.`
+- .binddrift/worktrees/v6.13/rust/kernel/net/phy/reg.rs:113 `TO_RESULT_MAPPING`
 - wrapper_fix: `b2e47002b2350f57bfa8fe1c231e9fbb6baef78b`
 
 ## W-000023 SignatureDrift
@@ -536,9 +536,9 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/net/phy/reg.rs:123 `write` unsafe=1
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/net/phy/reg.rs:119 `// SAFETY: `phydev` is pointing to a valid object by the type invariant of `Device`.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/net/phy/reg.rs:122 `TO_RESULT_MAPPING`
+- .binddrift/worktrees/v6.13/rust/kernel/net/phy/reg.rs:123 `write` unsafe=1
+- .binddrift/worktrees/v6.13/rust/kernel/net/phy/reg.rs:119 `// SAFETY: `phydev` is pointing to a valid object by the type invariant of `Device`.`
+- .binddrift/worktrees/v6.13/rust/kernel/net/phy/reg.rs:122 `TO_RESULT_MAPPING`
 - wrapper_fix: `b2e47002b2350f57bfa8fe1c231e9fbb6baef78b`
 
 ## W-000024 SignatureDrift
@@ -563,9 +563,9 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/net/phy/reg.rs:202 `read` unsafe=1
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/net/phy/reg.rs:199 `// SAFETY: `phydev` is pointing to a valid object by the type invariant of `Device`.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/net/phy/reg.rs:203 `TO_RESULT_MAPPING`
+- .binddrift/worktrees/v6.13/rust/kernel/net/phy/reg.rs:202 `read` unsafe=1
+- .binddrift/worktrees/v6.13/rust/kernel/net/phy/reg.rs:199 `// SAFETY: `phydev` is pointing to a valid object by the type invariant of `Device`.`
+- .binddrift/worktrees/v6.13/rust/kernel/net/phy/reg.rs:203 `TO_RESULT_MAPPING`
 - wrapper_fix: `b2e47002b2350f57bfa8fe1c231e9fbb6baef78b`
 
 ## W-000025 SignatureDrift
@@ -590,9 +590,9 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/net/phy/reg.rs:212 `write` unsafe=1
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/net/phy/reg.rs:209 `// SAFETY: `phydev` is pointing to a valid object by the type invariant of `Device`.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/net/phy/reg.rs:211 `TO_RESULT_MAPPING`
+- .binddrift/worktrees/v6.13/rust/kernel/net/phy/reg.rs:212 `write` unsafe=1
+- .binddrift/worktrees/v6.13/rust/kernel/net/phy/reg.rs:209 `// SAFETY: `phydev` is pointing to a valid object by the type invariant of `Device`.`
+- .binddrift/worktrees/v6.13/rust/kernel/net/phy/reg.rs:211 `TO_RESULT_MAPPING`
 - wrapper_fix: `b2e47002b2350f57bfa8fe1c231e9fbb6baef78b`
 
 ## W-000034 FieldDrift
@@ -617,16 +617,16 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/firmware.rs:15 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/firmware.rs:55 `no_run` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/firmware.rs:59 `request_internal` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/firmware.rs:60 `request_internal` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/firmware.rs:85 `as_raw` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/firmware.rs:50 `/// let blob = fw.data();`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/firmware.rs:51 `///`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/firmware.rs:52 `/// # Ok(())`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/firmware.rs:81 `RESULT_RETURN`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/firmware.rs:86 `AS_PTR`
+- .binddrift/worktrees/v6.13/rust/kernel/firmware.rs:15 `None` unsafe=0
+- .binddrift/worktrees/v6.13/rust/kernel/firmware.rs:55 `no_run` unsafe=0
+- .binddrift/worktrees/v6.13/rust/kernel/firmware.rs:59 `request_internal` unsafe=0
+- .binddrift/worktrees/v6.13/rust/kernel/firmware.rs:60 `request_internal` unsafe=0
+- .binddrift/worktrees/v6.13/rust/kernel/firmware.rs:85 `as_raw` unsafe=0
+- .binddrift/worktrees/v6.13/rust/kernel/firmware.rs:50 `/// let blob = fw.data();`
+- .binddrift/worktrees/v6.13/rust/kernel/firmware.rs:51 `///`
+- .binddrift/worktrees/v6.13/rust/kernel/firmware.rs:52 `/// # Ok(())`
+- .binddrift/worktrees/v6.13/rust/kernel/firmware.rs:81 `RESULT_RETURN`
+- .binddrift/worktrees/v6.13/rust/kernel/firmware.rs:86 `AS_PTR`
 - wrapper_fix: `a23b018c3bf646274f02edd46bf448c20c826d94`
 
 ## W-000015 SignatureDrift
@@ -652,11 +652,11 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/task.rs:368 `Kuid::into_uid_in_current_ns` unsafe=1
+- .binddrift/worktrees/v6.13/rust/kernel/task.rs:368 `Kuid::into_uid_in_current_ns` unsafe=1
 - safe API `Kuid::into_uid_in_current_ns`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/task.rs:363 `///`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/task.rs:364 `/// Uses the namespace of the current task.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/task.rs:367 `// SAFETY: Just an FFI call.`
+- .binddrift/worktrees/v6.13/rust/kernel/task.rs:363 `///`
+- .binddrift/worktrees/v6.13/rust/kernel/task.rs:364 `/// Uses the namespace of the current task.`
+- .binddrift/worktrees/v6.13/rust/kernel/task.rs:367 `// SAFETY: Just an FFI call.`
 - wrapper_fix: `8ad1a41f7e23287f07a3516c700bc32501d4f104`
 
 ## W-000005 SignatureDrift
@@ -680,8 +680,8 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/sync/lock/mutex.rs:104 `example` unsafe=1
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/sync/lock/mutex.rs:102 `// SAFETY: The safety requirements ensure that `ptr` is valid for writes, and `name` and`
+- .binddrift/worktrees/v6.13/rust/kernel/sync/lock/mutex.rs:104 `example` unsafe=1
+- .binddrift/worktrees/v6.13/rust/kernel/sync/lock/mutex.rs:102 `// SAFETY: The safety requirements ensure that `ptr` is valid for writes, and `name` and`
 - wrapper_fix: `d065cc76054d21e48a839a2a19ba99dbc51a4d11`
 
 ## W-000013 SignatureDrift
@@ -705,8 +705,8 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/miscdevice.rs:164 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/miscdevice.rs:168 `// SAFETY: All zeros is a valid value for `bindings::file_operations`.`
+- .binddrift/worktrees/v6.13/rust/kernel/miscdevice.rs:164 `None` unsafe=0
+- .binddrift/worktrees/v6.13/rust/kernel/miscdevice.rs:168 `// SAFETY: All zeros is a valid value for `bindings::file_operations`.`
 - wrapper_fix: `68aabb29a5469e4b7358e70e64a7fac433e27f06`
 
 ## W-000019 SignatureDrift
@@ -730,9 +730,9 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/firmware.rs:24 `request_nowarn` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/firmware.rs:28 `/// Abstraction around a C `struct firmware`.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/firmware.rs:29 `///`
+- .binddrift/worktrees/v6.13/rust/kernel/firmware.rs:24 `request_nowarn` unsafe=0
+- .binddrift/worktrees/v6.13/rust/kernel/firmware.rs:28 `/// Abstraction around a C `struct firmware`.`
+- .binddrift/worktrees/v6.13/rust/kernel/firmware.rs:29 `///`
 - wrapper_fix: `a23b018c3bf646274f02edd46bf448c20c826d94`
 
 ## W-000021 SignatureDrift
@@ -757,7 +757,7 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/task.rs:368 `Kuid::into_uid_in_current_ns` unsafe=1
+- .binddrift/worktrees/v6.13/rust/kernel/task.rs:368 `Kuid::into_uid_in_current_ns` unsafe=1
 - safe API `Kuid::into_uid_in_current_ns`
 - wrapper_fix: `8ad1a41f7e23287f07a3516c700bc32501d4f104`
 
@@ -781,7 +781,7 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/workqueue.rs:197 `print_2_later` unsafe=1
+- .binddrift/worktrees/v6.13/rust/kernel/workqueue.rs:197 `print_2_later` unsafe=1
 - wrapper_fix: `d4d791d4aac041fde6eeba0a8f9201d728b52373`
 
 ## W-000027 SignatureDrift
@@ -804,7 +804,7 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/firmware.rs:20 `request` unsafe=0
+- .binddrift/worktrees/v6.13/rust/kernel/firmware.rs:20 `request` unsafe=0
 - wrapper_fix: `a23b018c3bf646274f02edd46bf448c20c826d94`
 
 ## W-000032 SignatureDrift
@@ -829,8 +829,8 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/task.rs:376 `eq` unsafe=1
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/task.rs:375 `// SAFETY: Just an FFI call.`
+- .binddrift/worktrees/v6.13/rust/kernel/task.rs:376 `eq` unsafe=1
+- .binddrift/worktrees/v6.13/rust/kernel/task.rs:375 `// SAFETY: Just an FFI call.`
 - wrapper_fix: `8ad1a41f7e23287f07a3516c700bc32501d4f104`
 
 ## W-000006 SignatureDrift

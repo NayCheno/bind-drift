@@ -21,9 +21,9 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v7.0/rust/kernel/dma.rs:652 `drop` unsafe=1
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v7.0/rust/kernel/dma.rs:648 `// SAFETY: Device pointer is guaranteed as valid by the type invariant on `Device`.`
-- weak lifetime name /home/nya/workspace/bind-drift/.binddrift/worktrees/v7.0/rust/kernel/dma.rs:652 `LIFETIME_NAMING_PATTERN`
+- .binddrift/worktrees/v7.0/rust/kernel/dma.rs:652 `drop` unsafe=1
+- .binddrift/worktrees/v7.0/rust/kernel/dma.rs:648 `// SAFETY: Device pointer is guaranteed as valid by the type invariant on `Device`.`
+- weak lifetime name .binddrift/worktrees/v7.0/rust/kernel/dma.rs:652 `LIFETIME_NAMING_PATTERN`
 
 ## W-000001 FieldDrift
 
@@ -48,20 +48,20 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v7.0/rust/kernel/auxiliary.rs:269 `release` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v7.0/rust/kernel/device.rs:170 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v7.0/rust/kernel/device.rs:183 `Device::get_device` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v7.0/rust/kernel/device.rs:338 `Device<Ctx>::as_raw` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v7.0/rust/kernel/device.rs:369 `Device<Ctx>::parent` unsafe=0
+- .binddrift/worktrees/v7.0/rust/kernel/auxiliary.rs:269 `release` unsafe=0
+- .binddrift/worktrees/v7.0/rust/kernel/device.rs:170 `None` unsafe=0
+- .binddrift/worktrees/v7.0/rust/kernel/device.rs:183 `Device::get_device` unsafe=0
+- .binddrift/worktrees/v7.0/rust/kernel/device.rs:338 `Device<Ctx>::as_raw` unsafe=0
+- .binddrift/worktrees/v7.0/rust/kernel/device.rs:369 `Device<Ctx>::parent` unsafe=0
 - safe API `Device::get_device`
 - safe API `Device<Ctx>::as_raw`
 - safe API `Device<Ctx>::parent`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v7.0/rust/kernel/auxiliary.rs:265 `// SAFETY: A `struct auxiliary_device` always has a parent.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v7.0/rust/kernel/device.rs:165 `///`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v7.0/rust/kernel/device.rs:166 `/// [`AlwaysRefCounted`]: kernel::sync::aref::AlwaysRefCounted`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v7.0/rust/kernel/device.rs:170 `OPAQUE`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v7.0/rust/kernel/device.rs:183 `AREF`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v7.0/rust/kernel/device.rs:185 `FROM_RAW`
+- .binddrift/worktrees/v7.0/rust/kernel/auxiliary.rs:265 `// SAFETY: A `struct auxiliary_device` always has a parent.`
+- .binddrift/worktrees/v7.0/rust/kernel/device.rs:165 `///`
+- .binddrift/worktrees/v7.0/rust/kernel/device.rs:166 `/// [`AlwaysRefCounted`]: kernel::sync::aref::AlwaysRefCounted`
+- .binddrift/worktrees/v7.0/rust/kernel/device.rs:170 `OPAQUE`
+- .binddrift/worktrees/v7.0/rust/kernel/device.rs:183 `AREF`
+- .binddrift/worktrees/v7.0/rust/kernel/device.rs:185 `FROM_RAW`
 - wrapper_fix: `a23b018c3bf646274f02edd46bf448c20c826d94`
 - wrapper_fix: `7b948a2af6b5d64a25c14da8f63d8084ea527cd9`
 - wrapper_fix: `4d320e30ee04c25c660eca2bb33e846ebb71a79a`
@@ -88,15 +88,15 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v7.0/rust/kernel/pci.rs:101 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v7.0/rust/kernel/pci.rs:123 `remove_callback` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v7.0/rust/kernel/pci.rs:339 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v7.0/rust/kernel/pci.rs:345 `as_raw` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v7.0/rust/kernel/pci.rs:466 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v7.0/rust/kernel/pci.rs:124 `// SAFETY: The PCI bus only ever calls the remove callback with a valid pointer to a`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v7.0/rust/kernel/pci.rs:334 `///`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v7.0/rust/kernel/pci.rs:335 `/// A [`Device`] instance represents a valid `struct pci_dev` created by the C portion of the`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v7.0/rust/kernel/pci.rs:339 `OPAQUE`
+- .binddrift/worktrees/v7.0/rust/kernel/pci.rs:101 `None` unsafe=0
+- .binddrift/worktrees/v7.0/rust/kernel/pci.rs:123 `remove_callback` unsafe=0
+- .binddrift/worktrees/v7.0/rust/kernel/pci.rs:339 `None` unsafe=0
+- .binddrift/worktrees/v7.0/rust/kernel/pci.rs:345 `as_raw` unsafe=0
+- .binddrift/worktrees/v7.0/rust/kernel/pci.rs:466 `None` unsafe=0
+- .binddrift/worktrees/v7.0/rust/kernel/pci.rs:124 `// SAFETY: The PCI bus only ever calls the remove callback with a valid pointer to a`
+- .binddrift/worktrees/v7.0/rust/kernel/pci.rs:334 `///`
+- .binddrift/worktrees/v7.0/rust/kernel/pci.rs:335 `/// A [`Device`] instance represents a valid `struct pci_dev` created by the C portion of the`
+- .binddrift/worktrees/v7.0/rust/kernel/pci.rs:339 `OPAQUE`
 - wrapper_fix: `7b948a2af6b5d64a25c14da8f63d8084ea527cd9`
 
 ## W-000003 FieldDrift
@@ -121,15 +121,15 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v7.0/rust/kernel/platform.rs:95 `probe_callback` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v7.0/rust/kernel/platform.rs:111 `remove_callback` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v7.0/rust/kernel/platform.rs:257 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v7.0/rust/kernel/platform.rs:262 `as_raw` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v7.0/rust/kernel/platform.rs:325 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v7.0/rust/kernel/platform.rs:96 `// SAFETY: The platform bus only ever calls the probe callback with a valid pointer to a`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v7.0/rust/kernel/platform.rs:112 `// SAFETY: The platform bus only ever calls the remove callback with a valid pointer to a`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v7.0/rust/kernel/platform.rs:252 `///`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v7.0/rust/kernel/platform.rs:257 `OPAQUE`
+- .binddrift/worktrees/v7.0/rust/kernel/platform.rs:95 `probe_callback` unsafe=0
+- .binddrift/worktrees/v7.0/rust/kernel/platform.rs:111 `remove_callback` unsafe=0
+- .binddrift/worktrees/v7.0/rust/kernel/platform.rs:257 `None` unsafe=0
+- .binddrift/worktrees/v7.0/rust/kernel/platform.rs:262 `as_raw` unsafe=0
+- .binddrift/worktrees/v7.0/rust/kernel/platform.rs:325 `None` unsafe=0
+- .binddrift/worktrees/v7.0/rust/kernel/platform.rs:96 `// SAFETY: The platform bus only ever calls the probe callback with a valid pointer to a`
+- .binddrift/worktrees/v7.0/rust/kernel/platform.rs:112 `// SAFETY: The platform bus only ever calls the remove callback with a valid pointer to a`
+- .binddrift/worktrees/v7.0/rust/kernel/platform.rs:252 `///`
+- .binddrift/worktrees/v7.0/rust/kernel/platform.rs:257 `OPAQUE`
 - wrapper_fix: `ef4dc4cc7001e9cce8a3b556362171648be9ad92`
 - wrapper_fix: `4d320e30ee04c25c660eca2bb33e846ebb71a79a`
 - wrapper_fix: `0242623384c767b1156b61b67894b4ecf6682b8b`

@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from binddrift.config import Config
-from binddrift.artifact_paths import repo_relative
+from binddrift.artifact_paths import repo_relative, sanitize_local_paths
 from binddrift.warnings import eligible_for_main_warning, read_warnings
 
 
@@ -63,7 +63,7 @@ def resolve_manifest_path(cfg: Config, value: str) -> Path:
     return (cfg.repo_root / path).resolve()
 
 
-def aggregate_pair_jsonl(run_dir: Path, filename: str, output: Path) -> int:
+def aggregate_pair_jsonl(run_dir: Path, filename: str, output: Path, *, cfg: Config | None = None) -> int:
     rows = 0
     output.parent.mkdir(parents=True, exist_ok=True)
     with output.open("w", encoding="utf-8") as out:
@@ -75,6 +75,12 @@ def aggregate_pair_jsonl(run_dir: Path, filename: str, output: Path) -> int:
                 for line in fh:
                     if not line.strip():
                         continue
+                    if cfg is not None:
+                        try:
+                            row = sanitize_local_paths(json.loads(line), cfg)
+                            line = json.dumps(row, sort_keys=True)
+                        except json.JSONDecodeError:
+                            line = sanitize_local_paths(line.rstrip("\n"), cfg)
                     out.write(line if line.endswith("\n") else line + "\n")
                     rows += 1
     return rows

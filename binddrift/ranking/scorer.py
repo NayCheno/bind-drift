@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from binddrift.config import Config
+from binddrift.artifact_paths import repo_relative, sanitize_local_paths
 from binddrift.db import connect, initialize
 from binddrift.evaluation.wrapper_oracle import classify_fix_kinds, compatible_fix_kind, replay_head_date, version_dates_from_db, wrapper_fix_in_time_window
 from binddrift.warnings import read_warnings, write_warnings
@@ -166,13 +167,13 @@ def rank_warnings(cfg: Config) -> dict[str, Any]:
     for idx, warning in enumerate(warnings, start=1):
         warning["rank"] = idx
     write_warnings(cfg, warnings)
-    cfg.report_md.write_text(_markdown(warnings), encoding="utf-8")
+    cfg.report_md.write_text(sanitize_local_paths(_markdown(warnings), cfg), encoding="utf-8")
     return {
         "warnings": len(warnings),
         "input_warnings": len(input_warnings),
         "dropped_unpromoted": len(input_warnings) - len(warnings),
-        "warning_file": str(cfg.warnings_jsonl),
-        "report": str(cfg.report_md),
+        "warning_file": repo_relative(cfg, cfg.warnings_jsonl),
+        "report": repo_relative(cfg, cfg.report_md),
     }
 
 

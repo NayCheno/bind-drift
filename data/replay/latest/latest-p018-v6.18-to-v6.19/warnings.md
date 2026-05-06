@@ -21,8 +21,8 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:438 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:434 `/// Lock the pages covered when they are faulted in.`
+- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:438 `None` unsafe=0
+- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:434 `/// Lock the pages covered when they are faulted in.`
 
 ## W-000004 MacroConstDrift
 
@@ -45,8 +45,8 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:450 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:446 `/// Synchronous page faults. (DAX-specific)`
+- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:450 `None` unsafe=0
+- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:446 `/// Synchronous page faults. (DAX-specific)`
 
 ## W-000005 MacroConstDrift
 
@@ -69,8 +69,8 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:429 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:425 `/// Memory mapped I/O or similar.`
+- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:429 `None` unsafe=0
+- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:425 `/// Memory mapped I/O or similar.`
 
 ## W-000006 MacroConstDrift
 
@@ -93,8 +93,8 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:456 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:452 `/// Wipe VMA contents in child on fork.`
+- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:456 `None` unsafe=0
+- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:452 `/// Wipe VMA contents in child on fork.`
 
 ## W-000007 MacroConstDrift
 
@@ -117,8 +117,8 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:432 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:428 `/// Do not copy this vma on fork.`
+- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:432 `None` unsafe=0
+- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:428 `/// Do not copy this vma on fork.`
 
 ## W-000008 MacroConstDrift
 
@@ -141,8 +141,8 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:405 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:401 `/// Mapping allows writes.`
+- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:405 `None` unsafe=0
+- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:401 `/// Mapping allows writes.`
 
 ## W-000009 MacroConstDrift
 
@@ -165,8 +165,8 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:465 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:461 `/// Can contain `struct page` and pure PFN pages.`
+- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:465 `None` unsafe=0
+- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:461 `/// Can contain `struct page` and pure PFN pages.`
 
 ## W-000010 MacroConstDrift
 
@@ -189,8 +189,8 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:444 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:440 `/// Should the VM suppress accounting.`
+- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:444 `None` unsafe=0
+- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:440 `/// Should the VM suppress accounting.`
 
 ## W-000011 MacroConstDrift
 
@@ -213,8 +213,8 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:426 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:422 `/// Page-ranges managed without `struct page`, just pure PFN.`
+- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:426 `None` unsafe=0
+- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:422 `/// Page-ranges managed without `struct page`, just pure PFN.`
 
 ## W-000012 MacroConstDrift
 
@@ -237,8 +237,8 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:435 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:431 `/// Cannot expand with mremap().`
+- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:435 `None` unsafe=0
+- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:431 `/// Cannot expand with mremap().`
 
 ## W-000013 MacroConstDrift
 
@@ -261,8 +261,8 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:417 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:413 `/// Mapping may be updated to allow writes.`
+- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:417 `None` unsafe=0
+- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:413 `/// Mapping may be updated to allow writes.`
 
 ## W-000014 MacroConstDrift
 
@@ -285,8 +285,8 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:411 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:407 `/// Mapping is shared.`
+- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:411 `None` unsafe=0
+- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:407 `/// Mapping is shared.`
 
 ## W-000015 MacroConstDrift
 
@@ -309,8 +309,8 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:420 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:416 `/// Mapping may be updated to allow execution.`
+- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:420 `None` unsafe=0
+- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:416 `/// Mapping may be updated to allow execution.`
 
 ## W-000016 MacroConstDrift
 
@@ -333,8 +333,8 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:414 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:410 `/// Mapping may be updated to allow reads.`
+- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:414 `None` unsafe=0
+- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:410 `/// Mapping may be updated to allow reads.`
 
 ## W-000017 MacroConstDrift
 
@@ -357,9 +357,9 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:471 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:467 `/// MADV_NOHUGEPAGE marked this vma.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:470 `/// KSM may merge identical pages.`
+- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:471 `None` unsafe=0
+- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:467 `/// MADV_NOHUGEPAGE marked this vma.`
+- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:470 `/// KSM may merge identical pages.`
 
 ## W-000018 MacroConstDrift
 
@@ -382,8 +382,8 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:462 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:458 `/// Not soft dirty clean area.`
+- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:462 `None` unsafe=0
+- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:458 `/// Not soft dirty clean area.`
 
 ## W-000019 MacroConstDrift
 
@@ -406,8 +406,8 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:468 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:464 `/// MADV_HUGEPAGE marked this vma.`
+- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:468 `None` unsafe=0
+- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:464 `/// MADV_HUGEPAGE marked this vma.`
 
 ## W-000020 MacroConstDrift
 
@@ -430,8 +430,8 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:441 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:437 `/// Is a VM accounted object.`
+- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:441 `None` unsafe=0
+- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:437 `/// Is a VM accounted object.`
 
 ## W-000021 MacroConstDrift
 
@@ -454,8 +454,8 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:423 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:419 `/// Mapping may be updated to be shared.`
+- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:423 `None` unsafe=0
+- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:419 `/// Mapping may be updated to be shared.`
 
 ## W-000022 MacroConstDrift
 
@@ -478,8 +478,8 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:399 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:395 `/// No flags are set.`
+- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:399 `None` unsafe=0
+- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:395 `/// No flags are set.`
 
 ## W-000023 MacroConstDrift
 
@@ -502,8 +502,8 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:408 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:404 `/// Mapping allows execution.`
+- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:408 `None` unsafe=0
+- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:404 `/// Mapping allows execution.`
 
 ## W-000024 MacroConstDrift
 
@@ -526,8 +526,8 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:459 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:455 `/// Do not include in the core dump.`
+- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:459 `None` unsafe=0
+- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:455 `/// Do not include in the core dump.`
 
 ## W-000025 MacroConstDrift
 
@@ -550,8 +550,8 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:447 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:443 `/// Huge TLB Page VM.`
+- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:447 `None` unsafe=0
+- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:443 `/// Huge TLB Page VM.`
 
 ## W-000026 MacroConstDrift
 
@@ -574,8 +574,8 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:453 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:449 `/// Architecture-specific flag.`
+- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:453 `None` unsafe=0
+- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:449 `/// Architecture-specific flag.`
 
 ## W-000027 MacroConstDrift
 
@@ -598,8 +598,8 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:402 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:398 `/// Mapping allows reads.`
+- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:402 `None` unsafe=0
+- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:398 `/// Mapping allows reads.`
 
 ## W-000002 FieldDrift
 
@@ -624,21 +624,21 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/block/mq/operations.rs:158 `complete_callback` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/block/mq/operations.rs:219 `complete_callback` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/block/mq/operations.rs:246 `complete_callback` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/block/mq/request.rs:60 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/block/mq/request.rs:72 `Request<T>::aref_from_raw` unsafe=0
+- .binddrift/worktrees/v6.19/rust/kernel/block/mq/operations.rs:158 `complete_callback` unsafe=0
+- .binddrift/worktrees/v6.19/rust/kernel/block/mq/operations.rs:219 `complete_callback` unsafe=0
+- .binddrift/worktrees/v6.19/rust/kernel/block/mq/operations.rs:246 `complete_callback` unsafe=0
+- .binddrift/worktrees/v6.19/rust/kernel/block/mq/request.rs:60 `None` unsafe=0
+- .binddrift/worktrees/v6.19/rust/kernel/block/mq/request.rs:72 `Request<T>::aref_from_raw` unsafe=0
 - safe API `Request<T>::aref_from_raw`
 - safe API `Request<T>::complete`
 - safe API `Request<T>::wrapper_ptr`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/block/mq/operations.rs:153 `/// # Safety`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/block/mq/operations.rs:154 `///`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/block/mq/operations.rs:155 `/// This function may only be called by blk-mq C infrastructure. `rq` must`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/block/mq/request.rs:76 `NONNULL_MAPPING`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/block/mq/request.rs:60 `OPAQUE`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/block/mq/request.rs:63 `AREF`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/block/mq/request.rs:72 `AREF`
+- .binddrift/worktrees/v6.19/rust/kernel/block/mq/operations.rs:153 `/// # Safety`
+- .binddrift/worktrees/v6.19/rust/kernel/block/mq/operations.rs:154 `///`
+- .binddrift/worktrees/v6.19/rust/kernel/block/mq/operations.rs:155 `/// This function may only be called by blk-mq C infrastructure. `rq` must`
+- .binddrift/worktrees/v6.19/rust/kernel/block/mq/request.rs:76 `NONNULL_MAPPING`
+- .binddrift/worktrees/v6.19/rust/kernel/block/mq/request.rs:60 `OPAQUE`
+- .binddrift/worktrees/v6.19/rust/kernel/block/mq/request.rs:63 `AREF`
+- .binddrift/worktrees/v6.19/rust/kernel/block/mq/request.rs:72 `AREF`
 - wrapper_fix: `28e848386b92645f93b9f2fdba5882c3ca7fb3e2`
 - wrapper_fix: `a307bf1db5448eccd72a1d7857f7661c6330d5ad`
 
@@ -664,8 +664,8 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/block/mq/gen_disk.rs:111 `GenDiskBuilder::capacity_sectors` unsafe=1
+- .binddrift/worktrees/v6.19/rust/kernel/block/mq/gen_disk.rs:111 `GenDiskBuilder::capacity_sectors` unsafe=1
 - safe API `GenDiskBuilder::capacity_sectors`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/block/mq/gen_disk.rs:106 `// SAFETY: T::QueueData was created by the call to `into_foreign()` above`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/block/mq/gen_disk.rs:110 `// SAFETY: `bindings::queue_limits` contain only fields that are valid when zeroed.`
+- .binddrift/worktrees/v6.19/rust/kernel/block/mq/gen_disk.rs:106 `// SAFETY: T::QueueData was created by the call to `into_foreign()` above`
+- .binddrift/worktrees/v6.19/rust/kernel/block/mq/gen_disk.rs:110 `// SAFETY: `bindings::queue_limits` contain only fields that are valid when zeroed.`
 - wrapper_fix: `5e3b7009f116f684ac6b93d8924506154f3b1f6d`

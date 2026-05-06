@@ -5,19 +5,20 @@ import hashlib
 from pathlib import Path
 from typing import Any
 
+from binddrift.artifact_paths import sanitize_local_paths
 from .config import Config
 
 
 def write_warnings(cfg: Config, warnings: list[dict[str, Any]]) -> Path:
     cfg.ensure_dirs()
-    return write_jsonl(cfg.warnings_jsonl, warnings)
+    return write_jsonl(cfg.warnings_jsonl, warnings, cfg=cfg)
 
 
 def write_drift_facts(cfg: Config, facts: list[dict[str, Any]]) -> Path:
     cfg.ensure_dirs()
     with cfg.drift_facts_jsonl.open("w", encoding="utf-8") as fh:
         for fact in facts:
-            fh.write(json.dumps(fact, sort_keys=True) + "\n")
+            fh.write(json.dumps(sanitize_local_paths(fact, cfg), sort_keys=True) + "\n")
     return cfg.drift_facts_jsonl
 
 
@@ -53,11 +54,11 @@ def split_main_and_single_version(warnings: list[dict[str, Any]]) -> tuple[list[
     return main, single_version
 
 
-def write_jsonl(path: Path, rows: list[dict[str, Any]]) -> Path:
+def write_jsonl(path: Path, rows: list[dict[str, Any]], *, cfg: Config | None = None) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8") as fh:
         for row in rows:
-            item = dict(row)
+            item = sanitize_local_paths(dict(row), cfg) if cfg else dict(row)
             ensure_warning_uid(item)
             fh.write(json.dumps(item, sort_keys=True) + "\n")
     return path

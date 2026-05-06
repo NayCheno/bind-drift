@@ -23,12 +23,12 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.18/rust/kernel/bitmap.rs:327 `Bitmap::set_bit_atomic` unsafe=1
+- .binddrift/worktrees/v6.18/rust/kernel/bitmap.rs:327 `Bitmap::set_bit_atomic` unsafe=1
 - safe API `Bitmap::set_bit_atomic`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.18/rust/kernel/bitmap.rs:325 `// SAFETY: `index` is within bounds and the caller has ensured that`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.18/rust/kernel/bitmap.rs:330 `/// Clear `index` bit.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.18/rust/kernel/bitmap.rs:331 `///`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.18/rust/kernel/bitmap.rs:327 `AS_PTR`
+- .binddrift/worktrees/v6.18/rust/kernel/bitmap.rs:325 `// SAFETY: `index` is within bounds and the caller has ensured that`
+- .binddrift/worktrees/v6.18/rust/kernel/bitmap.rs:330 `/// Clear `index` bit.`
+- .binddrift/worktrees/v6.18/rust/kernel/bitmap.rs:331 `///`
+- .binddrift/worktrees/v6.18/rust/kernel/bitmap.rs:327 `AS_PTR`
 - wrapper_fix: `6cf93a9ed39e9f86c7f69c28078500270e70a695`
 - wrapper_fix: `11eca92a2caebcc2b3b65ca290385ff4b0498946`
 
@@ -56,10 +56,10 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.18/rust/kernel/bitmap.rs:406 `Bitmap::copy_and_extend` unsafe=1
+- .binddrift/worktrees/v6.18/rust/kernel/bitmap.rs:406 `Bitmap::copy_and_extend` unsafe=1
 - safe API `Bitmap::copy_and_extend`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.18/rust/kernel/bitmap.rs:404 `// SAFETY: access to `self` and `src` is within bounds.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.18/rust/kernel/bitmap.rs:408 `AS_PTR`
+- .binddrift/worktrees/v6.18/rust/kernel/bitmap.rs:404 `// SAFETY: access to `self` and `src` is within bounds.`
+- .binddrift/worktrees/v6.18/rust/kernel/bitmap.rs:408 `AS_PTR`
 - wrapper_fix: `0452b4ab2961093f23bb289b0112351b917fb23c`
 - wrapper_fix: `11eca92a2caebcc2b3b65ca290385ff4b0498946`
 
@@ -87,12 +87,12 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.18/rust/kernel/bitmap.rs:378 `Bitmap::clear_bit_atomic` unsafe=1
+- .binddrift/worktrees/v6.18/rust/kernel/bitmap.rs:378 `Bitmap::clear_bit_atomic` unsafe=1
 - safe API `Bitmap::clear_bit_atomic`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.18/rust/kernel/bitmap.rs:376 `// SAFETY: `index` is within bounds and the caller has ensured that`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.18/rust/kernel/bitmap.rs:381 `/// Copy `src` into this [`Bitmap`] and set any remaining bits to zero.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.18/rust/kernel/bitmap.rs:382 `///`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.18/rust/kernel/bitmap.rs:378 `AS_PTR`
+- .binddrift/worktrees/v6.18/rust/kernel/bitmap.rs:376 `// SAFETY: `index` is within bounds and the caller has ensured that`
+- .binddrift/worktrees/v6.18/rust/kernel/bitmap.rs:381 `/// Copy `src` into this [`Bitmap`] and set any remaining bits to zero.`
+- .binddrift/worktrees/v6.18/rust/kernel/bitmap.rs:382 `///`
+- .binddrift/worktrees/v6.18/rust/kernel/bitmap.rs:378 `AS_PTR`
 - wrapper_fix: `6cf93a9ed39e9f86c7f69c28078500270e70a695`
 - wrapper_fix: `11eca92a2caebcc2b3b65ca290385ff4b0498946`
 - wrapper_fix: `6a069876eb1402478900ee0eb7d7fe276bb1f4e3`
@@ -121,13 +121,13 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.18/rust/kernel/sync/refcount.rs:81 `Refcount::dec` unsafe=1
+- .binddrift/worktrees/v6.18/rust/kernel/sync/refcount.rs:81 `Refcount::dec` unsafe=1
 - safe API `Refcount::dec`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.18/rust/kernel/sync/refcount.rs:76 `/// Provides release memory ordering, such that prior loads and stores are done`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.18/rust/kernel/sync/refcount.rs:77 `/// before.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.18/rust/kernel/sync/refcount.rs:80 `// SAFETY: `self.as_ptr()` is valid.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.18/rust/kernel/sync/refcount.rs:80 `AS_PTR`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.18/rust/kernel/sync/refcount.rs:81 `AS_PTR`
+- .binddrift/worktrees/v6.18/rust/kernel/sync/refcount.rs:76 `/// Provides release memory ordering, such that prior loads and stores are done`
+- .binddrift/worktrees/v6.18/rust/kernel/sync/refcount.rs:77 `/// before.`
+- .binddrift/worktrees/v6.18/rust/kernel/sync/refcount.rs:80 `// SAFETY: `self.as_ptr()` is valid.`
+- .binddrift/worktrees/v6.18/rust/kernel/sync/refcount.rs:80 `AS_PTR`
+- .binddrift/worktrees/v6.18/rust/kernel/sync/refcount.rs:81 `AS_PTR`
 - wrapper_fix: `bb38f35b35f9de0cebc4d62ea73482454e38cef3`
 - wrapper_fix: `9ba1aaf25ab7dadb910348b6857865e87b4c5689`
 
@@ -155,13 +155,13 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.18/rust/kernel/sync/refcount.rs:56 `Refcount::set` unsafe=1
+- .binddrift/worktrees/v6.18/rust/kernel/sync/refcount.rs:56 `Refcount::set` unsafe=1
 - safe API `Refcount::set`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.18/rust/kernel/sync/refcount.rs:52 `/// Set a refcount's value.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.18/rust/kernel/sync/refcount.rs:55 `// SAFETY: `self.as_ptr()` is valid.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.18/rust/kernel/sync/refcount.rs:59 `/// Increment a refcount.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.18/rust/kernel/sync/refcount.rs:55 `AS_PTR`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.18/rust/kernel/sync/refcount.rs:56 `AS_PTR`
+- .binddrift/worktrees/v6.18/rust/kernel/sync/refcount.rs:52 `/// Set a refcount's value.`
+- .binddrift/worktrees/v6.18/rust/kernel/sync/refcount.rs:55 `// SAFETY: `self.as_ptr()` is valid.`
+- .binddrift/worktrees/v6.18/rust/kernel/sync/refcount.rs:59 `/// Increment a refcount.`
+- .binddrift/worktrees/v6.18/rust/kernel/sync/refcount.rs:55 `AS_PTR`
+- .binddrift/worktrees/v6.18/rust/kernel/sync/refcount.rs:56 `AS_PTR`
 - wrapper_fix: `bb38f35b35f9de0cebc4d62ea73482454e38cef3`
 - wrapper_fix: `9ba1aaf25ab7dadb910348b6857865e87b4c5689`
 
@@ -187,15 +187,15 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.18/rust/kernel/kunit.rs:202 `is_test_result_ok` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.18/rust/kernel/kunit.rs:203 `is_test_result_ok` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.18/rust/kernel/kunit.rs:223 `kunit_case_null` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.18/rust/kernel/kunit.rs:224 `kunit_case_null` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.18/rust/kernel/kunit.rs:296 `test_fn` unsafe=1
+- .binddrift/worktrees/v6.18/rust/kernel/kunit.rs:202 `is_test_result_ok` unsafe=0
+- .binddrift/worktrees/v6.18/rust/kernel/kunit.rs:203 `is_test_result_ok` unsafe=0
+- .binddrift/worktrees/v6.18/rust/kernel/kunit.rs:223 `kunit_case_null` unsafe=0
+- .binddrift/worktrees/v6.18/rust/kernel/kunit.rs:224 `kunit_case_null` unsafe=0
+- .binddrift/worktrees/v6.18/rust/kernel/kunit.rs:296 `test_fn` unsafe=1
 - safe API `is_test_result_ok`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.18/rust/kernel/kunit.rs:197 `/// Use [`kunit_case_null`] to generate such a delimiter.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.18/rust/kernel/kunit.rs:218 `/// Represents the NULL test case delimiter.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.18/rust/kernel/kunit.rs:219 `///`
+- .binddrift/worktrees/v6.18/rust/kernel/kunit.rs:197 `/// Use [`kunit_case_null`] to generate such a delimiter.`
+- .binddrift/worktrees/v6.18/rust/kernel/kunit.rs:218 `/// Represents the NULL test case delimiter.`
+- .binddrift/worktrees/v6.18/rust/kernel/kunit.rs:219 `///`
 - wrapper_fix: `7f87c7a003125d5af5ec7abbbc0ac21b4a4661ae`
 - wrapper_fix: `be97f3c82021239476ce32cddde32948c597753e`
 
@@ -222,11 +222,11 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.18/rust/kernel/bitmap.rs:351 `Bitmap::clear_bit` unsafe=1
+- .binddrift/worktrees/v6.18/rust/kernel/bitmap.rs:351 `Bitmap::clear_bit` unsafe=1
 - safe API `Bitmap::clear_bit`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.18/rust/kernel/bitmap.rs:350 `// SAFETY: `index` is within bounds.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.18/rust/kernel/bitmap.rs:354 `/// Clear `index` bit, atomically.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.18/rust/kernel/bitmap.rs:355 `///`
+- .binddrift/worktrees/v6.18/rust/kernel/bitmap.rs:350 `// SAFETY: `index` is within bounds.`
+- .binddrift/worktrees/v6.18/rust/kernel/bitmap.rs:354 `/// Clear `index` bit, atomically.`
+- .binddrift/worktrees/v6.18/rust/kernel/bitmap.rs:355 `///`
 - wrapper_fix: `6cf93a9ed39e9f86c7f69c28078500270e70a695`
 - wrapper_fix: `11eca92a2caebcc2b3b65ca290385ff4b0498946`
 
@@ -253,11 +253,11 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.18/rust/kernel/bitmap.rs:300 `Bitmap::set_bit` unsafe=1
+- .binddrift/worktrees/v6.18/rust/kernel/bitmap.rs:300 `Bitmap::set_bit` unsafe=1
 - safe API `Bitmap::set_bit`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.18/rust/kernel/bitmap.rs:299 `// SAFETY: Bit `index` is within bounds.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.18/rust/kernel/bitmap.rs:303 `/// Set bit with index `index`, atomically.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.18/rust/kernel/bitmap.rs:304 `///`
+- .binddrift/worktrees/v6.18/rust/kernel/bitmap.rs:299 `// SAFETY: Bit `index` is within bounds.`
+- .binddrift/worktrees/v6.18/rust/kernel/bitmap.rs:303 `/// Set bit with index `index`, atomically.`
+- .binddrift/worktrees/v6.18/rust/kernel/bitmap.rs:304 `///`
 - wrapper_fix: `6cf93a9ed39e9f86c7f69c28078500270e70a695`
 - wrapper_fix: `11eca92a2caebcc2b3b65ca290385ff4b0498946`
 

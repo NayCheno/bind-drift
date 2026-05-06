@@ -91,15 +91,15 @@
   "provenance": {
     "database_path": ".binddrift/binddrift.sqlite3",
     "manifest_artifact_sha256": {
-      "drift_facts.jsonl": "c64755be14a63245a9b14fe9ef7f300ce82f66871b7596665ad19ab94f84c646",
+      "drift_facts.jsonl": "45ec718e8bcf22e4b5d91bf1bfa4924d0c414958aba123c4e0f96bde7018d8ef",
       "evaluation_protocol.json": "7c3ad8140c7d11ddd748dd52100112f617b516cd35b1a1dfa41d41e515783e94",
       "manual_review.csv": "f999f73ccbc3615f44586a7d7c7fe93ba1899fcb35d885b646d2c9fc1eb27937",
       "pooled_review_labels.csv": "1061302669e1fb6d60c3a5747791c123763d539463f9602895dcd9c275fb092c",
       "pooled_review_manifest.json": "3d25ac308498eb62d985855bb585d672b551b1587c46b626c9e01e15198f87c4",
       "pooled_review_set.jsonl": "ebf367ba46a8ab16b4138990e99ade200019fc896ef658944708d90ded178dba",
-      "promoted_warnings.jsonl": "49a886a54b3d59e624e5450a1e40b671ae88538d74e2fdd341a950027449ac4f",
+      "promoted_warnings.jsonl": "e2d2f8d6bc0eb21a584fa3ae6cacedcd890aedf1fab912c8353ce35e38ac21e3",
       "single_version_review_targets.jsonl": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "warnings.jsonl": "4adab38c50e5620d773fe9eaa964e87477d6a631bb0bccd047cfacb4218961d8"
+      "warnings.jsonl": "c393edc237fee79cb4f56111e60de5ce4173e094f4ef96f953baafecd2cd658c"
     },
     "manifest_run_id": "latest",
     "review_label_sources": {
@@ -110,7 +110,7 @@
       "stale_or_unmatched_previous_rows": 0,
       "stale_or_unmatched_split_rows": 0
     },
-    "sample_hash": "4484601431fe8878c3f7e2bd46c91254e23c371ad82b1cd90bc38a67d526ed81",
+    "sample_hash": "dea2730bc2d95426f06bd9380c0b93583b77df2aa920b5486dc951c3f5413b88",
     "sampled_rows": 450,
     "sampler_version": "extractor-audit-v2"
   },

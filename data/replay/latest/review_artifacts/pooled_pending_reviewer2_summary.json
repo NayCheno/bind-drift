@@ -1,7 +1,7 @@
 {
   "role": "Reviewer 2",
-  "input": "/home/nya/workspace/bind-drift/data/replay/latest/review_artifacts/pooled_pending_evidence_packets.jsonl",
-  "output": "/home/nya/workspace/bind-drift/data/replay/latest/review_artifacts/pooled_pending_reviewer2.jsonl",
+  "input": "data/replay/latest/review_artifacts/pooled_pending_evidence_packets.jsonl",
+  "output": "data/replay/latest/review_artifacts/pooled_pending_reviewer2.jsonl",
   "total_rows": 176,
   "label_counts": {
     "BENIGN_DRIFT": 0,

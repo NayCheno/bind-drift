@@ -26,6 +26,37 @@ def sanitize_local_paths(value: Any, cfg: Config) -> Any:
     return value
 
 
+def sanitize_local_path_text(text: str, cfg: Config) -> str:
+    return _sanitize_string(text, cfg)
+
+
+def sanitize_local_path_file(path: Path, cfg: Config) -> bool:
+    text = path.read_text(encoding="utf-8", errors="ignore")
+    sanitized = sanitize_local_path_text(text, cfg)
+    if sanitized == text:
+        return False
+    path.write_text(sanitized, encoding="utf-8")
+    return True
+
+
+def sanitize_local_path_tree(
+    root: Path,
+    cfg: Config,
+    *,
+    suffixes: set[str] | None = None,
+) -> list[str]:
+    suffixes = suffixes or {".json", ".jsonl", ".csv", ".md"}
+    changed: list[str] = []
+    if not root.exists():
+        return changed
+    for path in sorted(root.rglob("*")):
+        if not path.is_file() or path.suffix not in suffixes:
+            continue
+        if sanitize_local_path_file(path, cfg):
+            changed.append(repo_relative(cfg, path))
+    return changed
+
+
 def _sanitize_string(value: str, cfg: Config) -> str:
     replacements = {
         str(cfg.repo_root): ".",

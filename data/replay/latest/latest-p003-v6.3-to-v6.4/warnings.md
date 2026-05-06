@@ -24,12 +24,12 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.4/rust/kernel/error.rs:225 `to_result` unsafe=1
+- .binddrift/worktrees/v6.4/rust/kernel/error.rs:225 `to_result` unsafe=1
 - safe API `to_result`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.4/rust/kernel/error.rs:222 `// SAFETY: The FFI function does not deref the pointer.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.4/rust/kernel/error.rs:224 `// SAFETY: The FFI function does not deref the pointer.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.4/rust/kernel/error.rs:223 `IS_ERR_MAPPING`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.4/rust/kernel/error.rs:225 `PTR_ERR_MAPPING`
+- .binddrift/worktrees/v6.4/rust/kernel/error.rs:222 `// SAFETY: The FFI function does not deref the pointer.`
+- .binddrift/worktrees/v6.4/rust/kernel/error.rs:224 `// SAFETY: The FFI function does not deref the pointer.`
+- .binddrift/worktrees/v6.4/rust/kernel/error.rs:223 `IS_ERR_MAPPING`
+- .binddrift/worktrees/v6.4/rust/kernel/error.rs:225 `PTR_ERR_MAPPING`
 - wrapper_fix: `752417b3f0e7721f1d630f40da22d57e0dae043e`
 
 ## W-000001 SignatureDrift
@@ -55,10 +55,10 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.4/rust/kernel/error.rs:114 `Error::to_errno` unsafe=1
+- .binddrift/worktrees/v6.4/rust/kernel/error.rs:114 `Error::to_errno` unsafe=1
 - safe API `Error::to_errno`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.4/rust/kernel/error.rs:110 `/// Returns the error encoded as a pointer.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.4/rust/kernel/error.rs:113 `// SAFETY: self.0 is a valid error due to its invariant.`
+- .binddrift/worktrees/v6.4/rust/kernel/error.rs:110 `/// Returns the error encoded as a pointer.`
+- .binddrift/worktrees/v6.4/rust/kernel/error.rs:113 `// SAFETY: self.0 is a valid error due to its invariant.`
 - wrapper_fix: `c7e20faa5fcad7a177cf6c306138010343dd6d3e`
 - wrapper_fix: `7bc186731e87482662c4f86da455f435fe838fb6`
 - wrapper_fix: `e9759c5b9ea555d09f426c70c880e9522e9b0576`
@@ -86,9 +86,9 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.4/rust/kernel/error.rs:223 `to_result` unsafe=1
+- .binddrift/worktrees/v6.4/rust/kernel/error.rs:223 `to_result` unsafe=1
 - safe API `to_result`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.4/rust/kernel/error.rs:219 `ERR_PTR_MAPPING`
+- .binddrift/worktrees/v6.4/rust/kernel/error.rs:219 `ERR_PTR_MAPPING`
 - wrapper_fix: `752417b3f0e7721f1d630f40da22d57e0dae043e`
 
 ## W-000004 SignatureDrift
@@ -114,7 +114,7 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.4/rust/kernel/task.rs:153 `dec_ref` unsafe=1
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.4/rust/kernel/task.rs:152 `// SAFETY: The safety requirements guarantee that the refcount is nonzero.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.4/rust/kernel/task.rs:153 `AS_PTR`
+- .binddrift/worktrees/v6.4/rust/kernel/task.rs:153 `dec_ref` unsafe=1
+- .binddrift/worktrees/v6.4/rust/kernel/task.rs:152 `// SAFETY: The safety requirements guarantee that the refcount is nonzero.`
+- .binddrift/worktrees/v6.4/rust/kernel/task.rs:153 `AS_PTR`
 - wrapper_fix: `8ad1a41f7e23287f07a3516c700bc32501d4f104`

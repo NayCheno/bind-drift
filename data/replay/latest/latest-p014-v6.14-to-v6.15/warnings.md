@@ -22,9 +22,9 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.15/rust/kernel/sync/condvar.rs:123 `CondVar::new` unsafe=1
+- .binddrift/worktrees/v6.15/rust/kernel/sync/condvar.rs:123 `CondVar::new` unsafe=1
 - safe API `CondVar::new`
-- weak lifetime name /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.15/rust/kernel/sync/condvar.rs:123 `LIFETIME_NAMING_PATTERN`
+- weak lifetime name .binddrift/worktrees/v6.15/rust/kernel/sync/condvar.rs:123 `LIFETIME_NAMING_PATTERN`
 
 ## W-000001 FieldDrift
 
@@ -48,12 +48,12 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.15/rust/kernel/pci.rs:62 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.15/rust/kernel/pci.rs:89 `remove_callback` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.15/rust/kernel/pci.rs:254 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.15/rust/kernel/pci.rs:364 `as_raw` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.15/rust/kernel/pci.rs:249 `/// # Invariants`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.15/rust/kernel/pci.rs:250 `///`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.15/rust/kernel/pci.rs:251 `/// A [`Device`] instance represents a valid `struct device` created by the C portion of the kernel.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.15/rust/kernel/pci.rs:254 `OPAQUE`
+- .binddrift/worktrees/v6.15/rust/kernel/pci.rs:62 `None` unsafe=0
+- .binddrift/worktrees/v6.15/rust/kernel/pci.rs:89 `remove_callback` unsafe=0
+- .binddrift/worktrees/v6.15/rust/kernel/pci.rs:254 `None` unsafe=0
+- .binddrift/worktrees/v6.15/rust/kernel/pci.rs:364 `as_raw` unsafe=0
+- .binddrift/worktrees/v6.15/rust/kernel/pci.rs:249 `/// # Invariants`
+- .binddrift/worktrees/v6.15/rust/kernel/pci.rs:250 `///`
+- .binddrift/worktrees/v6.15/rust/kernel/pci.rs:251 `/// A [`Device`] instance represents a valid `struct device` created by the C portion of the kernel.`
+- .binddrift/worktrees/v6.15/rust/kernel/pci.rs:254 `OPAQUE`
 - wrapper_fix: `7b948a2af6b5d64a25c14da8f63d8084ea527cd9`

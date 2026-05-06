@@ -218,16 +218,16 @@ def cmd_eval_manifest(args: argparse.Namespace, cfg: Config) -> int:
     paper_top_k = args.top_k
     drift_facts = run_dir / "drift_facts.jsonl"
     if args.refresh or not drift_facts.exists():
-        aggregate_pair_jsonl(run_dir, "drift_facts.jsonl", drift_facts)
+        aggregate_pair_jsonl(run_dir, "drift_facts.jsonl", drift_facts, cfg=cfg)
     existing_single_version = read_warnings(run_dir / "single_version_review_targets.jsonl")
     promoted_path = run_dir / "promoted_warnings.jsonl"
     source_warnings = read_warnings(promoted_path) or read_warnings(run_cfg.warnings_jsonl)
     warnings = source_warnings + existing_single_version
     main_warnings, single_version = split_main_and_single_version(warnings)
-    write_jsonl(promoted_path, main_warnings)
+    write_jsonl(promoted_path, main_warnings, cfg=run_cfg)
     paper_warnings = main_warnings[:paper_top_k]
     write_warnings(run_cfg, paper_warnings)
-    write_jsonl(run_dir / "single_version_review_targets.jsonl", single_version)
+    write_jsonl(run_dir / "single_version_review_targets.jsonl", single_version, cfg=run_cfg)
     warnings = read_warnings(run_cfg.warnings_jsonl)
     review = run_dir / "manual_review.csv"
     if args.refresh_review or not review.exists():
@@ -266,6 +266,7 @@ def cmd_eval_merge_manual_review(args: argparse.Namespace, cfg: Config) -> int:
         warnings_jsonl=Path(args.warnings).resolve() if args.warnings else run_dir / "warnings.jsonl",
         aggregate_review=Path(args.manual_review).resolve() if args.manual_review else run_dir / "manual_review.csv",
         override_jsonl=Path(args.override_jsonl).resolve() if args.override_jsonl else None,
+        cfg=cfg,
     )
     print(json.dumps(result, indent=2, sort_keys=True))
     return 0

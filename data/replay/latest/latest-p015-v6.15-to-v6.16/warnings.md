@@ -22,9 +22,9 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.16/rust/kernel/block/mq/gen_disk.rs:97 `GenDiskBuilder::capacity_sectors` unsafe=1
+- .binddrift/worktrees/v6.16/rust/kernel/block/mq/gen_disk.rs:97 `GenDiskBuilder::capacity_sectors` unsafe=1
 - safe API `GenDiskBuilder::capacity_sectors`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.16/rust/kernel/block/mq/gen_disk.rs:96 `// SAFETY: `bindings::queue_limits` contain only fields that are valid when zeroed.`
+- .binddrift/worktrees/v6.16/rust/kernel/block/mq/gen_disk.rs:96 `// SAFETY: `bindings::queue_limits` contain only fields that are valid when zeroed.`
 - wrapper_fix: `5e3b7009f116f684ac6b93d8924506154f3b1f6d`
 
 ## W-000004 FieldDrift
@@ -49,15 +49,15 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.16/rust/kernel/pci.rs:62 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.16/rust/kernel/pci.rs:89 `remove_callback` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.16/rust/kernel/pci.rs:257 `None` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.16/rust/kernel/pci.rs:367 `as_raw` unsafe=0
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.16/rust/kernel/pci.rs:474 `try_from` unsafe=1
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.16/rust/kernel/pci.rs:252 `/// # Invariants`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.16/rust/kernel/pci.rs:253 `///`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.16/rust/kernel/pci.rs:254 `/// A [`Device`] instance represents a valid `struct device` created by the C portion of the kernel.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.16/rust/kernel/pci.rs:257 `OPAQUE`
+- .binddrift/worktrees/v6.16/rust/kernel/pci.rs:62 `None` unsafe=0
+- .binddrift/worktrees/v6.16/rust/kernel/pci.rs:89 `remove_callback` unsafe=0
+- .binddrift/worktrees/v6.16/rust/kernel/pci.rs:257 `None` unsafe=0
+- .binddrift/worktrees/v6.16/rust/kernel/pci.rs:367 `as_raw` unsafe=0
+- .binddrift/worktrees/v6.16/rust/kernel/pci.rs:474 `try_from` unsafe=1
+- .binddrift/worktrees/v6.16/rust/kernel/pci.rs:252 `/// # Invariants`
+- .binddrift/worktrees/v6.16/rust/kernel/pci.rs:253 `///`
+- .binddrift/worktrees/v6.16/rust/kernel/pci.rs:254 `/// A [`Device`] instance represents a valid `struct device` created by the C portion of the kernel.`
+- .binddrift/worktrees/v6.16/rust/kernel/pci.rs:257 `OPAQUE`
 - wrapper_fix: `7b948a2af6b5d64a25c14da8f63d8084ea527cd9`
 
 ## W-000001 SignatureDrift
@@ -82,8 +82,8 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.16/rust/kernel/pci.rs:467 `try_from` unsafe=1
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.16/rust/kernel/pci.rs:465 `// SAFETY: By the type invariant of `Device`, `dev.as_raw()` is a valid pointer to a`
+- .binddrift/worktrees/v6.16/rust/kernel/pci.rs:467 `try_from` unsafe=1
+- .binddrift/worktrees/v6.16/rust/kernel/pci.rs:465 `// SAFETY: By the type invariant of `Device`, `dev.as_raw()` is a valid pointer to a`
 - wrapper_fix: `473b9f331718267815649cd93801da832200db71`
 
 ## W-000002 SignatureDrift
@@ -108,11 +108,11 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.16/rust/kernel/drm/gem/mod.rs:61 `inc_ref` unsafe=1
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.16/rust/kernel/drm/gem/mod.rs:57 `// SAFETY: All gem objects are refcounted.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.16/rust/kernel/drm/gem/mod.rs:60 `// SAFETY: The existence of a shared reference guarantees that the refcount is non-zero.`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.16/rust/kernel/drm/gem/mod.rs:65 `// SAFETY: We either hold the only refcount on `obj`, or one of many - meaning that no one`
-- weak lifetime name /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.16/rust/kernel/drm/gem/mod.rs:61 `LIFETIME_NAMING_PATTERN`
+- .binddrift/worktrees/v6.16/rust/kernel/drm/gem/mod.rs:61 `inc_ref` unsafe=1
+- .binddrift/worktrees/v6.16/rust/kernel/drm/gem/mod.rs:57 `// SAFETY: All gem objects are refcounted.`
+- .binddrift/worktrees/v6.16/rust/kernel/drm/gem/mod.rs:60 `// SAFETY: The existence of a shared reference guarantees that the refcount is non-zero.`
+- .binddrift/worktrees/v6.16/rust/kernel/drm/gem/mod.rs:65 `// SAFETY: We either hold the only refcount on `obj`, or one of many - meaning that no one`
+- weak lifetime name .binddrift/worktrees/v6.16/rust/kernel/drm/gem/mod.rs:61 `LIFETIME_NAMING_PATTERN`
 - wrapper_fix: `38cb08c3fcd3f3b1d0225dcec8ae50fab5751549`
 - wrapper_fix: `5ae65bdcb867555540169ef57876658262a67d87`
 
@@ -138,9 +138,9 @@
 
 ### Rust Evidence
 
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.16/rust/kernel/drm/gem/mod.rs:73 `dec_ref` unsafe=1
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.16/rust/kernel/drm/gem/mod.rs:70 `// SAFETY:`
-- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.16/rust/kernel/drm/gem/mod.rs:77 `/// Trait which must be implemented by drivers using base GEM objects.`
-- weak lifetime name /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.16/rust/kernel/drm/gem/mod.rs:73 `LIFETIME_NAMING_PATTERN`
+- .binddrift/worktrees/v6.16/rust/kernel/drm/gem/mod.rs:73 `dec_ref` unsafe=1
+- .binddrift/worktrees/v6.16/rust/kernel/drm/gem/mod.rs:70 `// SAFETY:`
+- .binddrift/worktrees/v6.16/rust/kernel/drm/gem/mod.rs:77 `/// Trait which must be implemented by drivers using base GEM objects.`
+- weak lifetime name .binddrift/worktrees/v6.16/rust/kernel/drm/gem/mod.rs:73 `LIFETIME_NAMING_PATTERN`
 - wrapper_fix: `38cb08c3fcd3f3b1d0225dcec8ae50fab5751549`
 - wrapper_fix: `5ae65bdcb867555540169ef57876658262a67d87`

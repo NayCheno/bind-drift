@@ -164,6 +164,7 @@ def _ensure_sample_csv(
 ) -> tuple[list[dict[str, str]], dict[str, Any]]:
     previous_rows = _read_sample_csv(sample_path) if sample_path.exists() else []
     rows = _sample_rows(cfg, manifest)
+    rows = [sanitize_local_paths(row, cfg) for row in rows]
     review_sources = _merge_review_labels(cfg, rows, previous_rows)
     sample_path.parent.mkdir(parents=True, exist_ok=True)
     with sample_path.open("w", newline="", encoding="utf-8") as fh:

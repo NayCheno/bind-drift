@@ -78,11 +78,11 @@
     "true_labeled_warnings": 43,
     "unclear_warnings": 11
   },
-  "manual_review_csv": "/home/nya/workspace/bind-drift/data/replay/latest/manual_review.csv",
+  "manual_review_csv": "data/replay/latest/manual_review.csv",
   "missing_sources": [],
   "override_rows": 0,
   "review_rows": 100,
-  "run_dir": "/home/nya/workspace/bind-drift/data/replay/latest",
+  "run_dir": "data/replay/latest",
   "top_warning_rows": 100,
   "true_labeled_warnings": 43,
   "updated_rows": 100,

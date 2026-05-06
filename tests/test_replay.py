@@ -9,6 +9,9 @@ from binddrift.replay import ReplayStageError, mark_stale_replay_runs, run_versi
 from binddrift.warnings import read_warnings, write_warnings
 
 
+LOCAL_PATH_MARKERS = ("/home/", "/Users/", "/tmp/")
+
+
 def _git(repo: Path, *args: str) -> None:
     subprocess.run(["git", "-C", str(repo), *args], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
@@ -131,6 +134,15 @@ def test_version_replay_records_pair_outputs(tmp_path: Path):
     assert warnings[0]["pair_id"].startswith("latest-p001-")
     assert warnings[0]["old_version"] == "v6.1"
     assert warnings[0]["new_version"] == "v6.2"
+    for artifact in (
+        stale_dir / "summary.json",
+        stale_dir / "warnings.jsonl",
+        stale_dir / "warnings.md",
+        stale_dir / "drift_facts.jsonl",
+        stale_dir / "promoted_warnings.jsonl",
+    ):
+        text = artifact.read_text(encoding="utf-8")
+        assert not any(marker in text for marker in LOCAL_PATH_MARKERS), artifact
 
     conn = connect(cfg.database)
     initialize(conn)

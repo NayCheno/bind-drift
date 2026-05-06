@@ -6,6 +6,8 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
+from binddrift.artifact_paths import sanitize_local_paths
+from binddrift.config import Config
 from binddrift.evaluation.metrics import TRUE_LABELS, labeled_summary, load_manual_labels, manual_review_agreement
 from binddrift.evaluation.label_join import check_label_join
 from binddrift.warnings import read_warnings
@@ -35,6 +37,7 @@ def merge_manual_review(
     warnings_jsonl: Path | None = None,
     aggregate_review: Path | None = None,
     override_jsonl: Path | None = None,
+    cfg: Config | None = None,
 ) -> dict[str, Any]:
     """Merge pair-level review rows into the canonical replay review CSV."""
 
@@ -93,7 +96,8 @@ def merge_manual_review(
     }
     report = run_dir / "review_artifacts" / "aggregate_review_merge_summary.json"
     report.parent.mkdir(parents=True, exist_ok=True)
-    report.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    artifact_result = sanitize_local_paths(result, cfg) if cfg else result
+    report.write_text(json.dumps(artifact_result, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return result
 
 

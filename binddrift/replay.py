@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from binddrift.artifact_paths import sanitize_local_paths, sanitize_local_path_tree
 from binddrift.config import Config
 from binddrift.dataset import extract_dataset
 from binddrift.db import connect, initialize, upsert_many
@@ -469,12 +470,14 @@ def run_version_replay(
 
     completed = sum(1 for pair in pairs if pair["status"] == "completed")
     failed = sum(1 for pair in pairs if pair["status"] != "completed")
-    drift_fact_count = aggregate_pair_jsonl(run_dir, "drift_facts.jsonl", aggregate_drift_facts)
+    sanitize_local_path_tree(run_dir, cfg)
+    drift_fact_count = aggregate_pair_jsonl(run_dir, "drift_facts.jsonl", aggregate_drift_facts, cfg=cfg)
     aggregate_ranking = rank_warnings(_cfg_for_replay_run(cfg, run_dir))
     main_warnings, single_version_targets = split_main_and_single_version(read_warnings(aggregate_warnings))
-    write_jsonl(aggregate_promoted_warnings, main_warnings)
-    write_jsonl(aggregate_warnings, main_warnings[:100])
-    write_jsonl(run_dir / "single_version_review_targets.jsonl", single_version_targets)
+    run_cfg = _cfg_for_replay_run(cfg, run_dir)
+    write_jsonl(aggregate_promoted_warnings, main_warnings, cfg=run_cfg)
+    write_jsonl(aggregate_warnings, main_warnings[:100], cfg=run_cfg)
+    write_jsonl(run_dir / "single_version_review_targets.jsonl", single_version_targets, cfg=run_cfg)
     aggregate_review = generate_manual_review(
         _cfg_for_replay_run(cfg, run_dir),
         main_warnings[:100],
@@ -502,12 +505,13 @@ def run_version_replay(
         "run_manifest": str(run_dir / "run_manifest.json") if should_write_manifest else None,
         "stale_previous": stale,
     }
-    (run_dir / "summary.json").write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    artifact_summary = sanitize_local_paths(summary, cfg)
+    (run_dir / "summary.json").write_text(json.dumps(artifact_summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     run_row.update(
         {
             "completed_at": _now(),
             "status": "completed" if failed == 0 else "completed_with_failures",
-            "summary": json.dumps(summary, sort_keys=True),
+            "summary": json.dumps(artifact_summary, sort_keys=True),
         }
     )
     _persist_run(cfg, run_row)

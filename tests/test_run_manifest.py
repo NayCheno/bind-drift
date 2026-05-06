@@ -7,7 +7,7 @@ from binddrift.cli import main
 from binddrift.config import Config
 from binddrift.evaluation.protocol import write_default_evaluation_protocol
 from binddrift.paper.tables import generate_paper_tables
-from binddrift.run_manifest import ArtifactConsistencyError, evaluation_protocol_split_hash, sha256_file, validate_run_manifest, write_run_manifest
+from binddrift.run_manifest import ArtifactConsistencyError, aggregate_pair_jsonl, evaluation_protocol_split_hash, sha256_file, validate_run_manifest, write_run_manifest
 from binddrift.warnings import make_warning_uid
 
 
@@ -71,6 +71,26 @@ def test_run_manifest_validates_counts_and_sha(tmp_path: Path):
     manifest_path.write_text(json.dumps(stale, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     with pytest.raises(ArtifactConsistencyError, match="locked_split_hash"):
         validate_run_manifest(cfg)
+
+
+def test_aggregate_pair_jsonl_sanitizes_local_paths(tmp_path: Path):
+    cfg = Config.from_args(repo_root=tmp_path)
+    run_dir = tmp_path / "data/replay/latest"
+    pair_dir = run_dir / "latest-p001"
+    pair_dir.mkdir(parents=True)
+    source_path = tmp_path / ".binddrift/worktrees/v6.2/rust/kernel/foo.rs"
+    (pair_dir / "drift_facts.jsonl").write_text(
+        json.dumps({"fact_id": "F-1", "rust_file": str(source_path)}, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+    rows = aggregate_pair_jsonl(run_dir, "drift_facts.jsonl", run_dir / "drift_facts.jsonl", cfg=cfg)
+
+    assert rows == 1
+    text = (run_dir / "drift_facts.jsonl").read_text(encoding="utf-8")
+    assert "/tmp/" not in text
+    assert str(tmp_path) not in text
+    assert ".binddrift/worktrees/v6.2/rust/kernel/foo.rs" in text
 
 
 def test_run_manifest_tracks_pooled_review_artifacts_when_present(tmp_path: Path):
