@@ -21,6 +21,7 @@ def test_paper_draft_preserves_claim_boundary() -> None:
     abstract = _section(full_text, "## Abstract", "## 1. Introduction")
     introduction = _section(full_text, "## 1. Introduction", "## 2. Background And Scope")
     evaluation = _section(full_text, "## 5. Evaluation", "## 6. Case Studies")
+    full_normalized = re.sub(r"\s+", " ", full_text.lower())
     text = re.sub(r"\s+", " ", "\n".join([abstract, introduction, evaluation]).lower())
     forbidden = [
         "bug detector",
@@ -38,6 +39,7 @@ def test_paper_draft_preserves_claim_boundary() -> None:
         assert phrase not in text
 
     required = [
+        "binddrift prioritizes review targets for rust-for-linux cross-language api and contract drift",
         "warning prioritization",
         "review target",
         "evidence chain",
@@ -82,8 +84,12 @@ def test_paper_draft_preserves_claim_boundary() -> None:
     assert "evidence gate is supported as the stronger claim" not in text
     assert "does not yet support a broad claim" not in text
     assert "semantic drift result remains exploratory" not in text
-    assert "not every warning is a confirmed bug" in full_text.lower()
-    assert "wrapper-fix oracle is auxiliary validation" in full_text.lower()
+    assert "does not prove rust safe abstraction soundness" in full_normalized
+    assert "does not automatically detect bugs" in full_normalized
+    assert "tier 2 semantic findings are review targets" in full_normalized
+    assert "`true_wrapper_fix` is not counted as `true_semantic_drift`" in full_normalized
+    assert "not every warning is a confirmed bug" in full_normalized
+    assert "wrapper-fix oracle is auxiliary validation" in full_normalized
 
 
 def test_table_index_records_sha256_provenance() -> None:

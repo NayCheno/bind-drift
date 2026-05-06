@@ -990,9 +990,35 @@
     },
     {
       "details": {
+        "forbidden_claim_phrases": [
+          "bug detector",
+          "soundness proof",
+          "complete detection",
+          "guaranteed stale abstraction",
+          "proves rust abstraction unsoundness",
+          "detects real bugs automatically",
+          "ranking improves prioritization",
+          "outperforms all baselines",
+          "many semantic bugs",
+          "ranking result is downgraded",
+          "evidence gate is supported as the stronger claim",
+          "semantic drift result remains exploratory"
+        ],
         "forbidden_found": [],
         "passes": true,
         "ranking_gate_passes": true,
+        "required_claim_phrases": [
+          "binddrift prioritizes review targets for rust-for-linux cross-language api and contract drift",
+          "warnings are review targets",
+          "not every warning is a confirmed bug",
+          "does not prove rust safe abstraction soundness",
+          "does not automatically detect bugs",
+          "tier 2 semantic findings are review targets",
+          "`true_wrapper_fix` is not counted as `true_semantic_drift`",
+          "wrapper-fix oracle is auxiliary validation",
+          "strict ranking gate passes",
+          "semantic gate passes"
+        ],
         "required_missing": [],
         "semantic_gate_passes": true
       },

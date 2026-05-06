@@ -1,19 +1,22 @@
-# BindDrift: Evidence-Backed Warning Prioritization for Rust-for-Linux API and Contract Drift
+# BindDrift: Prioritizing Review Targets for Rust-for-Linux Cross-Language API and Contract Drift
 
 ## Abstract
 
 Rust-for-Linux safe abstractions rely on Linux C APIs whose signatures, layouts,
-and behavioral contracts evolve outside Rust's type system. BindDrift is a
-static-analysis and cross-version replay artifact for evidence-backed warning
-prioritization, not automatic bug confirmation. BindDrift separates low-level
-cross-version drift facts from promoted Rust-impact warnings, then attaches an
-evidence chain from Linux C declarations or helpers through generated Rust
-bindings, unsafe Rust call sites, wrapper code, safety comments, or public safe
-abstractions. Each emitted warning is a review target for maintainers. The
-current canonical replay spans 21 Linux snapshots from `v6.1` through `v7.0`
-plus `HEAD`, covers 20 adjacent version pairs, records 16,757 drift facts,
-and promotes 320 Rust-impact warnings. A 500-item pooled review set is
-double-reviewed and adjudicated. The strict oracle-blind ranking gate reports
+and behavioral contracts evolve outside Rust's type system. BindDrift
+prioritizes review targets for Rust-for-Linux cross-language API and contract
+drift. It is a static-analysis and cross-version replay artifact for
+evidence-backed warning prioritization, not automatic bug confirmation:
+BindDrift does not prove Rust safe abstraction soundness and does not
+automatically detect bugs. BindDrift separates low-level cross-version drift
+facts from promoted Rust-impact warnings, then attaches an evidence chain from
+Linux C declarations or helpers through generated Rust bindings, unsafe Rust
+call sites, wrapper code, safety comments, or public safe abstractions. Each
+emitted warning is a review target for maintainers. The current canonical
+replay spans 21 Linux snapshots from `v6.1` through `v7.0` plus `HEAD`, covers
+20 adjacent version pairs, records 16,757 drift facts, and promotes 320
+Rust-impact warnings. A 500-item pooled review set is double-reviewed and
+adjudicated. The strict oracle-blind ranking gate reports
 P@10 = 1.00, P@20 = 1.00, P@50 = 0.86, P@100 = 0.43, and NDCG@20 = 1.00,
 improving P@20 by 0.60, P@50 by 0.64, and NDCG@20 by 0.5394 over the
 strongest simple baseline in the shared pooled-label evaluation. The final
@@ -28,8 +31,9 @@ also creates a cross-language maintenance problem: a safe Rust API can remain
 unchanged while the underlying C API changes its failure convention, refcount
 contract, allocation/free pairing, or sleepability constraints.
 
-BindDrift frames this as a software evolution problem. The relevant dependency
-chain is an evidence chain:
+BindDrift prioritizes review targets for Rust-for-Linux cross-language API and
+contract drift. It frames this as a software evolution problem. The relevant
+dependency chain is an evidence chain:
 
 ```text
 Linux C function/type/macro/helper
@@ -59,7 +63,8 @@ must rely on.
 BindDrift targets Linux mainline, x86_64, Rust-enabled builds when the local
 toolchain can produce them, and the `rust/bindings`, `rust/helpers`, and
 `rust/kernel` surfaces. It does not prove Rust safe abstraction soundness. Tier
-2 warnings are review targets and are explicitly marked as indicator-based.
+2 semantic findings are review targets and are explicitly marked as
+indicator-based. They are not confirmed defects.
 
 ## 3. Design
 

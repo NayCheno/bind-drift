@@ -662,8 +662,13 @@ def _paper_claims(cfg: Config) -> dict[str, Any]:
         forbidden.append("semantic gate passes")
     found = [phrase for phrase in forbidden if phrase in text]
     required = [
+        "binddrift prioritizes review targets for rust-for-linux cross-language api and contract drift",
         "warnings are review targets",
         "not every warning is a confirmed bug",
+        "does not prove rust safe abstraction soundness",
+        "does not automatically detect bugs",
+        "tier 2 semantic findings are review targets",
+        "`true_wrapper_fix` is not counted as `true_semantic_drift`",
         "wrapper-fix oracle is auxiliary validation",
     ]
     required.append("strict ranking gate passes" if ranking_passes else "evidence gate is supported as the stronger claim")
@@ -673,6 +678,8 @@ def _paper_claims(cfg: Config) -> dict[str, Any]:
         "passes": not found and not missing,
         "ranking_gate_passes": ranking_passes,
         "semantic_gate_passes": semantic_passes,
+        "required_claim_phrases": required,
+        "forbidden_claim_phrases": forbidden,
         "forbidden_found": found,
         "required_missing": missing,
     }
