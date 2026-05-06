@@ -564,14 +564,48 @@
       "unclear_rate": 0.0
     },
     "ranking": {
+      "ablation_story": {
+        "ablations": [
+          {
+            "ablation": "no_graph",
+            "design_choice": "Graph evidence keeps weak symbol-only matches below better-supported C/Rust contract evidence.",
+            "primary_minus_ablation": {
+              "auprc_on_pooled_review_set": 0.5376,
+              "ndcg_at_20": 0.5616,
+              "p_at_20": 0.4,
+              "p_at_50": 0.32
+            },
+            "supports_design_choice": true
+          },
+          {
+            "ablation": "no_impact_gate",
+            "design_choice": "Impact gating helps keep C-only or weak-reachability drift below Rust-impact review targets.",
+            "primary_minus_ablation": {
+              "auprc_on_pooled_review_set": 0.3857,
+              "ndcg_at_20": 0.6407,
+              "p_at_20": 0.5,
+              "p_at_50": 0.12
+            },
+            "supports_design_choice": true
+          }
+        ],
+        "minimum_required_supporting_ablations": 2,
+        "supporting_ablation_count": 2,
+        "supports_design": true
+      },
       "candidate_oracle_only": 0,
       "checks": {
+        "ablation_story": true,
+        "all_rankers_same_pool": true,
         "auprc_at_least_best_simple": true,
         "bootstrap_ci_lower_bound_positive": true,
         "candidate_count": true,
         "candidate_count_matches_recomputed": true,
+        "m6_acceptance_minimum": true,
+        "m6_no_oracle_leakage": true,
         "ndcg_at_20": true,
         "ndcg_at_20_lift": true,
+        "no_self_evaluation_top100_only": true,
         "oracle_leakage": true,
         "p_at_10": true,
         "p_at_100": true,
@@ -579,14 +613,19 @@
         "p_at_20_lift": true,
         "p_at_50": true,
         "p_at_50_lift": true,
+        "primary_beats_best_simple_baseline": true,
         "primary_beats_random": true,
         "primary_candidates_exclude_pure_oracle_only": true,
+        "random_baseline_sanity": true,
+        "ranking_table_matches_recomputed": true,
         "reported_top100_complete": true,
         "significance_p_value": true,
         "top100_generated_binding_only_limit": true,
         "top100_oracle_only": true,
         "top50_generated_binding_only": true,
-        "top50_score_explanations": true
+        "top50_score_explanations": true,
+        "top_false_negative_taxonomy": true,
+        "top_false_positive_taxonomy": true
       },
       "claim": "ranking improvement claim supported on pooled labels",
       "comparison": {
@@ -597,6 +636,7 @@
           "p_at_50": 0.64
         },
         "minimum_conditions_passed": 3,
+        "minimum_required_conditions": 3,
         "paired_bootstrap_significance": {
           "best_simple_baseline": "same_as_comparison",
           "method": "paired_rank_position_bootstrap",
@@ -634,6 +674,33 @@
         "passes_minimum_lift": true,
         "primary_ranker": "binddrift_oracle_blind"
       },
+      "m6_acceptance": {
+        "checks": {
+          "ablation_story": true,
+          "all_rankers_same_pool": true,
+          "bootstrap_ci_lower_bound": true,
+          "ndcg_at_20_delta": true,
+          "no_oracle_leakage": true,
+          "no_self_evaluation_top100_only": true,
+          "p_at_20_delta": true,
+          "p_at_50_delta": true,
+          "p_value": true,
+          "pool_label_coverage": true,
+          "primary_beats_best_simple_baseline": true,
+          "random_baseline_sanity": true,
+          "top_false_negative_taxonomy": true,
+          "top_false_positive_taxonomy": true
+        },
+        "minimum_passes": true,
+        "thresholds": {
+          "ndcg_at_20_delta": 0.1,
+          "p_at_20_delta": 0.1,
+          "p_at_50_delta": 0.07,
+          "p_value": 0.05,
+          "pool_label_coverage": 0.95,
+          "supporting_ablations": 2
+        }
+      },
       "metrics": {
         "auprc_on_pooled_review_set": 0.9444,
         "candidate_count": 320,
@@ -645,8 +712,188 @@
         "review_pool_ranked_count": 272
       },
       "passes": true,
+      "ranking_table_recompute_mismatches": [],
       "top100_generated_binding_only": 0,
-      "top100_oracle_only": 0
+      "top100_oracle_only": 0,
+      "top_false_negative_taxonomy": {
+        "allowed_taxonomy": [
+          "binding_or_layout_tail_candidate",
+          "contract_drift_ranked_below_top100",
+          "direct_rust_use_without_contract_boost",
+          "not_ranked_by_primary_candidate_filter",
+          "true_label_ranked_below_top100"
+        ],
+        "count": 4,
+        "examples": [
+          {
+            "label": "TRUE_WRAPPER_FIX",
+            "pair_id": "latest-p006-v6.6-to-v6.7",
+            "rank": 120,
+            "symbol": "compat_ptr_ioctl",
+            "taxonomy": "binding_or_layout_tail_candidate",
+            "type": "SignatureDrift",
+            "warning_id": "W-000001",
+            "warning_uid": "4d882d1f6a1138d581132f19f57ffc916e719f96314cc4a6c2379342e17d22cc"
+          },
+          {
+            "label": "TRUE_WRAPPER_FIX",
+            "pair_id": "latest-p020-v7.0-to-HEAD_9207d47f966b",
+            "rank": 121,
+            "symbol": "dma_resv_lock",
+            "taxonomy": "binding_or_layout_tail_candidate",
+            "type": "SignatureDrift",
+            "warning_id": "W-000001",
+            "warning_uid": "da8840f14175c162dda2e19e9454658a2053269096c0bfd34173a2e1ad9f90dd"
+          },
+          {
+            "label": "TRUE_BUILD_BREAKAGE",
+            "pair_id": "latest-p013-v6.13-to-v6.14",
+            "rank": 135,
+            "symbol": "pci_alloc_irq_vectors",
+            "taxonomy": "binding_or_layout_tail_candidate",
+            "type": "SignatureDrift",
+            "warning_id": "W-000005",
+            "warning_uid": "a9258d35ac73ebd8518074366ff99ac0ebc2ab2f1f84b04d849736976dd4ac60"
+          },
+          {
+            "label": "TRUE_WRAPPER_FIX",
+            "pair_id": "latest-p007-v6.7-to-v6.8",
+            "rank": 154,
+            "symbol": "device",
+            "taxonomy": "binding_or_layout_tail_candidate",
+            "type": "FieldDrift",
+            "warning_id": "W-000007",
+            "warning_uid": "008d4bc1dd6309371bfe398912473c623667c2161a158acd2ca12ffac9fa5b24"
+          }
+        ],
+        "schema_valid": true,
+        "schema_version": "m6-ranking-taxonomy-v1",
+        "taxonomy": {
+          "binding_or_layout_tail_candidate": 4
+        },
+        "unknown_taxonomy": [],
+        "window": "pooled_true_labels_outside_primary_top_100"
+      },
+      "top_false_positive_taxonomy": {
+        "allowed_taxonomy": [
+          "binding_only_or_generated_surface",
+          "macro_or_constant_surface_overprioritized",
+          "signature_change_without_adjudicated_rust_contract_impact",
+          "weak_contract_mapping_or_scope_mismatch",
+          "weak_or_missing_rust_reachability"
+        ],
+        "count": 57,
+        "examples": [
+          {
+            "label": "FALSE_POSITIVE",
+            "pair_id": "latest-p012-v6.12-to-v6.13",
+            "rank": 44,
+            "symbol": "errno_to_blk_status",
+            "taxonomy": "binding_only_or_generated_surface",
+            "type": "SignatureDrift",
+            "warning_id": "W-000018",
+            "warning_uid": "0217c5aca3beed930cd6cd613e9717d4a78ab28013cffd3881c7d5c7ab7db42a"
+          },
+          {
+            "label": "FALSE_POSITIVE",
+            "pair_id": "latest-p012-v6.12-to-v6.13",
+            "rank": 45,
+            "symbol": "firmware_request_nowarn",
+            "taxonomy": "binding_only_or_generated_surface",
+            "type": "SignatureDrift",
+            "warning_id": "W-000019",
+            "warning_uid": "a7b50f9e01fa519b3ca5429567469093b01a1a6e6aac05980f9c6eb72628692a"
+          },
+          {
+            "label": "FALSE_POSITIVE",
+            "pair_id": "latest-p012-v6.12-to-v6.13",
+            "rank": 46,
+            "symbol": "PTR_ERR",
+            "taxonomy": "macro_or_constant_surface_overprioritized",
+            "type": "SignatureDrift",
+            "warning_id": "W-000003",
+            "warning_uid": "39859c860002f454586acf39f3d0df45a3189f1edc7868bad4cb189a795d4b8e"
+          },
+          {
+            "label": "FALSE_POSITIVE",
+            "pair_id": "latest-p020-v7.0-to-HEAD_9207d47f966b",
+            "rank": 47,
+            "symbol": "gpu_buddy_alloc_blocks",
+            "taxonomy": "binding_only_or_generated_surface",
+            "type": "SignatureDrift",
+            "warning_id": "W-000003",
+            "warning_uid": "58bf7f2f2d74c5ec6be9fcd8a9b33e90df0d6227323e4b82048987d533465397"
+          },
+          {
+            "label": "FALSE_POSITIVE",
+            "pair_id": "latest-p012-v6.12-to-v6.13",
+            "rank": 48,
+            "symbol": "IS_ERR",
+            "taxonomy": "macro_or_constant_surface_overprioritized",
+            "type": "SignatureDrift",
+            "warning_id": "W-000002",
+            "warning_uid": "4b538a23e5b7e22f2cc86f95ffea064b2634aa0ab97449ad304889083dc27efd"
+          },
+          {
+            "label": "FALSE_POSITIVE",
+            "pair_id": "latest-p017-v6.17-to-v6.18",
+            "rank": 49,
+            "symbol": "refcount_set",
+            "taxonomy": "binding_only_or_generated_surface",
+            "type": "SignatureDrift",
+            "warning_id": "W-000176",
+            "warning_uid": "f6741da33cd41c225aef023b1b2a71f2e315f0610d131c539603cbe7aedb8ec6"
+          },
+          {
+            "label": "FALSE_POSITIVE",
+            "pair_id": "latest-p017-v6.17-to-v6.18",
+            "rank": 50,
+            "symbol": "refcount_dec",
+            "taxonomy": "binding_only_or_generated_surface",
+            "type": "SignatureDrift",
+            "warning_id": "W-000175",
+            "warning_uid": "dee765bcd2302ae60a2b8879f2ad930b8bdb343af3df1fd16c994112640d77c5"
+          },
+          {
+            "label": "FALSE_POSITIVE",
+            "pair_id": "latest-p012-v6.12-to-v6.13",
+            "rank": 51,
+            "symbol": "rb_node",
+            "taxonomy": "binding_only_or_generated_surface",
+            "type": "FieldDrift",
+            "warning_id": "W-000037",
+            "warning_uid": "c4db15ef412f4f82fb1709ab6fc668ce3ecdeb046df1d7f3cde9429b65f60b7c"
+          },
+          {
+            "label": "FALSE_POSITIVE",
+            "pair_id": "latest-p012-v6.12-to-v6.13",
+            "rank": 52,
+            "symbol": "REFCOUNT_INIT",
+            "taxonomy": "macro_or_constant_surface_overprioritized",
+            "type": "SignatureDrift",
+            "warning_id": "W-000004",
+            "warning_uid": "399880825c439eb15d3e73aa711d383a87e7dbba9e9a3173f6a97bdef4e841b7"
+          },
+          {
+            "label": "FALSE_POSITIVE",
+            "pair_id": "latest-p010-v6.10-to-v6.11",
+            "rank": 53,
+            "symbol": "errno_to_blk_status",
+            "taxonomy": "binding_only_or_generated_surface",
+            "type": "SignatureDrift",
+            "warning_id": "W-000004",
+            "warning_uid": "d668e025ab0727df4a19529d3eaa4e08a0e8e04c23fa27b5dd2701fb50ba80c6"
+          }
+        ],
+        "schema_valid": true,
+        "schema_version": "m6-ranking-taxonomy-v1",
+        "taxonomy": {
+          "binding_only_or_generated_surface": 49,
+          "macro_or_constant_surface_overprioritized": 8
+        },
+        "unknown_taxonomy": [],
+        "window": "primary_top_100"
+      }
     },
     "semantic": {
       "candidates_reviewed": 304,
@@ -727,7 +974,7 @@
   "passes": true,
   "protocol_version": "ccfb-strict-v2",
   "run_manifest": "data/replay/latest/run_manifest.json",
-  "stage": "final",
+  "stage": "m6",
   "stage_required_checks": [
     "binddrift_review_role_artifacts",
     "case_study_gate",
@@ -740,8 +987,7 @@
     "ranking",
     "required_tables_exist",
     "run_manifest_valid",
-    "semantic",
-    "strict_extractor_audit_gate"
+    "semantic"
   ],
   "status": "ccfb_ready",
   "strict_ccfb": true

@@ -12,14 +12,30 @@ from typing import Any
 from binddrift.config import Config
 from binddrift.evaluation.metrics import TRUE_LABELS, label_for_warning, load_manual_labels
 from binddrift.evaluation.pooled_review import DEFAULT_RANKERS, ranker_output_details
-from binddrift.evaluation.protocol import load_evaluation_protocol, protocol_provenance
+from binddrift.evaluation.protocol import FORBIDDEN_PRIMARY_SCORE_COMPONENTS, load_evaluation_protocol, protocol_provenance
 from binddrift.run_manifest import canonical_run_dir, repo_relative, sha256_file, validate_run_manifest
 from binddrift.warnings import read_warnings
 
 
 SIMPLE_BASELINES = {"binding_diff", "c_signature", "c_indicator", "rust_use", "no_ranking", "random"}
 ABLATIONS = {"no_graph", "no_impact_gate"}
+TOP_K = 100
 KS = (10, 20, 50, 100)
+TAXONOMY_SCHEMA_VERSION = "m6-ranking-taxonomy-v1"
+FALSE_POSITIVE_TAXONOMY = {
+    "macro_or_constant_surface_overprioritized",
+    "binding_only_or_generated_surface",
+    "signature_change_without_adjudicated_rust_contract_impact",
+    "weak_or_missing_rust_reachability",
+    "weak_contract_mapping_or_scope_mismatch",
+}
+FALSE_NEGATIVE_TAXONOMY = {
+    "not_ranked_by_primary_candidate_filter",
+    "binding_or_layout_tail_candidate",
+    "direct_rust_use_without_contract_boost",
+    "contract_drift_ranked_below_top100",
+    "true_label_ranked_below_top100",
+}
 
 
 class RankerEvaluationError(RuntimeError):
@@ -35,12 +51,33 @@ def evaluate_rankers(
     output: Path | None = None,
     rankers: list[str] | None = None,
 ) -> dict[str, Any]:
+    output = output or cfg.repo_root / "paper/tables/ranking_pooled_evaluation.json"
+    table = build_ranker_evaluation(
+        cfg,
+        pool=pool,
+        labels=labels,
+        protocol_path=protocol_path,
+        rankers=rankers,
+    )
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(json.dumps(table, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    _write_split_tables(cfg, table)
+    return table
+
+
+def build_ranker_evaluation(
+    cfg: Config,
+    *,
+    pool: Path,
+    labels: Path,
+    protocol_path: Path | None = None,
+    rankers: list[str] | None = None,
+) -> dict[str, Any]:
     manifest = validate_run_manifest(cfg)
     protocol = load_evaluation_protocol(cfg)
     if protocol_path and protocol_path.exists():
         protocol = {**protocol, "path": str(protocol_path)}
     run_dir = canonical_run_dir(cfg)
-    output = output or cfg.repo_root / "paper/tables/ranking_pooled_evaluation.json"
     rankers = rankers or DEFAULT_RANKERS
     pool_rows = read_warnings(pool)
     label_map = load_manual_labels(labels, uid_only=True)
@@ -52,10 +89,12 @@ def evaluate_rankers(
     pool_label_values = [label_for_warning(label_map, warning) for warning in pool_rows]
     rows: list[dict[str, Any]] = []
     ranked_labels: dict[str, list[str]] = {}
+    ranked_pool_rows: dict[str, list[dict[str, Any]]] = {}
     for name, details in ranked_by_source.items():
         ranked = _dedupe_ranked_pool_rows(details["ranked"], pool_uids)
         label_values = [label_for_warning(label_map, warning) for warning in ranked]
         ranked_labels[name] = label_values
+        ranked_pool_rows[name] = ranked
         rows.append(
             _ranker_metrics(
                 name,
@@ -65,6 +104,9 @@ def evaluate_rankers(
                 pool_label_values,
                 candidate_count=int(details["candidate_count"]),
                 warning_volume=int(details["warning_volume"]),
+                score_component_keys=list(details.get("score_component_keys") or []),
+                ranking_feature_keys=list(details.get("ranking_feature_keys") or []),
+                forbidden_oracle_feature_keys=list(details.get("forbidden_oracle_feature_keys") or []),
             )
         )
     best_simple = _best_simple(rows)
@@ -86,6 +128,22 @@ def evaluate_rankers(
         ),
     )
     label_coverage = _strict_label_coverage(pool_rows, labels)
+    ablation_story = _ablation_story(rows, primary)
+    taxonomies = _ranking_error_taxonomies(
+        pool_rows,
+        label_map,
+        ranked_pool_rows.get("binddrift_oracle_blind", []),
+    )
+    acceptance = _m6_acceptance(
+        rows,
+        primary,
+        comparison,
+        random_comparison,
+        label_coverage,
+        pool_size=len(pool_rows),
+        ablation_story=ablation_story,
+        taxonomies=taxonomies,
+    )
     table = {
         **protocol_provenance(protocol),
         "pool": repo_relative(cfg, pool),
@@ -99,6 +157,13 @@ def evaluate_rankers(
         "random_baseline": random_baseline,
         "comparison_against_best_simple_baseline": comparison,
         "comparison_against_random": random_comparison,
+        "all_rankers_same_pool": acceptance["checks"]["all_rankers_same_pool"],
+        "primary_beats_best_simple_baseline": acceptance["checks"]["primary_beats_best_simple_baseline"],
+        "no_self_evaluation_top100_only": acceptance["checks"]["no_self_evaluation_top100_only"],
+        "top_false_positive_taxonomy": taxonomies["top_false_positive_taxonomy"],
+        "top_false_negative_taxonomy": taxonomies["top_false_negative_taxonomy"],
+        "ablation_story": ablation_story,
+        "m6_acceptance": acceptance,
         "coverage_acceptance": {
             "minimum": 0.95,
             "passes": label_coverage["coverage"] >= 0.95,
@@ -107,9 +172,6 @@ def evaluate_rankers(
     }
     if table["coverage_acceptance"]["passes"] is not True:
         raise RankerEvaluationError(f"pooled review label coverage below 95%: {label_coverage['coverage']}")
-    output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps(table, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    _write_split_tables(cfg, table)
     return table
 
 
@@ -122,6 +184,9 @@ def _ranker_metrics(
     *,
     candidate_count: int,
     warning_volume: int,
+    score_component_keys: list[str],
+    ranking_feature_keys: list[str],
+    forbidden_oracle_feature_keys: list[str],
 ) -> dict[str, Any]:
     metrics = {f"p_at_{k}": _precision_at_k(ranked_labels, k, pool_size=len(pool_rows)) for k in KS}
     metrics["ndcg_at_20"] = _ndcg_at_k(ranked_labels, pool_labels, 20)
@@ -136,6 +201,9 @@ def _ranker_metrics(
         "oracle_blind": name != "binddrift_current",
         "warning_volume": warning_volume,
         "candidate_count": candidate_count,
+        "score_component_keys": sorted(score_component_keys),
+        "ranking_feature_keys": sorted(ranking_feature_keys),
+        "forbidden_oracle_feature_keys": sorted(forbidden_oracle_feature_keys),
         "evaluated_pool_rows": len(pool_rows),
         "evaluation_denominator": "complete_pooled_review_set",
         "review_pool_ranked_count": len(ranked),
@@ -316,7 +384,8 @@ def _comparison(
         "best_simple_baseline": best["ranker"],
         "deltas": deltas,
         "minimum_conditions_passed": passed,
-        "passes_minimum_lift": passed >= 2,
+        "minimum_required_conditions": 3,
+        "passes_minimum_lift": passed == 3,
         "paired_bootstrap_significance": significance or {},
     }
 
@@ -385,6 +454,285 @@ def _claim_recommendation(comparison: dict[str, Any], coverage: dict[str, Any], 
     return "evidence gate claim only; ranking improvement not supported"
 
 
+def _all_rankers_same_pool(rows: list[dict[str, Any]], pool_size: int) -> bool:
+    if not rows:
+        return False
+    distributions = {json.dumps(row.get("label_distribution") or {}, sort_keys=True) for row in rows}
+    return (
+        all(row.get("evaluated_pool_rows") == pool_size for row in rows)
+        and all(row.get("evaluation_denominator") == "complete_pooled_review_set" for row in rows)
+        and len(distributions) == 1
+    )
+
+
+def _no_self_evaluation_top100_only(rows: list[dict[str, Any]], pool_size: int) -> bool:
+    return bool(
+        pool_size > TOP_K
+        and rows
+        and all(row.get("evaluated_pool_rows") == pool_size for row in rows)
+        and all(row.get("evaluation_denominator") == "complete_pooled_review_set" for row in rows)
+    )
+
+
+def _significance_passes(comparison: dict[str, Any]) -> bool:
+    metrics = ((comparison.get("paired_bootstrap_significance") or {}).get("metrics") or {})
+    return all(
+        ((metrics.get(metric) or {}).get("bootstrap_delta_ci") or [0.0])[0] > 0.0
+        and ((metrics.get(metric) or {}).get("p_value_primary_not_better") or 1.0) < 0.05
+        for metric in ("p_at_20", "p_at_50", "ndcg_at_20")
+    )
+
+
+def _primary_beats_best_simple_baseline(comparison: dict[str, Any]) -> bool:
+    deltas = comparison.get("deltas") or {}
+    return bool(
+        (deltas.get("p_at_20") or 0.0) >= 0.10
+        and (deltas.get("p_at_50") or 0.0) >= 0.07
+        and (deltas.get("ndcg_at_20") or 0.0) >= 0.10
+        and _significance_passes(comparison)
+    )
+
+
+def _random_baseline_sanity(comparison: dict[str, Any]) -> bool:
+    deltas = comparison.get("deltas") or {}
+    return bool(
+        (deltas.get("p_at_20") or 0.0) > 0.0
+        and (deltas.get("p_at_50") or 0.0) > 0.0
+        and (deltas.get("ndcg_at_20") or 0.0) > 0.0
+        and _significance_passes(comparison)
+    )
+
+
+def _oracle_blind_eval_has_no_oracle_leakage(rows: list[dict[str, Any]]) -> bool:
+    for row in rows:
+        if row.get("kind") not in {"primary", "simple_baseline", "ablation"}:
+            continue
+        keys = set(row.get("score_component_keys") or []) | set(row.get("ranking_feature_keys") or [])
+        if row.get("oracle_blind") is not True:
+            return False
+        if row.get("forbidden_oracle_feature_keys"):
+            return False
+        if FORBIDDEN_PRIMARY_SCORE_COMPONENTS & keys:
+            return False
+    return True
+
+
+def _ablation_story(rows: list[dict[str, Any]], primary: dict[str, Any] | None) -> dict[str, Any]:
+    primary = primary or {}
+    by_name = {row.get("ranker"): row for row in rows}
+    labels = {
+        "no_graph": "Graph evidence keeps weak symbol-only matches below better-supported C/Rust contract evidence.",
+        "no_impact_gate": "Impact gating helps keep C-only or weak-reachability drift below Rust-impact review targets.",
+    }
+    ablations: list[dict[str, Any]] = []
+    for name in sorted(ABLATIONS):
+        row = by_name.get(name)
+        if not row:
+            continue
+        deltas = {
+            metric: round((primary.get(metric) or 0.0) - (row.get(metric) or 0.0), 4)
+            for metric in ("p_at_20", "p_at_50", "ndcg_at_20", "auprc_on_pooled_review_set")
+        }
+        supports = deltas["p_at_20"] > 0.0 and deltas["ndcg_at_20"] > 0.0
+        ablations.append(
+            {
+                "ablation": name,
+                "design_choice": labels.get(name, "Ablation supports an oracle-blind ranking design choice."),
+                "primary_minus_ablation": deltas,
+                "supports_design_choice": supports,
+            }
+        )
+    supporting = sum(1 for row in ablations if row["supports_design_choice"])
+    return {
+        "minimum_required_supporting_ablations": 2,
+        "supporting_ablation_count": supporting,
+        "supports_design": supporting >= 2,
+        "ablations": ablations,
+    }
+
+
+def _ranking_error_taxonomies(
+    pool_rows: list[dict[str, Any]],
+    labels: dict[str, str],
+    primary_ranked: list[dict[str, Any]],
+    *,
+    top_k: int = TOP_K,
+) -> dict[str, Any]:
+    top = primary_ranked[:top_k]
+    rank_by_uid = {str(warning.get("warning_uid")): rank for rank, warning in enumerate(primary_ranked, start=1)}
+    top_uids = {str(warning.get("warning_uid")) for warning in top}
+    false_positives = [
+        warning
+        for warning in top
+        if label_for_warning(labels, warning) and label_for_warning(labels, warning) not in TRUE_LABELS
+    ]
+    false_negatives = [
+        warning
+        for warning in pool_rows
+        if label_for_warning(labels, warning) in TRUE_LABELS and str(warning.get("warning_uid")) not in top_uids
+    ]
+    return {
+        "top_false_positive_taxonomy": _taxonomy_report(
+            false_positives,
+            labels,
+            rank_by_uid,
+            classifier=_false_positive_bucket,
+            allowed_labels=FALSE_POSITIVE_TAXONOMY,
+            window=f"primary_top_{top_k}",
+        ),
+        "top_false_negative_taxonomy": _taxonomy_report(
+            false_negatives,
+            labels,
+            rank_by_uid,
+            classifier=_false_negative_bucket,
+            allowed_labels=FALSE_NEGATIVE_TAXONOMY,
+            window=f"pooled_true_labels_outside_primary_top_{top_k}",
+        ),
+    }
+
+
+def _taxonomy_report(
+    warnings: list[dict[str, Any]],
+    labels: dict[str, str],
+    rank_by_uid: dict[str, int],
+    *,
+    classifier,
+    allowed_labels: set[str],
+    window: str,
+    example_limit: int = 10,
+) -> dict[str, Any]:
+    taxonomy = Counter(classifier(warning, rank_by_uid.get(str(warning.get("warning_uid")))) for warning in warnings)
+    unknown_labels = sorted(set(taxonomy) - allowed_labels)
+    examples = []
+    for warning in sorted(warnings, key=lambda row: (rank_by_uid.get(str(row.get("warning_uid")), 10**9), str(row.get("warning_uid"))))[:example_limit]:
+        uid = str(warning.get("warning_uid"))
+        examples.append(
+            {
+                "warning_uid": uid,
+                "warning_id": warning.get("warning_id"),
+                "pair_id": warning.get("pair_id"),
+                "rank": rank_by_uid.get(uid),
+                "label": label_for_warning(labels, warning),
+                "type": warning.get("type"),
+                "symbol": (warning.get("c_side") or {}).get("symbol"),
+                "taxonomy": classifier(warning, rank_by_uid.get(uid)),
+            }
+        )
+    return {
+        "schema_version": TAXONOMY_SCHEMA_VERSION,
+        "window": window,
+        "count": len(warnings),
+        "allowed_taxonomy": sorted(allowed_labels),
+        "taxonomy": dict(taxonomy),
+        "examples": examples,
+        "schema_valid": not unknown_labels and sum(taxonomy.values()) == len(warnings),
+        "unknown_taxonomy": unknown_labels,
+    }
+
+
+def _false_positive_bucket(warning: dict[str, Any], _rank: int | None = None) -> str:
+    symbol = str((warning.get("c_side") or {}).get("symbol") or "")
+    if symbol.isupper():
+        return "macro_or_constant_surface_overprioritized"
+    if warning.get("c_evidence_level") == "binding_only":
+        return "binding_only_or_generated_surface"
+    if warning.get("type") == "SignatureDrift":
+        return "signature_change_without_adjudicated_rust_contract_impact"
+    if not _has_rust_reachability(warning):
+        return "weak_or_missing_rust_reachability"
+    return "weak_contract_mapping_or_scope_mismatch"
+
+
+def _false_negative_bucket(warning: dict[str, Any], rank: int | None = None) -> str:
+    if rank is None:
+        return "not_ranked_by_primary_candidate_filter"
+    if warning.get("c_evidence_level") == "binding_only":
+        return "binding_or_layout_tail_candidate"
+    if not _has_safe_or_contract_evidence(warning):
+        return "direct_rust_use_without_contract_boost"
+    if str(warning.get("type") or "").endswith("Drift"):
+        return "contract_drift_ranked_below_top100"
+    return "true_label_ranked_below_top100"
+
+
+def _has_rust_reachability(warning: dict[str, Any]) -> bool:
+    rust_side = warning.get("rust_side") or {}
+    reasons = set(warning.get("promotion_reasons") or [])
+    return bool(rust_side.get("uses") or rust_side.get("safe_apis") or "direct_binding_use" in reasons or "exposes_safe_api" in reasons)
+
+
+def _has_safe_or_contract_evidence(warning: dict[str, Any]) -> bool:
+    rust_side = warning.get("rust_side") or {}
+    reasons = set(warning.get("promotion_reasons") or [])
+    return bool(
+        rust_side.get("safe_apis")
+        or rust_side.get("safety_comments")
+        or rust_side.get("error_mappings")
+        or rust_side.get("lifetime_facts")
+        or "exposes_safe_api" in reasons
+        or "contract_evidence" in reasons
+    )
+
+
+def _taxonomy_accepts(report: dict[str, Any]) -> bool:
+    examples = report.get("examples") or []
+    return bool(
+        report.get("schema_version") == TAXONOMY_SCHEMA_VERSION
+        and report.get("schema_valid") is True
+        and report.get("taxonomy")
+        and report.get("count") == sum((report.get("taxonomy") or {}).values())
+        and (report.get("count") or 0) >= len(examples)
+        and all(
+            example.get("warning_uid")
+            and example.get("label")
+            and example.get("taxonomy") in set(report.get("allowed_taxonomy") or [])
+            for example in examples
+        )
+    )
+
+
+def _m6_acceptance(
+    rows: list[dict[str, Any]],
+    primary: dict[str, Any] | None,
+    comparison: dict[str, Any],
+    random_comparison: dict[str, Any],
+    label_coverage: dict[str, Any],
+    *,
+    pool_size: int,
+    ablation_story: dict[str, Any],
+    taxonomies: dict[str, Any],
+) -> dict[str, Any]:
+    deltas = comparison.get("deltas") or {}
+    checks = {
+        "all_rankers_same_pool": _all_rankers_same_pool(rows, pool_size),
+        "pool_label_coverage": (label_coverage.get("coverage") or 0.0) >= 0.95,
+        "primary_beats_best_simple_baseline": _primary_beats_best_simple_baseline(comparison),
+        "p_at_20_delta": (deltas.get("p_at_20") or 0.0) >= 0.10,
+        "p_at_50_delta": (deltas.get("p_at_50") or 0.0) >= 0.07,
+        "ndcg_at_20_delta": (deltas.get("ndcg_at_20") or 0.0) >= 0.10,
+        "bootstrap_ci_lower_bound": _significance_passes(comparison),
+        "p_value": _significance_passes(comparison),
+        "random_baseline_sanity": _random_baseline_sanity(random_comparison),
+        "ablation_story": bool(ablation_story.get("supports_design")),
+        "no_oracle_leakage": _oracle_blind_eval_has_no_oracle_leakage(rows),
+        "no_self_evaluation_top100_only": _no_self_evaluation_top100_only(rows, pool_size),
+        "top_false_positive_taxonomy": _taxonomy_accepts(taxonomies.get("top_false_positive_taxonomy") or {}),
+        "top_false_negative_taxonomy": _taxonomy_accepts(taxonomies.get("top_false_negative_taxonomy") or {}),
+    }
+    return {
+        "checks": checks,
+        "minimum_passes": all(checks.values()),
+        "thresholds": {
+            "pool_label_coverage": 0.95,
+            "p_at_20_delta": 0.10,
+            "p_at_50_delta": 0.07,
+            "ndcg_at_20_delta": 0.10,
+            "p_value": 0.05,
+            "supporting_ablations": 2,
+        },
+    }
+
+
 def _write_split_tables(cfg: Config, table: dict[str, Any]) -> None:
     tables = cfg.repo_root / "paper/tables"
     baseline_rows = [row for row in table["rankers"] if row["kind"] in {"primary", "simple_baseline"}]
@@ -401,6 +749,12 @@ def _write_split_tables(cfg: Config, table: dict[str, Any]) -> None:
                 "random_baseline": table.get("random_baseline", {}),
                 "comparison": table["comparison_against_best_simple_baseline"],
                 "comparison_against_random": table.get("comparison_against_random", {}),
+                "all_rankers_same_pool": table.get("all_rankers_same_pool"),
+                "primary_beats_best_simple_baseline": table.get("primary_beats_best_simple_baseline"),
+                "no_self_evaluation_top100_only": table.get("no_self_evaluation_top100_only"),
+                "top_false_positive_taxonomy": table.get("top_false_positive_taxonomy"),
+                "top_false_negative_taxonomy": table.get("top_false_negative_taxonomy"),
+                "m6_acceptance": table.get("m6_acceptance"),
             },
             indent=2,
             sort_keys=True,
@@ -409,7 +763,7 @@ def _write_split_tables(cfg: Config, table: dict[str, Any]) -> None:
         encoding="utf-8",
     )
     (tables / "ablation_strict_comparison.json").write_text(
-        json.dumps({"rankers": ablation_rows}, indent=2, sort_keys=True) + "\n",
+        json.dumps({"rankers": ablation_rows, "ablation_story": table.get("ablation_story")}, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
     (tables / "warning_volume_reduction.json").write_text(

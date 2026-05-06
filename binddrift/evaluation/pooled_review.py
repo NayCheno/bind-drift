@@ -11,6 +11,7 @@ from binddrift.config import Config
 from binddrift.artifact_paths import sanitize_local_paths
 from binddrift.evaluation.baselines import _candidate_pool, _refresh_pool_scores, _variant_warnings
 from binddrift.evaluation.metrics import label_for_warning, load_manual_labels, manual_review_row_key
+from binddrift.evaluation.protocol import FORBIDDEN_PRIMARY_SCORE_COMPONENTS
 from binddrift.evaluation.wrapper_oracle import replay_head_date, version_dates_from_db
 from binddrift.db import connect, initialize
 from binddrift.ranking.oracle_blind_scorer import rank_primary_warnings_oracle_blind
@@ -40,6 +41,19 @@ RANKER_TO_BASELINE = {
     "no_impact_gate": "NoImpactGate",
     "no_ranking": "NoRanking",
     "random": "Random",
+}
+
+RANKER_FEATURE_KEYS = {
+    "binddrift_oracle_blind": "oracle_blind_score_components",
+    "binddrift_current": "current_score",
+    "binding_diff": "fact_source,c_evidence_level,c_side_change_size,rust_use_count",
+    "c_signature": "type,c_side_change_size",
+    "c_indicator": "indicator_based,c_evidence_level,confidence,c_side_change_size",
+    "rust_use": "rust_binding_use_count,rust_exposure_edge_count",
+    "no_graph": "symbol,warning_id",
+    "no_impact_gate": "c_evidence_level,confidence,c_side_change_size",
+    "no_ranking": "pair_id,warning_id,warning_uid",
+    "random": "deterministic_random_seed_0",
 }
 
 LABEL_FIELDS = [
@@ -166,20 +180,48 @@ def ranker_output_details(
     for name in rankers:
         if name == "binddrift_oracle_blind":
             ranked = rank_primary_warnings_oracle_blind(pool)
-            out[name] = {"ranked": ranked, "candidate_count": len(ranked), "warning_volume": len(pool)}
-        elif name == "binddrift_current":
             out[name] = {
-                "ranked": sorted(pool, key=lambda warning: (float(warning.get("score") or 0.0), str(warning.get("warning_uid"))), reverse=True),
+                "ranked": ranked,
+                "candidate_count": len(ranked),
+                "warning_volume": len(pool),
+                **_ranker_metadata(name, ranked),
+            }
+        elif name == "binddrift_current":
+            ranked = sorted(pool, key=lambda warning: (float(warning.get("score") or 0.0), str(warning.get("warning_uid"))), reverse=True)
+            out[name] = {
+                "ranked": ranked,
                 "candidate_count": len(pool),
                 "warning_volume": len(pool),
+                **_ranker_metadata(name, ranked),
             }
         else:
             baseline = RANKER_TO_BASELINE.get(name)
             if not baseline:
                 raise ValueError(f"unknown ranker: {name}")
             candidates, _count = _variant_warnings(baseline, warnings, pool, top_k=None)
-            out[name] = {"ranked": candidates, "candidate_count": _count, "warning_volume": _count}
+            out[name] = {
+                "ranked": candidates,
+                "candidate_count": _count,
+                "warning_volume": _count,
+                **_ranker_metadata(name, candidates),
+            }
     return out
+
+
+def _ranker_metadata(name: str, ranked: list[dict[str, Any]]) -> dict[str, Any]:
+    if name == "binddrift_oracle_blind":
+        score_keys = sorted({key for warning in ranked for key in (warning.get("score_components") or {})})
+    elif name == "binddrift_current":
+        score_keys = sorted({key for warning in ranked for key in (warning.get("score_breakdown") or {})})
+    else:
+        score_keys = []
+    ranking_features = [key.strip() for key in RANKER_FEATURE_KEYS.get(name, "").split(",") if key.strip()]
+    leaked_keys = sorted(FORBIDDEN_PRIMARY_SCORE_COMPONENTS & (set(score_keys) | set(ranking_features)))
+    return {
+        "score_component_keys": score_keys,
+        "ranking_feature_keys": ranking_features,
+        "forbidden_oracle_feature_keys": leaked_keys,
+    }
 
 
 def write_pooled_review_labels(pool_rows: list[dict[str, Any]], manual_review: Path, output: Path) -> dict[str, Any]:

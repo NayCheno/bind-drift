@@ -529,6 +529,15 @@ def _validate_table_consistency(cfg: Config, manifest: dict[str, Any] | None) ->
             raise RuntimeError("ranking_pooled_evaluation label_coverage does not match current pool and labels")
         if (ranking.get("coverage_acceptance") or {}).get("passes") is not True:
             raise RuntimeError(f"ranking_pooled_evaluation label coverage below 95%: {coverage['coverage']}")
+        m6_acceptance = ranking.get("m6_acceptance") or {}
+        if (m6_acceptance.get("checks") or {}).get("all_rankers_same_pool") is not True:
+            raise RuntimeError("ranking_pooled_evaluation does not certify all rankers used the same pool")
+        if ranking.get("no_self_evaluation_top100_only") is not True:
+            raise RuntimeError("ranking_pooled_evaluation must use the complete pooled review set, not top-100-only self-evaluation")
+        if not _ranking_taxonomy_schema_passes(ranking.get("top_false_positive_taxonomy") or {}):
+            raise RuntimeError("ranking_pooled_evaluation missing valid top false-positive taxonomy")
+        if not _ranking_taxonomy_schema_passes(ranking.get("top_false_negative_taxonomy") or {}):
+            raise RuntimeError("ranking_pooled_evaluation missing valid top false-negative taxonomy")
         for row in ranking.get("rankers", []):
             if row.get("evaluated_pool_rows") != coverage["pool_rows"]:
                 raise RuntimeError(f"ranking_pooled_evaluation {row.get('ranker')} does not use the full pooled review set")
@@ -587,6 +596,20 @@ def _strict_pooled_label_coverage(pool_path: Path, labels_path: Path) -> dict[st
         "excluded_conservative_backfill_rows": excluded_conservative,
         "label_distribution": label_distribution,
     }
+
+
+def _ranking_taxonomy_schema_passes(report: dict[str, Any]) -> bool:
+    taxonomy = report.get("taxonomy") or {}
+    allowed = set(report.get("allowed_taxonomy") or [])
+    examples = report.get("examples") or []
+    return bool(
+        report.get("schema_version") == "m6-ranking-taxonomy-v1"
+        and report.get("schema_valid") is True
+        and taxonomy
+        and report.get("count") == sum(taxonomy.values())
+        and all(label in allowed for label in taxonomy)
+        and all(example.get("warning_uid") and example.get("label") and example.get("taxonomy") in allowed for example in examples)
+    )
 
 
 def _read_warning_ids(path: Path) -> tuple[int, set[str], set[str]]:

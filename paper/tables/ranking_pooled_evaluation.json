@@ -1,4 +1,34 @@
 {
+  "ablation_story": {
+    "ablations": [
+      {
+        "ablation": "no_graph",
+        "design_choice": "Graph evidence keeps weak symbol-only matches below better-supported C/Rust contract evidence.",
+        "primary_minus_ablation": {
+          "auprc_on_pooled_review_set": 0.5376,
+          "ndcg_at_20": 0.5616,
+          "p_at_20": 0.4,
+          "p_at_50": 0.32
+        },
+        "supports_design_choice": true
+      },
+      {
+        "ablation": "no_impact_gate",
+        "design_choice": "Impact gating helps keep C-only or weak-reachability drift below Rust-impact review targets.",
+        "primary_minus_ablation": {
+          "auprc_on_pooled_review_set": 0.3857,
+          "ndcg_at_20": 0.6407,
+          "p_at_20": 0.5,
+          "p_at_50": 0.12
+        },
+        "supports_design_choice": true
+      }
+    ],
+    "minimum_required_supporting_ablations": 2,
+    "supporting_ablation_count": 2,
+    "supports_design": true
+  },
+  "all_rankers_same_pool": true,
   "best_simple_baseline": {
     "auprc_on_pooled_review_set": 0.351,
     "bootstrap_ci": {
@@ -18,6 +48,7 @@
     "candidate_count": 320,
     "evaluated_pool_rows": 500,
     "evaluation_denominator": "complete_pooled_review_set",
+    "forbidden_oracle_feature_keys": [],
     "kind": "simple_baseline",
     "label_distribution": {
       "BENIGN_DRIFT": 3,
@@ -45,8 +76,13 @@
       "TRUE_WRAPPER_FIX": 17
     },
     "ranker": "rust_use",
+    "ranking_feature_keys": [
+      "rust_binding_use_count",
+      "rust_exposure_edge_count"
+    ],
     "review_pool_covered": 0.544,
     "review_pool_ranked_count": 272,
+    "score_component_keys": [],
     "true_label_distribution": {
       "TRUE_BUILD_BREAKAGE": 1,
       "TRUE_SEMANTIC_DRIFT": 29,
@@ -64,6 +100,7 @@
       "p_at_50": 0.64
     },
     "minimum_conditions_passed": 3,
+    "minimum_required_conditions": 3,
     "paired_bootstrap_significance": {
       "best_simple_baseline": "same_as_comparison",
       "method": "paired_rank_position_bootstrap",
@@ -109,6 +146,7 @@
       "p_at_50": 0.72
     },
     "minimum_conditions_passed": 3,
+    "minimum_required_conditions": 3,
     "paired_bootstrap_significance": {
       "best_simple_baseline": "same_as_comparison",
       "method": "paired_rank_position_bootstrap",
@@ -160,9 +198,38 @@
   },
   "labels": "data/replay/latest/pooled_review_labels.csv",
   "labels_sha256": "928be7b3f78eefdc28d214661d8af57ac26fe2b8c9f98c10fe5949ce7823c298",
+  "m6_acceptance": {
+    "checks": {
+      "ablation_story": true,
+      "all_rankers_same_pool": true,
+      "bootstrap_ci_lower_bound": true,
+      "ndcg_at_20_delta": true,
+      "no_oracle_leakage": true,
+      "no_self_evaluation_top100_only": true,
+      "p_at_20_delta": true,
+      "p_at_50_delta": true,
+      "p_value": true,
+      "pool_label_coverage": true,
+      "primary_beats_best_simple_baseline": true,
+      "random_baseline_sanity": true,
+      "top_false_negative_taxonomy": true,
+      "top_false_positive_taxonomy": true
+    },
+    "minimum_passes": true,
+    "thresholds": {
+      "ndcg_at_20_delta": 0.1,
+      "p_at_20_delta": 0.1,
+      "p_at_50_delta": 0.07,
+      "p_value": 0.05,
+      "pool_label_coverage": 0.95,
+      "supporting_ablations": 2
+    }
+  },
+  "no_self_evaluation_top100_only": true,
   "pool": "data/replay/latest/pooled_review_set.jsonl",
   "pool_sha256": "7ef58da3e1fbb4ab68fc4748856627882c55c215d0d2db9812c707ba57ec7293",
   "pool_size": 500,
+  "primary_beats_best_simple_baseline": true,
   "primary_warning_set": "oracle_blind_ranked_warnings",
   "protocol_version": "ccfb-strict-v2",
   "random_baseline": {
@@ -184,6 +251,7 @@
     "candidate_count": 320,
     "evaluated_pool_rows": 500,
     "evaluation_denominator": "complete_pooled_review_set",
+    "forbidden_oracle_feature_keys": [],
     "kind": "simple_baseline",
     "label_distribution": {
       "BENIGN_DRIFT": 3,
@@ -211,8 +279,12 @@
       "TRUE_WRAPPER_FIX": 17
     },
     "ranker": "random",
+    "ranking_feature_keys": [
+      "deterministic_random_seed_0"
+    ],
     "review_pool_covered": 0.544,
     "review_pool_ranked_count": 272,
+    "score_component_keys": [],
     "true_label_distribution": {
       "TRUE_BUILD_BREAKAGE": 1,
       "TRUE_SEMANTIC_DRIFT": 29,
@@ -240,6 +312,7 @@
       "candidate_count": 320,
       "evaluated_pool_rows": 500,
       "evaluation_denominator": "complete_pooled_review_set",
+      "forbidden_oracle_feature_keys": [],
       "kind": "primary",
       "label_distribution": {
         "BENIGN_DRIFT": 3,
@@ -267,8 +340,40 @@
         "TRUE_WRAPPER_FIX": 17
       },
       "ranker": "binddrift_oracle_blind",
+      "ranking_feature_keys": [
+        "oracle_blind_score_components"
+      ],
       "review_pool_covered": 0.544,
       "review_pool_ranked_count": 272,
+      "score_component_keys": [
+        "added_symbol_without_old_c_evidence_penalty",
+        "ambiguous_binding_contract_surface_penalty",
+        "binding_diff_strength",
+        "binding_layout_surface_penalty",
+        "binding_only_surface_penalty",
+        "c_source_diff_strength",
+        "contract_sensitive_type",
+        "contract_symbol_indicator",
+        "cross_version_stability",
+        "direct_c_contract_chain",
+        "direct_c_error_chain",
+        "direct_c_lifetime_chain",
+        "error_mapping_evidence",
+        "evidence_diversity",
+        "field_layout_contract_surface",
+        "layout_lifetime_ambiguity_penalty",
+        "layout_safe_field_evidence",
+        "lifetime_ownership_evidence",
+        "macro_constant_penalty",
+        "macro_like_binding_surface_penalty",
+        "rust_direct_use",
+        "rust_use_density",
+        "rust_wrapper_surface_indicator",
+        "safe_api_exposure",
+        "safety_comment_proximity",
+        "signature_contract_surface",
+        "weak_graph_only_penalty"
+      ],
       "true_label_distribution": {
         "TRUE_BUILD_BREAKAGE": 1,
         "TRUE_SEMANTIC_DRIFT": 29,
@@ -295,6 +400,10 @@
       "candidate_count": 320,
       "evaluated_pool_rows": 500,
       "evaluation_denominator": "complete_pooled_review_set",
+      "forbidden_oracle_feature_keys": [
+        "build_oracle_hit",
+        "wrapper_fix_hit"
+      ],
       "kind": "auxiliary",
       "label_distribution": {
         "BENIGN_DRIFT": 3,
@@ -322,8 +431,26 @@
         "TRUE_WRAPPER_FIX": 17
       },
       "ranker": "binddrift_current",
+      "ranking_feature_keys": [
+        "current_score"
+      ],
       "review_pool_covered": 0.544,
       "review_pool_ranked_count": 272,
+      "score_component_keys": [
+        "added_symbol_without_old_c_evidence_penalty",
+        "binding_only_penalty",
+        "build_oracle_hit",
+        "c_source_diff_strength",
+        "contract_mapping",
+        "direct_rust_use",
+        "indicator_confidence",
+        "multi_version_consistency",
+        "no_evidence_chain_penalty",
+        "safe_api_exposure",
+        "safety_comment",
+        "weak_name_match_penalty",
+        "wrapper_fix_hit"
+      ],
       "true_label_distribution": {
         "TRUE_BUILD_BREAKAGE": 1,
         "TRUE_SEMANTIC_DRIFT": 29,
@@ -350,6 +477,7 @@
       "candidate_count": 291,
       "evaluated_pool_rows": 500,
       "evaluation_denominator": "complete_pooled_review_set",
+      "forbidden_oracle_feature_keys": [],
       "kind": "simple_baseline",
       "label_distribution": {
         "BENIGN_DRIFT": 3,
@@ -375,8 +503,15 @@
         "TRUE_WRAPPER_FIX": 17
       },
       "ranker": "binding_diff",
+      "ranking_feature_keys": [
+        "c_evidence_level",
+        "c_side_change_size",
+        "fact_source",
+        "rust_use_count"
+      ],
       "review_pool_covered": 0.486,
       "review_pool_ranked_count": 243,
+      "score_component_keys": [],
       "true_label_distribution": {
         "TRUE_BUILD_BREAKAGE": 1,
         "TRUE_SEMANTIC_DRIFT": 29,
@@ -403,6 +538,7 @@
       "candidate_count": 269,
       "evaluated_pool_rows": 500,
       "evaluation_denominator": "complete_pooled_review_set",
+      "forbidden_oracle_feature_keys": [],
       "kind": "simple_baseline",
       "label_distribution": {
         "BENIGN_DRIFT": 3,
@@ -430,8 +566,13 @@
         "TRUE_WRAPPER_FIX": 8
       },
       "ranker": "c_signature",
+      "ranking_feature_keys": [
+        "c_side_change_size",
+        "type"
+      ],
       "review_pool_covered": 0.442,
       "review_pool_ranked_count": 221,
+      "score_component_keys": [],
       "true_label_distribution": {
         "TRUE_BUILD_BREAKAGE": 1,
         "TRUE_SEMANTIC_DRIFT": 29,
@@ -458,6 +599,7 @@
       "candidate_count": 0,
       "evaluated_pool_rows": 500,
       "evaluation_denominator": "complete_pooled_review_set",
+      "forbidden_oracle_feature_keys": [],
       "kind": "simple_baseline",
       "label_distribution": {
         "BENIGN_DRIFT": 3,
@@ -476,8 +618,15 @@
       "ranked_label_distribution": {},
       "ranked_true_label_distribution": {},
       "ranker": "c_indicator",
+      "ranking_feature_keys": [
+        "c_evidence_level",
+        "c_side_change_size",
+        "confidence",
+        "indicator_based"
+      ],
       "review_pool_covered": 0.0,
       "review_pool_ranked_count": 0,
+      "score_component_keys": [],
       "true_label_distribution": {
         "TRUE_BUILD_BREAKAGE": 1,
         "TRUE_SEMANTIC_DRIFT": 29,
@@ -504,6 +653,7 @@
       "candidate_count": 320,
       "evaluated_pool_rows": 500,
       "evaluation_denominator": "complete_pooled_review_set",
+      "forbidden_oracle_feature_keys": [],
       "kind": "simple_baseline",
       "label_distribution": {
         "BENIGN_DRIFT": 3,
@@ -531,8 +681,13 @@
         "TRUE_WRAPPER_FIX": 17
       },
       "ranker": "rust_use",
+      "ranking_feature_keys": [
+        "rust_binding_use_count",
+        "rust_exposure_edge_count"
+      ],
       "review_pool_covered": 0.544,
       "review_pool_ranked_count": 272,
+      "score_component_keys": [],
       "true_label_distribution": {
         "TRUE_BUILD_BREAKAGE": 1,
         "TRUE_SEMANTIC_DRIFT": 29,
@@ -559,6 +714,7 @@
       "candidate_count": 320,
       "evaluated_pool_rows": 500,
       "evaluation_denominator": "complete_pooled_review_set",
+      "forbidden_oracle_feature_keys": [],
       "kind": "ablation",
       "label_distribution": {
         "BENIGN_DRIFT": 3,
@@ -586,8 +742,13 @@
         "TRUE_WRAPPER_FIX": 17
       },
       "ranker": "no_graph",
+      "ranking_feature_keys": [
+        "symbol",
+        "warning_id"
+      ],
       "review_pool_covered": 0.544,
       "review_pool_ranked_count": 272,
+      "score_component_keys": [],
       "true_label_distribution": {
         "TRUE_BUILD_BREAKAGE": 1,
         "TRUE_SEMANTIC_DRIFT": 29,
@@ -614,6 +775,7 @@
       "candidate_count": 320,
       "evaluated_pool_rows": 500,
       "evaluation_denominator": "complete_pooled_review_set",
+      "forbidden_oracle_feature_keys": [],
       "kind": "ablation",
       "label_distribution": {
         "BENIGN_DRIFT": 3,
@@ -641,8 +803,14 @@
         "TRUE_WRAPPER_FIX": 17
       },
       "ranker": "no_impact_gate",
+      "ranking_feature_keys": [
+        "c_evidence_level",
+        "c_side_change_size",
+        "confidence"
+      ],
       "review_pool_covered": 0.544,
       "review_pool_ranked_count": 272,
+      "score_component_keys": [],
       "true_label_distribution": {
         "TRUE_BUILD_BREAKAGE": 1,
         "TRUE_SEMANTIC_DRIFT": 29,
@@ -669,6 +837,7 @@
       "candidate_count": 320,
       "evaluated_pool_rows": 500,
       "evaluation_denominator": "complete_pooled_review_set",
+      "forbidden_oracle_feature_keys": [],
       "kind": "simple_baseline",
       "label_distribution": {
         "BENIGN_DRIFT": 3,
@@ -696,8 +865,14 @@
         "TRUE_WRAPPER_FIX": 17
       },
       "ranker": "no_ranking",
+      "ranking_feature_keys": [
+        "pair_id",
+        "warning_id",
+        "warning_uid"
+      ],
       "review_pool_covered": 0.544,
       "review_pool_ranked_count": 272,
+      "score_component_keys": [],
       "true_label_distribution": {
         "TRUE_BUILD_BREAKAGE": 1,
         "TRUE_SEMANTIC_DRIFT": 29,
@@ -724,6 +899,7 @@
       "candidate_count": 320,
       "evaluated_pool_rows": 500,
       "evaluation_denominator": "complete_pooled_review_set",
+      "forbidden_oracle_feature_keys": [],
       "kind": "simple_baseline",
       "label_distribution": {
         "BENIGN_DRIFT": 3,
@@ -751,8 +927,12 @@
         "TRUE_WRAPPER_FIX": 17
       },
       "ranker": "random",
+      "ranking_feature_keys": [
+        "deterministic_random_seed_0"
+      ],
       "review_pool_covered": 0.544,
       "review_pool_ranked_count": 272,
+      "score_component_keys": [],
       "true_label_distribution": {
         "TRUE_BUILD_BREAKAGE": 1,
         "TRUE_SEMANTIC_DRIFT": 29,
@@ -760,5 +940,184 @@
       },
       "warning_volume": 320
     }
-  ]
+  ],
+  "top_false_negative_taxonomy": {
+    "allowed_taxonomy": [
+      "binding_or_layout_tail_candidate",
+      "contract_drift_ranked_below_top100",
+      "direct_rust_use_without_contract_boost",
+      "not_ranked_by_primary_candidate_filter",
+      "true_label_ranked_below_top100"
+    ],
+    "count": 4,
+    "examples": [
+      {
+        "label": "TRUE_WRAPPER_FIX",
+        "pair_id": "latest-p006-v6.6-to-v6.7",
+        "rank": 120,
+        "symbol": "compat_ptr_ioctl",
+        "taxonomy": "binding_or_layout_tail_candidate",
+        "type": "SignatureDrift",
+        "warning_id": "W-000001",
+        "warning_uid": "4d882d1f6a1138d581132f19f57ffc916e719f96314cc4a6c2379342e17d22cc"
+      },
+      {
+        "label": "TRUE_WRAPPER_FIX",
+        "pair_id": "latest-p020-v7.0-to-HEAD_9207d47f966b",
+        "rank": 121,
+        "symbol": "dma_resv_lock",
+        "taxonomy": "binding_or_layout_tail_candidate",
+        "type": "SignatureDrift",
+        "warning_id": "W-000001",
+        "warning_uid": "da8840f14175c162dda2e19e9454658a2053269096c0bfd34173a2e1ad9f90dd"
+      },
+      {
+        "label": "TRUE_BUILD_BREAKAGE",
+        "pair_id": "latest-p013-v6.13-to-v6.14",
+        "rank": 135,
+        "symbol": "pci_alloc_irq_vectors",
+        "taxonomy": "binding_or_layout_tail_candidate",
+        "type": "SignatureDrift",
+        "warning_id": "W-000005",
+        "warning_uid": "a9258d35ac73ebd8518074366ff99ac0ebc2ab2f1f84b04d849736976dd4ac60"
+      },
+      {
+        "label": "TRUE_WRAPPER_FIX",
+        "pair_id": "latest-p007-v6.7-to-v6.8",
+        "rank": 154,
+        "symbol": "device",
+        "taxonomy": "binding_or_layout_tail_candidate",
+        "type": "FieldDrift",
+        "warning_id": "W-000007",
+        "warning_uid": "008d4bc1dd6309371bfe398912473c623667c2161a158acd2ca12ffac9fa5b24"
+      }
+    ],
+    "schema_valid": true,
+    "schema_version": "m6-ranking-taxonomy-v1",
+    "taxonomy": {
+      "binding_or_layout_tail_candidate": 4
+    },
+    "unknown_taxonomy": [],
+    "window": "pooled_true_labels_outside_primary_top_100"
+  },
+  "top_false_positive_taxonomy": {
+    "allowed_taxonomy": [
+      "binding_only_or_generated_surface",
+      "macro_or_constant_surface_overprioritized",
+      "signature_change_without_adjudicated_rust_contract_impact",
+      "weak_contract_mapping_or_scope_mismatch",
+      "weak_or_missing_rust_reachability"
+    ],
+    "count": 57,
+    "examples": [
+      {
+        "label": "FALSE_POSITIVE",
+        "pair_id": "latest-p012-v6.12-to-v6.13",
+        "rank": 44,
+        "symbol": "errno_to_blk_status",
+        "taxonomy": "binding_only_or_generated_surface",
+        "type": "SignatureDrift",
+        "warning_id": "W-000018",
+        "warning_uid": "0217c5aca3beed930cd6cd613e9717d4a78ab28013cffd3881c7d5c7ab7db42a"
+      },
+      {
+        "label": "FALSE_POSITIVE",
+        "pair_id": "latest-p012-v6.12-to-v6.13",
+        "rank": 45,
+        "symbol": "firmware_request_nowarn",
+        "taxonomy": "binding_only_or_generated_surface",
+        "type": "SignatureDrift",
+        "warning_id": "W-000019",
+        "warning_uid": "a7b50f9e01fa519b3ca5429567469093b01a1a6e6aac05980f9c6eb72628692a"
+      },
+      {
+        "label": "FALSE_POSITIVE",
+        "pair_id": "latest-p012-v6.12-to-v6.13",
+        "rank": 46,
+        "symbol": "PTR_ERR",
+        "taxonomy": "macro_or_constant_surface_overprioritized",
+        "type": "SignatureDrift",
+        "warning_id": "W-000003",
+        "warning_uid": "39859c860002f454586acf39f3d0df45a3189f1edc7868bad4cb189a795d4b8e"
+      },
+      {
+        "label": "FALSE_POSITIVE",
+        "pair_id": "latest-p020-v7.0-to-HEAD_9207d47f966b",
+        "rank": 47,
+        "symbol": "gpu_buddy_alloc_blocks",
+        "taxonomy": "binding_only_or_generated_surface",
+        "type": "SignatureDrift",
+        "warning_id": "W-000003",
+        "warning_uid": "58bf7f2f2d74c5ec6be9fcd8a9b33e90df0d6227323e4b82048987d533465397"
+      },
+      {
+        "label": "FALSE_POSITIVE",
+        "pair_id": "latest-p012-v6.12-to-v6.13",
+        "rank": 48,
+        "symbol": "IS_ERR",
+        "taxonomy": "macro_or_constant_surface_overprioritized",
+        "type": "SignatureDrift",
+        "warning_id": "W-000002",
+        "warning_uid": "4b538a23e5b7e22f2cc86f95ffea064b2634aa0ab97449ad304889083dc27efd"
+      },
+      {
+        "label": "FALSE_POSITIVE",
+        "pair_id": "latest-p017-v6.17-to-v6.18",
+        "rank": 49,
+        "symbol": "refcount_set",
+        "taxonomy": "binding_only_or_generated_surface",
+        "type": "SignatureDrift",
+        "warning_id": "W-000176",
+        "warning_uid": "f6741da33cd41c225aef023b1b2a71f2e315f0610d131c539603cbe7aedb8ec6"
+      },
+      {
+        "label": "FALSE_POSITIVE",
+        "pair_id": "latest-p017-v6.17-to-v6.18",
+        "rank": 50,
+        "symbol": "refcount_dec",
+        "taxonomy": "binding_only_or_generated_surface",
+        "type": "SignatureDrift",
+        "warning_id": "W-000175",
+        "warning_uid": "dee765bcd2302ae60a2b8879f2ad930b8bdb343af3df1fd16c994112640d77c5"
+      },
+      {
+        "label": "FALSE_POSITIVE",
+        "pair_id": "latest-p012-v6.12-to-v6.13",
+        "rank": 51,
+        "symbol": "rb_node",
+        "taxonomy": "binding_only_or_generated_surface",
+        "type": "FieldDrift",
+        "warning_id": "W-000037",
+        "warning_uid": "c4db15ef412f4f82fb1709ab6fc668ce3ecdeb046df1d7f3cde9429b65f60b7c"
+      },
+      {
+        "label": "FALSE_POSITIVE",
+        "pair_id": "latest-p012-v6.12-to-v6.13",
+        "rank": 52,
+        "symbol": "REFCOUNT_INIT",
+        "taxonomy": "macro_or_constant_surface_overprioritized",
+        "type": "SignatureDrift",
+        "warning_id": "W-000004",
+        "warning_uid": "399880825c439eb15d3e73aa711d383a87e7dbba9e9a3173f6a97bdef4e841b7"
+      },
+      {
+        "label": "FALSE_POSITIVE",
+        "pair_id": "latest-p010-v6.10-to-v6.11",
+        "rank": 53,
+        "symbol": "errno_to_blk_status",
+        "taxonomy": "binding_only_or_generated_surface",
+        "type": "SignatureDrift",
+        "warning_id": "W-000004",
+        "warning_uid": "d668e025ab0727df4a19529d3eaa4e08a0e8e04c23fa27b5dd2701fb50ba80c6"
+      }
+    ],
+    "schema_valid": true,
+    "schema_version": "m6-ranking-taxonomy-v1",
+    "taxonomy": {
+      "binding_only_or_generated_surface": 49,
+      "macro_or_constant_surface_overprioritized": 8
+    },
+    "unknown_taxonomy": [],
+    "window": "primary_top_100"
+  }
 }

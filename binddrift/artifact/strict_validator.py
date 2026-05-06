@@ -11,6 +11,7 @@ from typing import Any
 from binddrift.artifact_paths import LOCAL_PATH_MARKERS, repo_relative, sanitize_local_paths
 from binddrift.config import Config
 from binddrift.detectors.semantic_review_targets import SEMANTIC_REVIEW_QUOTAS, generate_semantic_review_targets
+from binddrift.evaluation.evaluate_rankers import TAXONOMY_SCHEMA_VERSION, build_ranker_evaluation, evaluate_rankers
 from binddrift.evaluation.protocol import assert_oracle_blind_components, load_evaluation_protocol
 from binddrift.paper.audit import generate_strict_extractor_audit
 from binddrift.paper.cases import generate_case_studies
@@ -71,7 +72,10 @@ def _required_for_stage(stage: str) -> set[str]:
 
 def reproduce_artifact(cfg: Config) -> dict[str, Any]:
     manifest = validate_run_manifest(cfg)
+    pooled_review_set = Path(manifest["resolved_paths"]["pooled_review_set"])
+    pooled_review_labels = Path(manifest["resolved_paths"]["pooled_review_labels"])
     outputs = {
+        "ranking_pooled_evaluation": evaluate_rankers(cfg, pool=pooled_review_set, labels=pooled_review_labels),
         "ranking_score_audit": generate_ranking_score_audit(cfg),
         "semantic_review_targets": generate_semantic_review_targets(cfg),
         "case_studies": generate_case_studies(cfg),
@@ -216,8 +220,18 @@ def _ranking_gate(cfg: Config) -> dict[str, Any]:
     random_comparison = data.get("comparison_against_random") or {}
     significance = (comparison.get("paired_bootstrap_significance") or {}).get("metrics") or {}
     deltas = comparison.get("deltas") or {}
+    acceptance = (data.get("m6_acceptance") or {}).get("checks") or {}
+    ablation_story = data.get("ablation_story") or {}
+    top_fp_taxonomy = data.get("top_false_positive_taxonomy") or {}
+    top_fn_taxonomy = data.get("top_false_negative_taxonomy") or {}
     audit = _json(cfg, "paper/tables/ranking_score_audit.json")
     manifest = validate_run_manifest(cfg)
+    recomputed = build_ranker_evaluation(
+        cfg,
+        pool=Path(manifest["resolved_paths"]["pooled_review_set"]),
+        labels=Path(manifest["resolved_paths"]["pooled_review_labels"]),
+    )
+    recompute_mismatches = _ranking_table_mismatches(data, recomputed)
     ranked = rank_primary_warnings_oracle_blind(read_warnings(Path(manifest["resolved_paths"]["promoted_warnings"])))
     top100_generated_binding_only = sum(1 for warning in ranked[:100] if generated_binding_only(warning))
     top100_oracle_only = sum(1 for warning in ranked[:100] if warning.get("oracle_only_promotion") is True)
@@ -226,6 +240,9 @@ def _ranking_gate(cfg: Config) -> dict[str, Any]:
     checks = {
         "candidate_count": (primary.get("candidate_count") or 0) >= 150,
         "candidate_count_matches_recomputed": primary.get("candidate_count") == len(ranked),
+        "ranking_table_matches_recomputed": not recompute_mismatches,
+        "m6_acceptance_minimum": _m6_acceptance_passes(data),
+        "m6_no_oracle_leakage": acceptance.get("no_oracle_leakage") is True,
         "primary_candidates_exclude_pure_oracle_only": candidate_oracle_only == 0,
         "reported_top100_complete": (primary.get("review_pool_ranked_count") or 0) >= 100 and (primary.get("labeled_at_100") or 0) >= 100,
         "p_at_10": (primary.get("p_at_10") or 0.0) >= 0.50,
@@ -245,7 +262,16 @@ def _ranking_gate(cfg: Config) -> dict[str, Any]:
             ((significance.get(metric) or {}).get("p_value_primary_not_better") or 1.0) < 0.05
             for metric in ("p_at_20", "p_at_50", "ndcg_at_20")
         ),
+        "all_rankers_same_pool": data.get("all_rankers_same_pool") is True and acceptance.get("all_rankers_same_pool") is True,
+        "primary_beats_best_simple_baseline": data.get("primary_beats_best_simple_baseline") is True
+        and acceptance.get("primary_beats_best_simple_baseline") is True,
         "primary_beats_random": bool(random_comparison.get("passes_minimum_lift")),
+        "random_baseline_sanity": acceptance.get("random_baseline_sanity") is True,
+        "ablation_story": acceptance.get("ablation_story") is True and (ablation_story.get("supporting_ablation_count") or 0) >= 2,
+        "top_false_positive_taxonomy": _taxonomy_schema_passes(top_fp_taxonomy),
+        "top_false_negative_taxonomy": _taxonomy_schema_passes(top_fn_taxonomy),
+        "no_self_evaluation_top100_only": data.get("no_self_evaluation_top100_only") is True
+        and acceptance.get("no_self_evaluation_top100_only") is True,
         "top100_oracle_only": top100_oracle_only == 0,
         "top50_generated_binding_only": (top50_checks.get("generated_binding_only_warnings") or 0) == 0,
         "top100_generated_binding_only_limit": top100_generated_binding_only <= 10,
@@ -260,11 +286,76 @@ def _ranking_gate(cfg: Config) -> dict[str, Any]:
             for key in ("candidate_count", "review_pool_ranked_count", "p_at_10", "p_at_20", "p_at_50", "p_at_100", "ndcg_at_20", "auprc_on_pooled_review_set")
         },
         "comparison": comparison,
+        "m6_acceptance": data.get("m6_acceptance") or {},
+        "ablation_story": ablation_story,
+        "top_false_positive_taxonomy": top_fp_taxonomy,
+        "top_false_negative_taxonomy": top_fn_taxonomy,
+        "ranking_table_recompute_mismatches": recompute_mismatches,
         "top100_generated_binding_only": top100_generated_binding_only,
         "top100_oracle_only": top100_oracle_only,
         "candidate_oracle_only": candidate_oracle_only,
         "claim": data.get("claim_recommendation"),
     }
+
+
+def _ranking_table_mismatches(data: dict[str, Any], recomputed: dict[str, Any]) -> list[str]:
+    keys = [
+        "pool_sha256",
+        "labels_sha256",
+        "pool_size",
+        "label_coverage",
+        "rankers",
+        "best_simple_baseline",
+        "random_baseline",
+        "comparison_against_best_simple_baseline",
+        "comparison_against_random",
+        "all_rankers_same_pool",
+        "primary_beats_best_simple_baseline",
+        "no_self_evaluation_top100_only",
+        "top_false_positive_taxonomy",
+        "top_false_negative_taxonomy",
+        "ablation_story",
+        "m6_acceptance",
+        "coverage_acceptance",
+        "claim_recommendation",
+    ]
+    return [key for key in keys if data.get(key) != recomputed.get(key)]
+
+
+def _m6_acceptance_passes(data: dict[str, Any]) -> bool:
+    m6 = data.get("m6_acceptance") or {}
+    checks = m6.get("checks") or {}
+    required = {
+        "all_rankers_same_pool",
+        "pool_label_coverage",
+        "primary_beats_best_simple_baseline",
+        "p_at_20_delta",
+        "p_at_50_delta",
+        "ndcg_at_20_delta",
+        "bootstrap_ci_lower_bound",
+        "p_value",
+        "random_baseline_sanity",
+        "ablation_story",
+        "no_oracle_leakage",
+        "no_self_evaluation_top100_only",
+        "top_false_positive_taxonomy",
+        "top_false_negative_taxonomy",
+    }
+    return bool(m6.get("minimum_passes") is True and all(checks.get(name) is True for name in required))
+
+
+def _taxonomy_schema_passes(report: dict[str, Any]) -> bool:
+    examples = report.get("examples") or []
+    allowed = set(report.get("allowed_taxonomy") or [])
+    taxonomy = report.get("taxonomy") or {}
+    return bool(
+        report.get("schema_version") == TAXONOMY_SCHEMA_VERSION
+        and report.get("schema_valid") is True
+        and taxonomy
+        and report.get("count") == sum(taxonomy.values())
+        and all(label in allowed for label in taxonomy)
+        and all(example.get("warning_uid") and example.get("label") and example.get("taxonomy") in allowed for example in examples)
+    )
 
 
 def _semantic_gate(cfg: Config) -> dict[str, Any]:

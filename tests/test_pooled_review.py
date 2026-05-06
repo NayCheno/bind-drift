@@ -3,7 +3,13 @@ import json
 from pathlib import Path
 
 from binddrift.config import Config
-from binddrift.evaluation.evaluate_rankers import evaluate_rankers
+from binddrift.artifact.strict_validator import _m6_acceptance_passes, _ranking_table_mismatches
+from binddrift.evaluation.evaluate_rankers import (
+    TAXONOMY_SCHEMA_VERSION,
+    _oracle_blind_eval_has_no_oracle_leakage,
+    _taxonomy_accepts,
+    evaluate_rankers,
+)
 from binddrift.evaluation.pooled_review import generate_pooled_review_set
 from binddrift.evaluation.protocol import write_default_evaluation_protocol
 from binddrift.run_manifest import write_run_manifest
@@ -147,6 +153,11 @@ def test_evaluate_rankers_uses_same_pooled_labels(tmp_path: Path):
     assert table["rankers"][0]["p_at_10"] == 0.3333
     assert {row["evaluated_pool_rows"] for row in table["rankers"]} == {3}
     assert len({json.dumps(row["label_distribution"], sort_keys=True) for row in table["rankers"]}) == 1
+    assert table["all_rankers_same_pool"] is True
+    assert table["top_false_positive_taxonomy"]["count"] == 2
+    assert table["top_false_positive_taxonomy"]["taxonomy"]
+    assert table["top_false_negative_taxonomy"]["count"] == 0
+    assert table["m6_acceptance"]["checks"]["pool_label_coverage"] is True
     assert table["comparison_against_best_simple_baseline"]["paired_bootstrap_significance"]["method"] == "paired_rank_position_bootstrap"
     for row in table["rankers"]:
         for metric in ("p_at_20", "p_at_50", "ndcg_at_20"):
@@ -173,3 +184,76 @@ def test_evaluate_rankers_counts_uncovered_pool_rows_as_misses(tmp_path: Path):
     assert by_ranker["c_indicator"]["p_at_10"] == 0.0
     assert by_ranker["c_indicator"]["auprc_on_pooled_review_set"] == 0.0
     assert by_ranker["c_indicator"]["label_distribution"] == by_ranker["binddrift_oracle_blind"]["label_distribution"]
+
+
+def test_oracle_leakage_check_uses_actual_feature_metadata() -> None:
+    rows = [
+        {
+            "ranker": "binddrift_oracle_blind",
+            "kind": "primary",
+            "oracle_blind": True,
+            "score_component_keys": ["wrapper_fix_hit"],
+            "ranking_feature_keys": [],
+            "forbidden_oracle_feature_keys": ["wrapper_fix_hit"],
+        }
+    ]
+
+    assert _oracle_blind_eval_has_no_oracle_leakage(rows) is False
+
+
+def test_taxonomy_schema_rejects_unknown_or_placeholder_labels() -> None:
+    valid = {
+        "schema_version": TAXONOMY_SCHEMA_VERSION,
+        "schema_valid": True,
+        "count": 1,
+        "allowed_taxonomy": ["weak_contract_mapping_or_scope_mismatch"],
+        "taxonomy": {"weak_contract_mapping_or_scope_mismatch": 1},
+        "examples": [
+            {
+                "warning_uid": "uid",
+                "label": "FALSE_POSITIVE",
+                "taxonomy": "weak_contract_mapping_or_scope_mismatch",
+            }
+        ],
+    }
+    invalid = {**valid, "taxonomy": {"placeholder": 1}, "schema_valid": False}
+
+    assert _taxonomy_accepts(valid) is True
+    assert _taxonomy_accepts(invalid) is False
+
+
+def test_ranking_recompute_mismatch_detects_stale_tables() -> None:
+    table = {
+        "pool_sha256": "a",
+        "labels_sha256": "b",
+        "pool_size": 2,
+        "rankers": [{"ranker": "binddrift_oracle_blind", "p_at_20": 1.0}],
+    }
+    stale = {
+        **table,
+        "rankers": [{"ranker": "binddrift_oracle_blind", "p_at_20": 0.0}],
+    }
+
+    assert "rankers" in _ranking_table_mismatches(stale, table)
+
+
+def test_strict_m6_acceptance_requires_no_oracle_leakage() -> None:
+    checks = {
+        "all_rankers_same_pool": True,
+        "pool_label_coverage": True,
+        "primary_beats_best_simple_baseline": True,
+        "p_at_20_delta": True,
+        "p_at_50_delta": True,
+        "ndcg_at_20_delta": True,
+        "bootstrap_ci_lower_bound": True,
+        "p_value": True,
+        "random_baseline_sanity": True,
+        "ablation_story": True,
+        "no_oracle_leakage": False,
+        "no_self_evaluation_top100_only": True,
+        "top_false_positive_taxonomy": True,
+        "top_false_negative_taxonomy": True,
+    }
+    table = {"m6_acceptance": {"minimum_passes": True, "checks": checks}}
+
+    assert _m6_acceptance_passes(table) is False

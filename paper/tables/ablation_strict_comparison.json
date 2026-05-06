@@ -1,4 +1,33 @@
 {
+  "ablation_story": {
+    "ablations": [
+      {
+        "ablation": "no_graph",
+        "design_choice": "Graph evidence keeps weak symbol-only matches below better-supported C/Rust contract evidence.",
+        "primary_minus_ablation": {
+          "auprc_on_pooled_review_set": 0.5376,
+          "ndcg_at_20": 0.5616,
+          "p_at_20": 0.4,
+          "p_at_50": 0.32
+        },
+        "supports_design_choice": true
+      },
+      {
+        "ablation": "no_impact_gate",
+        "design_choice": "Impact gating helps keep C-only or weak-reachability drift below Rust-impact review targets.",
+        "primary_minus_ablation": {
+          "auprc_on_pooled_review_set": 0.3857,
+          "ndcg_at_20": 0.6407,
+          "p_at_20": 0.5,
+          "p_at_50": 0.12
+        },
+        "supports_design_choice": true
+      }
+    ],
+    "minimum_required_supporting_ablations": 2,
+    "supporting_ablation_count": 2,
+    "supports_design": true
+  },
   "rankers": [
     {
       "auprc_on_pooled_review_set": 0.9444,
@@ -19,6 +48,7 @@
       "candidate_count": 320,
       "evaluated_pool_rows": 500,
       "evaluation_denominator": "complete_pooled_review_set",
+      "forbidden_oracle_feature_keys": [],
       "kind": "primary",
       "label_distribution": {
         "BENIGN_DRIFT": 3,
@@ -46,8 +76,40 @@
         "TRUE_WRAPPER_FIX": 17
       },
       "ranker": "binddrift_oracle_blind",
+      "ranking_feature_keys": [
+        "oracle_blind_score_components"
+      ],
       "review_pool_covered": 0.544,
       "review_pool_ranked_count": 272,
+      "score_component_keys": [
+        "added_symbol_without_old_c_evidence_penalty",
+        "ambiguous_binding_contract_surface_penalty",
+        "binding_diff_strength",
+        "binding_layout_surface_penalty",
+        "binding_only_surface_penalty",
+        "c_source_diff_strength",
+        "contract_sensitive_type",
+        "contract_symbol_indicator",
+        "cross_version_stability",
+        "direct_c_contract_chain",
+        "direct_c_error_chain",
+        "direct_c_lifetime_chain",
+        "error_mapping_evidence",
+        "evidence_diversity",
+        "field_layout_contract_surface",
+        "layout_lifetime_ambiguity_penalty",
+        "layout_safe_field_evidence",
+        "lifetime_ownership_evidence",
+        "macro_constant_penalty",
+        "macro_like_binding_surface_penalty",
+        "rust_direct_use",
+        "rust_use_density",
+        "rust_wrapper_surface_indicator",
+        "safe_api_exposure",
+        "safety_comment_proximity",
+        "signature_contract_surface",
+        "weak_graph_only_penalty"
+      ],
       "true_label_distribution": {
         "TRUE_BUILD_BREAKAGE": 1,
         "TRUE_SEMANTIC_DRIFT": 29,
@@ -74,6 +136,7 @@
       "candidate_count": 320,
       "evaluated_pool_rows": 500,
       "evaluation_denominator": "complete_pooled_review_set",
+      "forbidden_oracle_feature_keys": [],
       "kind": "ablation",
       "label_distribution": {
         "BENIGN_DRIFT": 3,
@@ -101,8 +164,13 @@
         "TRUE_WRAPPER_FIX": 17
       },
       "ranker": "no_graph",
+      "ranking_feature_keys": [
+        "symbol",
+        "warning_id"
+      ],
       "review_pool_covered": 0.544,
       "review_pool_ranked_count": 272,
+      "score_component_keys": [],
       "true_label_distribution": {
         "TRUE_BUILD_BREAKAGE": 1,
         "TRUE_SEMANTIC_DRIFT": 29,
@@ -129,6 +197,7 @@
       "candidate_count": 320,
       "evaluated_pool_rows": 500,
       "evaluation_denominator": "complete_pooled_review_set",
+      "forbidden_oracle_feature_keys": [],
       "kind": "ablation",
       "label_distribution": {
         "BENIGN_DRIFT": 3,
@@ -156,8 +225,14 @@
         "TRUE_WRAPPER_FIX": 17
       },
       "ranker": "no_impact_gate",
+      "ranking_feature_keys": [
+        "c_evidence_level",
+        "c_side_change_size",
+        "confidence"
+      ],
       "review_pool_covered": 0.544,
       "review_pool_ranked_count": 272,
+      "score_component_keys": [],
       "true_label_distribution": {
         "TRUE_BUILD_BREAKAGE": 1,
         "TRUE_SEMANTIC_DRIFT": 29,
