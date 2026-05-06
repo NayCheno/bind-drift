@@ -49,13 +49,14 @@ def generate_case_studies(cfg: Config, *, main_paper_mode: bool | None = None) -
     review_sources = _case_review_sources(cfg, warning_source, manifest)
     review_rows = _load_review_rows(review_sources)
     labels = {key: row.get("adjudicated_label", "") or row.get("label", "") for key, row in review_rows.items()}
-    labels.update(_load_adjudicated_labels(review_sources[-1]) if review_sources else {})
+    for key, label in (_load_adjudicated_labels(review_sources[-1]) if review_sources else {}).items():
+        labels.setdefault(key, label)
     semantic_targets = _semantic_target_rows(cfg, warnings)
     candidates = semantic_targets or warnings
     candidates = [sanitize_local_paths(row, cfg) for row in candidates]
 
     positive_cases = _select_positive_cases(candidates, labels, review_rows)
-    negative_cases = _select_negative_cases(candidates, labels, review_rows)
+    negative_cases = _select_negative_cases(candidates, labels, review_rows, positive_cases=positive_cases)
     if main_mode and len(positive_cases) < POSITIVE_TARGET:
         raise RuntimeError(f"Fewer than {POSITIVE_TARGET} adjudicated positive case studies available: {len(positive_cases)}")
 
@@ -205,9 +206,40 @@ def _select_negative_cases(
     warnings: list[dict[str, Any]],
     labels: dict[str, str],
     review_rows: dict[str, dict[str, str]],
+    *,
+    positive_cases: list[dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     selected: list[dict[str, Any]] = []
     used: set[str] = set()
+    covered_types = {_case_drift_type(warning) for warning in positive_cases or []}
+    preferred_case_types = [case_type for case_type in CASE_TARGET_TYPES if case_type not in covered_types]
+
+    def try_add(warning: dict[str, Any]) -> bool:
+        key = warning_key(warning)
+        if key in used:
+            return False
+        if not eligible_for_main_warning(warning):
+            return False
+        if not _review_has_adjudication(warning, review_rows):
+            return False
+        if not _has_case_evidence_chain(warning):
+            return False
+        selected.append(warning)
+        used.add(key)
+        return True
+
+    for case_type in preferred_case_types:
+        for preferred in ("FALSE_POSITIVE", "BENIGN_DRIFT", "UNCLEAR"):
+            for warning in warnings:
+                if len(selected) >= NEGATIVE_TARGET:
+                    return selected
+                if _case_drift_type(warning) != case_type:
+                    continue
+                if label_for_warning(labels, warning) == preferred and try_add(warning):
+                    break
+            if len(selected) >= NEGATIVE_TARGET or any(_case_drift_type(warning) == case_type for warning in selected):
+                break
+
     for preferred in ("FALSE_POSITIVE", "BENIGN_DRIFT", "UNCLEAR"):
         for warning in warnings:
             if len(selected) >= NEGATIVE_TARGET:
@@ -218,13 +250,19 @@ def _select_negative_cases(
             key = warning_key(warning)
             if key in used:
                 continue
-            if not eligible_for_main_warning(warning):
+            raw_type = str(warning.get("type") or "Unknown")
+            if any(str(item.get("type") or "Unknown") == raw_type for item in selected):
                 continue
-            if not _review_has_adjudication(warning, review_rows):
+            try_add(warning)
+    for preferred in ("FALSE_POSITIVE", "BENIGN_DRIFT", "UNCLEAR"):
+        for warning in warnings:
+            if len(selected) >= NEGATIVE_TARGET:
+                return selected
+            label = label_for_warning(labels, warning)
+            key = warning_key(warning)
+            if label != preferred or key in used:
                 continue
-            if _has_c_evidence(warning) or _has_rust_impact(warning):
-                selected.append(warning)
-                used.add(key)
+            try_add(warning)
     return selected
 
 
@@ -238,6 +276,7 @@ def _case_is_valid(warning: dict[str, Any], label: str | None, review_rows: dict
         and not generated_binding_only(warning)
         and _has_c_evidence(warning)
         and _has_rust_impact(warning)
+        and _has_case_evidence_chain(warning)
         and _review_has_adjudication(warning, review_rows)
     )
 
@@ -261,10 +300,10 @@ def _load_review_rows(paths: list[Path]) -> dict[str, dict[str, str]]:
                     continue
                 clean = {field: str(value or "") for field, value in row.items()}
                 clean["adjudicated_label"] = label
-                rows[key] = clean
+                rows.setdefault(key, clean)
                 uid_key = row.get("warning_uid", "").strip()
                 if uid_key:
-                    rows[uid_key] = clean
+                    rows.setdefault(uid_key, clean)
     return rows
 
 
@@ -319,6 +358,47 @@ def _has_wrapper_oracle(warning: dict[str, Any]) -> bool:
     return any(isinstance(item, dict) and item.get("oracle_type") == "wrapper_fix" for item in evidence)
 
 
+def _exposure_edges(warning: dict[str, Any]) -> list[dict[str, Any]]:
+    edges = ((warning.get("rust_side") or {}).get("exposure") or {}).get("edges") or []
+    return [edge for edge in edges if isinstance(edge, dict)]
+
+
+def _has_binding_or_helper_evidence(warning: dict[str, Any]) -> bool:
+    fact_source = str(warning.get("fact_source") or "")
+    if fact_source in {"binding_diff", "layout_diff", "macro_diff", "c_api_diff"}:
+        return True
+    return any(edge.get("edge_type") == "GENERATED_FROM" for edge in _exposure_edges(warning))
+
+
+def _has_unsafe_or_binding_use(warning: dict[str, Any]) -> bool:
+    rust_side = warning.get("rust_side", {})
+    for use in rust_side.get("uses") or []:
+        if isinstance(use, dict) and bool(use.get("enclosing_unsafe_block")):
+            return True
+    return False
+
+
+def _has_contract_mapping_evidence(warning: dict[str, Any]) -> bool:
+    rust_side = warning.get("rust_side", {})
+    return bool(
+        rust_side.get("safe_apis")
+        or rust_side.get("safety_comments")
+        or rust_side.get("error_mappings")
+        or rust_side.get("lifetime_facts")
+        or rust_side.get("oracle_hits")
+        or warning.get("rust_impact_level") in {"safe_api", "contract_mapping", "oracle_confirmed"}
+    )
+
+
+def _has_case_evidence_chain(warning: dict[str, Any]) -> bool:
+    return bool(
+        _has_c_evidence(warning)
+        and _has_binding_or_helper_evidence(warning)
+        and _has_unsafe_or_binding_use(warning)
+        and _has_contract_mapping_evidence(warning)
+    )
+
+
 def _case_summary_table(
     positive_cases: list[dict[str, Any]],
     negative_cases: list[dict[str, Any]],
@@ -326,7 +406,21 @@ def _case_summary_table(
     cfg: Config,
 ) -> dict[str, Any]:
     positive_labels = [label_for_warning(labels, warning) for warning in positive_cases]
+    all_cases = positive_cases + negative_cases
+    all_types = sorted({_case_drift_type(warning) for warning in all_cases})
     positive_types = sorted({_case_drift_type(warning) for warning in positive_cases})
+    raw_warning_types = sorted({str(warning.get("type") or "Unknown") for warning in all_cases})
+    missing_evidence_chain = [
+        {
+            "warning_uid": warning.get("warning_uid"),
+            "warning_id": warning.get("warning_id"),
+            "pair_id": warning.get("pair_id"),
+            "symbol": _symbol(warning),
+            "case_kind": "positive" if warning in positive_cases else "negative",
+        }
+        for warning in all_cases
+        if not _has_case_evidence_chain(warning)
+    ]
     case_paths = sorted((cfg.repo_root / "paper/cases").glob("case-*.md"))
     absolute_paths = _count_absolute_local_paths(case_paths)
     semantic_true_cases = sum(1 for label in positive_labels if label == "TRUE_SEMANTIC_DRIFT")
@@ -336,8 +430,12 @@ def _case_summary_table(
         "case_studies": len(positive_cases),
         "positive_case_studies": len(positive_cases),
         "negative_case_studies": len(negative_cases),
-        "case_drift_types": positive_types,
-        "drift_type_count": len(positive_types),
+        "case_drift_types": all_types,
+        "drift_type_count": len(all_types),
+        "positive_case_drift_types": positive_types,
+        "positive_drift_type_count": len(positive_types),
+        "raw_warning_types": raw_warning_types,
+        "raw_warning_type_count": len(raw_warning_types),
         "semantic_true_cases": semantic_true_cases,
         "non_wrapper_semantic_cases": non_wrapper_semantic_cases,
         "wrapper_fix_backed_cases": wrapper_cases,
@@ -346,6 +444,8 @@ def _case_summary_table(
         "benign_drift_cases": sum(1 for label in positive_labels if label == "BENIGN_DRIFT"),
         "unlabeled_cases": sum(1 for label in positive_labels if not label),
         "absolute_local_paths": absolute_paths,
+        "case_evidence_chain_missing": missing_evidence_chain,
+        "case_evidence_chain_missing_count": len(missing_evidence_chain),
         "positive_label_distribution": dict(Counter(positive_labels)),
         "negative_label_distribution": dict(Counter(label_for_warning(labels, warning) for warning in negative_cases)),
     }
@@ -353,9 +453,11 @@ def _case_summary_table(
         "case_studies_minimum": summary["case_studies"] >= 8,
         "negative_case_studies_minimum": summary["negative_case_studies"] >= 2,
         "drift_type_count_minimum": summary["drift_type_count"] >= 4,
+        "raw_warning_type_count_minimum": summary["raw_warning_type_count"] >= 3,
         "semantic_true_cases_minimum": summary["semantic_true_cases"] >= 3,
         "non_wrapper_semantic_cases_minimum": summary["non_wrapper_semantic_cases"] >= 2,
         "wrapper_fix_backed_cases_limit": summary["wrapper_fix_backed_cases"] <= max(0, summary["case_studies"] // 2),
+        "evidence_chain_complete": summary["case_evidence_chain_missing_count"] == 0,
         "positive_labels_clean": summary["false_positive_cases"] == 0 and summary["benign_drift_cases"] == 0 and summary["unlabeled_cases"] == 0,
         "absolute_local_paths_clean": summary["absolute_local_paths"] == 0,
     }
@@ -489,9 +591,18 @@ def _format_c_evidence(c_side: dict[str, Any]) -> str:
 
 def _format_rust_evidence(rust_side: dict[str, Any]) -> str:
     lines: list[str] = []
-    for use in (rust_side.get("uses") or [])[:5]:
+    for edge in ((rust_side.get("exposure") or {}).get("edges") or [])[:5]:
+        if isinstance(edge, dict):
+            lines.append(f"- exposure `{edge.get('edge_type')}`: `{edge.get('src')}` -> `{edge.get('dst')}`")
+    uses = sorted(
+        [use for use in (rust_side.get("uses") or []) if isinstance(use, dict)],
+        key=lambda use: (not bool(use.get("enclosing_unsafe_block")), str(use.get("rust_file") or ""), int(use.get("line") or 0)),
+    )
+    for use in uses[:5]:
         if isinstance(use, dict):
-            lines.append(f"- `{use.get('rust_file')}:{use.get('line')}` in `{use.get('enclosing_function')}`")
+            context = use.get("enclosing_function") or use.get("enclosing_impl") or use.get("enclosing_type") or "binding or module scope"
+            unsafe_note = " (unsafe block)" if bool(use.get("enclosing_unsafe_block")) else ""
+            lines.append(f"- `{use.get('rust_file')}:{use.get('line')}` in `{context}`{unsafe_note}")
     for item in (rust_side.get("safe_apis") or [])[:3]:
         if isinstance(item, dict):
             lines.append(f"- safe API `{item.get('api_name')}`")
@@ -545,13 +656,14 @@ def _missing_case_types(summary: dict[str, Any]) -> str:
     lines = [
         "# Missing Case Types",
         "",
-        f"Selected positive drift types: {', '.join(summary.get('case_drift_types') or []) or 'none'}.",
+        f"Selected case-study drift types: {', '.join(summary.get('case_drift_types') or []) or 'none'}.",
+        f"Selected positive drift types: {', '.join(summary.get('positive_case_drift_types') or []) or 'none'}.",
         "",
     ]
     if not missing:
-        lines.append("No target drift type is missing from the positive case suite.")
+        lines.append("No target drift type is missing from the case-study suite.")
     else:
-        lines.append("The following target drift types were not represented by an adjudicated positive case:")
+        lines.append("The following target drift types were not represented by an adjudicated case study:")
         lines.extend(f"- `{case_type}`" for case_type in missing)
     if summary.get("semantic_true_cases", 0) < 2:
         lines.append("")

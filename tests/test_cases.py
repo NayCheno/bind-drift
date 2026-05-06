@@ -4,7 +4,7 @@ import json
 from binddrift.config import Config
 from binddrift.db import connect, initialize, upsert_many
 from binddrift.evaluation.protocol import write_default_evaluation_protocol
-from binddrift.paper.cases import generate_case_studies
+from binddrift.paper.cases import _has_case_evidence_chain, generate_case_studies
 from binddrift.run_manifest import evaluation_protocol_split_hash, sha256_file
 from binddrift.warnings import write_warnings
 
@@ -23,6 +23,7 @@ def test_case_studies_only_use_true_labels_with_strong_evidence(tmp_path: Path):
                 "risk": "High",
             "score": 12.0,
             "c_evidence_level": "c_behavior_indicator",
+            "fact_source": "c_api_diff",
             "c_side": {
                 "symbol": "foo_get",
                 "old_indicators": ["NULL_RETURN"],
@@ -32,8 +33,14 @@ def test_case_studies_only_use_true_labels_with_strong_evidence(tmp_path: Path):
                 "evidence": [{"evidence_file": "foo.c", "evidence_line": 1, "evidence_text": "return ERR_PTR(-ENOMEM);"}],
             },
             "rust_side": {
-                "uses": [{"rust_file": "device.rs", "line": 10, "enclosing_function": "Device::get"}],
+                "uses": [{"rust_file": "device.rs", "line": 10, "enclosing_function": "Device::get", "enclosing_unsafe_block": 1}],
                 "error_mappings": [{"rust_file": "device.rs", "line": 11, "mapping_type": "ERR_PTR_MAPPING"}],
+                "exposure": {
+                    "edges": [
+                        {"edge_type": "GENERATED_FROM", "src": "CFunction:foo_get", "dst": "RustBindingFunction:foo_get"},
+                        {"edge_type": "CALLS_BINDING", "src": "RustWrapper:Device::get", "dst": "RustUnsafeCall:device.rs:10:foo_get"},
+                    ]
+                },
             },
         },
         {
@@ -58,10 +65,17 @@ def test_case_studies_only_use_true_labels_with_strong_evidence(tmp_path: Path):
             "risk": "High",
             "score": 12.0,
             "c_evidence_level": "c_behavior_indicator",
+            "fact_source": "c_api_diff",
             "c_side": {"symbol": "legacy_label", "old_indicators": ["NULL_RETURN"], "new_indicators": ["ERR_PTR_RETURN"]},
             "rust_side": {
-                "uses": [{"rust_file": "device.rs", "line": 30, "enclosing_function": "Device::legacy"}],
+                "uses": [{"rust_file": "device.rs", "line": 30, "enclosing_function": "Device::legacy", "enclosing_unsafe_block": 1}],
                 "error_mappings": [{"rust_file": "device.rs", "line": 31, "mapping_type": "ERR_PTR_MAPPING"}],
+                "exposure": {
+                    "edges": [
+                        {"edge_type": "GENERATED_FROM", "src": "CFunction:legacy_label", "dst": "RustBindingFunction:legacy_label"},
+                        {"edge_type": "CALLS_BINDING", "src": "RustWrapper:Device::legacy", "dst": "RustUnsafeCall:device.rs:30:legacy_label"},
+                    ]
+                },
             },
         },
         {
@@ -124,6 +138,7 @@ def test_case_studies_use_replay_adjacent_review_and_structured_diff(tmp_path: P
         "risk": "High",
         "score": 12.0,
         "c_evidence_level": "c_source_diff",
+        "fact_source": "c_api_diff",
         "c_side": {
             "symbol": "foo_get",
             "old": {"params": [], "return_type": "void *"},
@@ -132,8 +147,14 @@ def test_case_studies_use_replay_adjacent_review_and_structured_diff(tmp_path: P
             "new_version": "new",
         },
         "rust_side": {
-            "uses": [{"rust_file": "device.rs", "line": 10, "enclosing_function": "Device::get"}],
+            "uses": [{"rust_file": "device.rs", "line": 10, "enclosing_function": "Device::get", "enclosing_unsafe_block": 1}],
             "safety_comments": [{"rust_file": "device.rs", "line": 9, "text": "SAFETY: wrapper validates flags"}],
+            "exposure": {
+                "edges": [
+                    {"edge_type": "GENERATED_FROM", "src": "CFunction:foo_get", "dst": "RustBindingFunction:foo_get"},
+                    {"edge_type": "CALLS_BINDING", "src": "RustWrapper:Device::get", "dst": "RustUnsafeCall:device.rs:10:foo_get"},
+                ]
+            },
         },
     }
     (run_dir / "warnings.jsonl").write_text(json.dumps(warning, sort_keys=True) + "\n", encoding="utf-8")
@@ -177,6 +198,87 @@ def test_case_studies_use_replay_adjacent_review_and_structured_diff(tmp_path: P
     assert "wrapper validates flags" in text
 
 
+def test_case_studies_prefer_binddrift_review_labels_over_legacy_manual_review(tmp_path: Path):
+    cfg = Config.from_args(repo_root=tmp_path)
+    run_dir = tmp_path / "data/replay/latest"
+    run_dir.mkdir(parents=True)
+    warning = {
+        "warning_uid": "uid-semantic",
+        "warning_id": "W-000020",
+        "run_id": "latest",
+        "pair_id": "latest-p001",
+        "old_version": "old",
+        "new_version": "new",
+        "type": "MacroConstDrift",
+        "semantic_target_type": "SleepabilityContextDrift",
+        "promotion_status": "promoted",
+        "risk": "High",
+        "score": 12.0,
+        "c_evidence_level": "c_source_diff",
+        "rust_impact_level": "contract_mapping",
+        "fact_source": "macro_diff",
+        "c_side": {
+            "symbol": "VM_LOCKONFAULT",
+            "old": "0x00080000",
+            "new": "INIT_VM_FLAG(LOCKONFAULT)",
+            "old_version": "old",
+            "new_version": "new",
+        },
+        "rust_side": {
+            "uses": [{"rust_file": "mm/virt.rs", "line": 10, "enclosing_function": "VmaNew::lock", "enclosing_unsafe_block": 1}],
+            "safety_comments": [{"rust_file": "mm/virt.rs", "line": 9, "text": "SAFETY: VM flag contract"}],
+            "exposure": {
+                "edges": [
+                    {"edge_type": "GENERATED_FROM", "src": "CMacro:VM_LOCKONFAULT", "dst": "RustBindingConst:VM_LOCKONFAULT"},
+                    {"edge_type": "CALLS_BINDING", "src": "RustWrapper:VmaNew::lock", "dst": "RustUnsafeCall:mm/virt.rs:10:VM_LOCKONFAULT"},
+                ]
+            },
+        },
+    }
+    for name in ("promoted_warnings.jsonl", "semantic_target_review_set.jsonl"):
+        (run_dir / name).write_text(json.dumps(warning, sort_keys=True) + "\n", encoding="utf-8")
+    (run_dir / "semantic_target_review.csv").write_text(
+        "warning_uid,warning_id,pair_id,rank,semantic_target_type,type,symbol,oracle_blind_rank,oracle_blind_score,ranker_source,reviewer1_label,reviewer1_notes,reviewer2_label,reviewer2_notes,adjudicated_label,adjudication_notes,label_source\n"
+        "uid-semantic,W-000020,latest-p001,1,SleepabilityContextDrift,MacroConstDrift,VM_LOCKONFAULT,1,12.0,no_graph,TRUE_SEMANTIC_DRIFT,Direct C/Rust contract evidence,TRUE_SEMANTIC_DRIFT,Direct C/Rust contract evidence,TRUE_SEMANTIC_DRIFT,binddrift-review adjudication keeps this as semantic drift,binddrift_review_m3_final\n",
+        encoding="utf-8",
+    )
+    (run_dir / "manual_review.csv").write_text(
+        "warning_uid,warning_id,pair_id,reviewer1_label,reviewer1_notes,reviewer2_label,reviewer2_notes,adjudicated_label,adjudication_notes,label\n"
+        "uid-semantic,W-000020,latest-p001,BENIGN_DRIFT,legacy row,BENIGN_DRIFT,legacy row,BENIGN_DRIFT,legacy manual row should not override binddrift-review,\n",
+        encoding="utf-8",
+    )
+
+    result = generate_case_studies(cfg)
+    text = Path(result["files"][0]).read_text(encoding="utf-8")
+
+    assert result["cases"] == 1
+    assert "- Adjudicated label: `TRUE_SEMANTIC_DRIFT`" in text
+    assert "binddrift-review adjudication keeps this as semantic drift" in text
+
+
+def test_case_evidence_chain_requires_real_unsafe_use() -> None:
+    warning = {
+        "c_evidence_level": "c_source_diff",
+        "fact_source": "c_api_diff",
+        "c_side": {"symbol": "foo_get", "old": "int foo_get(void)", "new": "int foo_get(int flags)"},
+        "rust_impact_level": "contract_mapping",
+        "rust_side": {
+            "uses": [{"rust_file": "device.rs", "line": 10, "enclosing_function": "Device::get", "enclosing_unsafe_block": 0}],
+            "safety_comments": [{"rust_file": "device.rs", "line": 9, "text": "SAFETY: contract"}],
+            "exposure": {
+                "edges": [
+                    {"edge_type": "GENERATED_FROM", "src": "CFunction:foo_get", "dst": "RustBindingFunction:foo_get"},
+                    {"edge_type": "CALLS_BINDING", "src": "RustWrapper:Device::get", "dst": "RustUnsafeCall:device.rs:10:foo_get"},
+                ]
+            },
+        },
+    }
+
+    assert _has_case_evidence_chain(warning) is False
+    warning["rust_side"]["uses"][0]["enclosing_unsafe_block"] = 1
+    assert _has_case_evidence_chain(warning) is True
+
+
 def test_case_studies_main_mode_fails_without_two_true_positive_cases(tmp_path: Path):
     cfg = Config.from_args(repo_root=tmp_path)
     run_dir = tmp_path / "data/replay/latest"
@@ -192,6 +294,7 @@ def test_case_studies_main_mode_fails_without_two_true_positive_cases(tmp_path: 
         "risk": "High",
         "score": 12.0,
         "c_evidence_level": "c_behavior_indicator",
+        "fact_source": "c_api_diff",
         "c_side": {
             "symbol": "foo_get",
             "old_indicators": ["NULL_RETURN"],
@@ -201,8 +304,14 @@ def test_case_studies_main_mode_fails_without_two_true_positive_cases(tmp_path: 
             "evidence": [{"evidence_file": "foo.c", "evidence_line": 1, "evidence_text": "return ERR_PTR(-ENOMEM);"}],
         },
         "rust_side": {
-            "uses": [{"rust_file": "device.rs", "line": 10, "enclosing_function": "Device::get"}],
+            "uses": [{"rust_file": "device.rs", "line": 10, "enclosing_function": "Device::get", "enclosing_unsafe_block": 1}],
             "error_mappings": [{"rust_file": "device.rs", "line": 11, "mapping_type": "ERR_PTR_MAPPING"}],
+            "exposure": {
+                "edges": [
+                    {"edge_type": "GENERATED_FROM", "src": "CFunction:foo_get", "dst": "RustBindingFunction:foo_get"},
+                    {"edge_type": "CALLS_BINDING", "src": "RustWrapper:Device::get", "dst": "RustUnsafeCall:device.rs:10:foo_get"},
+                ]
+            },
         },
     }
     warning["warning_uid"] = "uid-1"
@@ -273,15 +382,19 @@ def test_case_suite_artifact_meets_strict_summary_gates() -> None:
     assert "case_studies" in summary
     assert "negative_case_studies" in summary
     assert "acceptance" in summary
+    assert "raw_warning_type_count" in summary
+    assert "case_evidence_chain_missing_count" in summary
     acceptance = summary["acceptance"]
     assert acceptance["minimum_passes"] is all(value for key, value in acceptance.items() if key != "minimum_passes")
     if summary["acceptance"]["minimum_passes"]:
         assert summary["case_studies"] >= 8
         assert summary["negative_case_studies"] >= 2
         assert summary["drift_type_count"] >= 4
+        assert summary["raw_warning_type_count"] >= 3
         assert summary["semantic_true_cases"] >= 3
         assert summary["non_wrapper_semantic_cases"] >= 2
         assert summary["wrapper_fix_backed_cases"] <= summary["case_studies"] // 2
+        assert summary["case_evidence_chain_missing_count"] == 0
     assert summary["false_positive_cases"] == 0
     assert summary["benign_drift_cases"] == 0
     assert summary["unlabeled_cases"] == 0

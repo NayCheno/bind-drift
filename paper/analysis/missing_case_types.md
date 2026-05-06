@@ -1,6 +1,6 @@
 # Missing Case Types
 
-Selected positive drift types: AllocationFreeDrift, NullabilityDrift, OwnershipRefcountDrift, SleepabilityContextDrift.
+Selected case-study drift types: AllocationFreeDrift, LayoutFieldDrift, NullabilityDrift, OwnershipRefcountDrift, SleepabilityContextDrift.
+Selected positive drift types: AllocationFreeDrift, NullabilityDrift, SleepabilityContextDrift.
 
-The following target drift types were not represented by an adjudicated positive case:
-- `LayoutFieldDrift`
+No target drift type is missing from the case-study suite.

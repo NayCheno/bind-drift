@@ -21,7 +21,10 @@
 
 ## Rust-Side Dependency
 
-- `.binddrift/worktrees/v6.14/rust/kernel/security.rs:68` in `drop`
+- exposure `GENERATED_FROM`: `CFunction:security_release_secctx` -> `RustBindingFunction:security_release_secctx`
+- exposure `HAS_SAFETY_COMMENT`: `RustBindingFunction:security_release_secctx` -> `RustSafetyComment:.binddrift/worktrees/v6.14/rust/kernel/security.rs:65`
+- exposure `CALLS_BINDING`: `RustBindingFunction:security_release_secctx` -> `RustUnsafeCall:.binddrift/worktrees/v6.14/rust/kernel/security.rs:68:security_release_secctx`
+- `.binddrift/worktrees/v6.14/rust/kernel/security.rs:68` in `drop` (unsafe block)
 - `.binddrift/worktrees/v6.14/rust/kernel/security.rs:65`: `// SAFETY: By the invariant of `Self`, this frees a context that came from a successful`
 
 ## Safe API / Contract Assumption
@@ -31,9 +34,9 @@ The warning reaches Rust code and should be reviewed as an evidence-backed targe
 ## Manual Review Label
 
 - Adjudicated label: `TRUE_SEMANTIC_DRIFT`
-- Reviewer 1: `TRUE_SEMANTIC_DRIFT` -- Direct C signature changed from char pointer/length to lsm_context pointer, and Rust SecurityCtx Drop calls security_release_secctx inside an unsafe block with an invariant comment. The release/lifetime contract plausibly depends on the changed C API.
-- Reviewer 2: `TRUE_SEMANTIC_DRIFT` -- Direct C signature changed from secdata/seclen release to struct lsm_context release, and SecurityCtx::drop calls it inside an unsafe wrapper with ownership/lifetime evidence. No build oracle, but the stale release contract is maintainer-reviewable.
-- Adjudication: Direct C signature changed from secdata/seclen release to lsm_context, and SecurityCtx drop reaches it through an unsafe ownership path. No build or wrapper oracle, but the release contract reaches Rust.
+- Reviewer 1: `TRUE_SEMANTIC_DRIFT` -- Direct C evidence shows real SignatureDrift for security_release_secctx, and the Rust unsafe/safe exposure depends on that contract. No wrapper oracle is needed because the packet has direct C evidence plus Rust contract dependence.
+- Reviewer 2: `TRUE_SEMANTIC_DRIFT` -- Direct C-side drift plus Rust unsafe_wrapper evidence shows a maintainer-relevant contract dependency for security_release_secctx; no build or wrapper oracle is needed for this semantic label.
+- Adjudication: security_release_secctx: direct C source/behavior evidence plus Rust safe/unsafe contract evidence support a stale-contract review target without build or wrapper oracle.
 
 ## Why This Is Not Generated-Binding-Only
 

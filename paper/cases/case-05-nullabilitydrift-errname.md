@@ -2,37 +2,37 @@
 
 ## Summary
 
-`errname` produced `W-000017` and is included as an adjudicated positive review target with label `TRUE_WRAPPER_FIX`.
+`errname` produced `W-000001` and is included as an adjudicated positive review target with label `TRUE_WRAPPER_FIX`.
 
 ## Old Version Evidence
 
-- Version: `v6.12`
-- Old value or indicators: `{'params': [{'name': 'err', 'type': 'core::ffi::c_int'}], 'return_type': '*const core::ffi::c_char'}`
+- Version: `v6.4`
+- Old value or indicators: `absent`
 
 ## New Version Evidence
 
-- Version: `v6.13`
-- New value or indicators: `{'params': [{'name': 'err', 'type': 'ffi::c_int'}], 'return_type': '*const ffi::c_char'}`
+- Version: `v6.5`
+- New value or indicators: `added`
 
 ## C-Side Diff
 
-- Old indicators/value: `{'params': [{'name': 'err', 'type': 'core::ffi::c_int'}], 'return_type': '*const core::ffi::c_char'}`
-- New indicators/value: `{'params': [{'name': 'err', 'type': 'ffi::c_int'}], 'return_type': '*const ffi::c_char'}`
+- Old indicators/value: `absent`
+- New indicators/value: `added`
 
 ## Rust-Side Dependency
 
-- exposure `HAS_C_INDICATOR`: `CFunction:errname` -> `CBehaviorIndicator:errname:NULL_RETURN:.binddrift/worktrees/v6.13/include/linux/errname.h:12`
+- exposure `HAS_C_INDICATOR`: `CFunction:errname` -> `CBehaviorIndicator:errname:NULL_RETURN:.binddrift/worktrees/v6.5/include/linux/errname.h:12`
 - exposure `GENERATED_FROM`: `CFunction:errname` -> `RustBindingFunction:errname`
-- exposure `HAS_ERROR_MAPPING`: `RustBindingFunction:errname` -> `RustErrorMapping:.binddrift/worktrees/v6.13/rust/kernel/error.rs:165:OPTION_RETURN`
-- exposure `HAS_SAFETY_COMMENT`: `RustBindingFunction:errname` -> `RustSafetyComment:.binddrift/worktrees/v6.13/rust/kernel/error.rs:163`
-- exposure `HAS_SAFETY_COMMENT`: `RustBindingFunction:errname` -> `RustSafetyComment:.binddrift/worktrees/v6.13/rust/kernel/error.rs:166`
-- `.binddrift/worktrees/v6.13/rust/kernel/error.rs:167` in `Error::name` (unsafe block)
+- exposure `HAS_ERROR_MAPPING`: `RustBindingFunction:errname` -> `RustErrorMapping:.binddrift/worktrees/v6.5/rust/kernel/error.rs:142:OPTION_RETURN`
+- exposure `HAS_SAFETY_COMMENT`: `RustBindingFunction:errname` -> `RustSafetyComment:.binddrift/worktrees/v6.5/rust/kernel/error.rs:140`
+- exposure `HAS_SAFETY_COMMENT`: `RustBindingFunction:errname` -> `RustSafetyComment:.binddrift/worktrees/v6.5/rust/kernel/error.rs:143`
+- `.binddrift/worktrees/v6.5/rust/kernel/error.rs:144` in `Error::name` (unsafe block)
 - safe API `Error::name`
 - safe API `Error::name`
-- `.binddrift/worktrees/v6.13/rust/kernel/error.rs:163`: `/// Returns a string representing the error, if one exists.`
-- `.binddrift/worktrees/v6.13/rust/kernel/error.rs:166`: `// SAFETY: Just an FFI call, there are no extra safety requirements.`
-- `.binddrift/worktrees/v6.13/rust/kernel/error.rs:171`: `// SAFETY: The string returned by `errname` is static and `NUL`-terminated.`
-- `.binddrift/worktrees/v6.13/rust/kernel/error.rs:165` error mapping `OPTION_RETURN`
+- `.binddrift/worktrees/v6.5/rust/kernel/error.rs:140`: `/// Returns a string representing the error, if one exists.`
+- `.binddrift/worktrees/v6.5/rust/kernel/error.rs:143`: `// SAFETY: Just an FFI call, there are no extra safety requirements.`
+- `.binddrift/worktrees/v6.5/rust/kernel/error.rs:148`: `// SAFETY: The string returned by `errname` is static and `NUL`-terminated.`
+- `.binddrift/worktrees/v6.5/rust/kernel/error.rs:142` error mapping `OPTION_RETURN`
 - wrapper_fix: `d2e3115d717197cb2bc020dd1f06b06538474ac3`
 - wrapper_fix: `e9759c5b9ea555d09f426c70c880e9522e9b0576`
 
@@ -65,10 +65,10 @@ A maintainer should inspect the Rust wrapper or safe abstraction path when carry
 
 ## Reproduction Pointers
 
-- Warning: `W-000017`
-- Warning UID: `f8dcd9f2cd00551e7fcbf283302d8a99ffb5521ed87acb06c679f5224daad64e`
-- Replay pair: `latest-p012-v6.12-to-v6.13`
+- Warning: `W-000001`
+- Warning UID: `294099e6983e2b23170870a24c569e1b11781c73105816716babe3dd7be19618`
+- Replay pair: `latest-p004-v6.4-to-v6.5`
 - Drift type: `NullabilityDrift`
 - C symbol: `errname`
-- Risk: `Medium`
-- Score: `11.0`
+- Risk: `High`
+- Score: `12.0`

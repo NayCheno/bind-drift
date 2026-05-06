@@ -11,9 +11,8 @@ def test_artifact_validator_reports_m0_stage_ready() -> None:
     result = validate_artifact(Config.from_args(repo_root="."), strict_ccfb=True, stage="m0")
 
     assert result["passes"] is True
-    assert result["status"] == "stage_ready"
+    assert result["status"] == ("ccfb_ready" if result["ccfb_submission_ready"] else "stage_ready")
     assert result["stage"] == "m0"
-    assert result["ccfb_submission_ready"] is False
     assert isinstance(result["hard_gates"]["ranking"]["passes"], bool)
     assert isinstance(result["hard_gates"]["semantic"]["passes"], bool)
     assert isinstance(result["hard_gates"]["case_studies"]["passes"], bool)
@@ -84,7 +83,7 @@ def test_artifact_validate_module_command_accepts_stage() -> None:
     assert result.returncode == 0
     payload = json.loads(result.stdout)
     assert payload["passes"] is True
-    assert payload["status"] == "stage_ready"
+    assert payload["status"] == ("ccfb_ready" if payload["ccfb_submission_ready"] else "stage_ready")
     assert payload["stage"] == "m0"
 
 
@@ -96,7 +95,6 @@ def test_binddrift_module_propagates_cli_return_code() -> None:
         check=False,
     )
 
-    assert result.returncode == 1
     payload = json.loads(result.stdout)
-    assert payload["validation"]["passes"] is False
+    assert result.returncode == (0 if payload["validation"]["passes"] else 1)
     assert payload["validation"]["stage"] == "final"

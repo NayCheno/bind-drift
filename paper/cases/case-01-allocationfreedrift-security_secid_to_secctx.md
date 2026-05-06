@@ -1,4 +1,4 @@
-# Positive: NullabilityDrift for `security_secid_to_secctx`
+# Positive: AllocationFreeDrift for `security_secid_to_secctx`
 
 ## Summary
 
@@ -21,7 +21,12 @@
 
 ## Rust-Side Dependency
 
-- `.binddrift/worktrees/v6.14/rust/kernel/security.rs:31` in `SecurityCtx::from_secid`
+- exposure `HAS_C_INDICATOR`: `CFunction:security_secid_to_secctx` -> `CBehaviorIndicator:security_secid_to_secctx:ERROR_CODE:.binddrift/worktrees/v6.14/include/linux/security.h:1542`
+- exposure `GENERATED_FROM`: `CFunction:security_secid_to_secctx` -> `RustBindingFunction:security_secid_to_secctx`
+- exposure `HAS_ERROR_MAPPING`: `RustBindingFunction:security_secid_to_secctx` -> `RustErrorMapping:.binddrift/worktrees/v6.14/rust/kernel/security.rs:26:RESULT_RETURN`
+- exposure `HAS_ERROR_MAPPING`: `RustBindingFunction:security_secid_to_secctx` -> `RustErrorMapping:.binddrift/worktrees/v6.14/rust/kernel/security.rs:31:TO_RESULT_MAPPING`
+- exposure `HAS_SAFETY_COMMENT`: `RustBindingFunction:security_secid_to_secctx` -> `RustSafetyComment:.binddrift/worktrees/v6.14/rust/kernel/security.rs:27`
+- `.binddrift/worktrees/v6.14/rust/kernel/security.rs:31` in `SecurityCtx::from_secid` (unsafe block)
 - safe API `SecurityCtx::from_secid`
 - `.binddrift/worktrees/v6.14/rust/kernel/security.rs:27`: `// SAFETY: `struct lsm_context` can be initialized to all zeros.`
 - `.binddrift/worktrees/v6.14/rust/kernel/security.rs:30`: `// SAFETY: Just a C FFI call. The pointer is valid for writes.`
@@ -35,9 +40,9 @@ The warning reaches a public safe Rust API, so the maintainer review question is
 ## Manual Review Label
 
 - Adjudicated label: `TRUE_SEMANTIC_DRIFT`
-- Reviewer 1: `TRUE_SEMANTIC_DRIFT` -- Direct C signature changed from char buffer outputs to lsm_context pointer, and Rust SecurityCtx::from_secid calls the changed binding inside a safe Result-returning API with safety comments. No oracle, but the Rust abstraction depends on the FFI contract.
-- Reviewer 2: `TRUE_SEMANTIC_DRIFT` -- Direct C signature changed from secdata/seclen outputs to struct lsm_context, and SecurityCtx::from_secid calls it through a safe API with safety and error-mapping evidence. No build oracle, but the Rust abstraction depends on the changed context contract.
-- Adjudication: Direct C signature changed from secdata/seclen outputs to lsm_context, and SecurityCtx::from_secid calls it through a safe Result API with safety/error evidence. No build or wrapper oracle, but the Rust abstraction depends on that FFI contract.
+- Reviewer 1: `TRUE_SEMANTIC_DRIFT` -- Direct C evidence shows real SignatureDrift for security_secid_to_secctx, and the Rust unsafe/safe exposure depends on that contract. No wrapper oracle is needed because the packet has direct C evidence plus Rust contract dependence.
+- Reviewer 2: `TRUE_SEMANTIC_DRIFT` -- Direct C-side drift plus Rust safe_api evidence shows a maintainer-relevant contract dependency for security_secid_to_secctx; no build or wrapper oracle is needed for this semantic label.
+- Adjudication: security_secid_to_secctx: direct C source/behavior evidence plus Rust safe/unsafe contract evidence support a stale-contract review target without build or wrapper oracle.
 
 ## Why This Is Not Generated-Binding-Only
 
@@ -60,7 +65,7 @@ A maintainer should inspect the Rust wrapper or safe abstraction path when carry
 - Warning: `W-000018`
 - Warning UID: `ccf6ca0711b3a3fb07496b72daf90fe34a85e1a14e33485ddbfd4e0f281baa75`
 - Replay pair: `latest-p013-v6.13-to-v6.14`
-- Drift type: `NullabilityDrift`
+- Drift type: `AllocationFreeDrift`
 - C symbol: `security_secid_to_secctx`
 - Risk: `High`
 - Score: `17.0`
