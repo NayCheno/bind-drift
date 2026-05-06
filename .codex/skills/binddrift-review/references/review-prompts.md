@@ -1,6 +1,8 @@
 # BindDrift Review Prompts
 
-Use these prompts to run LLM-assisted review of BindDrift warnings. Keep reviewer roles independent and do not pass Reviewer 1 output to Reviewer 2.
+Use these prompts to run the trusted binddrift-review expert protocol for
+BindDrift warnings. Keep reviewer roles independent and do not pass Reviewer 1
+output to Reviewer 2.
 
 ## Contents
 

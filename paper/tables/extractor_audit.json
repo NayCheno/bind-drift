@@ -92,7 +92,7 @@
     "database_path": ".binddrift/binddrift.sqlite3",
     "manifest_artifact_sha256": {
       "drift_facts.jsonl": "45ec718e8bcf22e4b5d91bf1bfa4924d0c414958aba123c4e0f96bde7018d8ef",
-      "evaluation_protocol.json": "3b5b8ddaaf675db6acbe3e6af848d40e51b530ea8427fc4f6822271d24ad6dbd",
+      "evaluation_protocol.json": "80480e9170f85f4efdca2ccc293121760cd7eadccdaba2f262ce036c46ff5f4b",
       "manual_review.csv": "f999f73ccbc3615f44586a7d7c7fe93ba1899fcb35d885b646d2c9fc1eb27937",
       "pooled_review_labels.csv": "27d407431b7e8fbb70c9634f76208e5515301e132e8eecf1164d35e391c58a46",
       "pooled_review_manifest.json": "15c49eed8ecffa6d916c2a51199447141be0bec273da758969d80aaa8b83442e",

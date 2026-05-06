@@ -2,6 +2,14 @@
 
 \tool{} is related to API evolution, software maintenance mining,
 cross-language binding generation, static analysis for systems software, and
-Rust-for-Linux empirical studies. Its distinguishing focus is the path from
-evolving Linux C APIs through generated bindings and unsafe Rust wrappers into
-safe abstraction contracts, with the claim framed as review prioritization.
+Rust-for-Linux empirical studies. Prior API-evolution and maintenance-mining
+work studies how software interfaces change over time; \tool{} instead follows
+Linux C API changes through generated Rust bindings and wrapper code. Binding
+generators such as bindgen automate declarations but do not decide whether a
+changed C contract invalidates a safe Rust abstraction~\cite{bindgen}.
+Rust-for-Linux brings this problem into the kernel setting, where evolving C
+interfaces, generated bindings, helper functions, and safe abstractions coexist
+in the same release history~\cite{rust-for-linux,linux-kernel}. Static-analysis
+bug finders aim to confirm defects or prove properties. \tool{} keeps a narrower
+claim: evidence-backed review prioritization for cross-language API and
+contract drift.

@@ -1,13 +1,17 @@
 ---
 name: binddrift-review
-description: Review BindDrift manual_review.csv warnings using an LLM-assisted evidence-collector, two independent reviewer roles, adjudication, and CSV backfill. Use when Codex needs to label BindDrift warnings, prepare evidence packets for warnings.jsonl/warnings.md/manual_review.csv rows, run sub-agent review of Rust-for-Linux API or contract drift warnings, or enforce the repository review-guide labels and claim boundary.
+description: Review BindDrift manual_review.csv warnings using the trusted binddrift-review expert protocol: evidence collector, two independent reviewer roles, adjudication, and CSV backfill. Use when Codex needs to label BindDrift warnings, prepare evidence packets for warnings.jsonl/warnings.md/manual_review.csv rows, run review of Rust-for-Linux API or contract drift warnings, or enforce the repository review-guide labels and claim boundary.
 ---
 
 # BindDrift Review
 
 ## Claim Boundary
 
-Treat BindDrift output as warnings, not proven bugs. Do not describe an all-LLM process as "human manual review" or "manual review by human experts" in paper text. Use wording such as "LLM-assisted review", "independent LLM review", or "LLM-assisted review with human spot-checking" unless actual human expert review happened.
+Treat BindDrift output as warnings, not proven bugs. Repository review artifacts
+produced by `binddrift-review` are accepted as the trusted expert review source
+for paper metrics when the strict gate records role separation, reviewer
+independence, rank/score blindness, complete adjudication, agreement statistics,
+reviewer-disagreement examples, and label leakage checks.
 
 The repository review guide uses two independent reviewers plus an adjudicator. Evaluation prefers `adjudicated_label`; legacy `label` exists for compatibility. Tier 2 semantic findings are review targets, not confirmed bugs.
 

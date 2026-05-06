@@ -22,17 +22,17 @@
   "evaluation_protocol": {
     "available": true,
     "path": "data/replay/latest/evaluation_protocol.json",
-    "sha256": "3b5b8ddaaf675db6acbe3e6af848d40e51b530ea8427fc4f6822271d24ad6dbd"
+    "sha256": "80480e9170f85f4efdca2ccc293121760cd7eadccdaba2f262ce036c46ff5f4b"
   },
   "evaluation_summary": {
     "available": true,
     "path": "paper/tables/evaluation_summary.json",
-    "sha256": "3ee7b022bf14b731182d28379bec3c7e4b4d9cf1e5d3aec470150130e4e71001"
+    "sha256": "f922e31d82d9d3825b6bc267694b1b6965128af5705c031ca22b3093f4180866"
   },
   "extractor_audit": {
     "available": true,
     "path": "paper/tables/extractor_audit.json",
-    "sha256": "bb7198c7c7dfcde328a7dd5a2621d8ca68564a5e1bfb68d5eb514581b1c2deba"
+    "sha256": "803c05a2239a4278c469b5cb8dc61c573b418bb8aabeaf746a09c3f203af0a9b"
   },
   "fact_counts": {
     "available": true,
@@ -52,7 +52,7 @@
   "manual_review_quality": {
     "available": true,
     "path": "paper/tables/manual_review_quality.json",
-    "sha256": "35b7f4252e1af8e0d0f570ebd591edeabbc1e59caace5fd74e7a5eefa28a81c5"
+    "sha256": "c8dbd94ad6398d2d941700175c853beb25fa2307dfcefc50dbace816239a223e"
   },
   "manual_review_summary": {
     "available": true,
@@ -62,12 +62,12 @@
   "ranking_pooled_evaluation": {
     "available": true,
     "path": "paper/tables/ranking_pooled_evaluation.json",
-    "sha256": "c77b2893b469217be798a5a80922b07e42bced6e3aae074d77798a3398cb4f1d"
+    "sha256": "fc77b0432fef4b3811cfb09b95c4a3484cd18f84a20dfa47ae8bef75d151db82"
   },
   "ranking_score_audit": {
     "available": true,
     "path": "paper/tables/ranking_score_audit.json",
-    "sha256": "bc502b882a26fe203b817cbe8d5bf30e8959f10df60c8550d28d7606ecdab1bc"
+    "sha256": "98c2cf5378dfb55ab6a7adcb740bd267ecd0404c926c1bdeaa2a71e179228213"
   },
   "red_team_review": {
     "available": true,
@@ -87,7 +87,7 @@
   "run_manifest": {
     "available": true,
     "path": "data/replay/latest/run_manifest.json",
-    "sha256": "9bd930053bb333db48d839fd5faf356c4befade9ac6d1a7bbfcf23c0a4ac262a"
+    "sha256": "8c769a19367905cf2ce95929ee65bb842e12490024fb7e627cf192e9a4e20cdf"
   },
   "runtime_scalability": {
     "available": true,

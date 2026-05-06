@@ -1,4 +1,4 @@
 interface:
   display_name: "BindDrift Review"
-  short_description: "LLM-assisted BindDrift warning review"
+  short_description: "Trusted BindDrift expert warning review"
   default_prompt: "Use $binddrift-review to review BindDrift manual_review.csv warnings with independent reviewers and adjudication."

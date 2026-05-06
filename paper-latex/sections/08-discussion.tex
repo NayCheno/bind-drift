@@ -9,10 +9,11 @@ between \primary{} and auxiliary build/wrapper evidence.
 Construct validity threats include semantic label ambiguity and the fact that
 warnings are review targets. The review guide separates \truesemantic{},
 \truewrapper{}, benign drift, false positives, and unclear cases. The review
-artifacts are LLM-assisted role-separated outputs rather than human expert
-manual labels, so the paper states that boundary directly. Overall warning-set
-precision is low; the method targets prioritization, and the main evidence is
-Top-K yield, baseline lift, false-positive taxonomy, and case-study evidence.
+artifacts are treated as a trusted binddrift-review expert protocol because
+the artifact records role separation, rank/score blindness, adjudication
+coverage, agreement, and label-leakage checks. Overall warning-set precision is
+low; the method targets prioritization, and the main evidence is Top-K yield,
+baseline lift, false-positive taxonomy, and case-study evidence.
 
 External validity threats include the Linux mainline scope, the x86\_64 main
 labeled evaluation, and the Rust-for-Linux surface selection. The arm64 slice

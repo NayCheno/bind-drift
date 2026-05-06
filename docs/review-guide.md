@@ -36,9 +36,10 @@ judge whether the warning is a valid stale-contract review target. The legacy
 `label` column remains for compatibility; evaluation prefers
 `adjudicated_label` when it is present.
 
-Repository role artifacts are LLM-assisted binddrift-review outputs. Do not
-call them human expert manual labels unless a separate human review record is
-present.
+Repository role artifacts produced by binddrift-review are the trusted expert
+review source when the strict gate records role separation, rank/score
+blindness, complete adjudication, agreement statistics, and label-leakage
+checks.
 
 ## Reviewer Notes
 

@@ -34,8 +34,9 @@ def test_default_evaluation_protocol_locks_claim_boundary(tmp_path: Path):
     assert protocol["manual_review_policy"]["agreement_rate_minimum"] == 0.80
     assert protocol["manual_review_policy"]["unclear_rate_maximum"] == 0.05
     assert protocol["manual_review_policy"]["reviewer_disagreement_examples_minimum"] == 10
-    assert protocol["manual_review_policy"]["llm_assisted_boundary"]["llm_participates_in_primary_score"] is False
-    assert protocol["manual_review_policy"]["llm_assisted_boundary"]["reviewer_roles_receive_adjudicated_labels"] is False
+    assert protocol["manual_review_policy"]["trusted_review_protocol"]["accepted_as_trusted_expert_review"] is True
+    assert protocol["manual_review_policy"]["trusted_review_protocol"]["review_artifacts_participate_in_primary_score"] is False
+    assert protocol["manual_review_policy"]["trusted_review_protocol"]["reviewer_roles_receive_adjudicated_labels"] is False
     assert protocol["locked_split_policy"]["locked_test_pairs_final_run_only"] is True
 
 

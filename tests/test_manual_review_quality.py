@@ -101,7 +101,7 @@ def test_manual_review_quality_uses_pooled_labels_and_writes_examples(tmp_path: 
     assert quality["unclear_is_true_positive"] is False
     assert quality["true_wrapper_fix_and_true_semantic_drift_reported_separately"] is True
     protocol = quality["review_protocol"]
-    assert protocol["method"] == "binddrift-review LLM-assisted independent double review with adjudication"
+    assert protocol["method"] == "binddrift-review trusted expert double review with adjudication"
     assert protocol["reviewer_independence"] is True
     assert protocol["reviewers_blind_to_ranker"] is True
     assert protocol["reviewers_blind_to_rank_and_score"] is True
@@ -110,9 +110,9 @@ def test_manual_review_quality_uses_pooled_labels_and_writes_examples(tmp_path: 
     assert protocol["reviewers_blind_to_oracles"] is False
     assert "auxiliary validation" in protocol["oracle_evidence_visibility"]
     assert protocol["label_source_for_metrics"] == "adjudicated_label"
-    assert protocol["llm_assisted_boundary"]["not_human_expert_manual_review"] is True
-    assert protocol["llm_assisted_boundary"]["llm_participates_in_primary_score"] is False
-    assert protocol["llm_assisted_boundary"]["reviewer_roles_receive_adjudicated_labels"] is False
+    assert protocol["trusted_review_protocol"]["accepted_as_trusted_expert_review"] is True
+    assert protocol["trusted_review_protocol"]["review_artifacts_participate_in_primary_score"] is False
+    assert protocol["trusted_review_protocol"]["reviewer_roles_receive_adjudicated_labels"] is False
 
     examples = (tmp_path / "paper/analysis/reviewer_disagreement_examples.md").read_text(encoding="utf-8")
     assert examples.count("## ") == 5

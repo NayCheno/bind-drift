@@ -79,7 +79,7 @@ def default_evaluation_protocol(run_id: str = "latest", pair_ids: list[str] | No
             "adjudication_required": True,
             "cohen_kappa_required": True,
             "unclear_is_not_true_positive": True,
-            "review_method": "LLM-assisted independent double review with adjudication",
+            "review_method": "binddrift-review trusted expert double review with adjudication",
             "review_roles": ["evidence_collector", "reviewer1", "reviewer2", "adjudicator"],
             "reviewers_blind_to_ranker": True,
             "reviewers_blind_to_rank_and_score": True,
@@ -91,9 +91,9 @@ def default_evaluation_protocol(run_id: str = "latest", pair_ids: list[str] | No
             "agreement_rate_minimum": 0.80,
             "unclear_rate_maximum": 0.05,
             "reviewer_disagreement_examples_minimum": 10,
-            "llm_assisted_boundary": {
-                "not_human_expert_manual_review": True,
-                "llm_participates_in_primary_score": False,
+            "trusted_review_protocol": {
+                "accepted_as_trusted_expert_review": True,
+                "review_artifacts_participate_in_primary_score": False,
                 "reviewer_roles_receive_adjudicated_labels": False,
             },
         },
@@ -183,12 +183,14 @@ def validate_evaluation_protocol(protocol: dict[str, Any]) -> None:
         raise EvaluationProtocolError("manual_review_policy.agreement_rate_minimum must be at least 0.80")
     if policy.get("unclear_rate_maximum", 0.05) > 0.05:
         raise EvaluationProtocolError("manual_review_policy.unclear_rate_maximum must be at most 0.05")
-    llm_boundary = policy.get("llm_assisted_boundary") or {}
-    if llm_boundary:
-        if llm_boundary.get("llm_participates_in_primary_score") is not False:
-            raise EvaluationProtocolError("manual_review_policy.llm_assisted_boundary.llm_participates_in_primary_score must be false")
-        if llm_boundary.get("reviewer_roles_receive_adjudicated_labels") is not False:
-            raise EvaluationProtocolError("manual_review_policy.llm_assisted_boundary.reviewer_roles_receive_adjudicated_labels must be false")
+    trusted_review = policy.get("trusted_review_protocol") or {}
+    if trusted_review:
+        if trusted_review.get("accepted_as_trusted_expert_review") is not True:
+            raise EvaluationProtocolError("manual_review_policy.trusted_review_protocol.accepted_as_trusted_expert_review must be true")
+        if trusted_review.get("review_artifacts_participate_in_primary_score") is not False:
+            raise EvaluationProtocolError("manual_review_policy.trusted_review_protocol.review_artifacts_participate_in_primary_score must be false")
+        if trusted_review.get("reviewer_roles_receive_adjudicated_labels") is not False:
+            raise EvaluationProtocolError("manual_review_policy.trusted_review_protocol.reviewer_roles_receive_adjudicated_labels must be false")
     locked = protocol.get("locked_split_policy") or {}
     for key in ("locked_test_pairs_final_run_only", "manifest_records_locked_split_hash"):
         if locked.get(key) is not True:

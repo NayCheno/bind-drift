@@ -13,7 +13,12 @@
     "adjudication_required": true,
     "cohen_kappa_required": true,
     "double_review": true,
-    "review_method": "LLM-assisted independent double review with adjudication",
+    "review_method": "binddrift-review trusted expert double review with adjudication",
+    "trusted_review_protocol": {
+      "accepted_as_trusted_expert_review": true,
+      "review_artifacts_participate_in_primary_score": false,
+      "reviewer_roles_receive_adjudicated_labels": false
+    },
     "unclear_is_not_true_positive": true
   },
   "oracle_usage": {

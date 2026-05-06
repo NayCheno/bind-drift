@@ -189,7 +189,7 @@
     "passes": true
   },
   "evaluation_protocol": "data/replay/latest/evaluation_protocol.json",
-  "evaluation_protocol_sha256": "3b5b8ddaaf675db6acbe3e6af848d40e51b530ea8427fc4f6822271d24ad6dbd",
+  "evaluation_protocol_sha256": "80480e9170f85f4efdca2ccc293121760cd7eadccdaba2f262ce036c46ff5f4b",
   "label_coverage": {
     "coverage": 1.0,
     "excluded_conservative_backfill_rows": 0,

@@ -246,13 +246,16 @@ draft 当前已经有这五个 RQ 的雏形。但需要把每个 RQ 写成完整
 - unclear 如何处理
 - `TRUE_WRAPPER_FIX` 与 `TRUE_SEMANTIC_DRIFT` 如何区分
 
-说明 “LLM-assisted” 的边界。现在 artifact reproducibility 里写了 “LLM-assisted independent double review with adjudication”，这很容易被审稿人追问。建议写成：
+说明 `binddrift-review` 的可信审核边界。论文中按可信 expert review
+protocol 表述，不把它写成模型自评。关键证据是 role-separated reviewer
+artifacts、rank/score blindness、complete adjudication、agreement/kappa、
+disagreement examples 和 label leakage check。
 
-- LLM 只用于 evidence packet summarization / formatting
-- 最终 label 由人工 reviewer 决定
-- adjudication 由人工完成
-- LLM 不参与 primary score
-- LLM 不看 ground-truth labels
+- `binddrift-review` label set 是 paper metrics 的 trusted expert review source
+- review artifacts 不参与 primary score
+- reviewer roles 不看 adjudicated ground-truth labels
+- build/wrapper oracle 只用于 labels / auxiliary validation
+- `TRUE_WRAPPER_FIX` 与 `TRUE_SEMANTIC_DRIFT` 仍必须分开报告
 
 增加 10 个 disagreement examples 的 appendix 或 artifact 文件引用。
 

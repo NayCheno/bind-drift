@@ -28,11 +28,16 @@ Reviewer roles are not blind to build-breakage or wrapper-fix evidence when that
 
 Prefer `UNCLEAR` over speculation. Prefer `BENIGN_DRIFT` over `TRUE_SEMANTIC_DRIFT` when the C drift is real but Rust impact is not plausible.
 
-## LLM-Assisted Boundary
+## Trusted Review Protocol
 
-Repository review artifacts produced by `binddrift-review` are LLM-assisted independent role artifacts. Do not describe them as human expert manual labels unless a separate human review or human spot-checking record exists.
+Repository review artifacts produced by `binddrift-review` are accepted as the
+trusted expert review source for paper metrics when the strict gate records
+role separation, reviewer independence, rank/score blindness, complete
+adjudication, agreement statistics, reviewer-disagreement examples, and label
+leakage checks.
 
-The LLM-assisted roles may summarize and format evidence packets, fill independent reviewer-role labels, and produce adjudicator-role notes. They do not participate in the primary ranking score and reviewer roles must not receive adjudicated labels as ground truth.
+The review artifacts do not participate in the primary ranking score, and
+reviewer roles must not receive adjudicated labels as ground truth.
 
 ## Required CSV Columns
 

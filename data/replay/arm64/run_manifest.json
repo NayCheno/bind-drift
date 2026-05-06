@@ -16,7 +16,7 @@
   "run_id": "arm64",
   "sha256": {
     "drift_facts.jsonl": "e0356f8c43b5d4368d9da51825af6fe7990727e375fd568484e561ec6a231140",
-    "evaluation_protocol.json": "24524be577ddb9fad4e60fc2bb48e9dc661b6cbfaa85ceaa5cb3de8dbe2b13ab",
+    "evaluation_protocol.json": "0a2204a1e2f9da1a51f09793aba1dd8a06c375f10184442c94092e55e287374b",
     "manual_review.csv": "ba443a0764c943ba2084ce702a12759fd557afc51b98b9ee2fc76b05ad7e50c2",
     "promoted_warnings.jsonl": "f6c9fb649ea0e6214df15f286d71560b3a6e61b6159fcaf791766bc5dcf8aeec",
     "single_version_review_targets.jsonl": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",

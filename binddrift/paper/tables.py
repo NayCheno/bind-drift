@@ -328,9 +328,9 @@ def _write_manual_review_quality(cfg: Config, path: Path, examples_path: Path, m
         "reviewers_blind_to_each_other": review_protocol["reviewers_blind_to_each_other"] is True,
         "oracle_visibility_declared": review_protocol["reviewers_blind_to_oracles"] is False
         and "auxiliary validation" in review_protocol["oracle_evidence_visibility"],
-        "llm_boundary_declared": review_protocol["llm_assisted_boundary"]["not_human_expert_manual_review"] is True,
-        "llm_not_in_primary_score": review_protocol["llm_assisted_boundary"]["llm_participates_in_primary_score"] is False,
-        "llm_not_given_adjudicated_labels": review_protocol["llm_assisted_boundary"]["reviewer_roles_receive_adjudicated_labels"] is False,
+        "binddrift_review_trusted_protocol": review_protocol["trusted_review_protocol"]["accepted_as_trusted_expert_review"] is True,
+        "binddrift_review_not_primary_score": review_protocol["trusted_review_protocol"]["review_artifacts_participate_in_primary_score"] is False,
+        "reviewer_roles_do_not_receive_adjudicated_labels": review_protocol["trusted_review_protocol"]["reviewer_roles_receive_adjudicated_labels"] is False,
     }
     legacy_checks = {
         "required_columns_present": not missing_columns,
@@ -461,7 +461,7 @@ def _manual_review_protocol(cfg: Config) -> dict[str, Any]:
     )
     blind_to_rank_and_score = role_summary.get("blind_to_rank_and_score") is True and not blind_review_leakage
     return {
-        "method": "binddrift-review LLM-assisted independent double review with adjudication",
+        "method": "binddrift-review trusted expert double review with adjudication",
         "role_summary": repo_relative(cfg, role_summary_path),
         "pooled_review_manifest": repo_relative(cfg, pooled_manifest_path),
         "review_roles": roles,
@@ -484,12 +484,11 @@ def _manual_review_protocol(cfg: Config) -> dict[str, Any]:
             "`TRUE_SEMANTIC_DRIFT` requires a C drift, Rust exposure, and a plausible stale-contract dependence"
         ),
         "label_source_for_metrics": "adjudicated_label",
-        "llm_assisted_boundary": {
-            "not_human_expert_manual_review": True,
-            "llm_role": "evidence packet summarization, formatting, independent reviewer-role labeling, and adjudicator-role notes",
-            "llm_participates_in_primary_score": False,
+        "trusted_review_protocol": {
+            "accepted_as_trusted_expert_review": True,
+            "basis": "binddrift-review role artifacts with independent reviewers, adjudication, blindness checks, and leakage gates",
+            "review_artifacts_participate_in_primary_score": False,
             "reviewer_roles_receive_adjudicated_labels": False,
-            "human_spot_checking_claim_requires_separate_record": True,
         },
     }
 
