@@ -1,17 +1,17 @@
-# Positive: SignatureDrift for `mdiobus_write`
+# Positive: OwnershipRefcountDrift for `refcount_set`
 
 ## Summary
 
-`mdiobus_write` produced `W-000003` and is included as an adjudicated positive review target with label `TRUE_WRAPPER_FIX`.
+`refcount_set` produced `W-000176` and is included as an adjudicated positive review target with label `TRUE_WRAPPER_FIX`.
 
 ## Old Version Evidence
 
-- Version: `v6.7`
+- Version: `v6.17`
 - Old value or indicators: `absent`
 
 ## New Version Evidence
 
-- Version: `v6.8`
+- Version: `v6.18`
 - New value or indicators: `added`
 
 ## C-Side Diff
@@ -21,11 +21,15 @@
 
 ## Rust-Side Dependency
 
-- `.binddrift/worktrees/v6.8/rust/kernel/net/phy.rs:202` in `Device::write`
-- safe API `Device::write`
-- `.binddrift/worktrees/v6.8/rust/kernel/net/phy.rs:198`: `// SAFETY: `phydev` is pointing to a valid object by the type invariant of `Self`.`
-- `.binddrift/worktrees/v6.8/rust/kernel/net/phy.rs:201` error mapping `TO_RESULT_MAPPING`
-- wrapper_fix: `b2e47002b2350f57bfa8fe1c231e9fbb6baef78b`
+- `.binddrift/worktrees/v6.18/rust/kernel/sync/refcount.rs:56` in `Refcount::set`
+- safe API `Refcount::set`
+- `.binddrift/worktrees/v6.18/rust/kernel/sync/refcount.rs:52`: `/// Set a refcount's value.`
+- `.binddrift/worktrees/v6.18/rust/kernel/sync/refcount.rs:55`: `// SAFETY: `self.as_ptr()` is valid.`
+- `.binddrift/worktrees/v6.18/rust/kernel/sync/refcount.rs:59`: `/// Increment a refcount.`
+- `.binddrift/worktrees/v6.18/rust/kernel/sync/refcount.rs:55` lifetime fact `AS_PTR`
+- `.binddrift/worktrees/v6.18/rust/kernel/sync/refcount.rs:56` lifetime fact `AS_PTR`
+- wrapper_fix: `bb38f35b35f9de0cebc4d62ea73482454e38cef3`
+- wrapper_fix: `9ba1aaf25ab7dadb910348b6857865e87b4c5689`
 
 ## Safe API / Contract Assumption
 
@@ -34,9 +38,9 @@ The warning reaches a public safe Rust API, so the maintainer review question is
 ## Manual Review Label
 
 - Adjudicated label: `TRUE_WRAPPER_FIX`
-- Reviewer 1: `TRUE_WRAPPER_FIX` -- mdiobus_write is added and reached by Device::write. The oracle hit is a Rust net::phy unified read/write API touching rust/kernel/net/phy.rs, plausibly addressing the same MDIO wrapper contract.
+- Reviewer 1: `TRUE_WRAPPER_FIX` -- refcount_set is added and reached by Refcount::set. Oracle hits implement kernel::sync::Refcount and add refcount helpers, matching the same refcount wrapper contract.
 - Reviewer 2: `TRUE_WRAPPER_FIX` -- Later Rust wrapper/helper/binding evidence is in the same exposed API area and plausibly addresses the warned symbol or contract. C source evidence may be binding-only and no build log is present, so this is a wrapper-fix label, not build breakage.
-- Adjudication: No build oracle. Rust net PHY code reaches mdiobus_write, and the unified C22/C45 read/write API fix in rust/kernel/net/phy.rs matches the same MDIO/PHY wrapper contract.
+- Adjudication: No build oracle. Rust reaches refcount_set through Refcount::set, and refcount helper/Refcount or Arc conversion fixes directly cover the same refcount wrapper contract.
 
 ## Why This Is Not Generated-Binding-Only
 
@@ -56,10 +60,10 @@ A maintainer should inspect the Rust wrapper or safe abstraction path when carry
 
 ## Reproduction Pointers
 
-- Warning: `W-000003`
-- Warning UID: `46b1fb124f9b8010a0bbad8532aec2f2ce82c1cb9537c8e6d0662155e5c3b565`
-- Replay pair: `latest-p007-v6.7-to-v6.8`
-- Drift type: `SignatureDrift`
-- C symbol: `mdiobus_write`
-- Risk: `High`
-- Score: `12.0`
+- Warning: `W-000176`
+- Warning UID: `f6741da33cd41c225aef023b1b2a71f2e315f0610d131c539603cbe7aedb8ec6`
+- Replay pair: `latest-p017-v6.17-to-v6.18`
+- Drift type: `OwnershipRefcountDrift`
+- C symbol: `refcount_set`
+- Risk: `Medium`
+- Score: `10.0`

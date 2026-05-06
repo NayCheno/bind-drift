@@ -5,6 +5,7 @@ from binddrift.config import Config
 from binddrift.db import connect, initialize, upsert_many
 from binddrift.evaluation.protocol import write_default_evaluation_protocol
 from binddrift.paper.cases import generate_case_studies
+from binddrift.run_manifest import evaluation_protocol_split_hash, sha256_file
 from binddrift.warnings import write_warnings
 
 
@@ -246,8 +247,6 @@ def test_case_studies_main_mode_fails_without_two_true_positive_cases(tmp_path: 
         encoding="utf-8",
     )
 
-    from binddrift.run_manifest import sha256_file
-
     manifest = json.loads((run_dir / "run_manifest.json").read_text(encoding="utf-8"))
     manifest["sha256"] = {
         "warnings.jsonl": sha256_file(run_dir / "warnings.jsonl"),
@@ -257,6 +256,9 @@ def test_case_studies_main_mode_fails_without_two_true_positive_cases(tmp_path: 
         "single_version_review_targets.jsonl": sha256_file(run_dir / "single_version_review_targets.jsonl"),
         "evaluation_protocol.json": sha256_file(run_dir / "evaluation_protocol.json"),
     }
+    manifest["locked_split_hash"] = evaluation_protocol_split_hash(
+        json.loads((run_dir / "evaluation_protocol.json").read_text(encoding="utf-8"))
+    )
     (run_dir / "run_manifest.json").write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
     import pytest

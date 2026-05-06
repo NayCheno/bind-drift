@@ -19,11 +19,12 @@ def test_default_evaluation_protocol_locks_claim_boundary(tmp_path: Path):
     protocol = load_evaluation_protocol(cfg)
 
     assert path.exists()
-    assert protocol["protocol_version"] == "ccfb-strict-v1"
+    assert protocol["protocol_version"] == "ccfb-strict-v2"
     assert protocol["claim_boundary"] == "evidence-backed warning prioritization"
     assert protocol["primary_warning_set"] == "oracle_blind_ranked_warnings"
     assert protocol["oracle_usage"]["not_allowed_in_primary_score"] is True
     assert protocol["manual_review_policy"]["unclear_is_not_true_positive"] is True
+    assert protocol["locked_split_policy"]["locked_test_pairs_final_run_only"] is True
 
 
 def test_default_evaluation_protocol_uses_canonical_pair_ids(tmp_path: Path):

@@ -7,7 +7,7 @@ from binddrift.cli import main
 from binddrift.config import Config
 from binddrift.evaluation.protocol import write_default_evaluation_protocol
 from binddrift.paper.tables import generate_paper_tables
-from binddrift.run_manifest import ArtifactConsistencyError, sha256_file, validate_run_manifest, write_run_manifest
+from binddrift.run_manifest import ArtifactConsistencyError, evaluation_protocol_split_hash, sha256_file, validate_run_manifest, write_run_manifest
 from binddrift.warnings import make_warning_uid
 
 
@@ -54,10 +54,22 @@ def test_run_manifest_validates_counts_and_sha(tmp_path: Path):
 
     assert validated["warning_count"] == 1
     assert manifest["sha256"]["warnings.jsonl"] == validated["sha256"]["warnings.jsonl"]
+    protocol = json.loads((tmp_path / "data/replay/latest/evaluation_protocol.json").read_text(encoding="utf-8"))
+    assert manifest["locked_split_hash"] == evaluation_protocol_split_hash(protocol)
 
     warnings = tmp_path / "data/replay/latest/warnings.jsonl"
-    warnings.write_text(warnings.read_text(encoding="utf-8") + '{"warning_id":"W-2"}\n', encoding="utf-8")
+    original_warnings = warnings.read_text(encoding="utf-8")
+    warnings.write_text(original_warnings + '{"warning_id":"W-2"}\n', encoding="utf-8")
     with pytest.raises(ArtifactConsistencyError, match="warning_count"):
+        validate_run_manifest(cfg)
+    warnings.write_text(original_warnings, encoding="utf-8")
+
+    write_run_manifest(cfg)
+    manifest_path = tmp_path / "data/replay/latest/run_manifest.json"
+    stale = json.loads(manifest_path.read_text(encoding="utf-8"))
+    stale["locked_split_hash"] = "stale"
+    manifest_path.write_text(json.dumps(stale, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    with pytest.raises(ArtifactConsistencyError, match="locked_split_hash"):
         validate_run_manifest(cfg)
 
 
@@ -228,7 +240,8 @@ def test_paper_tables_fail_on_stale_manual_metrics(tmp_path: Path):
             {
                 "warnings": 1,
                 "run_manifest": str(tmp_path / "data/replay/latest/run_manifest.json"),
-                "protocol_version": "ccfb-strict-v1",
+                "protocol_version": "ccfb-strict-v2",
+                "evaluation_protocol_sha256": sha256_file(tmp_path / "data/replay/latest/evaluation_protocol.json"),
                 "claim_boundary": "evidence-backed warning prioritization",
                 "primary_warning_set": "oracle_blind_ranked_warnings",
                 "oracle_blind_primary_result": {
@@ -337,7 +350,8 @@ def test_paper_tables_fail_when_evaluation_primary_leaks_oracle_score_key(tmp_pa
             {
                 "warnings": 1,
                 "run_manifest": str(run_dir / "run_manifest.json"),
-                "protocol_version": "ccfb-strict-v1",
+                "protocol_version": "ccfb-strict-v2",
+                "evaluation_protocol_sha256": sha256_file(run_dir / "evaluation_protocol.json"),
                 "claim_boundary": "evidence-backed warning prioritization",
                 "primary_warning_set": "oracle_blind_ranked_warnings",
                 "manual_review": manual,
@@ -450,12 +464,13 @@ def test_paper_tables_fail_when_pooled_label_coverage_is_low(tmp_path: Path):
     tables.mkdir(parents=True)
     (tables / "ranking_pooled_evaluation.json").write_text(
         json.dumps(
-            {
-                "pool": str(pool),
-                "pool_sha256": sha256_file(pool),
-                "labels": str(labels),
-                "labels_sha256": sha256_file(labels),
-                "label_coverage": {"coverage": 1.0, "labeled_rows": 1, "pool_rows": 1},
+                {
+                    "pool": str(pool),
+                    "pool_sha256": sha256_file(pool),
+                    "labels": str(labels),
+                    "labels_sha256": sha256_file(labels),
+                    "evaluation_protocol_sha256": sha256_file(run_dir / "evaluation_protocol.json"),
+                    "label_coverage": {"coverage": 1.0, "labeled_rows": 1, "pool_rows": 1},
                 "coverage_acceptance": {"minimum": 0.95, "passes": True},
                 "rankers": [
                     {

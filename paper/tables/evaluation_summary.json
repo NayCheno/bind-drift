@@ -53,7 +53,7 @@
   },
   "claim_boundary": "evidence-backed warning prioritization",
   "evaluation_protocol": "data/replay/latest/evaluation_protocol.json",
-  "evaluation_protocol_sha256": "f8ee618bd15df0b03a442829a4761001ac24cfe01c9baccc453c99a0af157203",
+  "evaluation_protocol_sha256": "7c3ad8140c7d11ddd748dd52100112f617b516cd35b1a1dfa41d41e515783e94",
   "ground_truth_rows": {
     "build_breakage_events": 0,
     "wrapper_fix_candidates": 226,
@@ -186,7 +186,7 @@
   },
   "primary_warning_set": "oracle_blind_ranked_warnings",
   "promoted_replay_warnings": 320,
-  "protocol_version": "ccfb-strict-v1",
+  "protocol_version": "ccfb-strict-v2",
   "recall": {
     "build_breakage": null,
     "typed_wrapper": null,

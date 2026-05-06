@@ -9,6 +9,7 @@
     "adjudication_required": true,
     "cohen_kappa_required": true,
     "double_review": true,
+    "review_method": "LLM-assisted independent double review with adjudication",
     "unclear_is_not_true_positive": true
   },
   "oracle_usage": {
@@ -25,7 +26,11 @@
     "AUPRC_on_pooled_review_set"
   ],
   "primary_warning_set": "oracle_blind_ranked_warnings",
-  "protocol_version": "ccfb-strict-v1",
+  "locked_split_policy": {
+    "locked_test_pairs_final_run_only": true,
+    "manifest_records_locked_split_hash": true
+  },
+  "protocol_version": "ccfb-strict-v2",
   "splits": {
     "dev_pairs": [
       "latest-p002-v6.2-to-v6.3",

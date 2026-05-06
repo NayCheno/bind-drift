@@ -150,7 +150,7 @@
     "passes": true
   },
   "evaluation_protocol": "data/replay/latest/evaluation_protocol.json",
-  "evaluation_protocol_sha256": "f8ee618bd15df0b03a442829a4761001ac24cfe01c9baccc453c99a0af157203",
+  "evaluation_protocol_sha256": "7c3ad8140c7d11ddd748dd52100112f617b516cd35b1a1dfa41d41e515783e94",
   "label_coverage": {
     "coverage": 1.0,
     "excluded_conservative_backfill_rows": 0,
@@ -163,7 +163,7 @@
   "pool_sha256": "ebf367ba46a8ab16b4138990e99ade200019fc896ef658944708d90ded178dba",
   "pool_size": 276,
   "primary_warning_set": "oracle_blind_ranked_warnings",
-  "protocol_version": "ccfb-strict-v1",
+  "protocol_version": "ccfb-strict-v2",
   "random_baseline": {
     "auprc_on_pooled_review_set": 0.0276,
     "bootstrap_ci": {

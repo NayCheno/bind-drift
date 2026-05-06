@@ -44,6 +44,11 @@ def sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
+def sha256_json(value: Any) -> str:
+    payload = json.dumps(value, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
+
+
 def count_csv_rows(path: Path) -> int:
     if not path.exists():
         return 0
@@ -111,6 +116,8 @@ def build_run_manifest(cfg: Config, run_id: str = REPLAY_RUN_ID) -> dict[str, An
     warnings = read_warnings(warnings_path)
     promoted_warnings = read_warnings(promoted_path)
     _validate_evaluation_protocol_splits(protocol_path, promoted_warnings)
+    protocol = json.loads(protocol_path.read_text(encoding="utf-8"))
+    split_hash = evaluation_protocol_split_hash(protocol)
     ineligible = [warning for warning in warnings + promoted_warnings if not eligible_for_main_warning(warning)]
     if ineligible:
         raise ArtifactConsistencyError(f"canonical warning file contains non-main warnings: {len(ineligible)}")
@@ -144,6 +151,7 @@ def build_run_manifest(cfg: Config, run_id: str = REPLAY_RUN_ID) -> dict[str, An
         "canonical_single_version_review_targets_file": repo_relative(cfg, single_version_path),
         "canonical_evaluation_protocol_file": repo_relative(cfg, protocol_path),
         "canonical_database": repo_relative(cfg, cfg.database),
+        "locked_split_hash": split_hash,
         "warning_count": warning_count,
         "promoted_warning_count": promoted_warning_count,
         "paper_topk": warning_count,
@@ -285,6 +293,14 @@ def validate_run_manifest(cfg: Config, manifest: dict[str, Any] | None = None) -
         checks.append((actual == expected, f"{name} sha256 {actual}!={expected}"))
     warnings = read_warnings(warnings_path) + read_warnings(promoted_path)
     _validate_evaluation_protocol_splits(protocol_path, read_warnings(promoted_path))
+    protocol = json.loads(protocol_path.read_text(encoding="utf-8"))
+    expected_split_hash = evaluation_protocol_split_hash(protocol)
+    checks.append(
+        (
+            manifest.get("locked_split_hash") == expected_split_hash,
+            f"locked_split_hash {manifest.get('locked_split_hash')}!={expected_split_hash}",
+        )
+    )
     checks.append(
         (
             all(eligible_for_main_warning(warning) for warning in warnings),
@@ -338,3 +354,16 @@ def _validate_evaluation_protocol_splits(protocol_path: Path, promoted_warnings:
             "evaluation_protocol split pair_ids do not match canonical warning pairs"
             f"; missing={missing[:5]} extra={extra[:5]}"
         )
+
+
+def evaluation_protocol_split_hash(protocol: dict[str, Any]) -> str:
+    splits = protocol.get("splits") or {}
+    locked_policy = protocol.get("locked_split_policy") or {}
+    payload = {
+        "splits": {
+            key: list(splits.get(key) or [])
+            for key in ("dev_pairs", "validation_pairs", "locked_test_pairs")
+        },
+        "locked_split_policy": locked_policy,
+    }
+    return sha256_json(payload)

@@ -10,7 +10,7 @@ from binddrift.run_manifest import canonical_run_dir, repo_relative, sha256_file
 
 
 PROTOCOL_NAME = "evaluation_protocol.json"
-PROTOCOL_VERSION = "ccfb-strict-v1"
+PROTOCOL_VERSION = "ccfb-strict-v2"
 CLAIM_BOUNDARY = "evidence-backed warning prioritization"
 PRIMARY_WARNING_SET = "oracle_blind_ranked_warnings"
 
@@ -79,6 +79,11 @@ def default_evaluation_protocol(run_id: str = "latest", pair_ids: list[str] | No
             "adjudication_required": True,
             "cohen_kappa_required": True,
             "unclear_is_not_true_positive": True,
+            "review_method": "LLM-assisted independent double review with adjudication",
+        },
+        "locked_split_policy": {
+            "locked_test_pairs_final_run_only": True,
+            "manifest_records_locked_split_hash": True,
         },
     }
 
@@ -131,6 +136,7 @@ def validate_evaluation_protocol(protocol: dict[str, Any]) -> None:
         "primary_metrics",
         "baseline_metrics",
         "manual_review_policy",
+        "locked_split_policy",
     }
     missing = sorted(required - set(protocol))
     if missing:
@@ -148,6 +154,10 @@ def validate_evaluation_protocol(protocol: dict[str, Any]) -> None:
     for key in ("double_review", "adjudication_required", "cohen_kappa_required", "unclear_is_not_true_positive"):
         if policy.get(key) is not True:
             raise EvaluationProtocolError(f"manual_review_policy.{key} must be true")
+    locked = protocol.get("locked_split_policy") or {}
+    for key in ("locked_test_pairs_final_run_only", "manifest_records_locked_split_hash"):
+        if locked.get(key) is not True:
+            raise EvaluationProtocolError(f"locked_split_policy.{key} must be true")
 
 
 def validate_protocol_pair_splits(cfg: Config, protocol: dict[str, Any], run_id: str = "latest") -> None:

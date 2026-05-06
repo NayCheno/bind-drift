@@ -9,7 +9,7 @@ from typing import Any
 from binddrift.artifact_paths import sanitize_local_paths
 from binddrift.config import Config
 from binddrift.db import connect, initialize
-from binddrift.evaluation.protocol import FORBIDDEN_PRIMARY_SCORE_COMPONENTS, load_evaluation_protocol
+from binddrift.evaluation.protocol import FORBIDDEN_PRIMARY_SCORE_COMPONENTS, PROTOCOL_VERSION, load_evaluation_protocol
 from binddrift.evaluation.metrics import load_manual_labels, manual_review_agreement, warning_label_key
 from binddrift.paper.audit import generate_extractor_audit, generate_strict_extractor_audit
 from binddrift.ranking.oracle_blind_scorer import rank_primary_warnings_oracle_blind
@@ -59,12 +59,12 @@ def generate_paper_tables(cfg: Config) -> dict[str, object]:
     _write_fact_counts(cfg, fact_counts)
     _write_manual_review_summary(cfg, manual_review, manifest=manifest)
     manual_quality_summary = _write_manual_review_quality(cfg, manual_quality, disagreement_examples, manifest=manifest)
+    _validate_table_consistency(cfg, manifest)
     if manual_quality_summary["strict_gate_active"] and not manual_quality_summary["acceptance"]["minimum_passes"]:
         raise RuntimeError("manual_review_quality strict gate failed")
     _write_runtime_scalability(cfg, runtime, manifest=manifest)
     audit = generate_extractor_audit(cfg, manifest=manifest)
     strict_audit = generate_strict_extractor_audit(cfg, manifest=manifest)
-    _validate_table_consistency(cfg, manifest)
     known = {
         "evaluation_summary": tables_dir / "evaluation_summary.json",
         "baselines_ablations": tables_dir / "baselines_ablations.json",
@@ -386,8 +386,11 @@ def _validate_table_consistency(cfg: Config, manifest: dict[str, Any] | None) ->
             raise RuntimeError(
                 f"evaluation_summary run_manifest {evaluation_manifest} != {expected_manifest}"
             )
-        if evaluation.get("protocol_version") != "ccfb-strict-v1":
-            raise RuntimeError("evaluation_summary missing protocol_version ccfb-strict-v1")
+        if evaluation.get("protocol_version") != PROTOCOL_VERSION:
+            raise RuntimeError(f"evaluation_summary missing protocol_version {PROTOCOL_VERSION}")
+        expected_protocol = Path(manifest["resolved_paths"]["evaluation_protocol"]).resolve()
+        if evaluation.get("evaluation_protocol_sha256") != sha256_file(expected_protocol):
+            raise RuntimeError("evaluation_summary evaluation_protocol_sha256 does not match current protocol")
         if evaluation.get("claim_boundary") != "evidence-backed warning prioritization":
             raise RuntimeError("evaluation_summary missing claim_boundary")
         if evaluation.get("primary_warning_set") != "oracle_blind_ranked_warnings":
@@ -486,6 +489,9 @@ def _validate_table_consistency(cfg: Config, manifest: dict[str, Any] | None) ->
             raise RuntimeError("ranking_pooled_evaluation pool_sha256 does not match current pool file")
         if ranking.get("labels_sha256") != sha256_file(labels_path):
             raise RuntimeError("ranking_pooled_evaluation labels_sha256 does not match current labels file")
+        expected_protocol = Path(manifest["resolved_paths"]["evaluation_protocol"]).resolve()
+        if ranking.get("evaluation_protocol_sha256") != sha256_file(expected_protocol):
+            raise RuntimeError("ranking_pooled_evaluation evaluation_protocol_sha256 does not match current protocol")
         if manifest.get("resolved_paths", {}).get("pooled_review_set"):
             expected_pool = Path(manifest["resolved_paths"]["pooled_review_set"]).resolve()
             expected_labels = Path(manifest["resolved_paths"]["pooled_review_labels"]).resolve()

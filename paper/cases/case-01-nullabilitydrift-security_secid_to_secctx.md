@@ -1,4 +1,4 @@
-# Positive: SignatureDrift for `security_secid_to_secctx`
+# Positive: NullabilityDrift for `security_secid_to_secctx`
 
 ## Summary
 
@@ -60,7 +60,7 @@ A maintainer should inspect the Rust wrapper or safe abstraction path when carry
 - Warning: `W-000018`
 - Warning UID: `ccf6ca0711b3a3fb07496b72daf90fe34a85e1a14e33485ddbfd4e0f281baa75`
 - Replay pair: `latest-p013-v6.13-to-v6.14`
-- Drift type: `SignatureDrift`
+- Drift type: `NullabilityDrift`
 - C symbol: `security_secid_to_secctx`
 - Risk: `High`
 - Score: `17.0`

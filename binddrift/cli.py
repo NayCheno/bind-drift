@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Callable
 
 from . import __version__
+from .artifact.strict_validator import VALIDATION_STAGES, validate_artifact
 from .config import Config
 from .dataset import extract_dataset
 from .detectors.tier1 import run_tier1, run_tier1_with_context
@@ -306,9 +307,14 @@ def cmd_paper_tables(args: argparse.Namespace, cfg: Config) -> int:
 
 
 def cmd_paper_build(args: argparse.Namespace, cfg: Config) -> int:
-    result = {"cases": generate_case_studies(cfg), "tables": generate_paper_tables(cfg)}
+    result = {
+        "cases": generate_case_studies(cfg),
+        "tables": generate_paper_tables(cfg),
+    }
+    validation = validate_artifact(cfg, strict_ccfb=True, stage=args.stage)
+    result["validation"] = validation
     print(json.dumps(result, indent=2, sort_keys=True))
-    return 0
+    return 0 if validation.get("passes") else 1
 
 
 def _add_common(parser: argparse.ArgumentParser) -> None:
@@ -496,7 +502,14 @@ def build_parser() -> argparse.ArgumentParser:
     paper_sub = paper.add_subparsers(dest="paper_command", required=True)
     _set(paper_sub.add_parser("tables", help="Generate paper tables."), cmd_paper_tables)
     _set(paper_sub.add_parser("cases", help="Generate case study skeletons."), cmd_paper_cases)
-    _set(paper_sub.add_parser("build", help="Generate paper cases and table index."), cmd_paper_build)
+    build = paper_sub.add_parser("build", help="Generate paper cases and table index, then run staged strict validation.")
+    build.add_argument(
+        "--stage",
+        choices=VALIDATION_STAGES,
+        default="final",
+        help="Validation stage to enforce after building paper artifacts.",
+    )
+    _set(build, cmd_paper_build)
     return parser
 
 

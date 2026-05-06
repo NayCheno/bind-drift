@@ -14,6 +14,7 @@
         "canonical_single_version_review_targets_file": "data/replay/latest/single_version_review_targets.jsonl",
         "canonical_warning_file": "data/replay/latest/warnings.jsonl",
         "drift_fact_count": 16757,
+        "locked_split_hash": "348bb27b4824ad39b8283bbfe8865e552a4bde0e2eac488bc2ec04adc71dc8b5",
         "pair_count": 20,
         "paper_topk": 100,
         "pooled_review_label_count": 276,
@@ -35,7 +36,7 @@
         "run_id": "latest",
         "sha256": {
           "drift_facts.jsonl": "c64755be14a63245a9b14fe9ef7f300ce82f66871b7596665ad19ab94f84c646",
-          "evaluation_protocol.json": "f8ee618bd15df0b03a442829a4761001ac24cfe01c9baccc453c99a0af157203",
+          "evaluation_protocol.json": "7c3ad8140c7d11ddd748dd52100112f617b516cd35b1a1dfa41d41e515783e94",
           "manual_review.csv": "f999f73ccbc3615f44586a7d7c7fe93ba1899fcb35d885b646d2c9fc1eb27937",
           "pooled_review_labels.csv": "1061302669e1fb6d60c3a5747791c123763d539463f9602895dcd9c275fb092c",
           "pooled_review_manifest.json": "3d25ac308498eb62d985855bb585d672b551b1587c46b626c9e01e15198f87c4",
@@ -59,10 +60,15 @@
           "warning_volume_reduction"
         ],
         "claim_boundary": "evidence-backed warning prioritization",
+        "locked_split_policy": {
+          "locked_test_pairs_final_run_only": true,
+          "manifest_records_locked_split_hash": true
+        },
         "manual_review_policy": {
           "adjudication_required": true,
           "cohen_kappa_required": true,
           "double_review": true,
+          "review_method": "LLM-assisted independent double review with adjudication",
           "unclear_is_not_true_positive": true
         },
         "oracle_usage": {
@@ -80,9 +86,9 @@
           "AUPRC_on_pooled_review_set"
         ],
         "primary_warning_set": "oracle_blind_ranked_warnings",
-        "protocol_version": "ccfb-strict-v1",
+        "protocol_version": "ccfb-strict-v2",
         "repo_relative_path": "data/replay/latest/evaluation_protocol.json",
-        "sha256": "f8ee618bd15df0b03a442829a4761001ac24cfe01c9baccc453c99a0af157203",
+        "sha256": "7c3ad8140c7d11ddd748dd52100112f617b516cd35b1a1dfa41d41e515783e94",
         "splits": {
           "dev_pairs": [
             "latest-p002-v6.2-to-v6.3",
@@ -191,37 +197,41 @@
         "acceptance": {
           "absolute_local_paths_clean": true,
           "case_studies_minimum": true,
-          "drift_type_count_minimum": false,
-          "minimum_passes": false,
+          "drift_type_count_minimum": true,
+          "minimum_passes": true,
           "negative_case_present": true,
           "positive_labels_clean": true,
-          "semantic_true_cases_minimum": false,
+          "semantic_true_cases_minimum": true,
           "wrapper_fix_cases_minimum": true
         },
         "benign_drift_cases": 0,
         "build_breakage_cases": 0,
         "case_drift_types": [
-          "SignatureDrift"
+          "AllocationFreeDrift",
+          "LayoutFieldDrift",
+          "NullabilityDrift",
+          "OwnershipRefcountDrift",
+          "SleepabilityContextDrift"
         ],
-        "case_studies": 6,
-        "drift_type_count": 1,
+        "case_studies": 7,
+        "drift_type_count": 5,
         "false_positive_cases": 0,
         "negative_case_studies": 1,
         "negative_label_distribution": {
           "FALSE_POSITIVE": 1
         },
-        "passes": false,
-        "positive_case_studies": 6,
+        "passes": true,
+        "positive_case_studies": 7,
         "positive_label_distribution": {
-          "TRUE_SEMANTIC_DRIFT": 1,
+          "TRUE_SEMANTIC_DRIFT": 2,
           "TRUE_WRAPPER_FIX": 5
         },
-        "semantic_true_cases": 1,
+        "semantic_true_cases": 2,
         "unlabeled_cases": 0,
         "wrapper_fix_backed_cases": 5
       },
       "name": "case_study_gate",
-      "passes": false
+      "passes": true
     },
     {
       "details": {
@@ -324,32 +334,36 @@
       "acceptance": {
         "absolute_local_paths_clean": true,
         "case_studies_minimum": true,
-        "drift_type_count_minimum": false,
-        "minimum_passes": false,
+        "drift_type_count_minimum": true,
+        "minimum_passes": true,
         "negative_case_present": true,
         "positive_labels_clean": true,
-        "semantic_true_cases_minimum": false,
+        "semantic_true_cases_minimum": true,
         "wrapper_fix_cases_minimum": true
       },
       "benign_drift_cases": 0,
       "build_breakage_cases": 0,
       "case_drift_types": [
-        "SignatureDrift"
+        "AllocationFreeDrift",
+        "LayoutFieldDrift",
+        "NullabilityDrift",
+        "OwnershipRefcountDrift",
+        "SleepabilityContextDrift"
       ],
-      "case_studies": 6,
-      "drift_type_count": 1,
+      "case_studies": 7,
+      "drift_type_count": 5,
       "false_positive_cases": 0,
       "negative_case_studies": 1,
       "negative_label_distribution": {
         "FALSE_POSITIVE": 1
       },
-      "passes": false,
-      "positive_case_studies": 6,
+      "passes": true,
+      "positive_case_studies": 7,
       "positive_label_distribution": {
-        "TRUE_SEMANTIC_DRIFT": 1,
+        "TRUE_SEMANTIC_DRIFT": 2,
         "TRUE_WRAPPER_FIX": 5
       },
-      "semantic_true_cases": 1,
+      "semantic_true_cases": 2,
       "unlabeled_cases": 0,
       "wrapper_fix_backed_cases": 5
     },
@@ -404,8 +418,23 @@
     }
   },
   "passes": false,
-  "protocol_version": "ccfb-strict-v1",
+  "protocol_version": "ccfb-strict-v2",
   "run_manifest": "data/replay/latest/run_manifest.json",
+  "stage": "final",
+  "stage_required_checks": [
+    "case_study_gate",
+    "evaluation_protocol_valid",
+    "manual_review_quality_gate",
+    "no_local_absolute_paths",
+    "oracle_blind_primary_has_no_forbidden_components",
+    "paper_claims_match_downgrades",
+    "pooled_review_coverage",
+    "ranking",
+    "required_tables_exist",
+    "run_manifest_valid",
+    "semantic",
+    "strict_extractor_audit_gate"
+  ],
   "status": "failed",
   "strict_ccfb": true
 }

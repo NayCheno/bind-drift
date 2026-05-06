@@ -16,6 +16,54 @@ from binddrift.paper.tables import generate_paper_tables
 from binddrift.ranking.score_audit import generate_ranking_score_audit
 from binddrift.run_manifest import canonical_run_dir, validate_run_manifest
 
+VALIDATION_STAGES = ("m0", "m1", "m2", "m3", "m4", "m5", "m6", "m7", "m8", "final")
+
+STAGE_REQUIRED_CHECKS: dict[str, set[str]] = {
+    "m0": {
+        "run_manifest_valid",
+        "evaluation_protocol_valid",
+        "required_tables_exist",
+        "oracle_blind_primary_has_no_forbidden_components",
+        "paper_claims_match_downgrades",
+    },
+    "m1": {"no_local_absolute_paths"},
+    "m2": {"ranking"},
+    "m3": {"pooled_review_coverage", "manual_review_quality_gate"},
+    "m4": {"semantic"},
+    "m5": {"case_study_gate"},
+    "m6": {"ranking"},
+    "m7": {"strict_extractor_audit_gate"},
+    "m8": {"ranking", "semantic", "manual_review_quality_gate", "case_study_gate", "strict_extractor_audit_gate"},
+    "final": {"ranking", "semantic", "manual_review_quality_gate", "case_study_gate", "strict_extractor_audit_gate"},
+}
+
+HARD_GATE_CHECK_NAMES = {
+    "ranking",
+    "semantic",
+    "manual_review_quality_gate",
+    "case_study_gate",
+    "strict_extractor_audit_gate",
+}
+
+
+def _stage_index(stage: str) -> int:
+    if stage == "final":
+        return VALIDATION_STAGES.index("m8")
+    return VALIDATION_STAGES.index(stage)
+
+
+def _required_for_stage(stage: str) -> set[str]:
+    required: set[str] = set()
+    for name in VALIDATION_STAGES:
+        if name == "final":
+            continue
+        required.update(STAGE_REQUIRED_CHECKS.get(name, set()))
+        if _stage_index(name) >= _stage_index(stage):
+            break
+    if stage == "final":
+        required.update(STAGE_REQUIRED_CHECKS["final"])
+    return required
+
 
 def reproduce_artifact(cfg: Config) -> dict[str, Any]:
     manifest = validate_run_manifest(cfg)
@@ -26,7 +74,7 @@ def reproduce_artifact(cfg: Config) -> dict[str, Any]:
         "strict_extractor_audit": generate_strict_extractor_audit(cfg, manifest=manifest),
         "paper_tables": generate_paper_tables(cfg),
     }
-    report = validate_artifact(cfg, strict_ccfb=True, run_tests=False)
+    report = validate_artifact(cfg, strict_ccfb=True, run_tests=False, stage="final")
     outputs["validation"] = report
     return sanitize_local_paths({
         "passes": report["passes"],
@@ -35,7 +83,15 @@ def reproduce_artifact(cfg: Config) -> dict[str, Any]:
     }, cfg)
 
 
-def validate_artifact(cfg: Config, *, strict_ccfb: bool = False, run_tests: bool = False) -> dict[str, Any]:
+def validate_artifact(
+    cfg: Config,
+    *,
+    strict_ccfb: bool = False,
+    run_tests: bool = False,
+    stage: str = "final",
+) -> dict[str, Any]:
+    if stage not in VALIDATION_STAGES:
+        raise ValueError(f"unknown validation stage {stage!r}; expected one of {', '.join(VALIDATION_STAGES)}")
     checks: list[dict[str, Any]] = []
     manifest = _check("run_manifest_valid", checks, lambda: validate_run_manifest(cfg))
     protocol = _check("evaluation_protocol_valid", checks, lambda: load_evaluation_protocol(cfg))
@@ -49,27 +105,41 @@ def validate_artifact(cfg: Config, *, strict_ccfb: bool = False, run_tests: bool
     _check("no_local_absolute_paths", checks, lambda: _no_local_paths(cfg))
     if run_tests:
         _check("pytest", checks, lambda: _run_pytest(cfg))
-    ranking = _ranking_gate(cfg)
-    semantic = _semantic_gate(cfg)
+    ranking = _gate(lambda: _ranking_gate(cfg))
+    semantic = _gate(lambda: _semantic_gate(cfg))
     hard_gates = {
         "ranking": ranking,
         "semantic": semantic,
-        "manual_review_quality": _manual_review_quality_gate(cfg),
-        "case_studies": _case_study_gate(cfg),
-        "strict_extractor_audit": _strict_extractor_gate(cfg),
+        "manual_review_quality": _gate(lambda: _manual_review_quality_gate(cfg)),
+        "case_studies": _gate(lambda: _case_study_gate(cfg)),
+        "strict_extractor_audit": _gate(lambda: _strict_extractor_gate(cfg)),
     }
-    consistency_passes = all(check["passes"] for check in checks)
+    checks_by_name = {check["name"]: check for check in checks}
+    required_names = _required_for_stage(stage)
+    stage_check_names = required_names - HARD_GATE_CHECK_NAMES
+    consistency_passes = all(checks_by_name.get(name, {"passes": False})["passes"] for name in stage_check_names)
+    hard_gate_passes = {
+        "ranking": ranking["passes"],
+        "semantic": semantic["passes"],
+        "manual_review_quality_gate": hard_gates["manual_review_quality"]["passes"],
+        "case_study_gate": hard_gates["case_studies"]["passes"],
+        "strict_extractor_audit_gate": hard_gates["strict_extractor_audit"]["passes"],
+    }
+    required_hard_passes = all(hard_gate_passes[name] for name in required_names if name in hard_gate_passes)
+    stage_passes = consistency_passes and required_hard_passes
     submission_ready = (
-        consistency_passes
+        all(check["passes"] for check in checks)
         and ranking["passes"]
         and semantic["passes"]
         and hard_gates["manual_review_quality"]["passes"]
         and hard_gates["case_studies"]["passes"]
     )
     report = {
-        "passes": consistency_passes,
-        "status": "ccfb_ready" if submission_ready else ("valid_with_downgrades" if consistency_passes else "failed"),
+        "passes": stage_passes,
+        "status": "ccfb_ready" if submission_ready else ("stage_ready" if stage_passes else "failed"),
         "strict_ccfb": strict_ccfb,
+        "stage": stage,
+        "stage_required_checks": sorted(required_names),
         "ccfb_submission_ready": submission_ready,
         "checks": checks,
         "hard_gates": hard_gates,
@@ -93,6 +163,13 @@ def _check(name: str, checks: list[dict[str, Any]], fn) -> Any:
     except Exception as exc:  # pragma: no cover - exercised through command path.
         checks.append({"name": name, "passes": False, "error": str(exc)})
         return None
+
+
+def _gate(fn) -> dict[str, Any]:
+    try:
+        return fn()
+    except Exception as exc:  # pragma: no cover - exercised through command path.
+        return {"passes": False, "error": str(exc)}
 
 
 def _required_tables(cfg: Config) -> dict[str, Any]:
