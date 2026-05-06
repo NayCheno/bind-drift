@@ -87,6 +87,20 @@ def test_artifact_validate_module_command_accepts_stage() -> None:
     assert payload["stage"] == "m0"
 
 
+def test_artifact_validator_reports_m7_extractor_audit_ready() -> None:
+    result = validate_artifact(Config.from_args(repo_root="."), strict_ccfb=True, stage="m7")
+
+    assert result["passes"] is True
+    assert result["stage"] == "m7"
+    audit = result["hard_gates"]["strict_extractor_audit"]
+    assert audit["passes"] is True
+    assert all(audit["checks"].values())
+    assert audit["negative_samples"]["passes"] is True
+    assert audit["cross_version_sampling"]["passes"] is True
+    assert audit["review_provenance"]["pending_rows"] == 0
+    assert audit["review_provenance"]["generated_default_labels"] == 0
+
+
 def test_binddrift_module_propagates_cli_return_code() -> None:
     result = subprocess.run(
         [sys.executable, "-m", "binddrift", "paper", "build", "--stage", "final"],

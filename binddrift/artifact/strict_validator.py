@@ -13,7 +13,7 @@ from binddrift.config import Config
 from binddrift.detectors.semantic_review_targets import SEMANTIC_REVIEW_QUOTAS, generate_semantic_review_targets
 from binddrift.evaluation.evaluate_rankers import TAXONOMY_SCHEMA_VERSION, build_ranker_evaluation, evaluate_rankers
 from binddrift.evaluation.protocol import assert_oracle_blind_components, load_evaluation_protocol
-from binddrift.paper.audit import generate_strict_extractor_audit
+from binddrift.paper.audit import STRICT_AUDIT_TARGETS, STRICT_TARGET_PRECISION, generate_strict_extractor_audit
 from binddrift.paper.cases import generate_case_studies
 from binddrift.paper.tables import generate_paper_tables
 from binddrift.ranking.oracle_blind_scorer import generated_binding_only, rank_primary_warnings_oracle_blind
@@ -548,7 +548,74 @@ def _case_study_gate(cfg: Config) -> dict[str, Any]:
 
 def _strict_extractor_gate(cfg: Config) -> dict[str, Any]:
     data = _json(cfg, "paper/tables/strict_extractor_audit.json")
-    return {"passes": bool(data.get("all_minimums_pass")), "total_samples": data.get("total_samples"), "agreement": data.get("agreement")}
+    extractors = data.get("extractors") or {}
+    acceptance = data.get("acceptance") or {}
+    negative_samples = data.get("negative_samples") or {}
+    cross_version_sampling = data.get("cross_version_sampling") or {}
+    taxonomy = cfg.repo_root / "paper/analysis/extractor_error_taxonomy.md"
+    taxonomy_text = taxonomy.read_text(encoding="utf-8") if taxonomy.exists() else ""
+    required_precision = STRICT_TARGET_PRECISION
+    precision_checks = {
+        name: (extractors.get(name, {}).get("precision") or 0.0) >= minimum
+        for name, minimum in required_precision.items()
+    }
+    sample_checks = {
+        name: (extractors.get(name, {}).get("sampled") or 0) == STRICT_AUDIT_TARGETS.get(name, 0)
+        for name in required_precision
+    }
+    checks = {
+        "all_minimums_pass": data.get("all_minimums_pass") is True,
+        "total_samples": (data.get("total_samples") or 0) >= 800,
+        "promoted_warning_evidence_samples": (extractors.get("promoted_warning_evidence", {}).get("sampled") or 0) >= 150,
+        "cohen_kappa": ((data.get("agreement") or {}).get("cohen_kappa") or 0.0) >= 0.80,
+        "negative_samples": negative_samples.get("passes") is True and (negative_samples.get("total") or 0) >= len(required_precision),
+        "cross_version_sampling": cross_version_sampling.get("passes") is True,
+        "cross_version_pair_coverage": all(
+            ((item or {}).get("pair_count") or 0) >= 10
+            for item in (cross_version_sampling.get("extractors") or {}).values()
+        ),
+        "parser_limitations": _strict_parser_limitations_cover_extractors(data),
+        "failure_taxonomy": taxonomy.exists()
+        and "Parser Limitations" in taxonomy_text
+        and "Negative Controls" in taxonomy_text
+        and "Observed Incorrect Rows" in taxonomy_text,
+        "review_provenance": _strict_review_provenance_passes(data),
+        "target_precision": all(precision_checks.values()),
+        "target_sample_sizes": all(sample_checks.values()),
+        "acceptance_target_passes": all((acceptance.get(name) or {}).get("target_passes") is True for name in required_precision),
+    }
+    return {
+        "passes": all(checks.values()),
+        "checks": checks,
+        "precision_checks": precision_checks,
+        "sample_checks": sample_checks,
+        "total_samples": data.get("total_samples"),
+        "agreement": data.get("agreement"),
+        "negative_samples": negative_samples,
+        "cross_version_sampling": cross_version_sampling,
+        "parser_limitations": data.get("parser_limitations"),
+        "review_provenance": data.get("review_provenance"),
+    }
+
+
+def _strict_parser_limitations_cover_extractors(data: dict[str, Any]) -> bool:
+    limitations = data.get("parser_limitations") or []
+    by_extractor = {
+        item.get("extractor_name")
+        for item in limitations
+        if item.get("extractor_name") and item.get("limitation")
+    }
+    return set(STRICT_AUDIT_TARGETS).issubset(by_extractor)
+
+
+def _strict_review_provenance_passes(data: dict[str, Any]) -> bool:
+    provenance = data.get("review_provenance") or {}
+    return bool(
+        provenance.get("requires_explicit_provenance") is True
+        and provenance.get("generated_default_labels") == 0
+        and provenance.get("pending_rows") == 0
+        and provenance.get("review_labels_transferred") == data.get("total_samples")
+    )
 
 
 def _paper_claims(cfg: Config) -> dict[str, Any]:

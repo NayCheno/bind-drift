@@ -148,12 +148,16 @@ and layout/field categories. It finds 2 `TRUE_SEMANTIC_DRIFT` rows, 54
 `TRUE_WRAPPER_FIX` rows, 2 build-breakage rows, and several benign, unclear, or
 false-positive rows. Because the semantic gate requires at least 8 semantic true positives and at least 3 semantic drift types, the semantic drift result remains exploratory.
 
-The strict extractor audit samples 600 facts across C functions, C behavior
+The strict extractor audit samples 830 facts across C functions, C behavior
 indicators, Rust binding uses, Rust safe API exposures, Rust error mappings,
-Rust lifetime facts, and promoted warning evidence chains. All strict audit rows
-have paired labels and adjudication. The audit reports Cohen's kappa = 1.0 and
-`all_minimums_pass = true`, including promoted warning evidence precision above
-the 0.85 gate.
+Rust lifetime facts, and 150 promoted warning evidence chains. The audit reports
+Cohen's kappa = 1.0 and `all_minimums_pass = true`, including promoted warning
+evidence precision above the 0.85 gate. Review labels are transferred only from
+rows with explicit reviewer/adjudication provenance; generated strict-only rows
+remain pending until that provenance is present. The generated failure taxonomy
+also reports limitation-focused negative controls for every extractor; these
+controls document parser boundaries and should not be read as completeness or
+bug confirmation evidence.
 
 The artifact also includes eight positive warning-backed case studies selected
 from adjudicated true positives.

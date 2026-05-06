@@ -29,16 +29,32 @@ def test_strict_extractor_audit_artifacts_exist_and_meet_thresholds() -> None:
     summary = json.loads(summary_path.read_text(encoding="utf-8"))
     assert summary["total_samples"] == sum(STRICT_AUDIT_TARGETS.values())
     assert summary["all_minimums_pass"] is True
-    assert summary["agreement"]["cohen_kappa"] >= 0.70
+    assert summary["agreement"]["cohen_kappa"] >= 0.80
+    assert summary["negative_samples"]["passes"] is True
+    assert summary["negative_samples"]["total"] >= len(STRICT_AUDIT_TARGETS)
+    assert summary["cross_version_sampling"]["passes"] is True
+    assert summary["review_provenance"]["pending_rows"] == 0
+    assert summary["review_provenance"]["generated_default_labels"] == 0
+    assert summary["review_provenance"]["review_labels_transferred"] == summary["total_samples"]
+    assert len(summary["parser_limitations"]) >= len(STRICT_AUDIT_TARGETS)
+    taxonomy = taxonomy_path.read_text(encoding="utf-8")
+    assert "Parser Limitations" in taxonomy
+    assert "Negative Controls" in taxonomy
+    assert "Observed Incorrect Rows" in taxonomy
     for extractor, target in STRICT_AUDIT_TARGETS.items():
         assert summary["extractors"][extractor]["sampled"] == target
+        assert summary["extractors"][extractor]["version_count"] >= 10
+        assert summary["extractors"][extractor]["pair_count"] >= 10
         assert summary["acceptance"][extractor]["passes"] is True
+        assert summary["acceptance"][extractor]["target_passes"] is True
+        assert summary["negative_samples"]["extractors"][extractor]["count"] >= 1
 
 
 def test_strict_extractor_audit_reports_promoted_warning_precision_gate() -> None:
     summary = json.loads(Path("paper/tables/strict_extractor_audit.json").read_text(encoding="utf-8"))
     promoted = summary["extractors"]["promoted_warning_evidence"]
 
-    assert promoted["sampled"] >= 100
+    assert promoted["sampled"] >= 150
     assert promoted["precision"] >= 0.85
+    assert promoted["pair_count"] >= 10
     assert summary["acceptance"]["promoted_warning_evidence"]["passes"] is True

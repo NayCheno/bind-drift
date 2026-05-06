@@ -74,7 +74,7 @@ STRICT_AUDIT_TARGETS = {
     "rust_safe_api_exposures": 120,
     "rust_error_mappings": 100,
     "rust_lifetime_facts": 100,
-    "promoted_warning_evidence": 120,
+    "promoted_warning_evidence": 150,
 }
 
 STRICT_MIN_PRECISION = {
@@ -83,8 +83,18 @@ STRICT_MIN_PRECISION = {
     "rust_binding_uses": 0.90,
     "rust_safe_api_exposures": 0.85,
     "rust_error_mappings": 0.85,
-    "rust_lifetime_facts": 0.80,
+    "rust_lifetime_facts": 0.85,
     "promoted_warning_evidence": 0.85,
+}
+
+STRICT_TARGET_PRECISION = {
+    "c_functions": 0.98,
+    "c_behavior_indicators": 0.90,
+    "rust_binding_uses": 0.95,
+    "rust_safe_api_exposures": 0.90,
+    "rust_error_mappings": 0.90,
+    "rust_lifetime_facts": 0.90,
+    "promoted_warning_evidence": 0.90,
 }
 
 STRICT_ERROR_CATEGORIES = {
@@ -103,16 +113,70 @@ STRICT_FIELDS = [
     "sample_id",
     "extractor_name",
     "version",
+    "audit_pair_id",
     "file",
     "line",
     "symbol",
     "extracted_fact",
     "raw_context",
+    "control_label",
+    "control_category",
     "reviewer1_label",
+    "reviewer1_provenance",
     "reviewer2_label",
+    "reviewer2_provenance",
     "adjudicated_label",
+    "adjudication_provenance",
     "error_category",
     "notes",
+]
+
+STRICT_REVIEW_FIELDS = {
+    "control_label",
+    "control_category",
+    "reviewer1_label",
+    "reviewer1_provenance",
+    "reviewer2_label",
+    "reviewer2_provenance",
+    "adjudicated_label",
+    "adjudication_provenance",
+    "error_category",
+    "notes",
+}
+
+STRICT_NEGATIVE_CONTROL_MINIMUM = 1
+STRICT_MIN_VERSION_COVERAGE = 10
+STRICT_MIN_PAIR_COVERAGE = 10
+
+STRICT_PARSER_LIMITATIONS = [
+    {
+        "extractor_name": "c_functions",
+        "limitation": "Header declarations and inline signatures are sampled as C API facts; the extractor does not prove body-level behavior or all call-site contracts.",
+    },
+    {
+        "extractor_name": "c_behavior_indicators",
+        "limitation": "Behavior indicators are lexical or local-context signals and must be reviewed with surrounding C code before being treated as semantic contract drift.",
+    },
+    {
+        "extractor_name": "rust_binding_uses",
+        "limitation": "A Rust binding reference establishes reachability evidence, not that the surrounding safe abstraction depends on the changed C contract.",
+    },
+    {
+        "extractor_name": "rust_safe_api_exposures",
+        "limitation": "Safe API exposure extraction is signature-oriented and can miss contracts expressed outside the function body or module-local helper path.",
+    },
+    {
+        "extractor_name": "rust_error_mappings",
+        "limitation": "Error and nullability mappings are proximity facts; nearby C bindings are hints, not proof of an exact return-convention dependency.",
+    },
+    {
+        "extractor_name": "rust_lifetime_facts",
+        "limitation": "Lifetime and ownership facts identify Rust-side patterns but do not prove that a specific C-side refcount or allocation rule changed.",
+    },
+    {
+        "extractor_name": "promoted_warning_evidence",
+        "limitation": "Promoted warning evidence is sufficient for prioritization, but file-level or oracle-only context is reported as a limitation and not as a confirmed bug.",
+    },
 ]
 
 
@@ -374,6 +438,18 @@ def _audit_version_ids(conn, manifest: dict[str, Any] | None) -> list[str]:
     return sorted(versions)
 
 
+def _audit_pairs(conn, manifest: dict[str, Any] | None) -> list[dict[str, str]]:
+    if not manifest:
+        return []
+    return [
+        {"pair_id": str(row["pair_id"]), "old_version": str(row["old_version"]), "new_version": str(row["new_version"])}
+        for row in conn.execute(
+            "SELECT pair_id, old_version, new_version FROM replay_pairs WHERE run_id=? AND status='completed' ORDER BY pair_id",
+            (manifest["run_id"],),
+        )
+    ]
+
+
 def _db_rows(
     conn,
     table: str,
@@ -558,23 +634,32 @@ def _precision_metrics(tables: dict[str, dict[str, Any]]) -> dict[str, float | N
 def generate_strict_extractor_audit(cfg: Config, manifest: dict[str, Any] | None = None) -> dict[str, Any]:
     sample_path = cfg.data_dir / "audit/strict_extractor_sample.csv"
     review_path = cfg.data_dir / "audit/strict_extractor_review.csv"
+    previous_review_rows = _read_strict_review_csv(review_path) if review_path.exists() else []
     rows = _strict_sample_rows(cfg, manifest)
     rows = [sanitize_local_paths(row, cfg) for row in rows]
+    review_provenance = _merge_strict_review_labels(rows, previous_review_rows)
     sample_path.parent.mkdir(parents=True, exist_ok=True)
     _write_strict_csv(sample_path, rows, review_fields=False)
     _write_strict_csv(review_path, rows, review_fields=True)
 
     summary = _strict_summary(rows)
+    summary["negative_samples"] = _strict_negative_samples(rows)
+    summary["cross_version_sampling"] = _strict_cross_version_sampling(rows)
+    summary["parser_limitations"] = STRICT_PARSER_LIMITATIONS
     summary.update(
         {
             "sample_csv": repo_relative(cfg, sample_path),
             "review_csv": repo_relative(cfg, review_path),
-            "sampler_version": "strict-extractor-audit-v1",
+            "sampler_version": "strict-extractor-audit-v2",
             "error_categories": sorted(STRICT_ERROR_CATEGORIES),
-            "review_method": "existing split review labels are reused where available; strict-only rows are labeled in the generated review CSV with provenance notes",
-            "acceptance": _strict_acceptance(summary),
+            "review_method": (
+                "strict audit labels are transferred only from matching reviewed rows with explicit "
+                "reviewer/adjudication provenance; unreviewed strict-only rows remain pending"
+            ),
+            "review_provenance": review_provenance,
         }
     )
+    summary["acceptance"] = _strict_acceptance(summary)
     summary["all_minimums_pass"] = all(item["passes"] for item in summary["acceptance"].values())
     out = cfg.repo_root / "paper/tables/strict_extractor_audit.json"
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -594,6 +679,7 @@ def _strict_sample_rows(cfg: Config, manifest: dict[str, Any] | None) -> list[di
     conn = connect(cfg.database)
     initialize(conn)
     version_ids = _audit_version_ids(conn, manifest)
+    pair_strata = _audit_pairs(conn, manifest)
     split_labels, _ = _read_split_review_labels(cfg)
     rows: list[dict[str, str]] = []
     rows.extend(
@@ -607,6 +693,7 @@ def _strict_sample_rows(cfg: Config, manifest: dict[str, Any] | None) -> list[di
             "line",
             split_labels=split_labels,
             version_ids=version_ids,
+            pair_strata=pair_strata,
         )
     )
     rows.extend(
@@ -620,6 +707,7 @@ def _strict_sample_rows(cfg: Config, manifest: dict[str, Any] | None) -> list[di
             "evidence_line",
             split_labels=split_labels,
             version_ids=version_ids,
+            pair_strata=pair_strata,
         )
     )
     rows.extend(
@@ -633,6 +721,7 @@ def _strict_sample_rows(cfg: Config, manifest: dict[str, Any] | None) -> list[di
             "line",
             split_labels=split_labels,
             version_ids=version_ids,
+            pair_strata=pair_strata,
         )
     )
     rows.extend(
@@ -646,6 +735,7 @@ def _strict_sample_rows(cfg: Config, manifest: dict[str, Any] | None) -> list[di
             "line",
             split_labels=split_labels,
             version_ids=version_ids,
+            pair_strata=pair_strata,
         )
     )
     rows.extend(
@@ -659,6 +749,7 @@ def _strict_sample_rows(cfg: Config, manifest: dict[str, Any] | None) -> list[di
             "line",
             split_labels=split_labels,
             version_ids=version_ids,
+            pair_strata=pair_strata,
         )
     )
     rows.extend(
@@ -672,6 +763,7 @@ def _strict_sample_rows(cfg: Config, manifest: dict[str, Any] | None) -> list[di
             "line",
             split_labels=split_labels,
             version_ids=version_ids,
+            pair_strata=pair_strata,
         )
     )
     rows.extend(_strict_promoted_warning_rows(cfg, manifest, STRICT_AUDIT_TARGETS["promoted_warning_evidence"]))
@@ -689,27 +781,123 @@ def _strict_db_rows(
     *,
     split_labels: dict[str, dict[str, str]],
     version_ids: list[str] | None,
+    pair_strata: list[dict[str, str]] | None,
 ) -> list[dict[str, str]]:
-    base_rows = _db_rows(conn, table, limit, symbol_col, file_col, line_col, version_ids=version_ids)
+    base_rows = _strict_db_rows_by_pair(
+        conn,
+        table,
+        limit,
+        symbol_col,
+        file_col,
+        line_col,
+        version_ids=version_ids,
+        pair_strata=pair_strata,
+    )
     out: list[dict[str, str]] = []
     for row in base_rows:
-        label = split_labels.get(row["sample_id"], {})
-        reviewed = _strict_review_from_split(row["sample_id"], label, extractor_name)
         fact = json.loads(row["extracted_fact"] or "{}")
+        control_category = _strict_negative_control_category(extractor_name, fact)
+        notes = _strict_limitation_note(extractor_name, fact) or "pending strict audit review"
         out.append(
             {
                 "sample_id": row["sample_id"].replace(table, extractor_name, 1),
                 "extractor_name": extractor_name,
                 "version": str(fact.get("version_id", "")),
+                "audit_pair_id": row.get("audit_pair_id", ""),
                 "file": row["file"],
                 "line": row["line"],
                 "symbol": row["symbol"],
                 "extracted_fact": row["extracted_fact"],
                 "raw_context": _raw_context(fact),
-                **reviewed,
+                "control_label": "NEGATIVE_CONTROL" if control_category else "",
+                "control_category": control_category,
+                "reviewer1_label": "",
+                "reviewer1_provenance": "",
+                "reviewer2_label": "",
+                "reviewer2_provenance": "",
+                "adjudicated_label": "",
+                "adjudication_provenance": "",
+                "error_category": "",
+                "notes": notes,
             }
         )
     return out
+
+
+def _strict_db_rows_by_pair(
+    conn,
+    table: str,
+    limit: int,
+    symbol_col: str,
+    file_col: str,
+    line_col: str,
+    *,
+    version_ids: list[str] | None,
+    pair_strata: list[dict[str, str]] | None,
+) -> list[dict[str, str]]:
+    rows = _db_rows(conn, table, 10_000_000, symbol_col, file_col, line_col, version_ids=version_ids)
+    if not pair_strata:
+        return rows[:limit]
+    by_version: dict[str, list[dict[str, str]]] = {}
+    for row in rows:
+        try:
+            fact = json.loads(row["extracted_fact"] or "{}")
+        except json.JSONDecodeError:
+            continue
+        by_version.setdefault(str(fact.get("version_id") or ""), []).append(row)
+
+    selected: list[dict[str, str]] = []
+    seen: set[str] = set()
+    while len(selected) < limit:
+        made_progress = False
+        for pair in pair_strata:
+            if len(selected) >= limit:
+                break
+            candidates = by_version.get(pair["old_version"], []) + by_version.get(pair["new_version"], [])
+            for row in candidates:
+                key = _strict_candidate_key(row)
+                if key in seen:
+                    continue
+                item = dict(row)
+                item["audit_pair_id"] = pair["pair_id"]
+                selected.append(item)
+                seen.add(key)
+                made_progress = True
+                break
+        if not made_progress:
+            break
+    if len(selected) < limit:
+        for row in rows:
+            if len(selected) >= limit:
+                break
+            key = _strict_candidate_key(row)
+            if key in seen:
+                continue
+            item = dict(row)
+            item["audit_pair_id"] = _pair_for_version(pair_strata, _version_from_row(row))
+            selected.append(item)
+            seen.add(key)
+    return selected
+
+
+def _strict_candidate_key(row: dict[str, str]) -> str:
+    payload = {field: row.get(field, "") for field in ("table", "symbol", "file", "line", "extracted_fact")}
+    return hashlib.sha256(json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
+
+
+def _version_from_row(row: dict[str, str]) -> str:
+    try:
+        fact = json.loads(row.get("extracted_fact") or "{}")
+    except json.JSONDecodeError:
+        return ""
+    return str(fact.get("version_id") or "")
+
+
+def _pair_for_version(pair_strata: list[dict[str, str]], version: str) -> str:
+    for pair in pair_strata:
+        if version in {pair["old_version"], pair["new_version"]}:
+            return pair["pair_id"]
+    return ""
 
 
 def _strict_review_from_split(sample_id: str, label: dict[str, str], extractor_name: str) -> dict[str, str]:
@@ -749,6 +937,56 @@ def _map_strict_error(error_type: str, extractor_name: str) -> str:
     return "OTHER"
 
 
+def _strict_negative_control_category(extractor_name: str, fact: dict[str, Any]) -> str:
+    if extractor_name == "c_functions" and not str(fact.get("definition_file") or "").strip():
+        return "HEADER_DECLARATION_WITHOUT_BODY"
+    if extractor_name == "c_behavior_indicators" and float(fact.get("confidence") or 1.0) < 0.9:
+        return "LOCAL_KEYWORD_INDICATOR"
+    if extractor_name == "rust_binding_uses" and int(fact.get("enclosing_unsafe_block") or 0) == 0:
+        return "BINDING_USE_OUTSIDE_UNSAFE_BLOCK"
+    if extractor_name == "rust_safe_api_exposures" and _empty_json_list(fact.get("uses_bindings")):
+        return "SAFE_API_WITHOUT_BINDING_EDGE"
+    if extractor_name == "rust_error_mappings" and not str(fact.get("nearby_binding_symbol") or "").strip():
+        return "ERROR_MAPPING_WITHOUT_NEARBY_BINDING"
+    if extractor_name == "rust_lifetime_facts" and _empty_json_list(fact.get("uses_bindings")):
+        return "LIFETIME_FACT_WITHOUT_BINDING_EDGE"
+    if extractor_name == "promoted_warning_evidence":
+        location = fact.get("evidence_location") if isinstance(fact.get("evidence_location"), dict) else {}
+        reasons = set(fact.get("promotion_reasons") or [])
+        if location.get("source") == "changed_files" or not str(location.get("line") or "").strip():
+            if reasons == {"oracle_hit"}:
+                return "FILE_LEVEL_ORACLE_ONLY_CONTEXT"
+            return "FILE_LEVEL_EVIDENCE_CONTEXT"
+    return ""
+
+
+def _empty_json_list(value: Any) -> bool:
+    if value in (None, "", []):
+        return True
+    if isinstance(value, list):
+        return len(value) == 0
+    if isinstance(value, str):
+        stripped = value.strip()
+        if stripped == "[]":
+            return True
+        try:
+            parsed = json.loads(stripped)
+        except json.JSONDecodeError:
+            return False
+        return isinstance(parsed, list) and len(parsed) == 0
+    return False
+
+
+def _strict_limitation_note(extractor_name: str, fact: dict[str, Any]) -> str:
+    category = _strict_negative_control_category(extractor_name, fact)
+    if not category:
+        return ""
+    return (
+        f"negative-control:{category}; adjudicated extractor fact is correct, "
+        "but this row documents a boundary where the parser should not be treated as completeness evidence"
+    )
+
+
 def _strict_promoted_warning_rows(cfg: Config, manifest: dict[str, Any] | None, limit: int) -> list[dict[str, str]]:
     warning_path = Path(manifest["resolved_paths"]["promoted_warnings"]) if manifest else cfg.warnings_jsonl
     warnings = [
@@ -771,21 +1009,29 @@ def _strict_promoted_warning_rows(cfg: Config, manifest: dict[str, Any] | None, 
             "rust_impact_level": warning.get("rust_impact_level"),
             "evidence_location": location,
         }
+        control_category = _strict_negative_control_category("promoted_warning_evidence", fact)
+        notes = _strict_limitation_note("promoted_warning_evidence", fact)
         out.append(
             {
                 "sample_id": f"promoted_warning_evidence-{idx:03d}",
                 "extractor_name": "promoted_warning_evidence",
                 "version": str(warning.get("new_version") or ""),
+                "audit_pair_id": str(warning.get("pair_id") or ""),
                 "file": location["file"],
                 "line": location["line"],
                 "symbol": str((warning.get("c_side") or {}).get("symbol") or ""),
                 "extracted_fact": json.dumps(fact, sort_keys=True),
                 "raw_context": json.dumps({"c_side": warning.get("c_side"), "rust_side_keys": sorted((warning.get("rust_side") or {}).keys())}, sort_keys=True),
-                "reviewer1_label": "CORRECT",
-                "reviewer2_label": "CORRECT",
-                "adjudicated_label": "CORRECT",
+                "control_label": "NEGATIVE_CONTROL" if control_category else "",
+                "control_category": control_category,
+                "reviewer1_label": "",
+                "reviewer1_provenance": "",
+                "reviewer2_label": "",
+                "reviewer2_provenance": "",
+                "adjudicated_label": "",
+                "adjudication_provenance": "",
                 "error_category": "",
-                "notes": "strict audit evidence-chain sample selected for concrete Rust/C reachability",
+                "notes": notes or "strict audit evidence-chain sample selected for concrete Rust/C reachability",
             }
         )
     return out
@@ -806,7 +1052,84 @@ def _write_strict_csv(path: Path, rows: list[dict[str, str]], *, review_fields: 
             if review_fields:
                 writer.writerow({field: row.get(field, "") for field in STRICT_FIELDS})
             else:
-                writer.writerow({field: ("" if field in {"reviewer1_label", "reviewer2_label", "adjudicated_label", "error_category", "notes"} else row.get(field, "")) for field in STRICT_FIELDS})
+                writer.writerow({field: ("" if field in STRICT_REVIEW_FIELDS else row.get(field, "")) for field in STRICT_FIELDS})
+
+
+def _read_strict_review_csv(path: Path) -> list[dict[str, str]]:
+    with path.open(newline="", encoding="utf-8") as fh:
+        reader = csv.DictReader(fh)
+        fieldnames = set(reader.fieldnames or [])
+        if not set(STRICT_FIELDS).issubset(fieldnames):
+            return []
+        return [{field: str(row.get(field, "") or "") for field in STRICT_FIELDS} for row in reader]
+
+
+def _merge_strict_review_labels(
+    rows: list[dict[str, str]],
+    previous_rows: list[dict[str, str]],
+) -> dict[str, Any]:
+    previous_by_fingerprint = {
+        _strict_row_fingerprint(row): row
+        for row in previous_rows
+        if _strict_review_has_provenance(row)
+    }
+    transferred = 0
+    current_fingerprints = {_strict_row_fingerprint(current) for current in rows}
+    for row in rows:
+        previous = previous_by_fingerprint.get(_strict_row_fingerprint(row))
+        if not previous:
+            continue
+        for field in STRICT_REVIEW_FIELDS:
+            row[field] = previous.get(field, "")
+        transferred += 1
+    stale_reviewed_rows = sum(
+        1
+        for row in previous_rows
+        if _strict_review_has_provenance(row) and _strict_row_fingerprint(row) not in current_fingerprints
+    )
+    missing = [
+        row["sample_id"]
+        for row in rows
+        if not row.get("reviewer1_label") or not row.get("reviewer2_label") or not row.get("adjudicated_label")
+    ]
+    return {
+        "source": "data/audit/strict_extractor_review.csv",
+        "previous_rows": len(previous_rows),
+        "review_labels_transferred": transferred,
+        "pending_rows": len(missing),
+        "pending_sample_ids": missing[:20],
+        "stale_reviewed_rows": stale_reviewed_rows,
+        "requires_explicit_provenance": True,
+        "generated_default_labels": 0,
+    }
+
+
+def _strict_review_has_provenance(row: dict[str, str]) -> bool:
+    return bool(
+        row.get("reviewer1_label", "").strip()
+        and row.get("reviewer2_label", "").strip()
+        and row.get("adjudicated_label", "").strip()
+        and row.get("reviewer1_provenance", "").strip()
+        and row.get("reviewer2_provenance", "").strip()
+        and row.get("adjudication_provenance", "").strip()
+    )
+
+
+def _strict_row_fingerprint(row: dict[str, str]) -> str:
+    payload = {
+        field: row.get(field, "")
+        for field in (
+            "extractor_name",
+            "version",
+            "audit_pair_id",
+            "file",
+            "line",
+            "symbol",
+            "extracted_fact",
+            "raw_context",
+        )
+    }
+    return hashlib.sha256(json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
 
 
 def _strict_summary(rows: list[dict[str, str]]) -> dict[str, Any]:
@@ -820,6 +1143,8 @@ def _strict_summary(rows: list[dict[str, str]]) -> dict[str, Any]:
         correct = sum(1 for row in reviewed if row.get("adjudicated_label") == "CORRECT")
         reviewer_pairs.extend((row.get("reviewer1_label", ""), row.get("reviewer2_label", "")) for row in reviewed)
         errors = Counter(row.get("error_category") or "NONE" for row in reviewed if row.get("adjudicated_label") == "INCORRECT")
+        versions = sorted({row.get("version", "") for row in sample if row.get("version")})
+        pair_ids = sorted({row.get("audit_pair_id", "") for row in sample if row.get("audit_pair_id")})
         extractors[name] = {
             "sampled": len(sample),
             "reviewed": len(reviewed),
@@ -827,6 +1152,11 @@ def _strict_summary(rows: list[dict[str, str]]) -> dict[str, Any]:
             "correct": correct,
             "precision": round(correct / len(reviewed), 4) if reviewed else None,
             "minimum_precision": STRICT_MIN_PRECISION.get(name),
+            "target_precision": STRICT_TARGET_PRECISION.get(name),
+            "version_count": len(versions),
+            "versions": versions,
+            "pair_count": len(pair_ids),
+            "pair_ids": pair_ids,
             "error_category_distribution": dict(errors),
         }
     agreement = _agreement(reviewer_pairs)
@@ -837,30 +1167,125 @@ def _strict_summary(rows: list[dict[str, str]]) -> dict[str, Any]:
     }
 
 
+def _strict_negative_samples(rows: list[dict[str, str]]) -> dict[str, Any]:
+    by_extractor: dict[str, dict[str, Any]] = {
+        name: {"count": 0, "categories": {}, "examples": []}
+        for name in STRICT_AUDIT_TARGETS
+    }
+    for row in rows:
+        extractor_name = row["extractor_name"]
+        if row.get("control_label") != "NEGATIVE_CONTROL" or not _strict_review_has_provenance(row):
+            continue
+        try:
+            fact = json.loads(row.get("extracted_fact") or "{}")
+        except json.JSONDecodeError:
+            fact = {}
+        category = row.get("control_category") or _strict_negative_control_category(extractor_name, fact)
+        if not category:
+            continue
+        summary = by_extractor.setdefault(extractor_name, {"count": 0, "categories": {}, "examples": []})
+        summary["count"] += 1
+        summary["categories"][category] = summary["categories"].get(category, 0) + 1
+        if len(summary["examples"]) < 3:
+            summary["examples"].append(
+                {
+                    "sample_id": row.get("sample_id"),
+                    "symbol": row.get("symbol"),
+                    "category": category,
+                    "note": row.get("notes"),
+                }
+            )
+    missing = [
+        name
+        for name, summary in sorted(by_extractor.items())
+        if summary["count"] < STRICT_NEGATIVE_CONTROL_MINIMUM
+    ]
+    return {
+        "description": (
+            "Negative controls are limitation-focused reviewed rows. They keep the extracted fact label "
+            "separate from completeness claims and document where downstream review must inspect context."
+        ),
+        "minimum_per_extractor": STRICT_NEGATIVE_CONTROL_MINIMUM,
+        "passes": not missing,
+        "missing_extractors": missing,
+        "total": sum(summary["count"] for summary in by_extractor.values()),
+        "extractors": by_extractor,
+    }
+
+
+def _strict_cross_version_sampling(rows: list[dict[str, str]]) -> dict[str, Any]:
+    coverage: dict[str, Any] = {}
+    for name in sorted(STRICT_AUDIT_TARGETS):
+        versions = sorted({row.get("version", "") for row in rows if row["extractor_name"] == name and row.get("version")})
+        pair_ids = sorted({row.get("audit_pair_id", "") for row in rows if row["extractor_name"] == name and row.get("audit_pair_id")})
+        coverage[name] = {"version_count": len(versions), "versions": versions, "pair_count": len(pair_ids), "pair_ids": pair_ids}
+    missing = [
+        name
+        for name, item in coverage.items()
+        if item["version_count"] < STRICT_MIN_VERSION_COVERAGE or item["pair_count"] < STRICT_MIN_PAIR_COVERAGE
+    ]
+    return {
+        "minimum_versions_per_extractor": STRICT_MIN_VERSION_COVERAGE,
+        "minimum_pairs_per_extractor": STRICT_MIN_PAIR_COVERAGE,
+        "passes": not missing,
+        "missing_extractors": missing,
+        "extractors": coverage,
+    }
+
+
 def _strict_acceptance(summary: dict[str, Any]) -> dict[str, Any]:
     acceptance: dict[str, Any] = {}
     for name, minimum in STRICT_MIN_PRECISION.items():
         extractor = summary["extractors"].get(name, {})
+        target_precision = STRICT_TARGET_PRECISION.get(name, minimum)
+        observed_precision = extractor.get("precision") or 0.0
+        sampled = extractor.get("sampled", 0)
+        pending = extractor.get("pending", 0)
+        minimum_passes = bool(
+            sampled == STRICT_AUDIT_TARGETS[name]
+            and pending == 0
+            and observed_precision >= minimum
+        )
+        target_passes = bool(observed_precision >= target_precision)
         acceptance[name] = {
             "minimum_precision": minimum,
+            "target_precision": target_precision,
             "observed_precision": extractor.get("precision"),
-            "sampled": extractor.get("sampled", 0),
+            "sampled": sampled,
             "target_sample": STRICT_AUDIT_TARGETS[name],
             "reviewed": extractor.get("reviewed", 0),
-            "pending": extractor.get("pending", 0),
-            "passes": bool(
-                extractor.get("sampled") == STRICT_AUDIT_TARGETS[name]
-                and extractor.get("pending") == 0
-                and (extractor.get("precision") or 0.0) >= minimum
-            ),
+            "pending": pending,
+            "minimum_passes": minimum_passes,
+            "target_passes": target_passes,
+            "passes": bool(minimum_passes and target_passes),
         }
     agreement = summary["agreement"]
+    negative_samples = summary.get("negative_samples") or {}
+    cross_version_sampling = summary.get("cross_version_sampling") or {}
+    review_provenance = summary.get("review_provenance") or {}
     acceptance["overall"] = {
         "total_samples": summary["total_samples"],
         "minimum_samples": 800,
+        "target_total_samples": 800,
         "cohen_kappa": agreement["cohen_kappa"],
         "minimum_kappa": 0.70,
-        "passes": bool(summary["total_samples"] >= 800 and (agreement["cohen_kappa"] or 0.0) >= 0.70),
+        "target_kappa": 0.80,
+        "negative_samples_pass": negative_samples.get("passes") is True,
+        "cross_version_sampling_pass": cross_version_sampling.get("passes") is True,
+        "parser_limitations_reported": bool(summary.get("parser_limitations")),
+        "review_provenance_pass": review_provenance.get("pending_rows") == 0
+        and review_provenance.get("generated_default_labels") == 0
+        and review_provenance.get("review_labels_transferred") == summary["total_samples"],
+        "passes": bool(
+            summary["total_samples"] >= 800
+            and (agreement["cohen_kappa"] or 0.0) >= 0.80
+            and negative_samples.get("passes") is True
+            and cross_version_sampling.get("passes") is True
+            and bool(summary.get("parser_limitations"))
+            and review_provenance.get("pending_rows") == 0
+            and review_provenance.get("generated_default_labels") == 0
+            and review_provenance.get("review_labels_transferred") == summary["total_samples"]
+        ),
     }
     return acceptance
 
@@ -884,15 +1309,48 @@ def _agreement(pairs: list[tuple[str, str]]) -> dict[str, Any]:
 
 def _strict_error_taxonomy(summary: dict[str, Any]) -> str:
     lines = [
-        "# Extractor Error Taxonomy",
+        "# Extractor Failure And Limitation Taxonomy",
         "",
-        "Strict extractor audit error categories are reported per extractor. Empty categories mean no reviewed false rows in the strict sample.",
+        "Strict extractor audit error categories are reported per extractor. Limitation-focused negative controls are reviewed rows that keep the extracted fact separate from any completeness or confirmed-bug claim.",
+        "",
+        "## Overall",
+        "",
+        f"- Total strict samples: `{summary.get('total_samples')}`",
+        f"- Promoted warning evidence samples: `{(summary.get('extractors') or {}).get('promoted_warning_evidence', {}).get('sampled')}`",
+        f"- Cohen's kappa: `{(summary.get('agreement') or {}).get('cohen_kappa')}`",
+        f"- Negative-control rows: `{(summary.get('negative_samples') or {}).get('total')}`",
+        "",
+        "## Parser Limitations",
         "",
     ]
+    for item in summary.get("parser_limitations") or []:
+        lines.append(f"- `{item['extractor_name']}`: {item['limitation']}")
+    lines.append("")
+    lines.append("## Negative Controls")
+    lines.append("")
+    negative = summary.get("negative_samples") or {}
+    negative_by_extractor = negative.get("extractors") or {}
+    for name in sorted(summary["extractors"]):
+        item = negative_by_extractor.get(name) or {}
+        categories = item.get("categories") or {}
+        lines.append(f"### {name}")
+        lines.append("")
+        lines.append(f"- Count: `{item.get('count', 0)}`")
+        if categories:
+            for category, count in sorted(categories.items()):
+                lines.append(f"- `{category}`: {count}")
+        else:
+            lines.append("- No limitation-focused negative-control row selected.")
+        for example in (item.get("examples") or [])[:2]:
+            lines.append(f"- Example `{example.get('sample_id')}` `{example.get('symbol')}`: `{example.get('category')}`")
+        lines.append("")
+    lines.append("## Observed Incorrect Rows")
+    lines.append("")
     for name, extractor in sorted(summary["extractors"].items()):
-        lines.append(f"## {name}")
+        lines.append(f"### {name}")
         lines.append("")
         lines.append(f"- Precision: `{extractor.get('precision')}`")
+        lines.append(f"- Versions sampled: `{extractor.get('version_count')}`")
         errors = extractor.get("error_category_distribution") or {}
         if not errors:
             lines.append("- Main errors: none in reviewed strict sample.")

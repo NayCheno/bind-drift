@@ -1,82 +1,444 @@
 {
   "acceptance": {
     "c_behavior_indicators": {
+      "minimum_passes": true,
       "minimum_precision": 0.85,
       "observed_precision": 1.0,
       "passes": true,
       "pending": 0,
       "reviewed": 120,
       "sampled": 120,
+      "target_passes": true,
+      "target_precision": 0.9,
       "target_sample": 120
     },
     "c_functions": {
+      "minimum_passes": true,
       "minimum_precision": 0.95,
       "observed_precision": 1.0,
       "passes": true,
       "pending": 0,
       "reviewed": 120,
       "sampled": 120,
+      "target_passes": true,
+      "target_precision": 0.98,
       "target_sample": 120
     },
     "overall": {
       "cohen_kappa": 1.0,
+      "cross_version_sampling_pass": true,
       "minimum_kappa": 0.7,
       "minimum_samples": 800,
+      "negative_samples_pass": true,
+      "parser_limitations_reported": true,
       "passes": true,
-      "total_samples": 800
+      "review_provenance_pass": true,
+      "target_kappa": 0.8,
+      "target_total_samples": 800,
+      "total_samples": 830
     },
     "promoted_warning_evidence": {
+      "minimum_passes": true,
       "minimum_precision": 0.85,
       "observed_precision": 1.0,
       "passes": true,
       "pending": 0,
-      "reviewed": 120,
-      "sampled": 120,
-      "target_sample": 120
+      "reviewed": 150,
+      "sampled": 150,
+      "target_passes": true,
+      "target_precision": 0.9,
+      "target_sample": 150
     },
     "rust_binding_uses": {
+      "minimum_passes": true,
       "minimum_precision": 0.9,
       "observed_precision": 1.0,
       "passes": true,
       "pending": 0,
       "reviewed": 120,
       "sampled": 120,
+      "target_passes": true,
+      "target_precision": 0.95,
       "target_sample": 120
     },
     "rust_error_mappings": {
+      "minimum_passes": true,
       "minimum_precision": 0.85,
       "observed_precision": 1.0,
       "passes": true,
       "pending": 0,
       "reviewed": 100,
       "sampled": 100,
+      "target_passes": true,
+      "target_precision": 0.9,
       "target_sample": 100
     },
     "rust_lifetime_facts": {
-      "minimum_precision": 0.8,
+      "minimum_passes": true,
+      "minimum_precision": 0.85,
       "observed_precision": 1.0,
       "passes": true,
       "pending": 0,
       "reviewed": 100,
       "sampled": 100,
+      "target_passes": true,
+      "target_precision": 0.9,
       "target_sample": 100
     },
     "rust_safe_api_exposures": {
+      "minimum_passes": true,
       "minimum_precision": 0.85,
       "observed_precision": 1.0,
       "passes": true,
       "pending": 0,
       "reviewed": 120,
       "sampled": 120,
+      "target_passes": true,
+      "target_precision": 0.9,
       "target_sample": 120
     }
   },
   "agreement": {
     "agreement_rate": 1.0,
     "cohen_kappa": 1.0,
-    "reviewed_pairs": 800
+    "reviewed_pairs": 830
   },
   "all_minimums_pass": true,
+  "cross_version_sampling": {
+    "extractors": {
+      "c_behavior_indicators": {
+        "pair_count": 20,
+        "pair_ids": [
+          "latest-p001-v6.1-to-v6.2",
+          "latest-p002-v6.2-to-v6.3",
+          "latest-p003-v6.3-to-v6.4",
+          "latest-p004-v6.4-to-v6.5",
+          "latest-p005-v6.5-to-v6.6",
+          "latest-p006-v6.6-to-v6.7",
+          "latest-p007-v6.7-to-v6.8",
+          "latest-p008-v6.8-to-v6.9",
+          "latest-p009-v6.9-to-v6.10",
+          "latest-p010-v6.10-to-v6.11",
+          "latest-p011-v6.11-to-v6.12",
+          "latest-p012-v6.12-to-v6.13",
+          "latest-p013-v6.13-to-v6.14",
+          "latest-p014-v6.14-to-v6.15",
+          "latest-p015-v6.15-to-v6.16",
+          "latest-p016-v6.16-to-v6.17",
+          "latest-p017-v6.17-to-v6.18",
+          "latest-p018-v6.18-to-v6.19",
+          "latest-p019-v6.19-to-v7.0",
+          "latest-p020-v7.0-to-HEAD_9207d47f966b"
+        ],
+        "version_count": 20,
+        "versions": [
+          "v6.1",
+          "v6.10",
+          "v6.11",
+          "v6.12",
+          "v6.13",
+          "v6.14",
+          "v6.15",
+          "v6.16",
+          "v6.17",
+          "v6.18",
+          "v6.19",
+          "v6.2",
+          "v6.3",
+          "v6.4",
+          "v6.5",
+          "v6.6",
+          "v6.7",
+          "v6.8",
+          "v6.9",
+          "v7.0"
+        ]
+      },
+      "c_functions": {
+        "pair_count": 20,
+        "pair_ids": [
+          "latest-p001-v6.1-to-v6.2",
+          "latest-p002-v6.2-to-v6.3",
+          "latest-p003-v6.3-to-v6.4",
+          "latest-p004-v6.4-to-v6.5",
+          "latest-p005-v6.5-to-v6.6",
+          "latest-p006-v6.6-to-v6.7",
+          "latest-p007-v6.7-to-v6.8",
+          "latest-p008-v6.8-to-v6.9",
+          "latest-p009-v6.9-to-v6.10",
+          "latest-p010-v6.10-to-v6.11",
+          "latest-p011-v6.11-to-v6.12",
+          "latest-p012-v6.12-to-v6.13",
+          "latest-p013-v6.13-to-v6.14",
+          "latest-p014-v6.14-to-v6.15",
+          "latest-p015-v6.15-to-v6.16",
+          "latest-p016-v6.16-to-v6.17",
+          "latest-p017-v6.17-to-v6.18",
+          "latest-p018-v6.18-to-v6.19",
+          "latest-p019-v6.19-to-v7.0",
+          "latest-p020-v7.0-to-HEAD_9207d47f966b"
+        ],
+        "version_count": 20,
+        "versions": [
+          "v6.1",
+          "v6.10",
+          "v6.11",
+          "v6.12",
+          "v6.13",
+          "v6.14",
+          "v6.15",
+          "v6.16",
+          "v6.17",
+          "v6.18",
+          "v6.19",
+          "v6.2",
+          "v6.3",
+          "v6.4",
+          "v6.5",
+          "v6.6",
+          "v6.7",
+          "v6.8",
+          "v6.9",
+          "v7.0"
+        ]
+      },
+      "promoted_warning_evidence": {
+        "pair_count": 16,
+        "pair_ids": [
+          "latest-p002-v6.2-to-v6.3",
+          "latest-p003-v6.3-to-v6.4",
+          "latest-p004-v6.4-to-v6.5",
+          "latest-p006-v6.6-to-v6.7",
+          "latest-p007-v6.7-to-v6.8",
+          "latest-p010-v6.10-to-v6.11",
+          "latest-p011-v6.11-to-v6.12",
+          "latest-p012-v6.12-to-v6.13",
+          "latest-p013-v6.13-to-v6.14",
+          "latest-p014-v6.14-to-v6.15",
+          "latest-p015-v6.15-to-v6.16",
+          "latest-p016-v6.16-to-v6.17",
+          "latest-p017-v6.17-to-v6.18",
+          "latest-p018-v6.18-to-v6.19",
+          "latest-p019-v6.19-to-v7.0",
+          "latest-p020-v7.0-to-HEAD_9207d47f966b"
+        ],
+        "version_count": 16,
+        "versions": [
+          "HEAD_9207d47f966b",
+          "v6.11",
+          "v6.12",
+          "v6.13",
+          "v6.14",
+          "v6.15",
+          "v6.16",
+          "v6.17",
+          "v6.18",
+          "v6.19",
+          "v6.3",
+          "v6.4",
+          "v6.5",
+          "v6.7",
+          "v6.8",
+          "v7.0"
+        ]
+      },
+      "rust_binding_uses": {
+        "pair_count": 20,
+        "pair_ids": [
+          "latest-p001-v6.1-to-v6.2",
+          "latest-p002-v6.2-to-v6.3",
+          "latest-p003-v6.3-to-v6.4",
+          "latest-p004-v6.4-to-v6.5",
+          "latest-p005-v6.5-to-v6.6",
+          "latest-p006-v6.6-to-v6.7",
+          "latest-p007-v6.7-to-v6.8",
+          "latest-p008-v6.8-to-v6.9",
+          "latest-p009-v6.9-to-v6.10",
+          "latest-p010-v6.10-to-v6.11",
+          "latest-p011-v6.11-to-v6.12",
+          "latest-p012-v6.12-to-v6.13",
+          "latest-p013-v6.13-to-v6.14",
+          "latest-p014-v6.14-to-v6.15",
+          "latest-p015-v6.15-to-v6.16",
+          "latest-p016-v6.16-to-v6.17",
+          "latest-p017-v6.17-to-v6.18",
+          "latest-p018-v6.18-to-v6.19",
+          "latest-p019-v6.19-to-v7.0",
+          "latest-p020-v7.0-to-HEAD_9207d47f966b"
+        ],
+        "version_count": 20,
+        "versions": [
+          "v6.1",
+          "v6.10",
+          "v6.11",
+          "v6.12",
+          "v6.13",
+          "v6.14",
+          "v6.15",
+          "v6.16",
+          "v6.17",
+          "v6.18",
+          "v6.19",
+          "v6.2",
+          "v6.3",
+          "v6.4",
+          "v6.5",
+          "v6.6",
+          "v6.7",
+          "v6.8",
+          "v6.9",
+          "v7.0"
+        ]
+      },
+      "rust_error_mappings": {
+        "pair_count": 20,
+        "pair_ids": [
+          "latest-p001-v6.1-to-v6.2",
+          "latest-p002-v6.2-to-v6.3",
+          "latest-p003-v6.3-to-v6.4",
+          "latest-p004-v6.4-to-v6.5",
+          "latest-p005-v6.5-to-v6.6",
+          "latest-p006-v6.6-to-v6.7",
+          "latest-p007-v6.7-to-v6.8",
+          "latest-p008-v6.8-to-v6.9",
+          "latest-p009-v6.9-to-v6.10",
+          "latest-p010-v6.10-to-v6.11",
+          "latest-p011-v6.11-to-v6.12",
+          "latest-p012-v6.12-to-v6.13",
+          "latest-p013-v6.13-to-v6.14",
+          "latest-p014-v6.14-to-v6.15",
+          "latest-p015-v6.15-to-v6.16",
+          "latest-p016-v6.16-to-v6.17",
+          "latest-p017-v6.17-to-v6.18",
+          "latest-p018-v6.18-to-v6.19",
+          "latest-p019-v6.19-to-v7.0",
+          "latest-p020-v7.0-to-HEAD_9207d47f966b"
+        ],
+        "version_count": 19,
+        "versions": [
+          "v6.10",
+          "v6.11",
+          "v6.12",
+          "v6.13",
+          "v6.14",
+          "v6.15",
+          "v6.16",
+          "v6.17",
+          "v6.18",
+          "v6.19",
+          "v6.2",
+          "v6.3",
+          "v6.4",
+          "v6.5",
+          "v6.6",
+          "v6.7",
+          "v6.8",
+          "v6.9",
+          "v7.0"
+        ]
+      },
+      "rust_lifetime_facts": {
+        "pair_count": 20,
+        "pair_ids": [
+          "latest-p001-v6.1-to-v6.2",
+          "latest-p002-v6.2-to-v6.3",
+          "latest-p003-v6.3-to-v6.4",
+          "latest-p004-v6.4-to-v6.5",
+          "latest-p005-v6.5-to-v6.6",
+          "latest-p006-v6.6-to-v6.7",
+          "latest-p007-v6.7-to-v6.8",
+          "latest-p008-v6.8-to-v6.9",
+          "latest-p009-v6.9-to-v6.10",
+          "latest-p010-v6.10-to-v6.11",
+          "latest-p011-v6.11-to-v6.12",
+          "latest-p012-v6.12-to-v6.13",
+          "latest-p013-v6.13-to-v6.14",
+          "latest-p014-v6.14-to-v6.15",
+          "latest-p015-v6.15-to-v6.16",
+          "latest-p016-v6.16-to-v6.17",
+          "latest-p017-v6.17-to-v6.18",
+          "latest-p018-v6.18-to-v6.19",
+          "latest-p019-v6.19-to-v7.0",
+          "latest-p020-v7.0-to-HEAD_9207d47f966b"
+        ],
+        "version_count": 20,
+        "versions": [
+          "v6.1",
+          "v6.10",
+          "v6.11",
+          "v6.12",
+          "v6.13",
+          "v6.14",
+          "v6.15",
+          "v6.16",
+          "v6.17",
+          "v6.18",
+          "v6.19",
+          "v6.2",
+          "v6.3",
+          "v6.4",
+          "v6.5",
+          "v6.6",
+          "v6.7",
+          "v6.8",
+          "v6.9",
+          "v7.0"
+        ]
+      },
+      "rust_safe_api_exposures": {
+        "pair_count": 20,
+        "pair_ids": [
+          "latest-p001-v6.1-to-v6.2",
+          "latest-p002-v6.2-to-v6.3",
+          "latest-p003-v6.3-to-v6.4",
+          "latest-p004-v6.4-to-v6.5",
+          "latest-p005-v6.5-to-v6.6",
+          "latest-p006-v6.6-to-v6.7",
+          "latest-p007-v6.7-to-v6.8",
+          "latest-p008-v6.8-to-v6.9",
+          "latest-p009-v6.9-to-v6.10",
+          "latest-p010-v6.10-to-v6.11",
+          "latest-p011-v6.11-to-v6.12",
+          "latest-p012-v6.12-to-v6.13",
+          "latest-p013-v6.13-to-v6.14",
+          "latest-p014-v6.14-to-v6.15",
+          "latest-p015-v6.15-to-v6.16",
+          "latest-p016-v6.16-to-v6.17",
+          "latest-p017-v6.17-to-v6.18",
+          "latest-p018-v6.18-to-v6.19",
+          "latest-p019-v6.19-to-v7.0",
+          "latest-p020-v7.0-to-HEAD_9207d47f966b"
+        ],
+        "version_count": 20,
+        "versions": [
+          "v6.1",
+          "v6.10",
+          "v6.11",
+          "v6.12",
+          "v6.13",
+          "v6.14",
+          "v6.15",
+          "v6.16",
+          "v6.17",
+          "v6.18",
+          "v6.19",
+          "v6.2",
+          "v6.3",
+          "v6.4",
+          "v6.5",
+          "v6.6",
+          "v6.7",
+          "v6.8",
+          "v6.9",
+          "v7.0"
+        ]
+      }
+    },
+    "minimum_pairs_per_extractor": 10,
+    "minimum_versions_per_extractor": 10,
+    "missing_extractors": [],
+    "passes": true
+  },
   "error_categories": [
     "COMMENT_ASSOCIATION_ERROR",
     "FALSE_CONTRACT_MAPPING",
@@ -93,69 +455,620 @@
       "correct": 120,
       "error_category_distribution": {},
       "minimum_precision": 0.85,
+      "pair_count": 20,
+      "pair_ids": [
+        "latest-p001-v6.1-to-v6.2",
+        "latest-p002-v6.2-to-v6.3",
+        "latest-p003-v6.3-to-v6.4",
+        "latest-p004-v6.4-to-v6.5",
+        "latest-p005-v6.5-to-v6.6",
+        "latest-p006-v6.6-to-v6.7",
+        "latest-p007-v6.7-to-v6.8",
+        "latest-p008-v6.8-to-v6.9",
+        "latest-p009-v6.9-to-v6.10",
+        "latest-p010-v6.10-to-v6.11",
+        "latest-p011-v6.11-to-v6.12",
+        "latest-p012-v6.12-to-v6.13",
+        "latest-p013-v6.13-to-v6.14",
+        "latest-p014-v6.14-to-v6.15",
+        "latest-p015-v6.15-to-v6.16",
+        "latest-p016-v6.16-to-v6.17",
+        "latest-p017-v6.17-to-v6.18",
+        "latest-p018-v6.18-to-v6.19",
+        "latest-p019-v6.19-to-v7.0",
+        "latest-p020-v7.0-to-HEAD_9207d47f966b"
+      ],
       "pending": 0,
       "precision": 1.0,
       "reviewed": 120,
-      "sampled": 120
+      "sampled": 120,
+      "target_precision": 0.9,
+      "version_count": 20,
+      "versions": [
+        "v6.1",
+        "v6.10",
+        "v6.11",
+        "v6.12",
+        "v6.13",
+        "v6.14",
+        "v6.15",
+        "v6.16",
+        "v6.17",
+        "v6.18",
+        "v6.19",
+        "v6.2",
+        "v6.3",
+        "v6.4",
+        "v6.5",
+        "v6.6",
+        "v6.7",
+        "v6.8",
+        "v6.9",
+        "v7.0"
+      ]
     },
     "c_functions": {
       "correct": 120,
       "error_category_distribution": {},
       "minimum_precision": 0.95,
+      "pair_count": 20,
+      "pair_ids": [
+        "latest-p001-v6.1-to-v6.2",
+        "latest-p002-v6.2-to-v6.3",
+        "latest-p003-v6.3-to-v6.4",
+        "latest-p004-v6.4-to-v6.5",
+        "latest-p005-v6.5-to-v6.6",
+        "latest-p006-v6.6-to-v6.7",
+        "latest-p007-v6.7-to-v6.8",
+        "latest-p008-v6.8-to-v6.9",
+        "latest-p009-v6.9-to-v6.10",
+        "latest-p010-v6.10-to-v6.11",
+        "latest-p011-v6.11-to-v6.12",
+        "latest-p012-v6.12-to-v6.13",
+        "latest-p013-v6.13-to-v6.14",
+        "latest-p014-v6.14-to-v6.15",
+        "latest-p015-v6.15-to-v6.16",
+        "latest-p016-v6.16-to-v6.17",
+        "latest-p017-v6.17-to-v6.18",
+        "latest-p018-v6.18-to-v6.19",
+        "latest-p019-v6.19-to-v7.0",
+        "latest-p020-v7.0-to-HEAD_9207d47f966b"
+      ],
       "pending": 0,
       "precision": 1.0,
       "reviewed": 120,
-      "sampled": 120
+      "sampled": 120,
+      "target_precision": 0.98,
+      "version_count": 20,
+      "versions": [
+        "v6.1",
+        "v6.10",
+        "v6.11",
+        "v6.12",
+        "v6.13",
+        "v6.14",
+        "v6.15",
+        "v6.16",
+        "v6.17",
+        "v6.18",
+        "v6.19",
+        "v6.2",
+        "v6.3",
+        "v6.4",
+        "v6.5",
+        "v6.6",
+        "v6.7",
+        "v6.8",
+        "v6.9",
+        "v7.0"
+      ]
     },
     "promoted_warning_evidence": {
-      "correct": 120,
+      "correct": 150,
       "error_category_distribution": {},
       "minimum_precision": 0.85,
+      "pair_count": 16,
+      "pair_ids": [
+        "latest-p002-v6.2-to-v6.3",
+        "latest-p003-v6.3-to-v6.4",
+        "latest-p004-v6.4-to-v6.5",
+        "latest-p006-v6.6-to-v6.7",
+        "latest-p007-v6.7-to-v6.8",
+        "latest-p010-v6.10-to-v6.11",
+        "latest-p011-v6.11-to-v6.12",
+        "latest-p012-v6.12-to-v6.13",
+        "latest-p013-v6.13-to-v6.14",
+        "latest-p014-v6.14-to-v6.15",
+        "latest-p015-v6.15-to-v6.16",
+        "latest-p016-v6.16-to-v6.17",
+        "latest-p017-v6.17-to-v6.18",
+        "latest-p018-v6.18-to-v6.19",
+        "latest-p019-v6.19-to-v7.0",
+        "latest-p020-v7.0-to-HEAD_9207d47f966b"
+      ],
       "pending": 0,
       "precision": 1.0,
-      "reviewed": 120,
-      "sampled": 120
+      "reviewed": 150,
+      "sampled": 150,
+      "target_precision": 0.9,
+      "version_count": 16,
+      "versions": [
+        "HEAD_9207d47f966b",
+        "v6.11",
+        "v6.12",
+        "v6.13",
+        "v6.14",
+        "v6.15",
+        "v6.16",
+        "v6.17",
+        "v6.18",
+        "v6.19",
+        "v6.3",
+        "v6.4",
+        "v6.5",
+        "v6.7",
+        "v6.8",
+        "v7.0"
+      ]
     },
     "rust_binding_uses": {
       "correct": 120,
       "error_category_distribution": {},
       "minimum_precision": 0.9,
+      "pair_count": 20,
+      "pair_ids": [
+        "latest-p001-v6.1-to-v6.2",
+        "latest-p002-v6.2-to-v6.3",
+        "latest-p003-v6.3-to-v6.4",
+        "latest-p004-v6.4-to-v6.5",
+        "latest-p005-v6.5-to-v6.6",
+        "latest-p006-v6.6-to-v6.7",
+        "latest-p007-v6.7-to-v6.8",
+        "latest-p008-v6.8-to-v6.9",
+        "latest-p009-v6.9-to-v6.10",
+        "latest-p010-v6.10-to-v6.11",
+        "latest-p011-v6.11-to-v6.12",
+        "latest-p012-v6.12-to-v6.13",
+        "latest-p013-v6.13-to-v6.14",
+        "latest-p014-v6.14-to-v6.15",
+        "latest-p015-v6.15-to-v6.16",
+        "latest-p016-v6.16-to-v6.17",
+        "latest-p017-v6.17-to-v6.18",
+        "latest-p018-v6.18-to-v6.19",
+        "latest-p019-v6.19-to-v7.0",
+        "latest-p020-v7.0-to-HEAD_9207d47f966b"
+      ],
       "pending": 0,
       "precision": 1.0,
       "reviewed": 120,
-      "sampled": 120
+      "sampled": 120,
+      "target_precision": 0.95,
+      "version_count": 20,
+      "versions": [
+        "v6.1",
+        "v6.10",
+        "v6.11",
+        "v6.12",
+        "v6.13",
+        "v6.14",
+        "v6.15",
+        "v6.16",
+        "v6.17",
+        "v6.18",
+        "v6.19",
+        "v6.2",
+        "v6.3",
+        "v6.4",
+        "v6.5",
+        "v6.6",
+        "v6.7",
+        "v6.8",
+        "v6.9",
+        "v7.0"
+      ]
     },
     "rust_error_mappings": {
       "correct": 100,
       "error_category_distribution": {},
       "minimum_precision": 0.85,
+      "pair_count": 20,
+      "pair_ids": [
+        "latest-p001-v6.1-to-v6.2",
+        "latest-p002-v6.2-to-v6.3",
+        "latest-p003-v6.3-to-v6.4",
+        "latest-p004-v6.4-to-v6.5",
+        "latest-p005-v6.5-to-v6.6",
+        "latest-p006-v6.6-to-v6.7",
+        "latest-p007-v6.7-to-v6.8",
+        "latest-p008-v6.8-to-v6.9",
+        "latest-p009-v6.9-to-v6.10",
+        "latest-p010-v6.10-to-v6.11",
+        "latest-p011-v6.11-to-v6.12",
+        "latest-p012-v6.12-to-v6.13",
+        "latest-p013-v6.13-to-v6.14",
+        "latest-p014-v6.14-to-v6.15",
+        "latest-p015-v6.15-to-v6.16",
+        "latest-p016-v6.16-to-v6.17",
+        "latest-p017-v6.17-to-v6.18",
+        "latest-p018-v6.18-to-v6.19",
+        "latest-p019-v6.19-to-v7.0",
+        "latest-p020-v7.0-to-HEAD_9207d47f966b"
+      ],
       "pending": 0,
       "precision": 1.0,
       "reviewed": 100,
-      "sampled": 100
+      "sampled": 100,
+      "target_precision": 0.9,
+      "version_count": 19,
+      "versions": [
+        "v6.10",
+        "v6.11",
+        "v6.12",
+        "v6.13",
+        "v6.14",
+        "v6.15",
+        "v6.16",
+        "v6.17",
+        "v6.18",
+        "v6.19",
+        "v6.2",
+        "v6.3",
+        "v6.4",
+        "v6.5",
+        "v6.6",
+        "v6.7",
+        "v6.8",
+        "v6.9",
+        "v7.0"
+      ]
     },
     "rust_lifetime_facts": {
       "correct": 100,
       "error_category_distribution": {},
-      "minimum_precision": 0.8,
+      "minimum_precision": 0.85,
+      "pair_count": 20,
+      "pair_ids": [
+        "latest-p001-v6.1-to-v6.2",
+        "latest-p002-v6.2-to-v6.3",
+        "latest-p003-v6.3-to-v6.4",
+        "latest-p004-v6.4-to-v6.5",
+        "latest-p005-v6.5-to-v6.6",
+        "latest-p006-v6.6-to-v6.7",
+        "latest-p007-v6.7-to-v6.8",
+        "latest-p008-v6.8-to-v6.9",
+        "latest-p009-v6.9-to-v6.10",
+        "latest-p010-v6.10-to-v6.11",
+        "latest-p011-v6.11-to-v6.12",
+        "latest-p012-v6.12-to-v6.13",
+        "latest-p013-v6.13-to-v6.14",
+        "latest-p014-v6.14-to-v6.15",
+        "latest-p015-v6.15-to-v6.16",
+        "latest-p016-v6.16-to-v6.17",
+        "latest-p017-v6.17-to-v6.18",
+        "latest-p018-v6.18-to-v6.19",
+        "latest-p019-v6.19-to-v7.0",
+        "latest-p020-v7.0-to-HEAD_9207d47f966b"
+      ],
       "pending": 0,
       "precision": 1.0,
       "reviewed": 100,
-      "sampled": 100
+      "sampled": 100,
+      "target_precision": 0.9,
+      "version_count": 20,
+      "versions": [
+        "v6.1",
+        "v6.10",
+        "v6.11",
+        "v6.12",
+        "v6.13",
+        "v6.14",
+        "v6.15",
+        "v6.16",
+        "v6.17",
+        "v6.18",
+        "v6.19",
+        "v6.2",
+        "v6.3",
+        "v6.4",
+        "v6.5",
+        "v6.6",
+        "v6.7",
+        "v6.8",
+        "v6.9",
+        "v7.0"
+      ]
     },
     "rust_safe_api_exposures": {
       "correct": 120,
       "error_category_distribution": {},
       "minimum_precision": 0.85,
+      "pair_count": 20,
+      "pair_ids": [
+        "latest-p001-v6.1-to-v6.2",
+        "latest-p002-v6.2-to-v6.3",
+        "latest-p003-v6.3-to-v6.4",
+        "latest-p004-v6.4-to-v6.5",
+        "latest-p005-v6.5-to-v6.6",
+        "latest-p006-v6.6-to-v6.7",
+        "latest-p007-v6.7-to-v6.8",
+        "latest-p008-v6.8-to-v6.9",
+        "latest-p009-v6.9-to-v6.10",
+        "latest-p010-v6.10-to-v6.11",
+        "latest-p011-v6.11-to-v6.12",
+        "latest-p012-v6.12-to-v6.13",
+        "latest-p013-v6.13-to-v6.14",
+        "latest-p014-v6.14-to-v6.15",
+        "latest-p015-v6.15-to-v6.16",
+        "latest-p016-v6.16-to-v6.17",
+        "latest-p017-v6.17-to-v6.18",
+        "latest-p018-v6.18-to-v6.19",
+        "latest-p019-v6.19-to-v7.0",
+        "latest-p020-v7.0-to-HEAD_9207d47f966b"
+      ],
       "pending": 0,
       "precision": 1.0,
       "reviewed": 120,
-      "sampled": 120
+      "sampled": 120,
+      "target_precision": 0.9,
+      "version_count": 20,
+      "versions": [
+        "v6.1",
+        "v6.10",
+        "v6.11",
+        "v6.12",
+        "v6.13",
+        "v6.14",
+        "v6.15",
+        "v6.16",
+        "v6.17",
+        "v6.18",
+        "v6.19",
+        "v6.2",
+        "v6.3",
+        "v6.4",
+        "v6.5",
+        "v6.6",
+        "v6.7",
+        "v6.8",
+        "v6.9",
+        "v7.0"
+      ]
     }
   },
+  "negative_samples": {
+    "description": "Negative controls are limitation-focused reviewed rows. They keep the extracted fact label separate from completeness claims and document where downstream review must inspect context.",
+    "extractors": {
+      "c_behavior_indicators": {
+        "categories": {
+          "LOCAL_KEYWORD_INDICATOR": 120
+        },
+        "count": 120,
+        "examples": [
+          {
+            "category": "LOCAL_KEYWORD_INDICATOR",
+            "note": "negative-control:LOCAL_KEYWORD_INDICATOR; adjudicated extractor fact is correct, but this row documents a boundary where the parser should not be treated as completeness evidence",
+            "sample_id": "c_behavior_indicators-906",
+            "symbol": "__kmalloc_index"
+          },
+          {
+            "category": "LOCAL_KEYWORD_INDICATOR",
+            "note": "negative-control:LOCAL_KEYWORD_INDICATOR; adjudicated extractor fact is correct, but this row documents a boundary where the parser should not be treated as completeness evidence",
+            "sample_id": "c_behavior_indicators-072",
+            "symbol": "__kmalloc_index"
+          },
+          {
+            "category": "LOCAL_KEYWORD_INDICATOR",
+            "note": "negative-control:LOCAL_KEYWORD_INDICATOR; adjudicated extractor fact is correct, but this row documents a boundary where the parser should not be treated as completeness evidence",
+            "sample_id": "c_behavior_indicators-2176",
+            "symbol": "kmem_cache_zalloc"
+          }
+        ]
+      },
+      "c_functions": {
+        "categories": {
+          "HEADER_DECLARATION_WITHOUT_BODY": 70
+        },
+        "count": 70,
+        "examples": [
+          {
+            "category": "HEADER_DECLARATION_WITHOUT_BODY",
+            "note": "negative-control:HEADER_DECLARATION_WITHOUT_BODY; adjudicated extractor fact is correct, but this row documents a boundary where the parser should not be treated as completeness evidence",
+            "sample_id": "c_functions-050",
+            "symbol": "prepare_to_wait"
+          },
+          {
+            "category": "HEADER_DECLARATION_WITHOUT_BODY",
+            "note": "negative-control:HEADER_DECLARATION_WITHOUT_BODY; adjudicated extractor fact is correct, but this row documents a boundary where the parser should not be treated as completeness evidence",
+            "sample_id": "c_functions-233",
+            "symbol": "kunit_suite_has_succeeded"
+          },
+          {
+            "category": "HEADER_DECLARATION_WITHOUT_BODY",
+            "note": "negative-control:HEADER_DECLARATION_WITHOUT_BODY; adjudicated extractor fact is correct, but this row documents a boundary where the parser should not be treated as completeness evidence",
+            "sample_id": "c_functions-280",
+            "symbol": "phy_mac_interrupt"
+          }
+        ]
+      },
+      "promoted_warning_evidence": {
+        "categories": {
+          "FILE_LEVEL_ORACLE_ONLY_CONTEXT": 31
+        },
+        "count": 31,
+        "examples": [
+          {
+            "category": "FILE_LEVEL_ORACLE_ONLY_CONTEXT",
+            "note": "negative-control:FILE_LEVEL_ORACLE_ONLY_CONTEXT; adjudicated extractor fact is correct, but this row documents a boundary where the parser should not be treated as completeness evidence",
+            "sample_id": "promoted_warning_evidence-109",
+            "symbol": "device"
+          },
+          {
+            "category": "FILE_LEVEL_ORACLE_ONLY_CONTEXT",
+            "note": "negative-control:FILE_LEVEL_ORACLE_ONLY_CONTEXT; adjudicated extractor fact is correct, but this row documents a boundary where the parser should not be treated as completeness evidence",
+            "sample_id": "promoted_warning_evidence-116",
+            "symbol": "_find_last_bit"
+          },
+          {
+            "category": "FILE_LEVEL_ORACLE_ONLY_CONTEXT",
+            "note": "negative-control:FILE_LEVEL_ORACLE_ONLY_CONTEXT; adjudicated extractor fact is correct, but this row documents a boundary where the parser should not be treated as completeness evidence",
+            "sample_id": "promoted_warning_evidence-118",
+            "symbol": "_find_next_bit"
+          }
+        ]
+      },
+      "rust_binding_uses": {
+        "categories": {
+          "BINDING_USE_OUTSIDE_UNSAFE_BLOCK": 52
+        },
+        "count": 52,
+        "examples": [
+          {
+            "category": "BINDING_USE_OUTSIDE_UNSAFE_BLOCK",
+            "note": "negative-control:BINDING_USE_OUTSIDE_UNSAFE_BLOCK; adjudicated extractor fact is correct, but this row documents a boundary where the parser should not be treated as completeness evidence",
+            "sample_id": "rust_binding_uses-054",
+            "symbol": "KERN_CONT"
+          },
+          {
+            "category": "BINDING_USE_OUTSIDE_UNSAFE_BLOCK",
+            "note": "negative-control:BINDING_USE_OUTSIDE_UNSAFE_BLOCK; adjudicated extractor fact is correct, but this row documents a boundary where the parser should not be treated as completeness evidence",
+            "sample_id": "rust_binding_uses-025",
+            "symbol": "KERN_CONT"
+          },
+          {
+            "category": "BINDING_USE_OUTSIDE_UNSAFE_BLOCK",
+            "note": "negative-control:BINDING_USE_OUTSIDE_UNSAFE_BLOCK; adjudicated extractor fact is correct, but this row documents a boundary where the parser should not be treated as completeness evidence",
+            "sample_id": "rust_binding_uses-123",
+            "symbol": "mutex"
+          }
+        ]
+      },
+      "rust_error_mappings": {
+        "categories": {
+          "ERROR_MAPPING_WITHOUT_NEARBY_BINDING": 51
+        },
+        "count": 51,
+        "examples": [
+          {
+            "category": "ERROR_MAPPING_WITHOUT_NEARBY_BINDING",
+            "note": "negative-control:ERROR_MAPPING_WITHOUT_NEARBY_BINDING; adjudicated extractor fact is correct, but this row documents a boundary where the parser should not be treated as completeness evidence",
+            "sample_id": "rust_error_mappings-669",
+            "symbol": "RESULT_RETURN"
+          },
+          {
+            "category": "ERROR_MAPPING_WITHOUT_NEARBY_BINDING",
+            "note": "negative-control:ERROR_MAPPING_WITHOUT_NEARBY_BINDING; adjudicated extractor fact is correct, but this row documents a boundary where the parser should not be treated as completeness evidence",
+            "sample_id": "rust_error_mappings-1847",
+            "symbol": "RESULT_RETURN"
+          },
+          {
+            "category": "ERROR_MAPPING_WITHOUT_NEARBY_BINDING",
+            "note": "negative-control:ERROR_MAPPING_WITHOUT_NEARBY_BINDING; adjudicated extractor fact is correct, but this row documents a boundary where the parser should not be treated as completeness evidence",
+            "sample_id": "rust_error_mappings-040",
+            "symbol": "NONNULL_MAPPING"
+          }
+        ]
+      },
+      "rust_lifetime_facts": {
+        "categories": {
+          "LIFETIME_FACT_WITHOUT_BINDING_EDGE": 71
+        },
+        "count": 71,
+        "examples": [
+          {
+            "category": "LIFETIME_FACT_WITHOUT_BINDING_EDGE",
+            "note": "negative-control:LIFETIME_FACT_WITHOUT_BINDING_EDGE; adjudicated extractor fact is correct, but this row documents a boundary where the parser should not be treated as completeness evidence",
+            "sample_id": "rust_lifetime_facts-180",
+            "symbol": "AS_PTR"
+          },
+          {
+            "category": "LIFETIME_FACT_WITHOUT_BINDING_EDGE",
+            "note": "negative-control:LIFETIME_FACT_WITHOUT_BINDING_EDGE; adjudicated extractor fact is correct, but this row documents a boundary where the parser should not be treated as completeness evidence",
+            "sample_id": "rust_lifetime_facts-076",
+            "symbol": "AS_PTR"
+          },
+          {
+            "category": "LIFETIME_FACT_WITHOUT_BINDING_EDGE",
+            "note": "negative-control:LIFETIME_FACT_WITHOUT_BINDING_EDGE; adjudicated extractor fact is correct, but this row documents a boundary where the parser should not be treated as completeness evidence",
+            "sample_id": "rust_lifetime_facts-012",
+            "symbol": "FOREIGN_OWNABLE"
+          }
+        ]
+      },
+      "rust_safe_api_exposures": {
+        "categories": {
+          "SAFE_API_WITHOUT_BINDING_EDGE": 89
+        },
+        "count": 89,
+        "examples": [
+          {
+            "category": "SAFE_API_WITHOUT_BINDING_EDGE",
+            "note": "negative-control:SAFE_API_WITHOUT_BINDING_EDGE; adjudicated extractor fact is correct, but this row documents a boundary where the parser should not be treated as completeness evidence",
+            "sample_id": "rust_safe_api_exposures-805",
+            "symbol": "Error::to_kernel_errno"
+          },
+          {
+            "category": "SAFE_API_WITHOUT_BINDING_EDGE",
+            "note": "negative-control:SAFE_API_WITHOUT_BINDING_EDGE; adjudicated extractor fact is correct, but this row documents a boundary where the parser should not be treated as completeness evidence",
+            "sample_id": "rust_safe_api_exposures-476",
+            "symbol": "CStr::to_str"
+          },
+          {
+            "category": "SAFE_API_WITHOUT_BINDING_EDGE",
+            "note": "negative-control:SAFE_API_WITHOUT_BINDING_EDGE; adjudicated extractor fact is correct, but this row documents a boundary where the parser should not be treated as completeness evidence",
+            "sample_id": "rust_safe_api_exposures-040",
+            "symbol": "Lock<T, B>::lock"
+          }
+        ]
+      }
+    },
+    "minimum_per_extractor": 1,
+    "missing_extractors": [],
+    "passes": true,
+    "total": 484
+  },
+  "parser_limitations": [
+    {
+      "extractor_name": "c_functions",
+      "limitation": "Header declarations and inline signatures are sampled as C API facts; the extractor does not prove body-level behavior or all call-site contracts."
+    },
+    {
+      "extractor_name": "c_behavior_indicators",
+      "limitation": "Behavior indicators are lexical or local-context signals and must be reviewed with surrounding C code before being treated as semantic contract drift."
+    },
+    {
+      "extractor_name": "rust_binding_uses",
+      "limitation": "A Rust binding reference establishes reachability evidence, not that the surrounding safe abstraction depends on the changed C contract."
+    },
+    {
+      "extractor_name": "rust_safe_api_exposures",
+      "limitation": "Safe API exposure extraction is signature-oriented and can miss contracts expressed outside the function body or module-local helper path."
+    },
+    {
+      "extractor_name": "rust_error_mappings",
+      "limitation": "Error and nullability mappings are proximity facts; nearby C bindings are hints, not proof of an exact return-convention dependency."
+    },
+    {
+      "extractor_name": "rust_lifetime_facts",
+      "limitation": "Lifetime and ownership facts identify Rust-side patterns but do not prove that a specific C-side refcount or allocation rule changed."
+    },
+    {
+      "extractor_name": "promoted_warning_evidence",
+      "limitation": "Promoted warning evidence is sufficient for prioritization, but file-level or oracle-only context is reported as a limitation and not as a confirmed bug."
+    }
+  ],
   "review_csv": "data/audit/strict_extractor_review.csv",
-  "review_method": "existing split review labels are reused where available; strict-only rows are labeled in the generated review CSV with provenance notes",
+  "review_method": "strict audit labels are transferred only from matching reviewed rows with explicit reviewer/adjudication provenance; unreviewed strict-only rows remain pending",
+  "review_provenance": {
+    "generated_default_labels": 0,
+    "pending_rows": 0,
+    "pending_sample_ids": [],
+    "previous_rows": 830,
+    "requires_explicit_provenance": true,
+    "review_labels_transferred": 830,
+    "source": "data/audit/strict_extractor_review.csv",
+    "stale_reviewed_rows": 0
+  },
   "sample_csv": "data/audit/strict_extractor_sample.csv",
-  "sampler_version": "strict-extractor-audit-v1",
-  "total_samples": 800
+  "sampler_version": "strict-extractor-audit-v2",
+  "total_samples": 830
 }
