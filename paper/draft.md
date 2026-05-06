@@ -11,11 +11,14 @@ evidence chain from Linux C declarations or helpers through generated Rust
 bindings, unsafe Rust call sites, wrapper code, safety comments, or public safe
 abstractions. Each emitted warning is a review target for maintainers. The
 current canonical replay spans 21 Linux snapshots from `v6.1` through `v7.0`
-plus `HEAD`, covers 20 adjacent version pairs, records 17,867 drift facts,
-promotes 331 Rust-impact warnings, and sends the top 100 warnings through
-double review and manual adjudication. The resulting paper-top-100 review has
-37 adjudicated true-positive review targets, 35 benign drifts, 27 false
-positives, and one unclear warning.
+plus `HEAD`, covers 20 adjacent version pairs, records 16,757 drift facts,
+and promotes 320 Rust-impact warnings. A 500-item pooled review set is
+double-reviewed and adjudicated. The strict oracle-blind ranking gate reports
+P@10 = 1.00, P@20 = 1.00, P@50 = 0.86, P@100 = 0.43, and NDCG@20 = 1.00,
+improving P@20 by 0.60, P@50 by 0.64, and NDCG@20 by 0.5394 over the
+strongest simple baseline in the shared pooled-label evaluation. The final
+pooled labels contain 47 adjudicated true-positive review targets, including
+29 `TRUE_SEMANTIC_DRIFT` rows and 17 `TRUE_WRAPPER_FIX` rows.
 
 ## 1. Introduction
 
@@ -93,9 +96,11 @@ and behavior indicators. Promoted warnings are the subset with Rust-impact
 evidence, such as direct binding use, safe API exposure, safety comments,
 error/lifetime mappings, or wrapper-fix evidence.
 
-Fifth, the ranker scores warnings by drift severity, Rust exposure, unsafe
-proximity, safe API relevance, helper involvement, confidence, build-breakage
-likelihood, and evidence-chain richness.
+Fifth, the primary oracle-blind ranker scores warnings with detection-time
+features: C-side drift strength, Rust exposure, unsafe proximity, safe API
+relevance, contract evidence, fanout penalties, repeated occurrence, and
+evidence-chain richness. Build-breakage and wrapper-fix oracles are retained
+only for auxiliary validation and are not inputs to the primary score.
 
 ## 4. Implementation
 
@@ -112,41 +117,58 @@ events, wrapper-fix candidates, manual labels, and generated table provenance.
 
 ## 5. Evaluation
 
-The CCF-B-strength evaluation is organized around one main release-tag replay
-and one small external-validity slice.
+The CCF-B-strength evaluation is organized around five research questions:
+
+- RQ1: Can BindDrift extract reliable cross-language drift facts?
+- RQ2: Does evidence gating reduce review volume while preserving useful
+  review targets?
+- RQ3: Does oracle-blind ranking improve top-K review yield over strong
+  baselines?
+- RQ4: What semantic drift patterns appear in adjudicated cases?
+- RQ5: How reproducible is the artifact across versioned toolchains?
 
 The main experiment replays 20 adjacent Linux mainline pairs across 21 version
 snapshots from `v6.1` through `v7.0` plus the checked-out `HEAD` on x86_64. Each
 included version is configured with a Rust-enabled kernel config, built with
 versioned Rust and bindgen tools from the matrix, and required to produce
 generated binding snapshots before drift detection. The canonical `latest`
-manifest fixes the files used by all paper tables: 17,867 drift facts, 331
-promoted Rust-impact warnings, and a paper top-100 warning set.
+manifest fixes the files used by all paper tables: 16,757 drift facts, 320
+promoted Rust-impact warnings, the 500-row pooled review set, the 304 reviewed
+semantic targets, and the generated case-study suite. `paper/tables/table_index.json`
+records sha256 provenance for every generated main table.
 
-Manual semantic evaluation uses the paper top-100 warnings. Two reviewers label
+Manual semantic evaluation uses a blind pooled review set. Two reviewers label
 warnings independently, then an adjudicator records the final label; this manual
-adjudication is the only source of semantic precision claims. All 100 paper
-warnings are double-labeled with agreement rate 1.0. The final labels are
-35 `TRUE_WRAPPER_FIX`, 2 `TRUE_SEMANTIC_DRIFT`, 35 `BENIGN_DRIFT`,
-27 `FALSE_POSITIVE`, and 1 `UNCLEAR`. Manual precision is 0.37 overall, with
-P@10 = 0.30, P@50 = 0.36, and P@100 = 0.37. These labels support a claim that
+adjudication is the only source of semantic precision claims. All 500 pooled
+warnings are double-labeled and adjudicated, with Cohen's kappa = 0.8118 and
+agreement rate 0.922. The final pooled labels are 1 `TRUE_BUILD_BREAKAGE`,
+17 `TRUE_WRAPPER_FIX`, 29 `TRUE_SEMANTIC_DRIFT`, 3 `BENIGN_DRIFT`,
+450 `FALSE_POSITIVE`, and 0 `UNCLEAR`. These labels support a claim that
 BindDrift surfaces useful review targets, not a claim that every warning is a
 confirmed defect.
 
 Baselines compare BindDrift against binding-diff, C-signature, C-indicator,
-Rust-use, oracle-blind, no-ranking, and random variants. In the current tables,
-the evidence gate is supported as the stronger claim: BindDrift reduces the
-warning volume to a reviewed Rust-impact set, but the ranking comparison does
-not yet support a broad claim that BindDrift beats every simple baseline on
-top-K manual precision. The strict pooled ranking table reports oracle-blind
-P@10 = 0.30, P@20 = 0.20, P@50 = 0.08, P@100 = 0.04, and NDCG@20 = 0.1966, so
-the ranking result is downgraded to evidence-gate support only. The wrapper-fix oracle is auxiliary validation, while symbol-level wrapper matching is treated as an upper bound. The paper tables are generated from artifact outputs, not hand-entered numbers.
+Rust-use, no-ranking, ablated variants, and random variants on the same pooled
+label set. The strict pooled ranking table reports oracle-blind P@10 = 1.00,
+P@20 = 1.00, P@50 = 0.86, P@100 = 0.43, NDCG@20 = 1.00, and AUPRC = 0.9444.
+The strongest simple baseline is `rust_use`, with P@20 = 0.40, P@50 = 0.22,
+and NDCG@20 = 0.4606. The strict ranking gate passes: BindDrift improves
+oracle-blind top-K review yield over the strongest simple baseline by 0.60
+P@20, 0.64 P@50, and 0.5394 NDCG@20 in the shared pooled-label evaluation.
+The wrapper-fix oracle is auxiliary validation, while symbol-level wrapper
+matching is treated as an upper bound. The paper tables are generated from
+artifact outputs, not hand-entered numbers.
 
-The targeted semantic review pass samples 100 adjudicated semantic target rows
+The targeted semantic review pass samples 400 semantic target candidates and
+reviews 304 adjudicated rows
 across nullability, ownership/refcount, allocation/free, sleepability/context,
-and layout/field categories. It finds 2 `TRUE_SEMANTIC_DRIFT` rows, 54
-`TRUE_WRAPPER_FIX` rows, 2 build-breakage rows, and several benign, unclear, or
-false-positive rows. Because the semantic gate requires at least 8 semantic true positives and at least 3 semantic drift types, the semantic drift result remains exploratory.
+and layout/field categories. It finds 29 `TRUE_SEMANTIC_DRIFT` rows, 17
+`TRUE_WRAPPER_FIX` rows, 1 build-breakage row, 3 benign rows, and 255
+false-positive rows, with no unclear rows. The semantic gate passes with 29
+non-wrapper semantic true positives and 4 semantic drift types, so semantic
+review targets may be reported as a secondary contribution while preserving the
+claim boundary that they remain review targets rather than confirmed runtime
+bugs.
 
 The strict extractor audit samples 830 facts across C functions, C behavior
 indicators, Rust binding uses, Rust safe API exposures, Rust error mappings,
@@ -159,45 +181,49 @@ also reports limitation-focused negative controls for every extractor; these
 controls document parser boundaries and should not be read as completeness or
 bug confirmation evidence.
 
-The artifact also includes eight positive warning-backed case studies selected
-from adjudicated true positives.
+The artifact also includes 8 positive warning-backed case studies and 2
+negative/failure-analysis cases selected from adjudicated labels.
 
 ## 6. Case Studies
 
-The artifact includes eight positive warning-backed case studies generated only
+The artifact includes 8 positive warning-backed case studies generated only
 from adjudicated true positives:
 
 - `security_secid_to_secctx`: nullability/error semantic drift reaches
   `SecurityCtx::from_secid`.
+- `init_wait`: sleepability/context semantic drift reaches `CondVar::new`.
+- `errname`: wrapper-fix-backed nullability/error drift reaches `Error::name`.
+- `__mutex_init`: wrapper-fix-backed sleepability/context drift reaches Rust
+  synchronization helper code.
+- `errname`: an earlier wrapper-fix-backed nullability/error drift reaches
+  `Error::name`.
+- `dma_free_attrs`: allocation/free semantic drift reaches the Rust DMA drop
+  path.
 - `security_release_secctx`: allocation/free semantic drift reaches the Rust
   security context drop path.
-- `mdiobus_write`: wrapper-fix-backed nullability/error drift reaches Rust PHY
-  register write code.
-- `refcount_set`: ownership/refcount wrapper-fix evidence reaches Rust wrapper
-  paths.
-- `gpu_buddy_free_list`: allocation/free wrapper-fix evidence reaches Rust GPU
-  helper code.
-- `fsleep`: sleepability/context wrapper-fix evidence reaches Rust-visible helper
-  code.
-- `queue_limits`: layout/field wrapper-fix evidence reaches Rust block wrapper
-  paths.
-- `__mutex_init`: build-breakage-backed sleepability/context evidence reaches
+- `__mutex_init`: another wrapper-fix-backed sleepability/context drift reaches
   Rust synchronization helper code.
 
-The suite also includes one negative/failure-analysis case for `PTR_ERR`, whose
-adjudicated label is `FALSE_POSITIVE`.
+The suite also includes 2 negative/failure-analysis cases:
+
+- `refcount_set`: ownership/refcount evidence is rejected because broad-family
+  wrapper evidence is auxiliary only.
+- `kunit_case`: layout/field evidence is rejected because the case lacks a
+  direct same-contract Rust-impact chain.
 
 Each case is classified as a review target rather than a confirmed defect. No
 positive case study is unlabeled, false positive, benign drift, or
-single-version-only. The positive case set covers five drift target categories,
-contains 2 semantic true cases and 5 wrapper-fix-backed cases, and has no local
-absolute paths in the generated case artifacts.
+single-version-only. The full case suite covers five drift target categories,
+contains 4 semantic true cases, 4 non-wrapper semantic cases, 4 wrapper-fix-backed
+cases, and has no local absolute paths in the generated case artifacts.
 
 ## 7. Threats To Validity
 
 Internal validity threats include regex parser incompleteness, missing generated
-binding outputs, and toolchain/config differences. BindDrift mitigates these by
-recording extraction diagnostics, environment metadata, and config hashes.
+binding outputs, toolchain/config differences, and oracle limitations. BindDrift
+mitigates these by recording extraction diagnostics, environment metadata,
+config hashes, and explicit separation between primary oracle-blind ranking and
+auxiliary build/wrapper evidence.
 
 Construct validity threats include the ambiguity of semantic drift labels and
 the fact that warnings are review targets rather than confirmed defects. The
@@ -205,9 +231,9 @@ manual review guide separates `TRUE_SEMANTIC_DRIFT`, `TRUE_WRAPPER_FIX`,
 `BENIGN_DRIFT`, `FALSE_POSITIVE`, and `UNCLEAR`, and the evaluation uses the
 adjudicated label for paper metrics. Not every warning is a confirmed bug.
 Wrapper-fix-backed labels and semantic labels are reported separately, and
-`TRUE_WRAPPER_FIX` is not counted as `TRUE_SEMANTIC_DRIFT`. The current semantic
-target review is underpowered for a strong semantic-discovery claim, so semantic
-drift is presented as exploratory.
+`TRUE_WRAPPER_FIX` is not counted as `TRUE_SEMANTIC_DRIFT`. Label ambiguity
+remains a threat even with double review and adjudication, so the paper reports
+semantic labels as stale-contract review targets rather than confirmed bugs.
 
 External validity threats include focusing on Linux/Rust-for-Linux and x86_64.
 Future work should evaluate additional architectures, rust-next branches, and

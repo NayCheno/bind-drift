@@ -1,0 +1,64 @@
+{
+  "artifact_quickstart_checked": true,
+  "claim_boundary_checked": true,
+  "review_method": "pre-submission red-team review over paper/draft.md, README.md, docs/artifact-guide.md, paper/tables/table_index.json, and strict validator gates",
+  "rounds": [
+    {
+      "issues": [
+        {
+          "closure_evidence": "paper/draft.md abstract and evaluation now use 16,757 drift facts and 320 Rust-impact warnings from data/replay/latest/run_manifest.json.",
+          "id": "rt1-stale-replay-counts",
+          "status": "closed",
+          "summary": "Draft used stale 17,867/331 replay counts."
+        },
+        {
+          "closure_evidence": "paper/draft.md reports strict pooled ranking P@10/P@20/P@50/P@100/NDCG@20 and baseline deltas from paper/tables/ranking_pooled_evaluation.json.",
+          "id": "rt1-ranking-downgrade-stale",
+          "status": "closed",
+          "summary": "Draft still described the old failed ranking gate."
+        },
+        {
+          "closure_evidence": "paper/draft.md reports 29 TRUE_SEMANTIC_DRIFT rows, 29 non-wrapper semantic true positives, and 4 semantic drift types.",
+          "id": "rt1-semantic-downgrade-stale",
+          "status": "closed",
+          "summary": "Draft still called semantic drift exploratory despite the M4 gate passing."
+        }
+      ],
+      "reviewers": [
+        "red-team-reviewer-1",
+        "red-team-reviewer-2"
+      ],
+      "round": 1,
+      "scope": "paper claim and generated-number consistency"
+    },
+    {
+      "issues": [
+        {
+          "closure_evidence": "binddrift/paper/tables.py writes sha256 for every available table_index entry, and strict_validator checks the hashes.",
+          "id": "rt2-table-provenance",
+          "status": "closed",
+          "summary": "Main table provenance listed paths but no sha256 hashes."
+        },
+        {
+          "closure_evidence": "README.md and docs/artifact-guide.md document uv run python -m binddrift.artifact reproduce as the one-command main-table reproduction path.",
+          "id": "rt2-one-command-repro",
+          "status": "closed",
+          "summary": "Artifact guide did not expose a single command for reproducing main tables."
+        },
+        {
+          "closure_evidence": "strict_validator adds m8_paper_submission_gate covering RQs, threats, stale numbers, table sha256, docs quickstart, and this red-team closure file.",
+          "id": "rt2-m8-hard-gate",
+          "status": "closed",
+          "summary": "M8 acceptance was described in docs but not enforced by the strict validator."
+        }
+      ],
+      "reviewers": [
+        "red-team-reviewer-1",
+        "red-team-reviewer-2"
+      ],
+      "round": 2,
+      "scope": "artifact reproduction, README quickstart, and M8 hard gate"
+    }
+  ],
+  "table_provenance_checked": true
+}

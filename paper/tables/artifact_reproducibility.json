@@ -992,9 +992,65 @@
       "details": {
         "forbidden_found": [],
         "passes": true,
-        "required_missing": []
+        "ranking_gate_passes": true,
+        "required_missing": [],
+        "semantic_gate_passes": true
       },
       "name": "paper_claims_match_downgrades",
+      "passes": true
+    },
+    {
+      "details": {
+        "abstract_missing": [],
+        "body_missing": [],
+        "checks": {
+          "abstract_numbers_from_tables": true,
+          "artifact_guide_one_command": true,
+          "body_numbers_from_tables": true,
+          "forbidden_claims_absent": true,
+          "no_stale_numbers": true,
+          "red_team_two_rounds_closed": true,
+          "research_questions_present": true,
+          "table_index_sha256_provenance": true,
+          "threats_to_validity_present": true
+        },
+        "docs_checks": {
+          "artifact_guide_mentions_main_tables": true,
+          "artifact_guide_paper_build_final": true,
+          "artifact_guide_reproduce_command": true,
+          "readme_paper_build_final": true,
+          "readme_reproduce_command": true
+        },
+        "forbidden_found": [],
+        "passes": true,
+        "red_team": {
+          "checks": {
+            "all_issues_closed": true,
+            "artifact_quickstart_checked": true,
+            "claim_boundary_checked": true,
+            "independent_reviewers": true,
+            "issues_present": true,
+            "table_provenance_checked": true,
+            "two_rounds": true
+          },
+          "issue_count": 6,
+          "open_issues": [],
+          "passes": true,
+          "path": "paper/analysis/red_team_review.json",
+          "round_count": 2
+        },
+        "rq_missing": [],
+        "stale_found": [],
+        "table_index": {
+          "entries": 19,
+          "mismatched_sha256": [],
+          "missing_sha256": [],
+          "passes": true,
+          "unavailable": []
+        },
+        "threat_missing": []
+      },
+      "name": "m8_paper_submission_gate",
       "passes": true
     },
     {
@@ -2172,11 +2228,12 @@
   "passes": true,
   "protocol_version": "ccfb-strict-v2",
   "run_manifest": "data/replay/latest/run_manifest.json",
-  "stage": "m7",
+  "stage": "final",
   "stage_required_checks": [
     "binddrift_review_role_artifacts",
     "case_study_gate",
     "evaluation_protocol_valid",
+    "m8_paper_submission_gate",
     "manual_review_quality_gate",
     "no_local_absolute_paths",
     "oracle_blind_primary_has_no_forbidden_components",

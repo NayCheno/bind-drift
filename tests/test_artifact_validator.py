@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 
 from binddrift.config import Config
-from binddrift.artifact.strict_validator import validate_artifact
+from binddrift.artifact.strict_validator import _table_index_sha256_gate, validate_artifact
 
 
 def test_artifact_validator_reports_m0_stage_ready() -> None:
@@ -99,6 +99,35 @@ def test_artifact_validator_reports_m7_extractor_audit_ready() -> None:
     assert audit["cross_version_sampling"]["passes"] is True
     assert audit["review_provenance"]["pending_rows"] == 0
     assert audit["review_provenance"]["generated_default_labels"] == 0
+
+
+def test_artifact_validator_reports_m8_paper_submission_ready() -> None:
+    result = validate_artifact(Config.from_args(repo_root="."), strict_ccfb=True, stage="m8")
+
+    assert result["passes"] is True
+    assert result["stage"] == "m8"
+    m8 = next(check for check in result["checks"] if check["name"] == "m8_paper_submission_gate")
+    assert m8["passes"] is True
+    assert all(m8["details"]["checks"].values())
+    assert m8["details"]["red_team"]["round_count"] >= 2
+    assert m8["details"]["table_index"]["missing_sha256"] == []
+
+
+def test_m8_table_index_gate_rejects_stale_sha256() -> None:
+    path = Path("paper/tables/table_index.json")
+    original = path.read_text(encoding="utf-8")
+    try:
+        payload = json.loads(original)
+        first_name = next(iter(payload))
+        payload[first_name]["sha256"] = "0" * 64
+        path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+        result = _table_index_sha256_gate(Config.from_args(repo_root="."))
+
+        assert result["passes"] is False
+        assert first_name in result["mismatched_sha256"]
+    finally:
+        path.write_text(original, encoding="utf-8")
 
 
 def test_binddrift_module_propagates_cli_return_code() -> None:

@@ -18,7 +18,7 @@ uv run binddrift graph build
 uv run binddrift detect all
 uv run binddrift rank
 uv run binddrift eval all
-uv run binddrift paper build
+uv run binddrift paper build --stage final
 ```
 
 The pilot does not require a full kernel build. If generated bindings are absent, the binding extractor reports the missing object-tree files and continues. This is expected for a fresh checkout without a Rust-enabled kernel build.
@@ -100,8 +100,20 @@ After replay completes, generate the aggregate review sheet and paper tables:
 
 ```bash
 uv run binddrift --data-dir data/replay/latest eval all --top-k 100 --run-id latest
-uv run binddrift paper build
+uv run binddrift paper build --stage final
 ```
+
+For the checked-in canonical replay artifacts, one command regenerates the main
+tables, case studies, strict extractor audit outputs, and final CCF-B validation
+report:
+
+```bash
+uv run python -m binddrift.artifact reproduce
+```
+
+The command rewrites `paper/tables/*.json`, `paper/cases/*.md`,
+`paper/analysis/*.md`, and `paper/tables/artifact_reproducibility.json`; it
+returns a non-zero exit code if the strict gate fails.
 
 For the arm64 external-validity slice, repeat a small run over the latest six
 release tags:

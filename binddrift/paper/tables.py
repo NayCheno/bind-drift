@@ -81,14 +81,17 @@ def generate_paper_tables(cfg: Config) -> dict[str, object]:
         "baseline_strict_comparison": tables_dir / "baseline_strict_comparison.json",
         "ablation_strict_comparison": tables_dir / "ablation_strict_comparison.json",
         "warning_volume_reduction": tables_dir / "warning_volume_reduction.json",
+        "red_team_review": cfg.repo_root / "paper/analysis/red_team_review.json",
         "run_manifest": canonical_run_dir(cfg) / "run_manifest.json",
         "evaluation_protocol": Path(protocol["path"]) if protocol else canonical_run_dir(cfg) / "evaluation_protocol.json",
         "toolchain_matrix": cfg.data_dir / "toolchain_matrix.json",
     }
-    index = {
-        name: {"path": repo_relative(cfg, path), "available": path.exists()}
-        for name, path in known.items()
-    }
+    index = {}
+    for name, path in known.items():
+        entry = {"path": repo_relative(cfg, path), "available": path.exists()}
+        if path.exists() and path.is_file():
+            entry["sha256"] = sha256_file(path)
+        index[name] = entry
     out = tables_dir / "table_index.json"
     out.write_text(json.dumps(index, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return {"table_index": str(out), "tables": index}

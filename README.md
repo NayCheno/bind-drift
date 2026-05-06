@@ -18,7 +18,7 @@ uv run binddrift graph build
 uv run binddrift detect all
 uv run binddrift rank
 uv run binddrift eval all
-uv run binddrift paper build
+uv run binddrift paper build --stage final
 ```
 
 The prototype is implemented as a staged command-line workflow. The pilot pipeline records missing generated bindings or build prerequisites as artifact data rather than treating them as successful extraction.
@@ -35,7 +35,15 @@ uv run binddrift toolchain matrix --start v6.1 --fetch-tags
 uv run binddrift toolchain bootstrap --install-matrix
 uv run binddrift replay versions --start v6.1 --include-head --fetch-tags --build-bindings --configure --arch x86_64 --toolchain auto --jobs 1
 uv run binddrift --data-dir data/replay/latest eval all --top-k 100 --run-id latest
-uv run binddrift paper build
+uv run binddrift paper build --stage final
+```
+
+To regenerate the checked-in main evaluation tables and run the full strict
+artifact gate from the canonical replay artifacts, use the artifact reproduction
+entrypoint:
+
+```bash
+uv run python -m binddrift.artifact reproduce
 ```
 
 Replay outputs are stored under `data/replay/latest/`. Each `replay versions`

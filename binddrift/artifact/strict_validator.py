@@ -11,6 +11,7 @@ from typing import Any
 from binddrift.artifact_paths import LOCAL_PATH_MARKERS, repo_relative, sanitize_local_paths
 from binddrift.config import Config
 from binddrift.detectors.semantic_review_targets import SEMANTIC_REVIEW_QUOTAS, generate_semantic_review_targets
+from binddrift.evaluation.evaluator import run_evaluation
 from binddrift.evaluation.evaluate_rankers import TAXONOMY_SCHEMA_VERSION, build_ranker_evaluation, evaluate_rankers
 from binddrift.evaluation.protocol import assert_oracle_blind_components, load_evaluation_protocol
 from binddrift.paper.audit import STRICT_AUDIT_TARGETS, STRICT_TARGET_PRECISION, generate_strict_extractor_audit
@@ -18,7 +19,7 @@ from binddrift.paper.cases import generate_case_studies
 from binddrift.paper.tables import generate_paper_tables
 from binddrift.ranking.oracle_blind_scorer import generated_binding_only, rank_primary_warnings_oracle_blind
 from binddrift.ranking.score_audit import generate_ranking_score_audit
-from binddrift.run_manifest import canonical_run_dir, validate_run_manifest
+from binddrift.run_manifest import canonical_run_dir, sha256_file, validate_run_manifest
 from binddrift.warnings import read_warnings
 
 VALIDATION_STAGES = ("m0", "m1", "m2", "m3", "m4", "m5", "m6", "m7", "m8", "final")
@@ -38,8 +39,22 @@ STAGE_REQUIRED_CHECKS: dict[str, set[str]] = {
     "m5": {"case_study_gate"},
     "m6": {"ranking"},
     "m7": {"strict_extractor_audit_gate"},
-    "m8": {"ranking", "semantic", "manual_review_quality_gate", "case_study_gate", "strict_extractor_audit_gate"},
-    "final": {"ranking", "semantic", "manual_review_quality_gate", "case_study_gate", "strict_extractor_audit_gate"},
+    "m8": {
+        "ranking",
+        "semantic",
+        "manual_review_quality_gate",
+        "case_study_gate",
+        "strict_extractor_audit_gate",
+        "m8_paper_submission_gate",
+    },
+    "final": {
+        "ranking",
+        "semantic",
+        "manual_review_quality_gate",
+        "case_study_gate",
+        "strict_extractor_audit_gate",
+        "m8_paper_submission_gate",
+    },
 }
 
 HARD_GATE_CHECK_NAMES = {
@@ -75,6 +90,7 @@ def reproduce_artifact(cfg: Config) -> dict[str, Any]:
     pooled_review_set = Path(manifest["resolved_paths"]["pooled_review_set"])
     pooled_review_labels = Path(manifest["resolved_paths"]["pooled_review_labels"])
     outputs = {
+        "evaluation": run_evaluation(cfg, top_k=int(manifest.get("paper_topk", 100)), run_id=str(manifest.get("run_id", "latest"))),
         "ranking_pooled_evaluation": evaluate_rankers(cfg, pool=pooled_review_set, labels=pooled_review_labels),
         "ranking_score_audit": generate_ranking_score_audit(cfg),
         "semantic_review_targets": generate_semantic_review_targets(cfg),
@@ -111,6 +127,7 @@ def validate_artifact(
     _check("case_study_gate", checks, lambda: _case_study_gate(cfg))
     _check("strict_extractor_audit_gate", checks, lambda: _strict_extractor_gate(cfg))
     _check("paper_claims_match_downgrades", checks, lambda: _paper_claims(cfg))
+    _check("m8_paper_submission_gate", checks, lambda: _m8_paper_submission_gate(cfg))
     _check("no_local_absolute_paths", checks, lambda: _no_local_paths(cfg))
     if run_tests:
         _check("pytest", checks, lambda: _run_pytest(cfg))
@@ -619,23 +636,287 @@ def _strict_review_provenance_passes(data: dict[str, Any]) -> bool:
 
 
 def _paper_claims(cfg: Config) -> dict[str, Any]:
-    text = (cfg.repo_root / "paper/draft.md").read_text(encoding="utf-8").lower()
+    text = _normal_text((cfg.repo_root / "paper/draft.md").read_text(encoding="utf-8"))
+    ranking = _json(cfg, "paper/tables/ranking_pooled_evaluation.json")
+    semantic = _json(cfg, "paper/tables/semantic_drift_review_summary.json")
+    ranking_passes = _m6_acceptance_passes(ranking) and ranking.get("primary_beats_best_simple_baseline") is True
+    semantic_passes = (semantic.get("acceptance") or {}).get("minimum_passes") is True
     forbidden = [
         "bug detector",
         "soundness proof",
         "complete detection",
+        "guaranteed stale abstraction",
+        "proves rust abstraction unsoundness",
+        "detects real bugs automatically",
         "ranking improves prioritization",
         "outperforms all baselines",
+        "many semantic bugs",
     ]
+    if ranking_passes:
+        forbidden.extend(["ranking result is downgraded", "evidence gate is supported as the stronger claim"])
+    else:
+        forbidden.append("strict ranking gate passes")
+    if semantic_passes:
+        forbidden.append("semantic drift result remains exploratory")
+    else:
+        forbidden.append("semantic gate passes")
     found = [phrase for phrase in forbidden if phrase in text]
     required = [
         "warnings are review targets",
         "not every warning is a confirmed bug",
         "wrapper-fix oracle is auxiliary validation",
-        "semantic drift result remains exploratory",
     ]
+    required.append("strict ranking gate passes" if ranking_passes else "evidence gate is supported as the stronger claim")
+    required.append("semantic gate passes" if semantic_passes else "semantic drift result remains exploratory")
     missing = [phrase for phrase in required if phrase not in text]
-    return {"passes": not found and not missing, "forbidden_found": found, "required_missing": missing}
+    return {
+        "passes": not found and not missing,
+        "ranking_gate_passes": ranking_passes,
+        "semantic_gate_passes": semantic_passes,
+        "forbidden_found": found,
+        "required_missing": missing,
+    }
+
+
+def _m8_paper_submission_gate(cfg: Config) -> dict[str, Any]:
+    draft_path = cfg.repo_root / "paper/draft.md"
+    readme_path = cfg.repo_root / "README.md"
+    artifact_guide_path = cfg.repo_root / "docs/artifact-guide.md"
+    draft = draft_path.read_text(encoding="utf-8")
+    text = _normal_text(draft)
+    abstract = _normal_text(_markdown_section(draft, "## Abstract", "## 1. Introduction"))
+    readme = _normal_text(readme_path.read_text(encoding="utf-8"))
+    artifact_guide = _normal_text(artifact_guide_path.read_text(encoding="utf-8"))
+
+    expected = _m8_expected_paper_phrases(cfg)
+    abstract_missing = [phrase for phrase in expected["abstract"] if phrase not in abstract]
+    body_missing = [phrase for phrase in expected["body"] if phrase not in text]
+    stale_found = [phrase for phrase in expected["stale"] if phrase in text]
+    rq_missing = [phrase for phrase in expected["rqs"] if phrase not in text]
+    threat_missing = [phrase for phrase in expected["threats"] if phrase not in text]
+    forbidden_found = [phrase for phrase in expected["forbidden"] if phrase in text]
+    table_index = _table_index_sha256_gate(cfg)
+    red_team = _red_team_gate(cfg)
+
+    one_command = "uv run python -m binddrift.artifact reproduce"
+    paper_build = "uv run binddrift paper build --stage final"
+    docs_checks = {
+        "readme_reproduce_command": one_command in readme,
+        "readme_paper_build_final": paper_build in readme,
+        "artifact_guide_reproduce_command": one_command in artifact_guide,
+        "artifact_guide_paper_build_final": paper_build in artifact_guide,
+        "artifact_guide_mentions_main_tables": "main tables" in artifact_guide,
+    }
+    checks = {
+        "abstract_numbers_from_tables": not abstract_missing,
+        "body_numbers_from_tables": not body_missing,
+        "no_stale_numbers": not stale_found,
+        "research_questions_present": not rq_missing,
+        "threats_to_validity_present": not threat_missing,
+        "forbidden_claims_absent": not forbidden_found,
+        "table_index_sha256_provenance": table_index["passes"],
+        "artifact_guide_one_command": all(docs_checks.values()),
+        "red_team_two_rounds_closed": red_team["passes"],
+    }
+    return {
+        "passes": all(checks.values()),
+        "checks": checks,
+        "abstract_missing": abstract_missing,
+        "body_missing": body_missing,
+        "stale_found": stale_found,
+        "rq_missing": rq_missing,
+        "threat_missing": threat_missing,
+        "forbidden_found": forbidden_found,
+        "docs_checks": docs_checks,
+        "table_index": table_index,
+        "red_team": red_team,
+    }
+
+
+def _m8_expected_paper_phrases(cfg: Config) -> dict[str, list[str]]:
+    manifest = validate_run_manifest(cfg)
+    ranking = _json(cfg, "paper/tables/ranking_pooled_evaluation.json")
+    manual = _json(cfg, "paper/tables/manual_review_quality.json")
+    semantic = _json(cfg, "paper/tables/semantic_drift_review_summary.json")
+    cases = _json(cfg, "paper/tables/case_study_summary.json")
+    extractor = _json(cfg, "paper/tables/strict_extractor_audit.json")
+    primary = next((row for row in ranking.get("rankers", []) if row.get("ranker") == "binddrift_oracle_blind"), {})
+    best = ranking.get("best_simple_baseline") or {}
+    deltas = (ranking.get("comparison_against_best_simple_baseline") or {}).get("deltas") or {}
+    manual_true = (
+        (manual.get("label_distribution") or {}).get("TRUE_BUILD_BREAKAGE", 0)
+        + (manual.get("label_distribution") or {}).get("TRUE_WRAPPER_FIX", 0)
+        + (manual.get("label_distribution") or {}).get("TRUE_SEMANTIC_DRIFT", 0)
+    )
+    return {
+        "abstract": [
+            f"{manifest['version_count']} linux snapshots",
+            f"{manifest['pair_count']} adjacent version pairs",
+            f"{_fmt_int(manifest['drift_fact_count'])} drift facts",
+            f"{_fmt_int(manifest['promoted_warning_count'])} rust-impact warnings",
+            f"{manual.get('reviewed_warnings')}-item pooled review set",
+            f"p@10 = {_fmt_metric(primary.get('p_at_10'))}",
+            f"p@20 = {_fmt_metric(primary.get('p_at_20'))}",
+            f"p@50 = {_fmt_metric(primary.get('p_at_50'))}",
+            f"p@100 = {_fmt_metric(primary.get('p_at_100'))}",
+            f"ndcg@20 = {_fmt_metric(primary.get('ndcg_at_20'))}",
+            f"p@20 by {_fmt_metric(deltas.get('p_at_20'))}",
+            f"p@50 by {_fmt_metric(deltas.get('p_at_50'))}",
+            f"ndcg@20 by {_fmt_metric(deltas.get('ndcg_at_20'), digits=4)}",
+            f"{manual_true} adjudicated true-positive review targets",
+            f"{manual.get('true_semantic_drift_count')} `true_semantic_drift`",
+            f"{manual.get('true_wrapper_fix_count')} `true_wrapper_fix`",
+        ],
+        "body": [
+            f"{manual.get('reviewed_warnings')} pooled warnings are double-labeled and adjudicated",
+            f"cohen's kappa = {_fmt_metric(manual.get('cohen_kappa'), digits=4)}",
+            f"agreement rate {_fmt_metric(manual.get('agreement_rate'), digits=3)}",
+            f"{manual.get('true_build_breakage_count')} `true_build_breakage`",
+            f"{manual.get('true_wrapper_fix_count')} `true_wrapper_fix`",
+            f"{manual.get('true_semantic_drift_count')} `true_semantic_drift`",
+            f"{(manual.get('label_distribution') or {}).get('false_positive'.upper(), 0)} `false_positive`",
+            f"p@20 = {_fmt_metric(best.get('p_at_20'))}",
+            f"p@50 = {_fmt_metric(best.get('p_at_50'))}",
+            f"ndcg@20 = {_fmt_metric(best.get('ndcg_at_20'), digits=4)}",
+            f"{_fmt_metric(deltas.get('p_at_20'))} p@20",
+            f"{_fmt_metric(deltas.get('p_at_50'))} p@50",
+            f"{_fmt_metric(deltas.get('ndcg_at_20'), digits=4)} ndcg@20",
+            f"{semantic.get('semantic_review_candidates')} semantic target candidates",
+            f"reviews {semantic.get('reviewed_semantic_targets')} adjudicated rows",
+            f"{semantic.get('true_semantic_drift_count')} `true_semantic_drift` rows",
+            f"{semantic.get('non_wrapper_semantic_true_positives')} non-wrapper semantic true positives",
+            f"{semantic.get('semantic_drift_type_count')} semantic drift types",
+            f"{cases.get('positive_case_studies')} positive warning-backed case studies",
+            f"{cases.get('negative_case_studies')} negative/failure-analysis cases",
+            f"{cases.get('semantic_true_cases')} semantic true cases",
+            f"{cases.get('non_wrapper_semantic_cases')} non-wrapper semantic cases",
+            f"{cases.get('wrapper_fix_backed_cases')} wrapper-fix-backed cases",
+            f"{extractor.get('total_samples')} facts",
+            f"{(extractor.get('extractors') or {}).get('promoted_warning_evidence', {}).get('sampled')} promoted warning evidence chains",
+            f"cohen's kappa = {_fmt_metric(((extractor.get('agreement') or {}).get('cohen_kappa')), digits=1)}",
+        ],
+        "stale": [
+            "17,867 drift facts",
+            "331 rust-impact warnings",
+            "37 adjudicated true-positive",
+            "p@10 = 0.30",
+            "p@20 = 0.20",
+            "p@50 = 0.08",
+            "p@100 = 0.04",
+            "ndcg@20 = 0.1966",
+            "semantic drift result remains exploratory",
+        ],
+        "rqs": [
+            "rq1: can binddrift extract reliable cross-language drift facts?",
+            "rq2: does evidence gating reduce review volume while preserving useful review targets?",
+            "rq3: does oracle-blind ranking improve top-k review yield over strong baselines?",
+            "rq4: what semantic drift patterns appear in adjudicated cases?",
+            "rq5: how reproducible is the artifact across versioned toolchains?",
+        ],
+        "threats": [
+            "parser incompleteness",
+            "label ambiguity",
+            "x86_64",
+            "oracle limitations",
+        ],
+        "forbidden": [
+            "bug detector",
+            "soundness proof",
+            "complete detection",
+            "outperforms all baselines",
+            "many semantic bugs",
+            "detects real bugs automatically",
+            "proves rust abstraction unsoundness",
+        ],
+    }
+
+
+def _table_index_sha256_gate(cfg: Config) -> dict[str, Any]:
+    path = cfg.repo_root / "paper/tables/table_index.json"
+    if not path.exists():
+        return {"passes": False, "missing_index": True}
+    index = json.loads(path.read_text(encoding="utf-8"))
+    missing_sha: list[str] = []
+    mismatched_sha: list[str] = []
+    unavailable: list[str] = []
+    for name, entry in index.items():
+        relpath = entry.get("path")
+        table_path = cfg.repo_root / str(relpath or "")
+        if not entry.get("available"):
+            unavailable.append(name)
+            continue
+        if not relpath or not table_path.exists():
+            unavailable.append(name)
+            continue
+        reported = entry.get("sha256")
+        if not reported:
+            missing_sha.append(name)
+            continue
+        actual = sha256_file(table_path)
+        if reported != actual:
+            mismatched_sha.append(name)
+    return {
+        "passes": not missing_sha and not mismatched_sha and not unavailable,
+        "entries": len(index),
+        "missing_sha256": missing_sha,
+        "mismatched_sha256": mismatched_sha,
+        "unavailable": unavailable,
+    }
+
+
+def _red_team_gate(cfg: Config) -> dict[str, Any]:
+    path = cfg.repo_root / "paper/analysis/red_team_review.json"
+    if not path.exists():
+        return {"passes": False, "missing": repo_relative(cfg, path)}
+    data = json.loads(path.read_text(encoding="utf-8"))
+    rounds = data.get("rounds") or []
+    issues = [issue for round_item in rounds for issue in (round_item.get("issues") or [])]
+    open_issues = [
+        issue.get("id", "")
+        for issue in issues
+        if issue.get("status") != "closed" or not issue.get("closure_evidence")
+    ]
+    checks = {
+        "two_rounds": len(rounds) >= 2,
+        "independent_reviewers": all(len(set(round_item.get("reviewers") or [])) >= 2 for round_item in rounds),
+        "issues_present": bool(issues),
+        "all_issues_closed": not open_issues,
+        "claim_boundary_checked": data.get("claim_boundary_checked") is True,
+        "table_provenance_checked": data.get("table_provenance_checked") is True,
+        "artifact_quickstart_checked": data.get("artifact_quickstart_checked") is True,
+    }
+    return {
+        "passes": all(checks.values()),
+        "path": repo_relative(cfg, path),
+        "checks": checks,
+        "round_count": len(rounds),
+        "issue_count": len(issues),
+        "open_issues": open_issues,
+    }
+
+
+def _markdown_section(text: str, start: str, end: str) -> str:
+    try:
+        start_index = text.index(start)
+    except ValueError:
+        return ""
+    try:
+        end_index = text.index(end, start_index + len(start))
+    except ValueError:
+        end_index = len(text)
+    return text[start_index:end_index]
+
+
+def _normal_text(text: str) -> str:
+    return " ".join(text.lower().split())
+
+
+def _fmt_int(value: Any) -> str:
+    return f"{int(value):,}"
+
+
+def _fmt_metric(value: Any, *, digits: int = 2) -> str:
+    return f"{float(value or 0.0):.{digits}f}"
 
 
 def _no_local_paths(cfg: Config) -> dict[str, Any]:

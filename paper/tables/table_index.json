@@ -1,74 +1,97 @@
 {
   "ablation_strict_comparison": {
     "available": true,
-    "path": "paper/tables/ablation_strict_comparison.json"
+    "path": "paper/tables/ablation_strict_comparison.json",
+    "sha256": "b80dfd3c62ece05aa830da74c8a07c1df917d9439c35de0872535de8b7e9192f"
   },
   "baseline_strict_comparison": {
     "available": true,
-    "path": "paper/tables/baseline_strict_comparison.json"
+    "path": "paper/tables/baseline_strict_comparison.json",
+    "sha256": "03e9d1989cc9d6cc6f5db790ec9db573a7e2f64e72fe6dad1a684a0a7300949e"
   },
   "baselines_ablations": {
     "available": true,
-    "path": "paper/tables/baselines_ablations.json"
+    "path": "paper/tables/baselines_ablations.json",
+    "sha256": "5ca0a3f49a682ff6255ba9a93270e5dacc0ccd12e2555a3af44bf86f93dcbcf3"
   },
   "evaluation_protocol": {
     "available": true,
-    "path": "data/replay/latest/evaluation_protocol.json"
+    "path": "data/replay/latest/evaluation_protocol.json",
+    "sha256": "7c3ad8140c7d11ddd748dd52100112f617b516cd35b1a1dfa41d41e515783e94"
   },
   "evaluation_summary": {
     "available": true,
-    "path": "paper/tables/evaluation_summary.json"
+    "path": "paper/tables/evaluation_summary.json",
+    "sha256": "421b489b5e430c2a244474b2b992903b32f7c7280d11b6830eb21b8040b9d9c9"
   },
   "extractor_audit": {
     "available": true,
-    "path": "paper/tables/extractor_audit.json"
+    "path": "paper/tables/extractor_audit.json",
+    "sha256": "b257783f274d47cb8e83575da80e9991240227c356a32f4db9a306ad00c10f8e"
   },
   "fact_counts": {
     "available": true,
-    "path": "paper/tables/fact_counts.json"
+    "path": "paper/tables/fact_counts.json",
+    "sha256": "edc1d29e944572e38c21659d82347d4897aa737531f3a94f610f33b8071a8a7e"
   },
   "manual_review_quality": {
     "available": true,
-    "path": "paper/tables/manual_review_quality.json"
+    "path": "paper/tables/manual_review_quality.json",
+    "sha256": "3cf0fa87620bc9f32a9db77f5b36f17a87048cce5913e4777570a2591a014fcd"
   },
   "manual_review_summary": {
     "available": true,
-    "path": "paper/tables/manual_review_summary.json"
+    "path": "paper/tables/manual_review_summary.json",
+    "sha256": "a695637573ea37f3eb39ca52d065e04e87f29b02a4fd7f5928d0a812e3fb7065"
   },
   "ranking_pooled_evaluation": {
     "available": true,
-    "path": "paper/tables/ranking_pooled_evaluation.json"
+    "path": "paper/tables/ranking_pooled_evaluation.json",
+    "sha256": "613d19614ad6fe5960cee814ef32ad6568a0cc3b7b0ccfb448708918a9237f0f"
   },
   "ranking_score_audit": {
     "available": true,
-    "path": "paper/tables/ranking_score_audit.json"
+    "path": "paper/tables/ranking_score_audit.json",
+    "sha256": "bc502b882a26fe203b817cbe8d5bf30e8959f10df60c8550d28d7606ecdab1bc"
+  },
+  "red_team_review": {
+    "available": true,
+    "path": "paper/analysis/red_team_review.json",
+    "sha256": "79aeb40104fb2e1c9c1d33d91cf0bbaa5f3b4411f623850e10f5dedb127dfe8f"
   },
   "replay_summary": {
     "available": true,
-    "path": "paper/tables/replay_summary.json"
+    "path": "paper/tables/replay_summary.json",
+    "sha256": "f65ed982018520e12edb52f3659cf68089755ea988068fe0090d54fab218b636"
   },
   "reviewer_disagreement_examples": {
     "available": true,
-    "path": "paper/analysis/reviewer_disagreement_examples.md"
+    "path": "paper/analysis/reviewer_disagreement_examples.md",
+    "sha256": "b4a413f6cbbd85972491ce8859d4c7720466ea4709777ef04abc6c2509745c85"
   },
   "run_manifest": {
     "available": true,
-    "path": "data/replay/latest/run_manifest.json"
+    "path": "data/replay/latest/run_manifest.json",
+    "sha256": "24be0dc5b17c88b4b0580f1865b9cc1f9a4ecde86bcef71aeac7595aee4473ca"
   },
   "runtime_scalability": {
     "available": true,
-    "path": "paper/tables/runtime_scalability.json"
+    "path": "paper/tables/runtime_scalability.json",
+    "sha256": "9ee0c56e02bee282feeb1c31c6b751b9da497aadc51df34969b2ef3ce7ef65a0"
   },
   "strict_extractor_audit": {
     "available": true,
-    "path": "paper/tables/strict_extractor_audit.json"
+    "path": "paper/tables/strict_extractor_audit.json",
+    "sha256": "4ec1b47bf7dbed248fcc0a36af1caceac1ff892388a30711b34be8d2da3e3aa0"
   },
   "toolchain_matrix": {
     "available": true,
-    "path": "data/toolchain_matrix.json"
+    "path": "data/toolchain_matrix.json",
+    "sha256": "d8dccbd819f5dbfa5b81fb5e23a88d5287c183cb2cb90c0f0902cb159b2570ea"
   },
   "warning_volume_reduction": {
     "available": true,
-    "path": "paper/tables/warning_volume_reduction.json"
+    "path": "paper/tables/warning_volume_reduction.json",
+    "sha256": "9eb1a6559a98a3313beeccb6b55559611912b1692351a1e8aa8e49eb8e70f11a"
   }
 }
