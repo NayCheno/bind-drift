@@ -1,22 +1,22 @@
 {
   "rankers": [
     {
-      "auprc_on_pooled_review_set": 0.0235,
+      "auprc_on_pooled_review_set": 0.7938,
       "bootstrap_ci": {
         "ndcg_at_20": [
-          0.0,
-          0.2683
+          0.5835,
+          0.9666
         ],
         "p_at_20": [
-          0.0,
-          0.25
+          0.6,
+          0.95
         ],
         "p_at_50": [
-          0.0,
-          0.1
+          0.64,
+          0.86
         ]
       },
-      "candidate_count": 29,
+      "candidate_count": 320,
       "evaluated_pool_rows": 276,
       "evaluation_denominator": "complete_pooled_review_set",
       "kind": "primary",
@@ -27,24 +27,27 @@
         "TRUE_WRAPPER_FIX": 50,
         "UNCLEAR": 18
       },
-      "labeled_at_100": 29,
-      "ndcg_at_20": 0.1848,
+      "labeled_at_100": 100,
+      "ndcg_at_20": 0.8514,
       "oracle_blind": true,
-      "p_at_10": 0.2,
-      "p_at_100": 0.02,
-      "p_at_20": 0.1,
-      "p_at_50": 0.04,
+      "p_at_10": 0.9,
+      "p_at_100": 0.52,
+      "p_at_20": 0.8,
+      "p_at_50": 0.76,
       "ranked_label_distribution": {
-        "BENIGN_DRIFT": 26,
-        "FALSE_POSITIVE": 1,
-        "TRUE_SEMANTIC_DRIFT": 2
+        "BENIGN_DRIFT": 37,
+        "FALSE_POSITIVE": 169,
+        "TRUE_SEMANTIC_DRIFT": 2,
+        "TRUE_WRAPPER_FIX": 50,
+        "UNCLEAR": 18
       },
       "ranked_true_label_distribution": {
-        "TRUE_SEMANTIC_DRIFT": 2
+        "TRUE_SEMANTIC_DRIFT": 2,
+        "TRUE_WRAPPER_FIX": 50
       },
       "ranker": "binddrift_oracle_blind",
-      "review_pool_covered": 0.1051,
-      "review_pool_ranked_count": 29,
+      "review_pool_covered": 1.0,
+      "review_pool_ranked_count": 276,
       "true_label_distribution": {
         "TRUE_SEMANTIC_DRIFT": 2,
         "TRUE_WRAPPER_FIX": 50
@@ -52,7 +55,7 @@
       "warning_volume": 320
     },
     {
-      "auprc_on_pooled_review_set": 0.1765,
+      "auprc_on_pooled_review_set": 0.2824,
       "bootstrap_ci": {
         "ndcg_at_20": [
           0.1657,
@@ -86,16 +89,19 @@
       "p_at_20": 0.4,
       "p_at_50": 0.24,
       "ranked_label_distribution": {
-        "BENIGN_DRIFT": 25,
-        "FALSE_POSITIVE": 63,
-        "TRUE_WRAPPER_FIX": 12
+        "BENIGN_DRIFT": 37,
+        "FALSE_POSITIVE": 169,
+        "TRUE_SEMANTIC_DRIFT": 2,
+        "TRUE_WRAPPER_FIX": 50,
+        "UNCLEAR": 18
       },
       "ranked_true_label_distribution": {
-        "TRUE_WRAPPER_FIX": 12
+        "TRUE_SEMANTIC_DRIFT": 2,
+        "TRUE_WRAPPER_FIX": 50
       },
       "ranker": "no_graph",
-      "review_pool_covered": 0.3623,
-      "review_pool_ranked_count": 100,
+      "review_pool_covered": 1.0,
+      "review_pool_ranked_count": 276,
       "true_label_distribution": {
         "TRUE_SEMANTIC_DRIFT": 2,
         "TRUE_WRAPPER_FIX": 50
@@ -103,7 +109,7 @@
       "warning_volume": 320
     },
     {
-      "auprc_on_pooled_review_set": 0.1163,
+      "auprc_on_pooled_review_set": 0.2243,
       "bootstrap_ci": {
         "ndcg_at_20": [
           0.1116,
@@ -138,18 +144,18 @@
       "p_at_50": 0.16,
       "ranked_label_distribution": {
         "BENIGN_DRIFT": 37,
-        "FALSE_POSITIVE": 37,
+        "FALSE_POSITIVE": 169,
         "TRUE_SEMANTIC_DRIFT": 2,
-        "TRUE_WRAPPER_FIX": 20,
-        "UNCLEAR": 4
+        "TRUE_WRAPPER_FIX": 50,
+        "UNCLEAR": 18
       },
       "ranked_true_label_distribution": {
         "TRUE_SEMANTIC_DRIFT": 2,
-        "TRUE_WRAPPER_FIX": 20
+        "TRUE_WRAPPER_FIX": 50
       },
       "ranker": "no_impact_gate",
-      "review_pool_covered": 0.3623,
-      "review_pool_ranked_count": 100,
+      "review_pool_covered": 1.0,
+      "review_pool_ranked_count": 276,
       "true_label_distribution": {
         "TRUE_SEMANTIC_DRIFT": 2,
         "TRUE_WRAPPER_FIX": 50

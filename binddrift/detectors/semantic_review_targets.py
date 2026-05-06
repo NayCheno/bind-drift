@@ -206,8 +206,9 @@ def semantic_target_type(warning: dict[str, Any]) -> str:
     symbol = str((warning.get("c_side") or {}).get("symbol") or "").lower()
     warning_type = str(warning.get("type") or "")
     rust_side = warning.get("rust_side") or {}
-    payload = json.dumps(warning, sort_keys=True).lower()
-    if warning_type in {"FieldDrift", "LayoutDrift", "LayoutFieldDrift"} or "field" in payload or "layout" in payload:
+    fact_source = str(warning.get("fact_source") or "")
+    c_side_payload = json.dumps(warning.get("c_side") or {}, sort_keys=True).lower()
+    if warning_type in {"FieldDrift", "LayoutDrift", "LayoutFieldDrift"} or fact_source == "layout_diff" or '"fields"' in c_side_payload:
         return "LayoutFieldDrift"
     if any(token in symbol for token in ("err", "null", "ptr", "is_err")) or rust_side.get("error_mappings"):
         return "NullabilityDrift"

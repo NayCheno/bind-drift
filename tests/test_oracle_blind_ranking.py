@@ -57,7 +57,7 @@ def test_oracle_blind_tier_d_stays_below_supported_warning():
     assert ranked[1]["eligibility_tier"] == "D"
 
 
-def test_primary_oracle_blind_excludes_binding_only_oracle_promoted_rows():
+def test_primary_oracle_blind_keeps_binding_rows_with_non_oracle_evidence():
     supported = {
         "warning_id": "W-supported",
         "warning_uid": "uid-supported",
@@ -84,10 +84,52 @@ def test_primary_oracle_blind_excludes_binding_only_oracle_promoted_rows():
     ranked = rank_warnings_oracle_blind([binding_layout, supported])
     primary = rank_primary_warnings_oracle_blind([binding_layout, supported])
 
-    assert ranked[0]["warning_id"] == "W-supported"
-    assert ranked[1]["c_evidence_level"] == "binding_only"
-    assert ranked[1]["primary_oracle_blind_eligible"] is False
-    assert [warning["warning_id"] for warning in primary] == ["W-supported"]
+    assert ranked[0]["warning_id"] == "W-layout"
+    assert ranked[0]["c_evidence_level"] == "binding_only"
+    assert ranked[0]["primary_oracle_blind_eligible"] is True
+    assert [warning["warning_id"] for warning in primary] == ["W-layout", "W-supported"]
+
+
+def test_oracle_blind_keeps_detection_time_binding_rows_as_weak_tail_candidates():
+    binding_tail = {
+        "warning_id": "W-binding-tail",
+        "warning_uid": "uid-binding-tail",
+        "type": "SignatureDrift",
+        "c_evidence_level": "binding_only",
+        "fact_source": "binding_diff",
+        "promotion_reasons": ["oracle_hit"],
+        "rust_side": {"oracle_hits": [{"oracle_type": "wrapper_fix"}]},
+    }
+
+    ranked = rank_primary_warnings_oracle_blind([binding_tail])
+
+    assert ranked[0]["oracle_only_promotion"] is False
+    assert ranked[0]["primary_oracle_blind_eligible"] is True
+    assert ranked[0]["strict_top50_eligible"] is False
+    assert ranked[0]["generated_binding_only"] is True
+    assert ranked[0]["eligibility_tier"] == "D"
+    assert ranked[0]["score_explanation"]
+
+
+def test_oracle_blind_excludes_pure_oracle_only_rows_from_primary_candidates():
+    oracle_only = {
+        "warning_id": "W-oracle-only",
+        "warning_uid": "uid-oracle-only",
+        "type": "SignatureDrift",
+        "c_evidence_level": "oracle_only",
+        "fact_source": "wrapper_fix_oracle",
+        "promotion_reasons": ["oracle_hit"],
+        "rust_side": {"oracle_hits": [{"oracle_type": "wrapper_fix"}]},
+    }
+
+    ranked = rank_warnings_oracle_blind([oracle_only])
+    primary = rank_primary_warnings_oracle_blind([oracle_only])
+
+    assert ranked[0]["oracle_only_promotion"] is True
+    assert ranked[0]["primary_oracle_blind_eligible"] is False
+    assert ranked[0]["eligibility_tier"] == "D"
+    assert ranked[0]["score_explanation"]
+    assert primary == []
 
 
 def test_primary_oracle_blind_includes_tier_c_without_oracle_dependency():

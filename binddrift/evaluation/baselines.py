@@ -196,7 +196,12 @@ def _variant_warnings(
     name: str,
     warnings: list[dict[str, Any]],
     pool: list[dict[str, Any]],
+    *,
+    top_k: int | None = TOP_K,
 ) -> tuple[list[dict[str, Any]], int]:
+    def window(ranked: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        return ranked if top_k is None else ranked[:top_k]
+
     if name == "BindingDiffOnly":
         candidates = [
             warning
@@ -204,11 +209,11 @@ def _variant_warnings(
             if warning.get("fact_source") == "binding_diff" or warning.get("c_evidence_level") == "binding_only"
         ]
         ranked = sorted(candidates, key=lambda warning: (_change_size(warning), _rust_use_count(warning), str(warning.get("warning_uid"))), reverse=True)
-        return ranked[:TOP_K], len(candidates)
+        return window(ranked), len(candidates)
     if name == "CSignatureDiffOnly":
         candidates = [warning for warning in pool if warning.get("type") == "SignatureDrift"]
         ranked = sorted(candidates, key=lambda warning: (_change_size(warning), str(warning.get("warning_uid"))), reverse=True)
-        return ranked[:TOP_K], len(candidates)
+        return window(ranked), len(candidates)
     if name == "CIndicatorOnly":
         candidates = [
             warning
@@ -216,24 +221,25 @@ def _variant_warnings(
             if warning.get("indicator_based") or warning.get("c_evidence_level") == "c_behavior_indicator"
         ]
         ranked = sorted(candidates, key=lambda warning: (float(warning.get("confidence") or 0.0), _change_size(warning)), reverse=True)
-        return ranked[:TOP_K], len(candidates)
+        return window(ranked), len(candidates)
     if name == "RustUseOnly":
         ranked = sorted(pool, key=lambda warning: (_rust_use_count(warning), str(warning.get("warning_uid"))), reverse=True)
-        return ranked[:TOP_K], len(pool)
+        return window(ranked), len(pool)
     if name == "OracleBlindBindDrift":
         ranked = rank_primary_warnings_oracle_blind(pool)
-        return ranked[:TOP_K], len(pool)
+        return window(ranked), len(ranked)
     if name == "NoRanking":
-        return pool[:TOP_K], len(pool)
+        return window(list(pool)), len(pool)
     if name == "Random":
-        return _random_average_rows(pool), len(pool)
+        ranked = _random_average_rows(pool, top_k=top_k)
+        return ranked, len(pool)
     if name == "NoGraph":
         ranked = sorted(pool, key=lambda warning: (_symbol(warning) or "", str(warning.get("warning_id"))))
-        return ranked[:TOP_K], len(pool)
+        return window(ranked), len(pool)
     if name == "NoImpactGate":
         ranked = sorted(pool, key=lambda warning: (_c_only_score(warning), str(warning.get("warning_uid"))), reverse=True)
-        return ranked[:TOP_K], len(pool)
-    return warnings, len(warnings)
+        return window(ranked), len(pool)
+    return window(warnings), len(warnings)
 
 
 def _candidate_pool(cfg: Config, warnings: list[dict[str, Any]], run_manifest: str | None) -> list[dict[str, Any]]:
@@ -299,13 +305,17 @@ def _rust_use_count(warning: dict[str, Any]) -> int:
     return len(rust_side.get("uses") or []) + int((rust_side.get("exposure") or {}).get("edge_count") or 0)
 
 
-def _random_average_rows(pool: list[dict[str, Any]], trials: int = 10) -> list[dict[str, Any]]:
-    if len(pool) <= TOP_K:
+def _random_average_rows(pool: list[dict[str, Any]], trials: int = 10, *, top_k: int | None = TOP_K) -> list[dict[str, Any]]:
+    if top_k is None:
+        ranked = list(pool)
+        random.Random(0).shuffle(ranked)
+        return ranked
+    if len(pool) <= top_k:
         return list(pool)
     # Represent Random by one deterministic seed in the normal metric columns;
     # per-seed spread is summarized separately by downstream comparison fields.
     rng = random.Random(0)
-    return rng.sample(pool, TOP_K)
+    return rng.sample(pool, top_k)
 
 
 def _review_coverage_at_k(warnings: list[dict[str, Any]], labels: dict[str, str], ks: tuple[int, ...] = (10, 50, 100)) -> dict[str, float | None]:

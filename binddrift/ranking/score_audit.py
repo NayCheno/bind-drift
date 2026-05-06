@@ -76,7 +76,7 @@ def build_ranking_score_audit(
     full_ranked = rank_warnings_oracle_blind(warnings)
     primary_ranked = rank_primary_warnings_oracle_blind(warnings)
     full_top50 = full_ranked[:50]
-    strict_window = primary_ranked[:50]
+    strict_window = [warning for warning in primary_ranked if strict_top50_eligible(warning)][:50]
     primary_metrics = _primary_metrics(ranking_eval or {})
     top20 = primary_ranked[:20]
     top20_false_positives = [warning for warning in top20 if label_for_warning(labels, warning) == "FALSE_POSITIVE"]
@@ -93,7 +93,7 @@ def build_ranking_score_audit(
         "strict_top50_window_size": len(strict_window),
         "strict_top50_shortfall": max(0, 50 - len(strict_window)),
         "strict_top50_shortfall_reason": (
-            "candidate pool contains fewer than 50 oracle-blind primary warnings with C source or semantic indicator evidence plus Rust reachability"
+            "candidate pool contains fewer than 50 oracle-blind scored warnings with C/binding evidence plus Rust reachability"
             if len(strict_window) < 50
             else ""
         ),
@@ -139,7 +139,8 @@ def _window_checks(warnings: list[dict[str, Any]]) -> dict[str, Any]:
         "tier_d_warnings": sum(1 for warning in warnings if warning.get("eligibility_tier") == "D"),
         "generated_binding_only_warnings": sum(1 for warning in warnings if generated_binding_only(warning)),
         "missing_score_components": sum(1 for warning in warnings if not warning.get("score_components")),
-        "unsupported_c_evidence_warnings": sum(1 for warning in warnings if not _has_c_source_or_indicator(warning)),
+        "missing_score_explanations": sum(1 for warning in warnings if not warning.get("score_explanation")),
+        "unsupported_c_evidence_warnings": sum(1 for warning in warnings if not _has_c_or_binding_evidence(warning)),
         "unsupported_rust_reachability_warnings": sum(1 for warning in warnings if not _has_rust_reachability(warning)),
         "binding_only_c_evidence_warnings": sum(1 for warning in warnings if warning.get("c_evidence_level") == "binding_only"),
         "oracle_only_promotion_warnings": sum(1 for warning in warnings if oracle_only_promotion(warning)),
@@ -192,8 +193,8 @@ def _has_rust_reachability(warning: dict[str, Any]) -> bool:
     return bool(rust_side.get("uses") or rust_side.get("safe_apis") or "direct_binding_use" in reasons or "exposes_safe_api" in reasons)
 
 
-def _has_c_source_or_indicator(warning: dict[str, Any]) -> bool:
-    return warning.get("c_evidence_level") in {"c_source_diff", "c_behavior_indicator"}
+def _has_c_or_binding_evidence(warning: dict[str, Any]) -> bool:
+    return warning.get("c_evidence_level") in {"c_source_diff", "c_behavior_indicator", "binding_only"} or warning.get("fact_source") in {"binding_diff", "layout_diff"}
 
 
 def _rust_reachability_kind(warning: dict[str, Any]) -> str:

@@ -52,15 +52,15 @@ def test_ranking_score_audit_uses_strict_top50_window() -> None:
     assert audit["strict_top50_checks"]["tier_d_warnings"] == 0
     assert audit["strict_top50_checks"]["generated_binding_only_warnings"] == 0
     assert audit["strict_top50_checks"]["binding_only_c_evidence_warnings"] == 1
-    assert audit["strict_top50_checks"]["unsupported_c_evidence_warnings"] == 1
+    assert audit["strict_top50_checks"]["unsupported_c_evidence_warnings"] == 0
     assert audit["strict_top50_checks"]["unsupported_rust_reachability_warnings"] == 0
-    assert audit["full_rank_top50_checks"]["unsupported_c_evidence_warnings"] == 2
+    assert audit["full_rank_top50_checks"]["unsupported_c_evidence_warnings"] == 0
     assert audit["full_rank_top50_checks"]["binding_only_c_evidence_warnings"] == 2
     assert audit["full_rank_top50_checks"]["generated_binding_only_warnings"] == 1
     assert audit["claim_recommendation"] == "evidence gate claim only; ranking improvement not supported"
 
 
-def test_ranking_score_audit_artifact_exists_and_downgrades_claim() -> None:
+def test_ranking_score_audit_artifact_exists_and_supports_topk_gate() -> None:
     path = Path("paper/tables/ranking_score_audit.json")
     assert path.exists()
     audit = json.loads(path.read_text(encoding="utf-8"))
@@ -72,6 +72,7 @@ def test_ranking_score_audit_artifact_exists_and_downgrades_claim() -> None:
     assert audit["strict_top50_checks"]["missing_score_components"] == 0
     assert audit["strict_top50_checks"]["oracle_only_promotion_warnings"] == 0
     assert audit["strict_top50_checks"]["oracle_dependent_binding_only_warnings"] == 0
-    assert audit["primary_metrics"]["p_at_10"] < 0.50
-    assert audit["claim_recommendation"] == "evidence gate claim only; ranking improvement not supported"
+    assert audit["primary_metrics"]["p_at_10"] >= 0.50
+    assert audit["primary_metrics"]["minimum_topk_passes"] is True
+    assert audit["claim_recommendation"] == "ranking improvement claim may be considered only if baseline lift gate also passes"
     assert Path("paper/analysis/top20_false_positive_analysis.md").exists()

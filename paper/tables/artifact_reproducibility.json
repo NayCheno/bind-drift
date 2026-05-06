@@ -142,15 +142,23 @@
       "details": {
         "passes": true,
         "score_component_keys": [
-          "binding_diff",
-          "c_source_diff",
-          "contract_evidence",
+          "added_symbol_without_old_c_evidence_penalty",
+          "binding_diff_strength",
+          "c_source_diff_strength",
           "contract_sensitive_type",
           "cross_version_stability",
-          "generated_binding_only_penalty",
-          "multi_evidence_bonus",
+          "error_mapping_evidence",
+          "evidence_diversity",
+          "field_layout_contract_surface",
+          "layout_lifetime_ambiguity_penalty",
+          "layout_safe_field_evidence",
+          "lifetime_ownership_evidence",
+          "macro_constant_penalty",
           "rust_direct_use",
+          "rust_use_density",
           "safe_api_exposure",
+          "safety_comment_proximity",
+          "signature_contract_surface",
           "weak_graph_only_penalty"
         ]
       },
@@ -327,15 +335,89 @@
       "source_csv": "data/replay/latest/pooled_review_labels.csv"
     },
     "ranking": {
-      "claim": "evidence gate claim only; ranking improvement not supported",
-      "metrics": {
-        "ndcg_at_20": 0.1848,
-        "p_at_10": 0.2,
-        "p_at_100": 0.02,
-        "p_at_20": 0.1,
-        "p_at_50": 0.04
+      "candidate_oracle_only": 0,
+      "checks": {
+        "auprc_at_least_best_simple": true,
+        "bootstrap_ci_lower_bound_positive": true,
+        "candidate_count": true,
+        "candidate_count_matches_recomputed": true,
+        "ndcg_at_20": true,
+        "ndcg_at_20_lift": true,
+        "oracle_leakage": true,
+        "p_at_10": true,
+        "p_at_100": true,
+        "p_at_20": true,
+        "p_at_20_lift": true,
+        "p_at_50": true,
+        "p_at_50_lift": true,
+        "primary_beats_random": true,
+        "primary_candidates_exclude_pure_oracle_only": true,
+        "reported_top100_complete": true,
+        "significance_p_value": true,
+        "top100_generated_binding_only_limit": true,
+        "top100_oracle_only": true,
+        "top50_generated_binding_only": true,
+        "top50_score_explanations": true
       },
-      "passes": false
+      "claim": "ranking improvement claim supported on pooled labels",
+      "comparison": {
+        "best_simple_baseline": "no_ranking",
+        "deltas": {
+          "ndcg_at_20": 0.3331,
+          "p_at_20": 0.3,
+          "p_at_50": 0.5
+        },
+        "minimum_conditions_passed": 3,
+        "paired_bootstrap_significance": {
+          "best_simple_baseline": "same_as_comparison",
+          "method": "paired_rank_position_bootstrap",
+          "metrics": {
+            "ndcg_at_20": {
+              "bootstrap_delta_ci": [
+                0.0946,
+                0.5522
+              ],
+              "observed_delta": 0.3331,
+              "p_value_primary_not_better": 0.002,
+              "significant_primary_better": true
+            },
+            "p_at_20": {
+              "bootstrap_delta_ci": [
+                0.1,
+                0.5
+              ],
+              "observed_delta": 0.3,
+              "p_value_primary_not_better": 0.002,
+              "significant_primary_better": true
+            },
+            "p_at_50": {
+              "bootstrap_delta_ci": [
+                0.36,
+                0.66
+              ],
+              "observed_delta": 0.5,
+              "p_value_primary_not_better": 0.002,
+              "significant_primary_better": true
+            }
+          },
+          "trials": 500
+        },
+        "passes_minimum_lift": true,
+        "primary_ranker": "binddrift_oracle_blind"
+      },
+      "metrics": {
+        "auprc_on_pooled_review_set": 0.7938,
+        "candidate_count": 320,
+        "ndcg_at_20": 0.8514,
+        "p_at_10": 0.9,
+        "p_at_100": 0.52,
+        "p_at_20": 0.8,
+        "p_at_50": 0.76,
+        "review_pool_ranked_count": 276
+      },
+      "passes": true,
+      "top100_generated_binding_only": 0,
+      "top100_oracle_only": 0
     },
     "semantic": {
       "claim": "semantic drift claim must be downgraded to exploratory",
@@ -354,18 +436,24 @@
       "total_samples": 600
     }
   },
-  "passes": true,
+  "passes": false,
   "protocol_version": "ccfb-strict-v2",
   "run_manifest": "data/replay/latest/run_manifest.json",
-  "stage": "m1",
+  "stage": "final",
   "stage_required_checks": [
+    "case_study_gate",
     "evaluation_protocol_valid",
+    "manual_review_quality_gate",
     "no_local_absolute_paths",
     "oracle_blind_primary_has_no_forbidden_components",
     "paper_claims_match_downgrades",
+    "pooled_review_coverage",
+    "ranking",
     "required_tables_exist",
-    "run_manifest_valid"
+    "run_manifest_valid",
+    "semantic",
+    "strict_extractor_audit_gate"
   ],
-  "status": "stage_ready",
+  "status": "failed",
   "strict_ccfb": true
 }

@@ -165,7 +165,7 @@ def ranker_output_details(
             baseline = RANKER_TO_BASELINE.get(name)
             if not baseline:
                 raise ValueError(f"unknown ranker: {name}")
-            candidates, _count = _variant_warnings(baseline, warnings, pool)
+            candidates, _count = _variant_warnings(baseline, warnings, pool, top_k=None)
             out[name] = {"ranked": candidates, "candidate_count": _count, "warning_volume": _count}
     return out
 

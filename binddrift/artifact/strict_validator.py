@@ -13,8 +13,10 @@ from binddrift.evaluation.protocol import assert_oracle_blind_components, load_e
 from binddrift.paper.audit import generate_strict_extractor_audit
 from binddrift.paper.cases import generate_case_studies
 from binddrift.paper.tables import generate_paper_tables
+from binddrift.ranking.oracle_blind_scorer import generated_binding_only, rank_primary_warnings_oracle_blind
 from binddrift.ranking.score_audit import generate_ranking_score_audit
 from binddrift.run_manifest import canonical_run_dir, validate_run_manifest
+from binddrift.warnings import read_warnings
 
 VALIDATION_STAGES = ("m0", "m1", "m2", "m3", "m4", "m5", "m6", "m7", "m8", "final")
 
@@ -206,14 +208,60 @@ def _pooled_review_coverage(cfg: Config) -> dict[str, Any]:
 def _ranking_gate(cfg: Config) -> dict[str, Any]:
     data = _json(cfg, "paper/tables/ranking_pooled_evaluation.json")
     primary = next((row for row in data.get("rankers", []) if row.get("ranker") == "binddrift_oracle_blind"), {})
-    passes = bool(
-        (primary.get("p_at_10") or 0.0) >= 0.50
-        and (primary.get("p_at_20") or 0.0) >= 0.45
-        and (primary.get("p_at_50") or 0.0) >= 0.42
-        and (primary.get("p_at_100") or 0.0) >= 0.40
-        and (primary.get("ndcg_at_20") or 0.0) >= 0.55
-    )
-    return {"passes": passes, "metrics": {key: primary.get(key) for key in ("p_at_10", "p_at_20", "p_at_50", "p_at_100", "ndcg_at_20")}, "claim": data.get("claim_recommendation")}
+    best = data.get("best_simple_baseline") or {}
+    comparison = data.get("comparison_against_best_simple_baseline") or {}
+    random_comparison = data.get("comparison_against_random") or {}
+    significance = (comparison.get("paired_bootstrap_significance") or {}).get("metrics") or {}
+    deltas = comparison.get("deltas") or {}
+    audit = _json(cfg, "paper/tables/ranking_score_audit.json")
+    manifest = validate_run_manifest(cfg)
+    ranked = rank_primary_warnings_oracle_blind(read_warnings(Path(manifest["resolved_paths"]["promoted_warnings"])))
+    top100_generated_binding_only = sum(1 for warning in ranked[:100] if generated_binding_only(warning))
+    top100_oracle_only = sum(1 for warning in ranked[:100] if warning.get("oracle_only_promotion") is True)
+    candidate_oracle_only = sum(1 for warning in ranked if warning.get("oracle_only_promotion") is True)
+    top50_checks = audit.get("strict_top50_checks") or {}
+    checks = {
+        "candidate_count": (primary.get("candidate_count") or 0) >= 150,
+        "candidate_count_matches_recomputed": primary.get("candidate_count") == len(ranked),
+        "primary_candidates_exclude_pure_oracle_only": candidate_oracle_only == 0,
+        "reported_top100_complete": (primary.get("review_pool_ranked_count") or 0) >= 100 and (primary.get("labeled_at_100") or 0) >= 100,
+        "p_at_10": (primary.get("p_at_10") or 0.0) >= 0.50,
+        "p_at_20": (primary.get("p_at_20") or 0.0) >= 0.45,
+        "p_at_50": (primary.get("p_at_50") or 0.0) >= 0.42,
+        "p_at_100": (primary.get("p_at_100") or 0.0) >= 0.40,
+        "ndcg_at_20": (primary.get("ndcg_at_20") or 0.0) >= 0.55,
+        "auprc_at_least_best_simple": (primary.get("auprc_on_pooled_review_set") or 0.0) >= (best.get("auprc_on_pooled_review_set") or 0.0),
+        "p_at_20_lift": (deltas.get("p_at_20") or 0.0) >= 0.10,
+        "p_at_50_lift": (deltas.get("p_at_50") or 0.0) >= 0.07,
+        "ndcg_at_20_lift": (deltas.get("ndcg_at_20") or 0.0) >= 0.10,
+        "bootstrap_ci_lower_bound_positive": all(
+            ((significance.get(metric) or {}).get("bootstrap_delta_ci") or [0.0])[0] > 0.0
+            for metric in ("p_at_20", "p_at_50", "ndcg_at_20")
+        ),
+        "significance_p_value": all(
+            ((significance.get(metric) or {}).get("p_value_primary_not_better") or 1.0) < 0.05
+            for metric in ("p_at_20", "p_at_50", "ndcg_at_20")
+        ),
+        "primary_beats_random": bool(random_comparison.get("passes_minimum_lift")),
+        "top100_oracle_only": top100_oracle_only == 0,
+        "top50_generated_binding_only": (top50_checks.get("generated_binding_only_warnings") or 0) == 0,
+        "top100_generated_binding_only_limit": top100_generated_binding_only <= 10,
+        "top50_score_explanations": (top50_checks.get("missing_score_explanations") or 0) == 0,
+        "oracle_leakage": _oracle_blind_components(cfg).get("passes") is True,
+    }
+    return {
+        "passes": all(checks.values()),
+        "checks": checks,
+        "metrics": {
+            key: primary.get(key)
+            for key in ("candidate_count", "review_pool_ranked_count", "p_at_10", "p_at_20", "p_at_50", "p_at_100", "ndcg_at_20", "auprc_on_pooled_review_set")
+        },
+        "comparison": comparison,
+        "top100_generated_binding_only": top100_generated_binding_only,
+        "top100_oracle_only": top100_oracle_only,
+        "candidate_oracle_only": candidate_oracle_only,
+        "claim": data.get("claim_recommendation"),
+    }
 
 
 def _semantic_gate(cfg: Config) -> dict[str, Any]:

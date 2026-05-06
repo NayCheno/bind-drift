@@ -23,6 +23,10 @@ def _binding_only(warning: dict[str, Any]) -> bool:
     return warning.get("c_evidence_level") == "binding_only" or warning.get("fact_source") == "binding_diff"
 
 
+def _detection_time_drift_evidence(warning: dict[str, Any]) -> bool:
+    return bool(_c_source_or_indicator(warning) or _binding_only(warning) or warning.get("fact_source") == "layout_diff")
+
+
 def _rust_side(warning: dict[str, Any]) -> dict[str, Any]:
     return warning.get("rust_side") or {}
 
@@ -46,6 +50,30 @@ def _contract_evidence(warning: dict[str, Any]) -> bool:
     )
 
 
+def _error_mapping(warning: dict[str, Any]) -> bool:
+    rust_side = _rust_side(warning)
+    return _has_list(rust_side.get("error_mappings")) or "has_error_mapping" in set(warning.get("promotion_reasons") or [])
+
+
+def _lifetime_or_ownership(warning: dict[str, Any]) -> bool:
+    rust_side = _rust_side(warning)
+    return _has_list(rust_side.get("lifetime_facts")) or "has_lifetime_fact" in set(warning.get("promotion_reasons") or [])
+
+
+def _safety_comment(warning: dict[str, Any]) -> bool:
+    rust_side = _rust_side(warning)
+    return _has_list(rust_side.get("safety_comments")) or "has_safety_comment" in set(warning.get("promotion_reasons") or [])
+
+
+def _non_oracle_rust_evidence(warning: dict[str, Any]) -> bool:
+    return bool(_direct_use(warning) or _safe_api(warning) or _contract_evidence(warning) or _safety_comment(warning))
+
+
+def _count_rust_items(warning: dict[str, Any], key: str) -> int:
+    value = _rust_side(warning).get(key)
+    return len(value) if isinstance(value, list) else 0
+
+
 def generated_binding_only(warning: dict[str, Any]) -> bool:
     demotions = set(warning.get("demotion_reasons") or [])
     return bool(
@@ -58,26 +86,31 @@ def generated_binding_only(warning: dict[str, Any]) -> bool:
 
 def oracle_only_promotion(warning: dict[str, Any]) -> bool:
     reasons = set(warning.get("promotion_reasons") or [])
-    return bool(reasons and reasons <= ORACLE_PROMOTION_REASONS)
+    return bool(
+        reasons
+        and reasons <= ORACLE_PROMOTION_REASONS
+        and not _detection_time_drift_evidence(warning)
+        and not _non_oracle_rust_evidence(warning)
+    )
 
 
 def oracle_dependent_binding_only(warning: dict[str, Any]) -> bool:
     reasons = set(warning.get("promotion_reasons") or [])
-    return _binding_only(warning) and bool(reasons & ORACLE_PROMOTION_REASONS)
-
-
-def primary_oracle_blind_eligible(warning: dict[str, Any]) -> bool:
-    tier = eligibility_tier(warning)
     return bool(
-        tier in {"A", "B", "C"}
-        and not generated_binding_only(warning)
-        and not oracle_only_promotion(warning)
-        and not oracle_dependent_binding_only(warning)
+        _binding_only(warning)
+        and reasons
+        and reasons <= ORACLE_PROMOTION_REASONS
+        and not _detection_time_drift_evidence(warning)
+        and not _non_oracle_rust_evidence(warning)
     )
 
 
+def primary_oracle_blind_eligible(warning: dict[str, Any]) -> bool:
+    return bool(_detection_time_drift_evidence(warning) and not oracle_only_promotion(warning))
+
+
 def strict_top50_eligible(warning: dict[str, Any]) -> bool:
-    return primary_oracle_blind_eligible(warning)
+    return bool(primary_oracle_blind_eligible(warning) and not generated_binding_only(warning) and _non_oracle_rust_evidence(warning))
 
 
 def eligibility_tier(warning: dict[str, Any]) -> str:
@@ -94,18 +127,18 @@ def eligibility_tier(warning: dict[str, Any]) -> str:
 
 
 def score_components(warning: dict[str, Any]) -> dict[str, float]:
-    rust_side = _rust_side(warning)
     evidence_kinds = [
         _c_source_or_indicator(warning),
         _binding_only(warning),
         _direct_use(warning),
         _safe_api(warning),
-        _has_list(rust_side.get("safety_comments")),
-        _has_list(rust_side.get("error_mappings")),
-        _has_list(rust_side.get("lifetime_facts")),
+        _safety_comment(warning),
+        _error_mapping(warning),
+        _lifetime_or_ownership(warning),
     ]
     diversity = sum(1 for item in evidence_kinds if item)
     warning_type = str(warning.get("type") or "")
+    fact_source = str(warning.get("fact_source") or "")
     contract_sensitive = warning_type in {
         "NullabilityDrift",
         "ErrorDrift",
@@ -118,25 +151,55 @@ def score_components(warning: dict[str, Any]) -> dict[str, float]:
         "FieldDrift",
         "LayoutDrift",
     }
+    direct = _direct_use(warning)
+    safe = _safe_api(warning)
+    safety = _safety_comment(warning)
+    error = _error_mapping(warning)
+    lifetime = _lifetime_or_ownership(warning)
+    binding = _binding_only(warning)
+    c_source = _c_source_or_indicator(warning)
+    field_layout = warning_type == "FieldDrift" and fact_source == "layout_diff"
+    signature = warning_type == "SignatureDrift"
+    macro_const = warning_type == "MacroConstDrift"
+    weak_graph = not _non_oracle_rust_evidence(warning)
+    added_without_old_c_evidence = "added_symbol_without_old_c_evidence" in set(warning.get("demotion_reasons") or [])
+    rust_use_count = min(_count_rust_items(warning, "uses"), 5)
+    safety_comment_count = min(_count_rust_items(warning, "safety_comments"), 5)
+    safe_api_count = min(_count_rust_items(warning, "safe_apis"), 3)
     components = {
-        "c_source_diff": 2.0 if _c_source_or_indicator(warning) else 0.0,
-        "binding_diff": 0.8 if _binding_only(warning) else 0.0,
-        "rust_direct_use": 2.0 if _direct_use(warning) else 0.0,
-        "safe_api_exposure": 2.0 if _safe_api(warning) else 0.0,
-        "contract_evidence": 2.0 if _contract_evidence(warning) else 0.0,
+        "c_source_diff_strength": 2.0 if c_source else 0.0,
+        "binding_diff_strength": 2.0 if binding else 0.0,
+        "rust_direct_use": 4.0 if direct else 0.0,
+        "safe_api_exposure": 2.5 if safe else 0.0,
+        "safety_comment_proximity": 3.0 if safety else 0.0,
+        "error_mapping_evidence": 2.0 if error else 0.0,
+        "lifetime_ownership_evidence": 1.2 if lifetime else 0.0,
         "contract_sensitive_type": 1.2 if contract_sensitive else 0.0,
-        "multi_evidence_bonus": min(2.0, diversity * 0.35),
+        "signature_contract_surface": 1.5 if signature else 0.0,
+        "field_layout_contract_surface": 1.0 if field_layout else 0.0,
+        "layout_safe_field_evidence": 4.0 if field_layout and direct and safe and safety and not lifetime else 0.0,
+        "evidence_diversity": min(2.0, diversity * 0.35),
+        "rust_use_density": round(rust_use_count * 0.15 + safety_comment_count * 0.10 + safe_api_count * 0.15, 3),
         "cross_version_stability": 1.0 if len(warning.get("observed_pairs") or []) > 1 else 0.0,
-        "generated_binding_only_penalty": -4.0 if _binding_only(warning) and not _contract_evidence(warning) else 0.0,
-        "weak_graph_only_penalty": -3.0 if eligibility_tier(warning) == "D" else 0.0,
+        "added_symbol_without_old_c_evidence_penalty": -3.0 if added_without_old_c_evidence else 0.0,
+        "macro_constant_penalty": -8.0 if macro_const else 0.0,
+        "weak_graph_only_penalty": -10.0 if weak_graph else 0.0,
+        "layout_lifetime_ambiguity_penalty": -12.0 if field_layout and lifetime else 0.0,
     }
     assert_oracle_blind_components(components, context=f"oracle-blind warning {warning.get('warning_id')}")
     return components
 
 
 def score_warning(warning: dict[str, Any]) -> float:
-    tier_bonus = {"A": 6.0, "B": 3.0, "C": 1.0, "D": -4.0}[eligibility_tier(warning)]
-    return round(tier_bonus + sum(score_components(warning).values()), 3)
+    return round(sum(score_components(warning).values()), 3)
+
+
+def score_explanation(components: dict[str, float]) -> list[str]:
+    ranked = sorted(
+        ((key, value) for key, value in components.items() if value),
+        key=lambda item: (-abs(float(item[1])), item[0]),
+    )
+    return [f"{key}={value:g}" for key, value in ranked[:5]]
 
 
 def annotate_warning(warning: dict[str, Any]) -> dict[str, Any]:
@@ -150,7 +213,8 @@ def annotate_warning(warning: dict[str, Any]) -> dict[str, Any]:
     row["oracle_only_promotion"] = oracle_only_promotion(row)
     row["oracle_dependent_binding_only"] = oracle_dependent_binding_only(row)
     row["primary_oracle_blind_eligible"] = primary_oracle_blind_eligible(row)
-    row["oracle_blind_score"] = round({"A": 6.0, "B": 3.0, "C": 1.0, "D": -4.0}[row["eligibility_tier"]] + sum(components.values()), 3)
+    row["oracle_blind_score"] = round(sum(components.values()), 3)
+    row["score_explanation"] = score_explanation(components)
     return row
 
 
@@ -159,8 +223,8 @@ def rank_warnings_oracle_blind(warnings: list[dict[str, Any]]) -> list[dict[str,
     ranked.sort(
         key=lambda warning: (
             bool(warning.get("strict_top50_eligible")),
-            {"A": 3, "B": 2, "C": 1, "D": 0}[warning["eligibility_tier"]],
             float(warning.get("oracle_blind_score") or 0.0),
+            {"A": 3, "B": 2, "C": 1, "D": 0}[warning["eligibility_tier"]],
             str(warning.get("warning_uid") or warning.get("warning_id") or ""),
         ),
         reverse=True,
