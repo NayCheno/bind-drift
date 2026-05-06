@@ -15,18 +15,18 @@
   "adjudicated": true,
   "adjudication_notes_missing": 0,
   "adjudication_notes_missing_rate": 0.0,
-  "agreement_rate": 0.5683,
-  "cohen_kappa": 0.415,
-  "disagreements": 120,
-  "double_labeled_warnings": 278,
+  "agreement_rate": 0.2609,
+  "cohen_kappa": 0.1195,
+  "disagreements": 204,
+  "double_labeled_warnings": 276,
   "label_coverage": 1.0,
   "label_distribution": {
-    "BENIGN_DRIFT": 36,
-    "FALSE_POSITIVE": 32,
-    "TRUE_BUILD_BREAKAGE": 3,
+    "BENIGN_DRIFT": 37,
+    "FALSE_POSITIVE": 169,
+    "TRUE_BUILD_BREAKAGE": 0,
     "TRUE_SEMANTIC_DRIFT": 2,
-    "TRUE_WRAPPER_FIX": 130,
-    "UNCLEAR": 75
+    "TRUE_WRAPPER_FIX": 50,
+    "UNCLEAR": 18
   },
   "label_leakage_check": "passed",
   "label_leakage_findings": [],
@@ -44,7 +44,7 @@
     "adjudicated_label",
     "adjudication_notes"
   ],
-  "reviewed_warnings": 278,
+  "reviewed_warnings": 276,
   "reviewer_disagreement_examples": {
     "examples": 5,
     "minimum_required": 5,
@@ -53,11 +53,11 @@
   "reviewers": 2,
   "source_csv": "data/replay/latest/pooled_review_labels.csv",
   "strict_gate_active": true,
-  "true_build_breakage_count": 3,
+  "true_build_breakage_count": 0,
   "true_semantic_drift_count": 2,
   "true_wrapper_fix_and_true_semantic_drift_reported_separately": true,
-  "true_wrapper_fix_count": 130,
-  "unclear_count": 75,
+  "true_wrapper_fix_count": 50,
+  "unclear_count": 18,
   "unclear_is_true_positive": false,
   "wrapper_fix_oracle_usage": "auxiliary_validation_only"
 }

@@ -1,8 +1,0 @@
-{
-  "labels": {
-    "BENIGN_DRIFT": 31,
-    "FALSE_POSITIVE": 6,
-    "TRUE_WRAPPER_FIX": 2
-  },
-  "rows": 39
-}

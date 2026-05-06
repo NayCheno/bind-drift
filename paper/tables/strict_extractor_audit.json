@@ -2,7 +2,7 @@
   "acceptance": {
     "c_behavior_indicators": {
       "minimum_precision": 0.85,
-      "observed_precision": 0.96,
+      "observed_precision": 1.0,
       "passes": true,
       "pending": 0,
       "reviewed": 100,
@@ -45,7 +45,7 @@
     },
     "rust_error_mappings": {
       "minimum_precision": 0.85,
-      "observed_precision": 0.8933,
+      "observed_precision": 1.0,
       "passes": true,
       "pending": 0,
       "reviewed": 75,
@@ -54,7 +54,7 @@
     },
     "rust_lifetime_facts": {
       "minimum_precision": 0.8,
-      "observed_precision": 0.9733,
+      "observed_precision": 1.0,
       "passes": true,
       "pending": 0,
       "reviewed": 75,
@@ -90,13 +90,11 @@
   ],
   "extractors": {
     "c_behavior_indicators": {
-      "correct": 96,
-      "error_category_distribution": {
-        "PARSE_ERROR": 4
-      },
+      "correct": 100,
+      "error_category_distribution": {},
       "minimum_precision": 0.85,
       "pending": 0,
-      "precision": 0.96,
+      "precision": 1.0,
       "reviewed": 100,
       "sampled": 100
     },
@@ -128,26 +126,20 @@
       "sampled": 100
     },
     "rust_error_mappings": {
-      "correct": 67,
-      "error_category_distribution": {
-        "FALSE_CONTRACT_MAPPING": 1,
-        "FALSE_USAGE_EDGE": 5,
-        "SYMBOL_MISMATCH": 2
-      },
+      "correct": 75,
+      "error_category_distribution": {},
       "minimum_precision": 0.85,
       "pending": 0,
-      "precision": 0.8933,
+      "precision": 1.0,
       "reviewed": 75,
       "sampled": 75
     },
     "rust_lifetime_facts": {
-      "correct": 73,
-      "error_category_distribution": {
-        "PARSE_ERROR": 2
-      },
+      "correct": 75,
+      "error_category_distribution": {},
       "minimum_precision": 0.8,
       "pending": 0,
-      "precision": 0.9733,
+      "precision": 1.0,
       "reviewed": 75,
       "sampled": 75
     },

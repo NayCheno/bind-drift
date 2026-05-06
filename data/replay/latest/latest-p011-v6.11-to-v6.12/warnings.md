@@ -2,8 +2,8 @@
 
 ## W-000002 FieldDrift
 
-- Risk: High
-- Score: 13.0
+- Risk: Medium
+- Score: 9.0
 - Symbol: device
 - Explanation: device changed across the selected Linux versions.
 - Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
@@ -19,32 +19,31 @@
 - safe_api_exposure: `4.0`
 - contract_mapping: `3.0`
 - safety_comment: `3.0`
-- wrapper_fix_hit: `4.0`
 - binding_only_penalty: `-5.0`
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.12/rust/kernel/device.rs:38 `None` unsafe=0
-- .binddrift/worktrees/v6.12/rust/kernel/device.rs:41 `None` unsafe=0
-- .binddrift/worktrees/v6.12/rust/kernel/device.rs:52 `None` unsafe=0
-- .binddrift/worktrees/v6.12/rust/kernel/device.rs:54 `None` unsafe=0
-- .binddrift/worktrees/v6.12/rust/kernel/device.rs:60 `Device::get_device` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.12/rust/kernel/device.rs:41 `None` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.12/rust/kernel/device.rs:54 `Device::get_device` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.12/rust/kernel/device.rs:60 `Device::as_raw` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.12/rust/kernel/device.rs:72 `Device::as_raw` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.12/rust/kernel/firmware.rs:15 `None` unsafe=0
 - safe API `Device::get_device`
 - safe API `Device::as_raw`
-- .binddrift/worktrees/v6.12/rust/kernel/device.rs:33 `/// A `Device` instance represents a valid `struct device` created by the C portion of the kernel.`
-- .binddrift/worktrees/v6.12/rust/kernel/device.rs:34 `///`
-- .binddrift/worktrees/v6.12/rust/kernel/device.rs:35 `/// Instances of this type are always reference-counted, that is, a call to `get_device` ensures`
-- .binddrift/worktrees/v6.12/rust/kernel/device.rs:38 `AREF`
-- .binddrift/worktrees/v6.12/rust/kernel/device.rs:38 `AREF`
-- .binddrift/worktrees/v6.12/rust/kernel/device.rs:38 `AREF`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.12/rust/kernel/device.rs:36 `/// that the allocation remains valid at least until the matching call to `put_device`.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.12/rust/kernel/device.rs:37 `///`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.12/rust/kernel/device.rs:38 `/// `bindings::device::release` is valid to be called from any thread, hence `ARef<Device>` can be`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.12/rust/kernel/device.rs:38 `AREF`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.12/rust/kernel/device.rs:41 `OPAQUE`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.12/rust/kernel/device.rs:54 `AREF`
 - wrapper_fix: `a23b018c3bf646274f02edd46bf448c20c826d94`
 - wrapper_fix: `7b948a2af6b5d64a25c14da8f63d8084ea527cd9`
 - wrapper_fix: `4d320e30ee04c25c660eca2bb33e846ebb71a79a`
 
 ## W-000003 FieldDrift
 
-- Risk: High
-- Score: 13.0
+- Risk: Medium
+- Score: 9.0
 - Symbol: request
 - Explanation: request changed across the selected Linux versions.
 - Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
@@ -60,26 +59,24 @@
 - safe_api_exposure: `4.0`
 - contract_mapping: `3.0`
 - safety_comment: `3.0`
-- wrapper_fix_hit: `4.0`
 - binding_only_penalty: `-5.0`
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.12/rust/kernel/block/mq/operations.rs:123 `commit_rqs_callback` unsafe=0
-- .binddrift/worktrees/v6.12/rust/kernel/block/mq/operations.rs:173 `complete_callback` unsafe=0
-- .binddrift/worktrees/v6.12/rust/kernel/block/mq/operations.rs:178 `complete_callback` unsafe=0
-- .binddrift/worktrees/v6.12/rust/kernel/block/mq/operations.rs:205 `complete_callback` unsafe=0
-- .binddrift/worktrees/v6.12/rust/kernel/block/mq/request.rs:53 `None` unsafe=0
-- safe API `Request<T>::start_unchecked`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.12/rust/kernel/block/mq/operations.rs:123 `complete_callback` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.12/rust/kernel/block/mq/operations.rs:178 `complete_callback` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.12/rust/kernel/block/mq/operations.rs:205 `complete_callback` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.12/rust/kernel/block/mq/request.rs:53 `None` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.12/rust/kernel/block/mq/request.rs:63 `Request<T>::aref_from_raw` unsafe=0
+- safe API `Request<T>::aref_from_raw`
 - safe API `Request<T>::wrapper_ptr`
-- .binddrift/worktrees/v6.12/rust/kernel/block/mq/operations.rs:118 `/// implemented, and there is no way to exercise this code path.`
-- .binddrift/worktrees/v6.12/rust/kernel/block/mq/operations.rs:119 `///`
-- .binddrift/worktrees/v6.12/rust/kernel/block/mq/operations.rs:120 `/// # Safety`
-- .binddrift/worktrees/v6.12/rust/kernel/block/mq/request.rs:67 `NONNULL_MAPPING`
-- .binddrift/worktrees/v6.12/rust/kernel/block/mq/request.rs:93 `RESULT_RETURN`
-- .binddrift/worktrees/v6.12/rust/kernel/block/mq/request.rs:53 `OPAQUE`
-- .binddrift/worktrees/v6.12/rust/kernel/block/mq/request.rs:56 `AREF`
-- .binddrift/worktrees/v6.12/rust/kernel/block/mq/request.rs:63 `AREF`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.12/rust/kernel/block/mq/operations.rs:118 `/// implemented, and there is no way to exercise this code path.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.12/rust/kernel/block/mq/operations.rs:119 `///`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.12/rust/kernel/block/mq/operations.rs:120 `/// # Safety`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.12/rust/kernel/block/mq/request.rs:67 `NONNULL_MAPPING`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.12/rust/kernel/block/mq/request.rs:53 `OPAQUE`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.12/rust/kernel/block/mq/request.rs:56 `AREF`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.12/rust/kernel/block/mq/request.rs:63 `AREF`
 - wrapper_fix: `28e848386b92645f93b9f2fdba5882c3ca7fb3e2`
 - wrapper_fix: `a307bf1db5448eccd72a1d7857f7661c6330d5ad`
 
@@ -105,6 +102,6 @@
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.12/rust/kernel/sync/lock/mutex.rs:104 `example` unsafe=1
-- .binddrift/worktrees/v6.12/rust/kernel/sync/lock/mutex.rs:102 `// SAFETY: The safety requirements ensure that `ptr` is valid for writes, and `name` and`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.12/rust/kernel/sync/lock/mutex.rs:104 `example` unsafe=1
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.12/rust/kernel/sync/lock/mutex.rs:102 `// SAFETY: The safety requirements ensure that `ptr` is valid for writes, and `name` and`
 - wrapper_fix: `d065cc76054d21e48a839a2a19ba99dbc51a4d11`

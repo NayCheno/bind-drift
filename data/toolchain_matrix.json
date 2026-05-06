@@ -1149,12 +1149,12 @@
     },
     {
       "compatibility_issues": [],
-      "date": "2026-05-03T15:25:47-07:00",
+      "date": "2026-05-05T09:11:52-07:00",
       "env_vars": {
         "LIBCLANG_PATH": "/usr/lib/llvm-18/lib",
         "LLVM_CONFIG_PATH": "/usr/bin/llvm-config-18"
       },
-      "git_commit": "6d35786de28116ecf78797a62b84e6bf3c45aa5a",
+      "git_commit": "9207d47f966be9f4d52e7e0119ac2b7a7e366f3e",
       "make_vars": {
         "BINDGEN": "/home/nya/workspace/bind-drift/.binddrift/toolchains/bindgen-0.71.1/bin/bindgen",
         "CLIPPY_DRIVER": "/home/nya/workspace/bind-drift/.binddrift/toolchains/rust-1.85.0/bin/clippy-driver",
@@ -1165,7 +1165,7 @@
         "RUST_LIB_SRC": "/home/nya/.rustup/toolchains/1.85.0-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library"
       },
       "missing": [],
-      "ref": "HEAD:6d35786de281",
+      "ref": "HEAD:9207d47f966b",
       "required": {
         "bindgen": "0.71.1",
         "rustc": "1.85.0"
@@ -1192,10 +1192,10 @@
         "rustc_version_text": "rustc 1.85.0 (4d91de4e4 2025-02-17)"
       },
       "tag": null,
-      "version_id": "HEAD_6d35786de281"
+      "version_id": "HEAD_9207d47f966b"
     }
   ],
-  "generated_at": "2026-05-05T11:37:52.053414+00:00",
+  "generated_at": "2026-05-05T23:41:32.698871+00:00",
   "linux_tree": "/home/nya/workspace/bind-drift/vendor/linux",
   "missing": [],
   "official_sources": [

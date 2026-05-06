@@ -1,0 +1,34 @@
+{
+  "final_double_labeled_rows": 276,
+  "final_labeled_rows": 276,
+  "label_distribution": {
+    "BENIGN_DRIFT": 37,
+    "FALSE_POSITIVE": 169,
+    "TRUE_SEMANTIC_DRIFT": 2,
+    "TRUE_WRAPPER_FIX": 50,
+    "UNCLEAR": 18
+  },
+  "missing_matches": {
+    "blank_csv_rows_without_pending_adjudicator": {
+      "count": 0,
+      "warning_uids": []
+    },
+    "pending_adjudicator_missing_reviewer1": {
+      "count": 0,
+      "warning_uids": []
+    },
+    "pending_adjudicator_missing_reviewer2": {
+      "count": 0,
+      "warning_uids": []
+    },
+    "pending_adjudicator_without_blank_csv_row": {
+      "count": 0,
+      "warning_uids": []
+    }
+  },
+  "pending_rows": 176,
+  "pre_labeled_rows": 100,
+  "total_rows": 276,
+  "updated_rows": 176,
+  "validation_errors": []
+}

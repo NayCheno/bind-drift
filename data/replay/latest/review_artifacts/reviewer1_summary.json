@@ -1,0 +1,11 @@
+{
+  "counts_by_label": {
+    "BENIGN_DRIFT": 13,
+    "FALSE_POSITIVE": 1,
+    "TRUE_BUILD_BREAKAGE": 0,
+    "TRUE_SEMANTIC_DRIFT": 2,
+    "TRUE_WRAPPER_FIX": 56,
+    "UNCLEAR": 28
+  },
+  "total_rows": 100
+}

@@ -1,0 +1,17 @@
+{
+  "total_rows": 100,
+  "counts_by_final_label": {
+    "BENIGN_DRIFT": 37,
+    "FALSE_POSITIVE": 9,
+    "TRUE_BUILD_BREAKAGE": 0,
+    "TRUE_SEMANTIC_DRIFT": 2,
+    "TRUE_WRAPPER_FIX": 41,
+    "UNCLEAR": 11
+  },
+  "disagreement_counts": {
+    "none": 50,
+    "minor": 31,
+    "major": 19
+  },
+  "validation_errors": 0
+}

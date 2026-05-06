@@ -2,8 +2,8 @@
 
 ## W-000003 SignatureDrift
 
-- Risk: Medium
-- Score: 10.0
+- Risk: Low
+- Score: 6.0
 - Symbol: mdiobus_write
 - Explanation: mdiobus_write changed across the selected Linux versions.
 - Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
@@ -19,22 +19,21 @@
 - safe_api_exposure: `4.0`
 - contract_mapping: `3.0`
 - safety_comment: `3.0`
-- wrapper_fix_hit: `4.0`
 - binding_only_penalty: `-5.0`
 - added_symbol_without_old_c_evidence_penalty: `-3.0`
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.8/rust/kernel/net/phy.rs:202 `Device::write` unsafe=1
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.8/rust/kernel/net/phy.rs:202 `Device::write` unsafe=1
 - safe API `Device::write`
-- .binddrift/worktrees/v6.8/rust/kernel/net/phy.rs:198 `// SAFETY: `phydev` is pointing to a valid object by the type invariant of `Self`.`
-- .binddrift/worktrees/v6.8/rust/kernel/net/phy.rs:201 `TO_RESULT_MAPPING`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.8/rust/kernel/net/phy.rs:198 `// SAFETY: `phydev` is pointing to a valid object by the type invariant of `Self`.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.8/rust/kernel/net/phy.rs:201 `TO_RESULT_MAPPING`
 - wrapper_fix: `b2e47002b2350f57bfa8fe1c231e9fbb6baef78b`
 
 ## W-000002 SignatureDrift
 
 - Risk: Low
-- Score: 7.0
+- Score: 3.0
 - Symbol: mdiobus_read
 - Explanation: mdiobus_read changed across the selected Linux versions.
 - Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
@@ -49,21 +48,20 @@
 - direct_rust_use: `4.0`
 - safe_api_exposure: `4.0`
 - safety_comment: `3.0`
-- wrapper_fix_hit: `4.0`
 - binding_only_penalty: `-5.0`
 - added_symbol_without_old_c_evidence_penalty: `-3.0`
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.8/rust/kernel/net/phy.rs:186 `Device::read` unsafe=1
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.8/rust/kernel/net/phy.rs:186 `Device::read` unsafe=1
 - safe API `Device::read`
-- .binddrift/worktrees/v6.8/rust/kernel/net/phy.rs:182 `// SAFETY: `phydev` is pointing to a valid object by the type invariant of `Self`.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.8/rust/kernel/net/phy.rs:182 `// SAFETY: `phydev` is pointing to a valid object by the type invariant of `Self`.`
 - wrapper_fix: `b2e47002b2350f57bfa8fe1c231e9fbb6baef78b`
 
 ## W-000007 FieldDrift
 
 - Risk: Low
-- Score: -1.0
+- Score: -5.0
 - Symbol: device
 - Explanation: device changed across the selected Linux versions.
 - Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
@@ -75,7 +73,6 @@
 
 ### Score Breakdown
 
-- wrapper_fix_hit: `4.0`
 - binding_only_penalty: `-5.0`
 
 ### Rust Evidence
@@ -87,7 +84,7 @@
 ## W-000001 SignatureDrift
 
 - Risk: Low
-- Score: -4.0
+- Score: -8.0
 - Symbol: get_device
 - Explanation: get_device changed across the selected Linux versions.
 - Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
@@ -99,7 +96,6 @@
 
 ### Score Breakdown
 
-- wrapper_fix_hit: `4.0`
 - binding_only_penalty: `-5.0`
 - added_symbol_without_old_c_evidence_penalty: `-3.0`
 
@@ -111,7 +107,7 @@
 ## W-000004 SignatureDrift
 
 - Risk: Low
-- Score: -4.0
+- Score: -8.0
 - Symbol: phy_read_mmd
 - Explanation: phy_read_mmd changed across the selected Linux versions.
 - Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
@@ -123,7 +119,6 @@
 
 ### Score Breakdown
 
-- wrapper_fix_hit: `4.0`
 - binding_only_penalty: `-5.0`
 - added_symbol_without_old_c_evidence_penalty: `-3.0`
 
@@ -134,7 +129,7 @@
 ## W-000005 SignatureDrift
 
 - Risk: Low
-- Score: -4.0
+- Score: -8.0
 - Symbol: phy_write_mmd
 - Explanation: phy_write_mmd changed across the selected Linux versions.
 - Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
@@ -146,7 +141,6 @@
 
 ### Score Breakdown
 
-- wrapper_fix_hit: `4.0`
 - binding_only_penalty: `-5.0`
 - added_symbol_without_old_c_evidence_penalty: `-3.0`
 
@@ -157,7 +151,7 @@
 ## W-000006 SignatureDrift
 
 - Risk: Low
-- Score: -4.0
+- Score: -8.0
 - Symbol: put_device
 - Explanation: put_device changed across the selected Linux versions.
 - Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
@@ -169,7 +163,6 @@
 
 ### Score Breakdown
 
-- wrapper_fix_hit: `4.0`
 - binding_only_penalty: `-5.0`
 - added_symbol_without_old_c_evidence_penalty: `-3.0`
 

@@ -13,69 +13,6 @@
   "examples_not_used_as_case_studies": [
     {
       "label": "FALSE_POSITIVE",
-      "pair_id": "latest-p015-v6.15-to-v6.16",
-      "semantic_target_type": "NullabilityDrift",
-      "symbol": "PTR_ERR",
-      "type": "SignatureDrift",
-      "warning_id": "W-000006",
-      "warning_uid": "5ec7e735433ea17d474dbc803baf4b16cb67fbddd317ec06ceaf246b4b06e33e"
-    },
-    {
-      "label": "FALSE_POSITIVE",
-      "pair_id": "latest-p010-v6.10-to-v6.11",
-      "semantic_target_type": "NullabilityDrift",
-      "symbol": "ERR_PTR",
-      "type": "SignatureDrift",
-      "warning_id": "W-000009",
-      "warning_uid": "5c20a5fac8fbaeeb6434c09c2b2e7a057ef4e5bc9dd57c142e000d3287debb92"
-    },
-    {
-      "label": "FALSE_POSITIVE",
-      "pair_id": "latest-p020-v7.0-to-HEAD_6d35786de281",
-      "semantic_target_type": "NullabilityDrift",
-      "symbol": "resource_size_t",
-      "type": "SignatureDrift",
-      "warning_id": "W-000011",
-      "warning_uid": "47ca2f5d932446898aae96f2ff01ea450d0498594eec0f6a7ee3e7ea67af774d"
-    },
-    {
-      "label": "FALSE_POSITIVE",
-      "pair_id": "latest-p017-v6.17-to-v6.18",
-      "semantic_target_type": "NullabilityDrift",
-      "symbol": "vma_lookup",
-      "type": "SignatureDrift",
-      "warning_id": "W-000181",
-      "warning_uid": "04e6913c1237813f12eb282288f7542d4952208e3113163866b9fef9e31e9487"
-    },
-    {
-      "label": "TRUE_WRAPPER_FIX",
-      "pair_id": "latest-p014-v6.14-to-v6.15",
-      "semantic_target_type": "NullabilityDrift",
-      "symbol": "mdiobus_write",
-      "type": "SignatureDrift",
-      "warning_id": "W-000005",
-      "warning_uid": "a43f69159ca0eea7926e237192cc664924f3b30281339f73fecb06be4a8d8bb8"
-    },
-    {
-      "label": "TRUE_WRAPPER_FIX",
-      "pair_id": "latest-p014-v6.14-to-v6.15",
-      "semantic_target_type": "NullabilityDrift",
-      "symbol": "mdiobus_read",
-      "type": "SignatureDrift",
-      "warning_id": "W-000004",
-      "warning_uid": "1ca09a4bede1c8a765de13bdf0c950a8a1f7255fd2d09ce37ee24268c9deb284"
-    },
-    {
-      "label": "FALSE_POSITIVE",
-      "pair_id": "latest-p018-v6.18-to-v6.19",
-      "semantic_target_type": "NullabilityDrift",
-      "symbol": "dev_get_drvdata",
-      "type": "SignatureDrift",
-      "warning_id": "W-000028",
-      "warning_uid": "9c78646f531bef4f9f3b14a4a2eb9a999c08663e26144e04149684ce611c9f6e"
-    },
-    {
-      "label": "FALSE_POSITIVE",
       "pair_id": "latest-p012-v6.12-to-v6.13",
       "semantic_target_type": "NullabilityDrift",
       "symbol": "device_add_disk",
@@ -84,7 +21,7 @@
       "warning_uid": "fd7adb7aa151991c0fadce9167e16b157fdd69559e3aaba40a8ec27f668cded0"
     },
     {
-      "label": "FALSE_POSITIVE",
+      "label": "TRUE_WRAPPER_FIX",
       "pair_id": "latest-p012-v6.12-to-v6.13",
       "semantic_target_type": "NullabilityDrift",
       "symbol": "errname",
@@ -93,28 +30,89 @@
       "warning_uid": "f8dcd9f2cd00551e7fcbf283302d8a99ffb5521ed87acb06c679f5224daad64e"
     },
     {
-      "label": "FALSE_POSITIVE",
+      "label": "TRUE_WRAPPER_FIX",
+      "pair_id": "latest-p003-v6.3-to-v6.4",
+      "semantic_target_type": "NullabilityDrift",
+      "symbol": "PTR_ERR",
+      "type": "SignatureDrift",
+      "warning_id": "W-000003",
+      "warning_uid": "d8f79e467f86c84e1f291c195f6e4cb94569fce965006cb105f6518d6dab57b3"
+    },
+    {
+      "label": "TRUE_WRAPPER_FIX",
+      "pair_id": "latest-p002-v6.2-to-v6.3",
+      "semantic_target_type": "NullabilityDrift",
+      "symbol": "REFCOUNT_INIT",
+      "type": "SignatureDrift",
+      "warning_id": "W-000001",
+      "warning_uid": "a3d89044e191c0409751d7986088db2623ef9ff2bb3853007fe5cd574b88a786"
+    },
+    {
+      "label": "UNCLEAR",
+      "pair_id": "latest-p010-v6.10-to-v6.11",
+      "semantic_target_type": "NullabilityDrift",
+      "symbol": "device_add_disk",
+      "type": "SignatureDrift",
+      "warning_id": "W-000003",
+      "warning_uid": "762ae9d89108b8018f94f2c47247c4de6e59c6d10b5187fca6d2d1b9bc69c0b7"
+    },
+    {
+      "label": "TRUE_WRAPPER_FIX",
       "pair_id": "latest-p012-v6.12-to-v6.13",
       "semantic_target_type": "NullabilityDrift",
-      "symbol": "firmware_request_nowarn",
+      "symbol": "IS_ERR",
       "type": "SignatureDrift",
-      "warning_id": "W-000019",
-      "warning_uid": "a7b50f9e01fa519b3ca5429567469093b01a1a6e6aac05980f9c6eb72628692a"
+      "warning_id": "W-000002",
+      "warning_uid": "4b538a23e5b7e22f2cc86f95ffea064b2634aa0ab97449ad304889083dc27efd"
+    },
+    {
+      "label": "TRUE_WRAPPER_FIX",
+      "pair_id": "latest-p007-v6.7-to-v6.8",
+      "semantic_target_type": "NullabilityDrift",
+      "symbol": "mdiobus_write",
+      "type": "SignatureDrift",
+      "warning_id": "W-000003",
+      "warning_uid": "46b1fb124f9b8010a0bbad8532aec2f2ce82c1cb9537c8e6d0662155e5c3b565"
+    },
+    {
+      "label": "TRUE_WRAPPER_FIX",
+      "pair_id": "latest-p012-v6.12-to-v6.13",
+      "semantic_target_type": "NullabilityDrift",
+      "symbol": "REFCOUNT_INIT",
+      "type": "SignatureDrift",
+      "warning_id": "W-000004",
+      "warning_uid": "399880825c439eb15d3e73aa711d383a87e7dbba9e9a3173f6a97bdef4e841b7"
+    },
+    {
+      "label": "TRUE_WRAPPER_FIX",
+      "pair_id": "latest-p012-v6.12-to-v6.13",
+      "semantic_target_type": "NullabilityDrift",
+      "symbol": "PTR_ERR",
+      "type": "SignatureDrift",
+      "warning_id": "W-000003",
+      "warning_uid": "39859c860002f454586acf39f3d0df45a3189f1edc7868bad4cb189a795d4b8e"
+    },
+    {
+      "label": "TRUE_WRAPPER_FIX",
+      "pair_id": "latest-p004-v6.4-to-v6.5",
+      "semantic_target_type": "NullabilityDrift",
+      "symbol": "errname",
+      "type": "SignatureDrift",
+      "warning_id": "W-000001",
+      "warning_uid": "294099e6983e2b23170870a24c569e1b11781c73105816716babe3dd7be19618"
     }
   ],
   "false_positive_taxonomy": {
-    "binding_only_or_generated_surface": 12,
-    "missing_evidence": 11,
-    "real_drift_without_rust_contract_impact": 10,
-    "unsupported_or_mismapped_contract": 9
+    "binding_only_or_generated_surface": 33,
+    "missing_evidence": 12,
+    "real_drift_without_rust_contract_impact": 14
   },
   "label_distribution": {
-    "BENIGN_DRIFT": 10,
-    "FALSE_POSITIVE": 21,
-    "TRUE_BUILD_BREAKAGE": 2,
+    "BENIGN_DRIFT": 14,
+    "FALSE_POSITIVE": 33,
     "TRUE_SEMANTIC_DRIFT": 2,
-    "TRUE_WRAPPER_FIX": 54,
-    "UNCLEAR": 11
+    "TRUE_WRAPPER_FIX": 39,
+    "UNCLEAR": 12
   },
   "non_wrapper_semantic_true_positives": 2,
   "note": "TRUE_WRAPPER_FIX is reported separately and is not counted as TRUE_SEMANTIC_DRIFT.",
@@ -139,7 +137,7 @@
   "target_review": "data/replay/latest/semantic_target_review.csv",
   "target_set": "data/replay/latest/semantic_target_review_set.jsonl",
   "true_semantic_drift_count": 2,
-  "true_wrapper_fix_count": 54,
+  "true_wrapper_fix_count": 39,
   "type_distribution": {
     "AllocationFreeDrift": 20,
     "LayoutFieldDrift": 20,
@@ -147,6 +145,6 @@
     "OwnershipRefcountDrift": 20,
     "SleepabilityContextDrift": 20
   },
-  "warnings_sha256": "8f1d3aa76e606aa62f2017b19e9992f7b9eda9339d10377a424aa246144f85c2",
+  "warnings_sha256": "49a886a54b3d59e624e5450a1e40b671ae88538d74e2fdd341a950027449ac4f",
   "warnings_source": "data/replay/latest/promoted_warnings.jsonl"
 }

@@ -2,8 +2,8 @@
 
 ## W-000002 SignatureDrift
 
-- Risk: High
-- Score: 13.0
+- Risk: Medium
+- Score: 9.0
 - Symbol: IS_ERR
 - Explanation: IS_ERR changed across the selected Linux versions.
 - Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
@@ -19,22 +19,20 @@
 - safe_api_exposure: `4.0`
 - contract_mapping: `3.0`
 - safety_comment: `3.0`
-- wrapper_fix_hit: `4.0`
 - binding_only_penalty: `-5.0`
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.13/rust/kernel/error.rs:295 `From<core::convert::Infallible>::to_result` unsafe=1
-- safe API `From<core::convert::Infallible>::to_result`
-- .binddrift/worktrees/v6.13/rust/kernel/error.rs:290 `/// ````
-- .binddrift/worktrees/v6.13/rust/kernel/error.rs:291 `ERR_PTR_MAPPING`
-- .binddrift/worktrees/v6.13/rust/kernel/error.rs:291 `RESULT_RETURN`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/error.rs:295 `to_result` unsafe=1
+- safe API `to_result`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/error.rs:290 `/// ````
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/error.rs:291 `ERR_PTR_MAPPING`
 - wrapper_fix: `752417b3f0e7721f1d630f40da22d57e0dae043e`
 
 ## W-000003 SignatureDrift
 
-- Risk: High
-- Score: 13.0
+- Risk: Medium
+- Score: 9.0
 - Symbol: PTR_ERR
 - Explanation: PTR_ERR changed across the selected Linux versions.
 - Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
@@ -50,22 +48,22 @@
 - safe_api_exposure: `4.0`
 - contract_mapping: `3.0`
 - safety_comment: `3.0`
-- wrapper_fix_hit: `4.0`
 - binding_only_penalty: `-5.0`
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.13/rust/kernel/error.rs:297 `From<core::convert::Infallible>::to_result` unsafe=1
-- safe API `From<core::convert::Infallible>::to_result`
-- .binddrift/worktrees/v6.13/rust/kernel/error.rs:294 `// SAFETY: The FFI function does not deref the pointer.`
-- .binddrift/worktrees/v6.13/rust/kernel/error.rs:296 `// SAFETY: The FFI function does not deref the pointer.`
-- .binddrift/worktrees/v6.13/rust/kernel/error.rs:295 `IS_ERR_MAPPING`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/error.rs:297 `to_result` unsafe=1
+- safe API `to_result`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/error.rs:294 `// SAFETY: The FFI function does not deref the pointer.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/error.rs:296 `// SAFETY: The FFI function does not deref the pointer.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/error.rs:295 `IS_ERR_MAPPING`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/error.rs:297 `PTR_ERR_MAPPING`
 - wrapper_fix: `752417b3f0e7721f1d630f40da22d57e0dae043e`
 
 ## W-000004 SignatureDrift
 
-- Risk: High
-- Score: 13.0
+- Risk: Medium
+- Score: 9.0
 - Symbol: REFCOUNT_INIT
 - Explanation: REFCOUNT_INIT changed across the selected Linux versions.
 - Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
@@ -81,33 +79,32 @@
 - safe_api_exposure: `4.0`
 - contract_mapping: `3.0`
 - safety_comment: `3.0`
-- wrapper_fix_hit: `4.0`
 - binding_only_penalty: `-5.0`
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.13/rust/kernel/sync/arc.rs:199 `Arc<T>::new` unsafe=1
-- .binddrift/worktrees/v6.13/rust/kernel/sync/arc.rs:318 `Arc<T>::into_unique_or_drop` unsafe=1
-- .binddrift/worktrees/v6.13/rust/kernel/sync/arc.rs:646 `UniqueArc<T>::new_uninit` unsafe=1
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/sync/arc.rs:199 `Arc<T>::new` unsafe=1
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/sync/arc.rs:318 `Arc<T>::into_unique_or_drop` unsafe=1
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/sync/arc.rs:646 `UniqueArc<T>::new_uninit` unsafe=1
 - safe API `Arc<T>::new`
 - safe API `Arc<T>::into_unique_or_drop`
 - safe API `UniqueArc<T>::new_uninit`
-- .binddrift/worktrees/v6.13/rust/kernel/sync/arc.rs:194 `/// Constructs a new reference counted instance of `T`.`
-- .binddrift/worktrees/v6.13/rust/kernel/sync/arc.rs:198 `// SAFETY: There are no safety requirements for this FFI call.`
-- .binddrift/worktrees/v6.13/rust/kernel/sync/arc.rs:313 `// SAFETY: We own a refcount, so the pointer is not dangling.`
-- .binddrift/worktrees/v6.13/rust/kernel/sync/arc.rs:195 `RESULT_RETURN`
-- .binddrift/worktrees/v6.13/rust/kernel/sync/arc.rs:641 `RESULT_RETURN`
-- weak lifetime name .binddrift/worktrees/v6.13/rust/kernel/sync/arc.rs:199 `LIFETIME_NAMING_PATTERN`
-- weak lifetime name .binddrift/worktrees/v6.13/rust/kernel/sync/arc.rs:318 `LIFETIME_NAMING_PATTERN`
-- weak lifetime name .binddrift/worktrees/v6.13/rust/kernel/sync/arc.rs:646 `LIFETIME_NAMING_PATTERN`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/sync/arc.rs:194 `/// Constructs a new reference counted instance of `T`.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/sync/arc.rs:198 `// SAFETY: There are no safety requirements for this FFI call.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/sync/arc.rs:313 `// SAFETY: We own a refcount, so the pointer is not dangling.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/sync/arc.rs:195 `RESULT_RETURN`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/sync/arc.rs:641 `RESULT_RETURN`
+- weak lifetime name /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/sync/arc.rs:199 `LIFETIME_NAMING_PATTERN`
+- weak lifetime name /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/sync/arc.rs:318 `LIFETIME_NAMING_PATTERN`
+- weak lifetime name /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/sync/arc.rs:646 `LIFETIME_NAMING_PATTERN`
 - wrapper_fix: `bb38f35b35f9de0cebc4d62ea73482454e38cef3`
 - wrapper_fix: `076acb647c1f448177d8b3b0e4f33de959713d7d`
 - wrapper_fix: `9ba1aaf25ab7dadb910348b6857865e87b4c5689`
 
 ## W-000016 SignatureDrift
 
-- Risk: High
-- Score: 13.0
+- Risk: Medium
+- Score: 9.0
 - Symbol: device_add_disk
 - Explanation: device_add_disk changed across the selected Linux versions.
 - Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
@@ -123,24 +120,20 @@
 - safe_api_exposure: `4.0`
 - contract_mapping: `3.0`
 - safety_comment: `3.0`
-- wrapper_fix_hit: `4.0`
 - binding_only_penalty: `-5.0`
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.13/rust/kernel/block/mq/gen_disk.rs:160 `GenDiskBuilder::capacity_sectors` unsafe=1
-- .binddrift/worktrees/v6.13/rust/kernel/block/mq/gen_disk.rs:179 `None` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/block/mq/gen_disk.rs:160 `GenDiskBuilder::capacity_sectors` unsafe=1
 - safe API `GenDiskBuilder::capacity_sectors`
-- .binddrift/worktrees/v6.13/rust/kernel/block/mq/gen_disk.rs:157 `// SAFETY: `gendisk` points to a valid and initialized instance of`
-- .binddrift/worktrees/v6.13/rust/kernel/block/mq/gen_disk.rs:174 `///`
-- .binddrift/worktrees/v6.13/rust/kernel/block/mq/gen_disk.rs:175 `/// # Invariants`
-- .binddrift/worktrees/v6.13/rust/kernel/block/mq/gen_disk.rs:156 `TO_RESULT_MAPPING`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/block/mq/gen_disk.rs:157 `// SAFETY: `gendisk` points to a valid and initialized instance of`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/block/mq/gen_disk.rs:156 `TO_RESULT_MAPPING`
 - wrapper_fix: `0c5928deada15a8d075516e6e0d9ee19011bb000`
 
 ## W-000017 SignatureDrift
 
-- Risk: High
-- Score: 13.0
+- Risk: Medium
+- Score: 9.0
 - Symbol: errname
 - Explanation: errname changed across the selected Linux versions.
 - Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
@@ -156,59 +149,24 @@
 - safe_api_exposure: `4.0`
 - contract_mapping: `3.0`
 - safety_comment: `3.0`
-- wrapper_fix_hit: `4.0`
 - binding_only_penalty: `-5.0`
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.13/rust/kernel/error.rs:167 `Error::name` unsafe=1
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/error.rs:167 `Error::name` unsafe=1
 - safe API `Error::name`
 - safe API `Error::name`
-- .binddrift/worktrees/v6.13/rust/kernel/error.rs:163 `/// Returns a string representing the error, if one exists.`
-- .binddrift/worktrees/v6.13/rust/kernel/error.rs:166 `// SAFETY: Just an FFI call, there are no extra safety requirements.`
-- .binddrift/worktrees/v6.13/rust/kernel/error.rs:171 `// SAFETY: The string returned by `errname` is static and `NUL`-terminated.`
-- .binddrift/worktrees/v6.13/rust/kernel/error.rs:165 `OPTION_RETURN`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/error.rs:163 `/// Returns a string representing the error, if one exists.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/error.rs:166 `// SAFETY: Just an FFI call, there are no extra safety requirements.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/error.rs:171 `// SAFETY: The string returned by `errname` is static and `NUL`-terminated.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/error.rs:165 `OPTION_RETURN`
 - wrapper_fix: `d2e3115d717197cb2bc020dd1f06b06538474ac3`
 - wrapper_fix: `e9759c5b9ea555d09f426c70c880e9522e9b0576`
 
-## W-000019 SignatureDrift
-
-- Risk: High
-- Score: 13.0
-- Symbol: firmware_request_nowarn
-- Explanation: firmware_request_nowarn changed across the selected Linux versions.
-- Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
-
-### C Evidence
-
-- Old: `{'params': [{'name': 'fw', 'type': '*mut *const firmware'}, {'name': 'name', 'type': '*const core::ffi::c_char'}, {'name': 'device', 'type': '*mut device'}], 'return_type': 'core::ffi::c_int'}`
-- New: `{'params': [{'name': 'fw', 'type': '*mut *const firmware'}, {'name': 'name', 'type': '*const ffi::c_char'}, {'name': 'device', 'type': '*mut device'}], 'return_type': 'ffi::c_int'}`
-
-### Score Breakdown
-
-- direct_rust_use: `4.0`
-- safe_api_exposure: `4.0`
-- contract_mapping: `3.0`
-- safety_comment: `3.0`
-- wrapper_fix_hit: `4.0`
-- binding_only_penalty: `-5.0`
-
-### Rust Evidence
-
-- .binddrift/worktrees/v6.13/rust/kernel/firmware.rs:12 `None` unsafe=0
-- .binddrift/worktrees/v6.13/rust/kernel/firmware.rs:24 `request_nowarn` unsafe=0
-- .binddrift/worktrees/v6.13/rust/kernel/firmware.rs:80 `Firmware::request` unsafe=0
-- safe API `Firmware::request`
-- .binddrift/worktrees/v6.13/rust/kernel/firmware.rs:28 `/// Abstraction around a C `struct firmware`.`
-- .binddrift/worktrees/v6.13/rust/kernel/firmware.rs:29 `///`
-- .binddrift/worktrees/v6.13/rust/kernel/firmware.rs:79 `/// Send a request for an optional firmware module. See also`
-- .binddrift/worktrees/v6.13/rust/kernel/firmware.rs:75 `RESULT_RETURN`
-- wrapper_fix: `a23b018c3bf646274f02edd46bf448c20c826d94`
-
 ## W-000033 FieldDrift
 
-- Risk: High
-- Score: 13.0
+- Risk: Medium
+- Score: 9.0
 - Symbol: device
 - Explanation: device changed across the selected Linux versions.
 - Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
@@ -224,103 +182,31 @@
 - safe_api_exposure: `4.0`
 - contract_mapping: `3.0`
 - safety_comment: `3.0`
-- wrapper_fix_hit: `4.0`
 - binding_only_penalty: `-5.0`
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.13/rust/kernel/device.rs:41 `None` unsafe=0
-- .binddrift/worktrees/v6.13/rust/kernel/device.rs:44 `None` unsafe=0
-- .binddrift/worktrees/v6.13/rust/kernel/device.rs:55 `None` unsafe=0
-- .binddrift/worktrees/v6.13/rust/kernel/device.rs:57 `None` unsafe=0
-- .binddrift/worktrees/v6.13/rust/kernel/device.rs:63 `Device::get_device` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/device.rs:44 `None` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/device.rs:57 `Device::get_device` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/device.rs:63 `Device::as_raw` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/device.rs:75 `Device::as_raw` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/firmware.rs:15 `None` unsafe=0
 - safe API `Device::get_device`
 - safe API `Device::as_raw`
-- .binddrift/worktrees/v6.13/rust/kernel/device.rs:36 `/// A `Device` instance represents a valid `struct device` created by the C portion of the kernel.`
-- .binddrift/worktrees/v6.13/rust/kernel/device.rs:37 `///`
-- .binddrift/worktrees/v6.13/rust/kernel/device.rs:38 `/// Instances of this type are always reference-counted, that is, a call to `get_device` ensures`
-- .binddrift/worktrees/v6.13/rust/kernel/device.rs:41 `AREF`
-- .binddrift/worktrees/v6.13/rust/kernel/device.rs:41 `AREF`
-- .binddrift/worktrees/v6.13/rust/kernel/device.rs:41 `AREF`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/device.rs:39 `/// that the allocation remains valid at least until the matching call to `put_device`.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/device.rs:40 `///`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/device.rs:41 `/// `bindings::device::release` is valid to be called from any thread, hence `ARef<Device>` can be`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/device.rs:41 `AREF`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/device.rs:44 `OPAQUE`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/device.rs:57 `AREF`
 - wrapper_fix: `a23b018c3bf646274f02edd46bf448c20c826d94`
 - wrapper_fix: `7b948a2af6b5d64a25c14da8f63d8084ea527cd9`
 - wrapper_fix: `4d320e30ee04c25c660eca2bb33e846ebb71a79a`
 
-## W-000034 FieldDrift
-
-- Risk: High
-- Score: 13.0
-- Symbol: firmware
-- Explanation: firmware changed across the selected Linux versions.
-- Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
-
-### C Evidence
-
-- Old: `[{'name': 'size', 'type': 'usize'}, {'name': 'data', 'type': '*const u8_'}, {'name': 'priv_', 'type': '*mut core::ffi::c_void'}]`
-- New: `[{'name': 'size', 'type': 'usize'}, {'name': 'data', 'type': '*const u8_'}, {'name': 'priv_', 'type': '*mut ffi::c_void'}]`
-
-### Score Breakdown
-
-- direct_rust_use: `4.0`
-- safe_api_exposure: `4.0`
-- contract_mapping: `3.0`
-- safety_comment: `3.0`
-- wrapper_fix_hit: `4.0`
-- binding_only_penalty: `-5.0`
-
-### Rust Evidence
-
-- .binddrift/worktrees/v6.13/rust/kernel/firmware.rs:15 `None` unsafe=0
-- .binddrift/worktrees/v6.13/rust/kernel/firmware.rs:55 `no_run` unsafe=0
-- .binddrift/worktrees/v6.13/rust/kernel/firmware.rs:59 `request_internal` unsafe=0
-- .binddrift/worktrees/v6.13/rust/kernel/firmware.rs:60 `request_internal` unsafe=0
-- .binddrift/worktrees/v6.13/rust/kernel/firmware.rs:62 `request_internal` unsafe=0
-- safe API `Firmware::request_nowarn`
-- safe API `Firmware::data`
-- .binddrift/worktrees/v6.13/rust/kernel/firmware.rs:50 `/// let blob = fw.data();`
-- .binddrift/worktrees/v6.13/rust/kernel/firmware.rs:51 `///`
-- .binddrift/worktrees/v6.13/rust/kernel/firmware.rs:52 `/// # Ok(())`
-- .binddrift/worktrees/v6.13/rust/kernel/firmware.rs:58 `RESULT_RETURN`
-- .binddrift/worktrees/v6.13/rust/kernel/firmware.rs:81 `RESULT_RETURN`
-- .binddrift/worktrees/v6.13/rust/kernel/firmware.rs:86 `AS_PTR`
-- .binddrift/worktrees/v6.13/rust/kernel/firmware.rs:100 `FROM_RAW`
-- wrapper_fix: `a23b018c3bf646274f02edd46bf448c20c826d94`
-
-## W-000036 FieldDrift
-
-- Risk: High
-- Score: 13.0
-- Symbol: queue_limits
-- Explanation: queue_limits changed across the selected Linux versions.
-- Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
-
-### C Evidence
-
-- Old: `[{'name': 'features', 'type': 'blk_features_t'}, {'name': 'flags', 'type': 'blk_flags_t'}, {'name': 'seg_boundary_mask', 'type': 'core::ffi::c_ulong'}, {'name': 'virt_boundary_mask', 'type': 'core::ffi::c_ulong'}, {'name': 'max_hw_sectors', 'type': 'core::ffi::c_uint'}, {'name': 'max_dev_sectors', 'type': 'core::ffi::c_uint'}, {'name': 'chunk_sectors', 'type': 'core::ffi::c_uint'}, {'name': 'max_sectors', 'type': 'core::ffi::c_uint'}, {'name': 'max_user_sectors', 'type': 'core::ffi::c_uint'}, {'name': 'max_segment_size', 'type': 'core::ffi::c_uint'}, {'name': 'physical_block_size', 'type': 'core::ffi::c_uint'}, {'name': 'logical_block_size', 'type': 'core::ffi::c_uint'}, {'name': 'alignment_offset', 'type': 'core::ffi::c_uint'}, {'name': 'io_min', 'type': 'core::ffi::c_uint'}, {'name': 'io_opt', 'type': 'core::ffi::c_uint'}, {'name': 'max_discard_sectors', 'type': 'core::ffi::c_uint'}, {'name': 'max_hw_discard_sectors', 'type': 'core::ffi::c_uint'}, {'name': 'max_user_discard_sectors', 'type': 'core::ffi::c_uint'}, {'name': 'max_secure_erase_sectors', 'type': 'core::ffi::c_uint'}, {'name': 'max_write_zeroes_sectors', 'type': 'core::ffi::c_uint'}, {'name': 'max_zone_append_sectors', 'type': 'core::ffi::c_uint'}, {'name': 'discard_granularity', 'type': 'core::ffi::c_uint'}, {'name': 'discard_alignment', 'type': 'core::ffi::c_uint'}, {'name': 'zone_write_granularity', 'type': 'core::ffi::c_uint'}, {'name': 'atomic_write_hw_max', 'type': 'core::ffi::c_uint'}, {'name': 'atomic_write_max_sectors', 'type': 'core::ffi::c_uint'}, {'name': 'atomic_write_hw_boundary', 'type': 'core::ffi::c_uint'}, {'name': 'atomic_write_boundary_sectors', 'type': 'core::ffi::c_uint'}, {'name': 'atomic_write_hw_unit_min', 'type': 'core::ffi::c_uint'}, {'name': 'atomic_write_unit_min', 'type': 'core::ffi::c_uint'}, {'name': 'atomic_write_hw_unit_max', 'type': 'core::ffi::c_uint'}, {'name': 'atomic_write_unit_max', 'type': 'core::ffi::c_uint'}, {'name': 'max_segments', 'type': 'core::ffi::c_ushort'}, {'name': 'max_integrity_segments', 'type': 'core::ffi::c_ushort'}, {'name': 'max_discard_segments', 'type': 'core::ffi::c_ushort'}, {'name': 'max_open_zones', 'type': 'core::ffi::c_uint'}, {'name': 'max_active_zones', 'type': 'core::ffi::c_uint'}, {'name': 'dma_alignment', 'type': 'core::ffi::c_uint'}, {'name': 'dma_pad_mask', 'type': 'core::ffi::c_uint'}, {'name': 'integrity', 'type': 'blk_integrity'}]`
-- New: `[{'name': 'features', 'type': 'blk_features_t'}, {'name': 'flags', 'type': 'blk_flags_t'}, {'name': 'seg_boundary_mask', 'type': 'ffi::c_ulong'}, {'name': 'virt_boundary_mask', 'type': 'ffi::c_ulong'}, {'name': 'max_hw_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_dev_sectors', 'type': 'ffi::c_uint'}, {'name': 'chunk_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_user_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_segment_size', 'type': 'ffi::c_uint'}, {'name': 'physical_block_size', 'type': 'ffi::c_uint'}, {'name': 'logical_block_size', 'type': 'ffi::c_uint'}, {'name': 'alignment_offset', 'type': 'ffi::c_uint'}, {'name': 'io_min', 'type': 'ffi::c_uint'}, {'name': 'io_opt', 'type': 'ffi::c_uint'}, {'name': 'max_discard_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_hw_discard_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_user_discard_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_secure_erase_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_write_zeroes_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_hw_zone_append_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_zone_append_sectors', 'type': 'ffi::c_uint'}, {'name': 'discard_granularity', 'type': 'ffi::c_uint'}, {'name': 'discard_alignment', 'type': 'ffi::c_uint'}, {'name': 'zone_write_granularity', 'type': 'ffi::c_uint'}, {'name': 'atomic_write_hw_max', 'type': 'ffi::c_uint'}, {'name': 'atomic_write_max_sectors', 'type': 'ffi::c_uint'}, {'name': 'atomic_write_hw_boundary', 'type': 'ffi::c_uint'}, {'name': 'atomic_write_boundary_sectors', 'type': 'ffi::c_uint'}, {'name': 'atomic_write_hw_unit_min', 'type': 'ffi::c_uint'}, {'name': 'atomic_write_unit_min', 'type': 'ffi::c_uint'}, {'name': 'atomic_write_hw_unit_max', 'type': 'ffi::c_uint'}, {'name': 'atomic_write_unit_max', 'type': 'ffi::c_uint'}, {'name': 'max_segments', 'type': 'ffi::c_ushort'}, {'name': 'max_integrity_segments', 'type': 'ffi::c_ushort'}, {'name': 'max_discard_segments', 'type': 'ffi::c_ushort'}, {'name': 'max_open_zones', 'type': 'ffi::c_uint'}, {'name': 'max_active_zones', 'type': 'ffi::c_uint'}, {'name': 'dma_alignment', 'type': 'ffi::c_uint'}, {'name': 'dma_pad_mask', 'type': 'ffi::c_uint'}, {'name': 'integrity', 'type': 'blk_integrity'}]`
-
-### Score Breakdown
-
-- direct_rust_use: `4.0`
-- safe_api_exposure: `4.0`
-- contract_mapping: `3.0`
-- safety_comment: `3.0`
-- wrapper_fix_hit: `4.0`
-- binding_only_penalty: `-5.0`
-
-### Rust Evidence
-
-- .binddrift/worktrees/v6.13/rust/kernel/block/mq/gen_disk.rs:96 `GenDiskBuilder::capacity_sectors` unsafe=0
-- .binddrift/worktrees/v6.13/rust/kernel/block/mq/gen_disk.rs:97 `GenDiskBuilder::capacity_sectors` unsafe=1
-- safe API `GenDiskBuilder::capacity_sectors`
-- .binddrift/worktrees/v6.13/rust/kernel/block/mq/gen_disk.rs:96 `// SAFETY: `bindings::queue_limits` contain only fields that are valid when zeroed.`
-- .binddrift/worktrees/v6.13/rust/kernel/block/mq/gen_disk.rs:95 `RESULT_RETURN`
-- wrapper_fix: `5e3b7009f116f684ac6b93d8924506154f3b1f6d`
-
 ## W-000037 FieldDrift
 
-- Risk: High
-- Score: 13.0
+- Risk: Medium
+- Score: 9.0
 - Symbol: rb_node
 - Explanation: rb_node changed across the selected Linux versions.
 - Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
@@ -336,27 +222,26 @@
 - safe_api_exposure: `4.0`
 - contract_mapping: `3.0`
 - safety_comment: `3.0`
-- wrapper_fix_hit: `4.0`
 - binding_only_penalty: `-5.0`
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.13/rust/kernel/rbtree.rs:326 `raw_entry` unsafe=0
-- .binddrift/worktrees/v6.13/rust/kernel/rbtree.rs:725 `None` unsafe=0
-- .binddrift/worktrees/v6.13/rust/kernel/rbtree.rs:874 `peek_mut` unsafe=0
-- .binddrift/worktrees/v6.13/rust/kernel/rbtree.rs:890 `get_neighbor_raw` unsafe=0
-- .binddrift/worktrees/v6.13/rust/kernel/rbtree.rs:901 `get_neighbor_raw` unsafe=0
-- safe API `RBTreeNodeReservation<K::into_node`
-- .binddrift/worktrees/v6.13/rust/kernel/rbtree.rs:327 `// SAFETY: `raw_self` is a valid pointer to the `RBTree` (created from `self` above).`
-- .binddrift/worktrees/v6.13/rust/kernel/rbtree.rs:331 `// SAFETY: All links fields we create are in a `Node<K, V>`.`
-- .binddrift/worktrees/v6.13/rust/kernel/rbtree.rs:720 `///`
-- .binddrift/worktrees/v6.13/rust/kernel/rbtree.rs:915 `AS_PTR`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/rbtree.rs:326 `raw_entry` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/rbtree.rs:725 `None` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/rbtree.rs:874 `get_neighbor_raw` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/rbtree.rs:890 `get_neighbor_raw` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/rbtree.rs:901 `get_neighbor_raw` unsafe=0
+- safe API `RBTreeNodeReservation<K, V>::into_node`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/rbtree.rs:327 `// SAFETY: `raw_self` is a valid pointer to the `RBTree` (created from `self` above).`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/rbtree.rs:331 `// SAFETY: All links fields we create are in a `Node<K, V>`.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/rbtree.rs:720 `///`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/rbtree.rs:915 `AS_PTR`
 - wrapper_fix: `8333ff4d0799aafbe4275cddcbaf45e545e4efba`
 
 ## W-000038 FieldDrift
 
-- Risk: High
-- Score: 13.0
+- Risk: Medium
+- Score: 9.0
 - Symbol: request
 - Explanation: request changed across the selected Linux versions.
 - Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
@@ -372,33 +257,31 @@
 - safe_api_exposure: `4.0`
 - contract_mapping: `3.0`
 - safety_comment: `3.0`
-- wrapper_fix_hit: `4.0`
 - binding_only_penalty: `-5.0`
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.13/rust/kernel/block/mq/operations.rs:123 `commit_rqs_callback` unsafe=0
-- .binddrift/worktrees/v6.13/rust/kernel/block/mq/operations.rs:173 `complete_callback` unsafe=0
-- .binddrift/worktrees/v6.13/rust/kernel/block/mq/operations.rs:178 `complete_callback` unsafe=0
-- .binddrift/worktrees/v6.13/rust/kernel/block/mq/operations.rs:205 `complete_callback` unsafe=0
-- .binddrift/worktrees/v6.13/rust/kernel/block/mq/request.rs:56 `None` unsafe=0
-- safe API `Request<T>::start_unchecked`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/block/mq/operations.rs:123 `complete_callback` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/block/mq/operations.rs:178 `complete_callback` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/block/mq/operations.rs:205 `complete_callback` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/block/mq/request.rs:56 `None` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/block/mq/request.rs:68 `Request<T>::aref_from_raw` unsafe=0
+- safe API `Request<T>::aref_from_raw`
 - safe API `Request<T>::wrapper_ptr`
-- .binddrift/worktrees/v6.13/rust/kernel/block/mq/operations.rs:118 `/// implemented, and there is no way to exercise this code path.`
-- .binddrift/worktrees/v6.13/rust/kernel/block/mq/operations.rs:119 `///`
-- .binddrift/worktrees/v6.13/rust/kernel/block/mq/operations.rs:120 `/// # Safety`
-- .binddrift/worktrees/v6.13/rust/kernel/block/mq/request.rs:72 `NONNULL_MAPPING`
-- .binddrift/worktrees/v6.13/rust/kernel/block/mq/request.rs:100 `RESULT_RETURN`
-- .binddrift/worktrees/v6.13/rust/kernel/block/mq/request.rs:56 `OPAQUE`
-- .binddrift/worktrees/v6.13/rust/kernel/block/mq/request.rs:59 `AREF`
-- .binddrift/worktrees/v6.13/rust/kernel/block/mq/request.rs:68 `AREF`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/block/mq/operations.rs:118 `/// implemented, and there is no way to exercise this code path.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/block/mq/operations.rs:119 `///`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/block/mq/operations.rs:120 `/// # Safety`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/block/mq/request.rs:72 `NONNULL_MAPPING`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/block/mq/request.rs:56 `OPAQUE`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/block/mq/request.rs:59 `AREF`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/block/mq/request.rs:68 `AREF`
 - wrapper_fix: `28e848386b92645f93b9f2fdba5882c3ca7fb3e2`
 - wrapper_fix: `a307bf1db5448eccd72a1d7857f7661c6330d5ad`
 
 ## W-000001 SignatureDrift
 
-- Risk: Medium
-- Score: 10.0
+- Risk: Low
+- Score: 6.0
 - Symbol: ERR_PTR
 - Explanation: ERR_PTR changed across the selected Linux versions.
 - Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
@@ -413,23 +296,22 @@
 - direct_rust_use: `4.0`
 - safe_api_exposure: `4.0`
 - safety_comment: `3.0`
-- wrapper_fix_hit: `4.0`
 - binding_only_penalty: `-5.0`
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.13/rust/kernel/error.rs:159 `Error::to_blk_status` unsafe=1
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/error.rs:159 `Error::to_blk_status` unsafe=1
 - safe API `Error::to_blk_status`
-- .binddrift/worktrees/v6.13/rust/kernel/error.rs:154 `/// Returns the error encoded as a pointer.`
-- .binddrift/worktrees/v6.13/rust/kernel/error.rs:157 `// SAFETY: `self.0` is a valid error due to its invariant.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/error.rs:154 `/// Returns the error encoded as a pointer.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/error.rs:157 `// SAFETY: `self.0` is a valid error due to its invariant.`
 - wrapper_fix: `c7e20faa5fcad7a177cf6c306138010343dd6d3e`
 - wrapper_fix: `7bc186731e87482662c4f86da455f435fe838fb6`
 - wrapper_fix: `e9759c5b9ea555d09f426c70c880e9522e9b0576`
 
 ## W-000014 SignatureDrift
 
-- Risk: Medium
-- Score: 10.0
+- Risk: Low
+- Score: 6.0
 - Symbol: current_euid
 - Explanation: current_euid changed across the selected Linux versions.
 - Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
@@ -445,23 +327,22 @@
 - safe_api_exposure: `4.0`
 - contract_mapping: `3.0`
 - safety_comment: `3.0`
-- wrapper_fix_hit: `4.0`
 - binding_only_penalty: `-5.0`
 - added_symbol_without_old_c_evidence_penalty: `-3.0`
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.13/rust/kernel/task.rs:347 `Kuid::current_euid` unsafe=1
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/task.rs:347 `Kuid::current_euid` unsafe=1
 - safe API `Kuid::current_euid`
-- .binddrift/worktrees/v6.13/rust/kernel/task.rs:343 `/// Get the current euid.`
-- .binddrift/worktrees/v6.13/rust/kernel/task.rs:346 `// SAFETY: Just an FFI call.`
-- .binddrift/worktrees/v6.13/rust/kernel/task.rs:347 `FROM_RAW`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/task.rs:343 `/// Get the current euid.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/task.rs:346 `// SAFETY: Just an FFI call.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/task.rs:347 `FROM_RAW`
 - wrapper_fix: `8ad1a41f7e23287f07a3516c700bc32501d4f104`
 
 ## W-000018 SignatureDrift
 
-- Risk: Medium
-- Score: 10.0
+- Risk: Low
+- Score: 6.0
 - Symbol: errno_to_blk_status
 - Explanation: errno_to_blk_status changed across the selected Linux versions.
 - Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
@@ -476,20 +357,19 @@
 - direct_rust_use: `4.0`
 - safe_api_exposure: `4.0`
 - safety_comment: `3.0`
-- wrapper_fix_hit: `4.0`
 - binding_only_penalty: `-5.0`
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.13/rust/kernel/error.rs:151 `Error::to_blk_status` unsafe=1
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/error.rs:151 `Error::to_blk_status` unsafe=1
 - safe API `Error::to_blk_status`
-- .binddrift/worktrees/v6.13/rust/kernel/error.rs:150 `// SAFETY: `self.0` is a valid error due to its invariant.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/error.rs:150 `// SAFETY: `self.0` is a valid error due to its invariant.`
 - wrapper_fix: `e9759c5b9ea555d09f426c70c880e9522e9b0576`
 
 ## W-000029 SignatureDrift
 
-- Risk: Medium
-- Score: 10.0
+- Risk: Low
+- Score: 6.0
 - Symbol: task_euid
 - Explanation: task_euid changed across the selected Linux versions.
 - Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
@@ -505,24 +385,23 @@
 - safe_api_exposure: `4.0`
 - contract_mapping: `3.0`
 - safety_comment: `3.0`
-- wrapper_fix_hit: `4.0`
 - binding_only_penalty: `-5.0`
 - added_symbol_without_old_c_evidence_penalty: `-3.0`
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.13/rust/kernel/task.rs:284 `Task::euid` unsafe=1
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/task.rs:284 `Task::euid` unsafe=1
 - safe API `Task::euid`
-- .binddrift/worktrees/v6.13/rust/kernel/task.rs:281 `/// Returns the effective UID of the given task.`
-- .binddrift/worktrees/v6.13/rust/kernel/task.rs:283 `// SAFETY: It's always safe to call `task_euid` on a valid task.`
-- .binddrift/worktrees/v6.13/rust/kernel/task.rs:284 `AS_PTR`
-- .binddrift/worktrees/v6.13/rust/kernel/task.rs:284 `FROM_RAW`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/task.rs:281 `/// Returns the effective UID of the given task.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/task.rs:283 `// SAFETY: It's always safe to call `task_euid` on a valid task.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/task.rs:284 `AS_PTR`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/task.rs:284 `FROM_RAW`
 - wrapper_fix: `8ad1a41f7e23287f07a3516c700bc32501d4f104`
 
 ## W-000030 SignatureDrift
 
-- Risk: Medium
-- Score: 10.0
+- Risk: Low
+- Score: 6.0
 - Symbol: task_tgid_nr_ns
 - Explanation: task_tgid_nr_ns changed across the selected Linux versions.
 - Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
@@ -538,22 +417,21 @@
 - safe_api_exposure: `4.0`
 - contract_mapping: `3.0`
 - safety_comment: `3.0`
-- wrapper_fix_hit: `4.0`
 - binding_only_penalty: `-5.0`
 - added_symbol_without_old_c_evidence_penalty: `-3.0`
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.13/rust/kernel/task.rs:318 `Task::tgid_nr_ns` unsafe=1
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/task.rs:318 `Task::tgid_nr_ns` unsafe=1
 - safe API `Task::tgid_nr_ns`
-- .binddrift/worktrees/v6.13/rust/kernel/task.rs:314 `// SAFETY: By the type invariant, we know that `self.0` is valid. We received a valid`
-- .binddrift/worktrees/v6.13/rust/kernel/task.rs:318 `AS_PTR`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/task.rs:314 `// SAFETY: By the type invariant, we know that `self.0` is valid. We received a valid`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/task.rs:318 `AS_PTR`
 - wrapper_fix: `8ad1a41f7e23287f07a3516c700bc32501d4f104`
 
 ## W-000031 SignatureDrift
 
-- Risk: Medium
-- Score: 10.0
+- Risk: Low
+- Score: 6.0
 - Symbol: task_uid
 - Explanation: task_uid changed across the selected Linux versions.
 - Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
@@ -569,24 +447,50 @@
 - safe_api_exposure: `4.0`
 - contract_mapping: `3.0`
 - safety_comment: `3.0`
-- wrapper_fix_hit: `4.0`
 - binding_only_penalty: `-5.0`
 - added_symbol_without_old_c_evidence_penalty: `-3.0`
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.13/rust/kernel/task.rs:278 `Task::uid` unsafe=1
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/task.rs:278 `Task::uid` unsafe=1
 - safe API `Task::uid`
-- .binddrift/worktrees/v6.13/rust/kernel/task.rs:275 `/// Returns the UID of the given task.`
-- .binddrift/worktrees/v6.13/rust/kernel/task.rs:277 `// SAFETY: It's always safe to call `task_uid` on a valid task.`
-- .binddrift/worktrees/v6.13/rust/kernel/task.rs:278 `AS_PTR`
-- .binddrift/worktrees/v6.13/rust/kernel/task.rs:278 `FROM_RAW`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/task.rs:275 `/// Returns the UID of the given task.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/task.rs:277 `// SAFETY: It's always safe to call `task_uid` on a valid task.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/task.rs:278 `AS_PTR`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/task.rs:278 `FROM_RAW`
 - wrapper_fix: `8ad1a41f7e23287f07a3516c700bc32501d4f104`
+
+## W-000036 FieldDrift
+
+- Risk: Low
+- Score: 6.0
+- Symbol: queue_limits
+- Explanation: queue_limits changed across the selected Linux versions.
+- Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
+
+### C Evidence
+
+- Old: `[{'name': 'features', 'type': 'blk_features_t'}, {'name': 'flags', 'type': 'blk_flags_t'}, {'name': 'seg_boundary_mask', 'type': 'core::ffi::c_ulong'}, {'name': 'virt_boundary_mask', 'type': 'core::ffi::c_ulong'}, {'name': 'max_hw_sectors', 'type': 'core::ffi::c_uint'}, {'name': 'max_dev_sectors', 'type': 'core::ffi::c_uint'}, {'name': 'chunk_sectors', 'type': 'core::ffi::c_uint'}, {'name': 'max_sectors', 'type': 'core::ffi::c_uint'}, {'name': 'max_user_sectors', 'type': 'core::ffi::c_uint'}, {'name': 'max_segment_size', 'type': 'core::ffi::c_uint'}, {'name': 'physical_block_size', 'type': 'core::ffi::c_uint'}, {'name': 'logical_block_size', 'type': 'core::ffi::c_uint'}, {'name': 'alignment_offset', 'type': 'core::ffi::c_uint'}, {'name': 'io_min', 'type': 'core::ffi::c_uint'}, {'name': 'io_opt', 'type': 'core::ffi::c_uint'}, {'name': 'max_discard_sectors', 'type': 'core::ffi::c_uint'}, {'name': 'max_hw_discard_sectors', 'type': 'core::ffi::c_uint'}, {'name': 'max_user_discard_sectors', 'type': 'core::ffi::c_uint'}, {'name': 'max_secure_erase_sectors', 'type': 'core::ffi::c_uint'}, {'name': 'max_write_zeroes_sectors', 'type': 'core::ffi::c_uint'}, {'name': 'max_zone_append_sectors', 'type': 'core::ffi::c_uint'}, {'name': 'discard_granularity', 'type': 'core::ffi::c_uint'}, {'name': 'discard_alignment', 'type': 'core::ffi::c_uint'}, {'name': 'zone_write_granularity', 'type': 'core::ffi::c_uint'}, {'name': 'atomic_write_hw_max', 'type': 'core::ffi::c_uint'}, {'name': 'atomic_write_max_sectors', 'type': 'core::ffi::c_uint'}, {'name': 'atomic_write_hw_boundary', 'type': 'core::ffi::c_uint'}, {'name': 'atomic_write_boundary_sectors', 'type': 'core::ffi::c_uint'}, {'name': 'atomic_write_hw_unit_min', 'type': 'core::ffi::c_uint'}, {'name': 'atomic_write_unit_min', 'type': 'core::ffi::c_uint'}, {'name': 'atomic_write_hw_unit_max', 'type': 'core::ffi::c_uint'}, {'name': 'atomic_write_unit_max', 'type': 'core::ffi::c_uint'}, {'name': 'max_segments', 'type': 'core::ffi::c_ushort'}, {'name': 'max_integrity_segments', 'type': 'core::ffi::c_ushort'}, {'name': 'max_discard_segments', 'type': 'core::ffi::c_ushort'}, {'name': 'max_open_zones', 'type': 'core::ffi::c_uint'}, {'name': 'max_active_zones', 'type': 'core::ffi::c_uint'}, {'name': 'dma_alignment', 'type': 'core::ffi::c_uint'}, {'name': 'dma_pad_mask', 'type': 'core::ffi::c_uint'}, {'name': 'integrity', 'type': 'blk_integrity'}]`
+- New: `[{'name': 'features', 'type': 'blk_features_t'}, {'name': 'flags', 'type': 'blk_flags_t'}, {'name': 'seg_boundary_mask', 'type': 'ffi::c_ulong'}, {'name': 'virt_boundary_mask', 'type': 'ffi::c_ulong'}, {'name': 'max_hw_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_dev_sectors', 'type': 'ffi::c_uint'}, {'name': 'chunk_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_user_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_segment_size', 'type': 'ffi::c_uint'}, {'name': 'physical_block_size', 'type': 'ffi::c_uint'}, {'name': 'logical_block_size', 'type': 'ffi::c_uint'}, {'name': 'alignment_offset', 'type': 'ffi::c_uint'}, {'name': 'io_min', 'type': 'ffi::c_uint'}, {'name': 'io_opt', 'type': 'ffi::c_uint'}, {'name': 'max_discard_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_hw_discard_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_user_discard_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_secure_erase_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_write_zeroes_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_hw_zone_append_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_zone_append_sectors', 'type': 'ffi::c_uint'}, {'name': 'discard_granularity', 'type': 'ffi::c_uint'}, {'name': 'discard_alignment', 'type': 'ffi::c_uint'}, {'name': 'zone_write_granularity', 'type': 'ffi::c_uint'}, {'name': 'atomic_write_hw_max', 'type': 'ffi::c_uint'}, {'name': 'atomic_write_max_sectors', 'type': 'ffi::c_uint'}, {'name': 'atomic_write_hw_boundary', 'type': 'ffi::c_uint'}, {'name': 'atomic_write_boundary_sectors', 'type': 'ffi::c_uint'}, {'name': 'atomic_write_hw_unit_min', 'type': 'ffi::c_uint'}, {'name': 'atomic_write_unit_min', 'type': 'ffi::c_uint'}, {'name': 'atomic_write_hw_unit_max', 'type': 'ffi::c_uint'}, {'name': 'atomic_write_unit_max', 'type': 'ffi::c_uint'}, {'name': 'max_segments', 'type': 'ffi::c_ushort'}, {'name': 'max_integrity_segments', 'type': 'ffi::c_ushort'}, {'name': 'max_discard_segments', 'type': 'ffi::c_ushort'}, {'name': 'max_open_zones', 'type': 'ffi::c_uint'}, {'name': 'max_active_zones', 'type': 'ffi::c_uint'}, {'name': 'dma_alignment', 'type': 'ffi::c_uint'}, {'name': 'dma_pad_mask', 'type': 'ffi::c_uint'}, {'name': 'integrity', 'type': 'blk_integrity'}]`
+
+### Score Breakdown
+
+- direct_rust_use: `4.0`
+- safe_api_exposure: `4.0`
+- safety_comment: `3.0`
+- binding_only_penalty: `-5.0`
+
+### Rust Evidence
+
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/block/mq/gen_disk.rs:97 `GenDiskBuilder::capacity_sectors` unsafe=1
+- safe API `GenDiskBuilder::capacity_sectors`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/block/mq/gen_disk.rs:96 `// SAFETY: `bindings::queue_limits` contain only fields that are valid when zeroed.`
+- wrapper_fix: `5e3b7009f116f684ac6b93d8924506154f3b1f6d`
 
 ## W-000022 SignatureDrift
 
-- Risk: Medium
-- Score: 9.0
+- Risk: Low
+- Score: 5.0
 - Symbol: mdiobus_read
 - Explanation: mdiobus_read changed across the selected Linux versions.
 - Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
@@ -601,20 +505,19 @@
 - direct_rust_use: `4.0`
 - contract_mapping: `3.0`
 - safety_comment: `3.0`
-- wrapper_fix_hit: `4.0`
 - binding_only_penalty: `-5.0`
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.13/rust/kernel/net/phy/reg.rs:111 `read` unsafe=1
-- .binddrift/worktrees/v6.13/rust/kernel/net/phy/reg.rs:107 `// SAFETY: `phydev` is pointing to a valid object by the type invariant of `Device`.`
-- .binddrift/worktrees/v6.13/rust/kernel/net/phy/reg.rs:113 `TO_RESULT_MAPPING`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/net/phy/reg.rs:111 `read` unsafe=1
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/net/phy/reg.rs:107 `// SAFETY: `phydev` is pointing to a valid object by the type invariant of `Device`.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/net/phy/reg.rs:113 `TO_RESULT_MAPPING`
 - wrapper_fix: `b2e47002b2350f57bfa8fe1c231e9fbb6baef78b`
 
 ## W-000023 SignatureDrift
 
-- Risk: Medium
-- Score: 9.0
+- Risk: Low
+- Score: 5.0
 - Symbol: mdiobus_write
 - Explanation: mdiobus_write changed across the selected Linux versions.
 - Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
@@ -629,20 +532,19 @@
 - direct_rust_use: `4.0`
 - contract_mapping: `3.0`
 - safety_comment: `3.0`
-- wrapper_fix_hit: `4.0`
 - binding_only_penalty: `-5.0`
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.13/rust/kernel/net/phy/reg.rs:123 `write` unsafe=1
-- .binddrift/worktrees/v6.13/rust/kernel/net/phy/reg.rs:119 `// SAFETY: `phydev` is pointing to a valid object by the type invariant of `Device`.`
-- .binddrift/worktrees/v6.13/rust/kernel/net/phy/reg.rs:122 `TO_RESULT_MAPPING`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/net/phy/reg.rs:123 `write` unsafe=1
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/net/phy/reg.rs:119 `// SAFETY: `phydev` is pointing to a valid object by the type invariant of `Device`.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/net/phy/reg.rs:122 `TO_RESULT_MAPPING`
 - wrapper_fix: `b2e47002b2350f57bfa8fe1c231e9fbb6baef78b`
 
 ## W-000024 SignatureDrift
 
-- Risk: Medium
-- Score: 9.0
+- Risk: Low
+- Score: 5.0
 - Symbol: phy_read_mmd
 - Explanation: phy_read_mmd changed across the selected Linux versions.
 - Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
@@ -657,21 +559,19 @@
 - direct_rust_use: `4.0`
 - contract_mapping: `3.0`
 - safety_comment: `3.0`
-- wrapper_fix_hit: `4.0`
 - binding_only_penalty: `-5.0`
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.13/rust/kernel/net/phy/reg.rs:202 `read` unsafe=1
-- .binddrift/worktrees/v6.13/rust/kernel/net/phy/reg.rs:199 `// SAFETY: `phydev` is pointing to a valid object by the type invariant of `Device`.`
-- .binddrift/worktrees/v6.13/rust/kernel/net/phy/reg.rs:197 `RESULT_RETURN`
-- .binddrift/worktrees/v6.13/rust/kernel/net/phy/reg.rs:203 `TO_RESULT_MAPPING`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/net/phy/reg.rs:202 `read` unsafe=1
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/net/phy/reg.rs:199 `// SAFETY: `phydev` is pointing to a valid object by the type invariant of `Device`.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/net/phy/reg.rs:203 `TO_RESULT_MAPPING`
 - wrapper_fix: `b2e47002b2350f57bfa8fe1c231e9fbb6baef78b`
 
 ## W-000025 SignatureDrift
 
-- Risk: Medium
-- Score: 9.0
+- Risk: Low
+- Score: 5.0
 - Symbol: phy_write_mmd
 - Explanation: phy_write_mmd changed across the selected Linux versions.
 - Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
@@ -686,51 +586,53 @@
 - direct_rust_use: `4.0`
 - contract_mapping: `3.0`
 - safety_comment: `3.0`
-- wrapper_fix_hit: `4.0`
 - binding_only_penalty: `-5.0`
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.13/rust/kernel/net/phy/reg.rs:212 `write` unsafe=1
-- .binddrift/worktrees/v6.13/rust/kernel/net/phy/reg.rs:209 `// SAFETY: `phydev` is pointing to a valid object by the type invariant of `Device`.`
-- .binddrift/worktrees/v6.13/rust/kernel/net/phy/reg.rs:211 `TO_RESULT_MAPPING`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/net/phy/reg.rs:212 `write` unsafe=1
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/net/phy/reg.rs:209 `// SAFETY: `phydev` is pointing to a valid object by the type invariant of `Device`.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/net/phy/reg.rs:211 `TO_RESULT_MAPPING`
 - wrapper_fix: `b2e47002b2350f57bfa8fe1c231e9fbb6baef78b`
 
-## W-000027 SignatureDrift
+## W-000034 FieldDrift
 
-- Risk: Medium
-- Score: 9.0
-- Symbol: request_firmware
-- Explanation: request_firmware changed across the selected Linux versions.
+- Risk: Low
+- Score: 5.0
+- Symbol: firmware
+- Explanation: firmware changed across the selected Linux versions.
 - Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
 
 ### C Evidence
 
-- Old: `{'params': [{'name': 'fw', 'type': '*mut *const firmware'}, {'name': 'name', 'type': '*const core::ffi::c_char'}, {'name': 'device', 'type': '*mut device'}], 'return_type': 'core::ffi::c_int'}`
-- New: `{'params': [{'name': 'fw', 'type': '*mut *const firmware'}, {'name': 'name', 'type': '*const ffi::c_char'}, {'name': 'device', 'type': '*mut device'}], 'return_type': 'ffi::c_int'}`
+- Old: `[{'name': 'size', 'type': 'usize'}, {'name': 'data', 'type': '*const u8_'}, {'name': 'priv_', 'type': '*mut core::ffi::c_void'}]`
+- New: `[{'name': 'size', 'type': 'usize'}, {'name': 'data', 'type': '*const u8_'}, {'name': 'priv_', 'type': '*mut ffi::c_void'}]`
 
 ### Score Breakdown
 
 - direct_rust_use: `4.0`
 - contract_mapping: `3.0`
 - safety_comment: `3.0`
-- wrapper_fix_hit: `4.0`
 - binding_only_penalty: `-5.0`
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.13/rust/kernel/firmware.rs:12 `None` unsafe=0
-- .binddrift/worktrees/v6.13/rust/kernel/firmware.rs:20 `request` unsafe=0
-- .binddrift/worktrees/v6.13/rust/kernel/firmware.rs:74 `request_internal` unsafe=0
-- .binddrift/worktrees/v6.13/rust/kernel/firmware.rs:69 `// SAFETY: `func` not bailing out with a non-zero error code, guarantees that `fw` is a`
-- .binddrift/worktrees/v6.13/rust/kernel/firmware.rs:74 `/// Send a firmware request and wait for it. See also `bindings::request_firmware`.`
-- .binddrift/worktrees/v6.13/rust/kernel/firmware.rs:71 `NONNULL_MAPPING`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/firmware.rs:15 `None` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/firmware.rs:55 `no_run` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/firmware.rs:59 `request_internal` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/firmware.rs:60 `request_internal` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/firmware.rs:85 `as_raw` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/firmware.rs:50 `/// let blob = fw.data();`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/firmware.rs:51 `///`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/firmware.rs:52 `/// # Ok(())`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/firmware.rs:81 `RESULT_RETURN`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/firmware.rs:86 `AS_PTR`
 - wrapper_fix: `a23b018c3bf646274f02edd46bf448c20c826d94`
 
 ## W-000015 SignatureDrift
 
 - Risk: Low
-- Score: 7.0
+- Score: 3.0
 - Symbol: current_user_ns
 - Explanation: current_user_ns changed across the selected Linux versions.
 - Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
@@ -745,45 +647,22 @@
 - direct_rust_use: `4.0`
 - safe_api_exposure: `4.0`
 - safety_comment: `3.0`
-- wrapper_fix_hit: `4.0`
 - binding_only_penalty: `-5.0`
 - added_symbol_without_old_c_evidence_penalty: `-3.0`
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.13/rust/kernel/task.rs:368 `Kuid::into_uid_in_current_ns` unsafe=1
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/task.rs:368 `Kuid::into_uid_in_current_ns` unsafe=1
 - safe API `Kuid::into_uid_in_current_ns`
-- .binddrift/worktrees/v6.13/rust/kernel/task.rs:363 `///`
-- .binddrift/worktrees/v6.13/rust/kernel/task.rs:364 `/// Uses the namespace of the current task.`
-- .binddrift/worktrees/v6.13/rust/kernel/task.rs:367 `// SAFETY: Just an FFI call.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/task.rs:363 `///`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/task.rs:364 `/// Uses the namespace of the current task.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/task.rs:367 `// SAFETY: Just an FFI call.`
 - wrapper_fix: `8ad1a41f7e23287f07a3516c700bc32501d4f104`
-
-## W-000039 SignatureDrift
-
-- Risk: Low
-- Score: 7.0
-- Symbol: atomic_try_cmpxchg
-- Explanation: atomic_try_cmpxchg changed across the selected Linux versions.
-- Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
-
-### C Evidence
-
-- Old: `{'params': ['lock', '&old', 'old + (1<<16)'], 'return_type': 'return'}`
-- New: `{'params': ['&lock->val', '&old', 'old + (1<<16)'], 'return_type': 'return'}`
-
-### Score Breakdown
-
-- c_source_diff_strength: `3.0`
-- wrapper_fix_hit: `4.0`
-
-### Rust Evidence
-
-- wrapper_fix: `fdd7c7e0d2ab3987882c570612d4622f437292c7`
 
 ## W-000005 SignatureDrift
 
 - Risk: Low
-- Score: 6.0
+- Score: 2.0
 - Symbol: __mutex_init
 - Explanation: __mutex_init changed across the selected Linux versions.
 - Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
@@ -797,47 +676,69 @@
 
 - direct_rust_use: `4.0`
 - safety_comment: `3.0`
-- wrapper_fix_hit: `4.0`
 - binding_only_penalty: `-5.0`
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.13/rust/kernel/sync/lock/mutex.rs:104 `example` unsafe=1
-- .binddrift/worktrees/v6.13/rust/kernel/sync/lock/mutex.rs:102 `// SAFETY: The safety requirements ensure that `ptr` is valid for writes, and `name` and`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/sync/lock/mutex.rs:104 `example` unsafe=1
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/sync/lock/mutex.rs:102 `// SAFETY: The safety requirements ensure that `ptr` is valid for writes, and `name` and`
 - wrapper_fix: `d065cc76054d21e48a839a2a19ba99dbc51a4d11`
 
-## W-000026 SignatureDrift
+## W-000013 SignatureDrift
 
 - Risk: Low
-- Score: 6.0
-- Symbol: queue_work_on
-- Explanation: queue_work_on changed across the selected Linux versions.
+- Score: 2.0
+- Symbol: compat_ptr_ioctl
+- Explanation: compat_ptr_ioctl changed across the selected Linux versions.
 - Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
 
 ### C Evidence
 
-- Old: `{'params': [{'name': 'cpu', 'type': 'core::ffi::c_int'}, {'name': 'wq', 'type': '*mut workqueue_struct'}, {'name': 'work', 'type': '*mut work_struct'}], 'return_type': 'bool_'}`
-- New: `{'params': [{'name': 'cpu', 'type': 'ffi::c_int'}, {'name': 'wq', 'type': '*mut workqueue_struct'}, {'name': 'work', 'type': '*mut work_struct'}], 'return_type': 'bool_'}`
+- Old: `{'params': [{'name': 'file', 'type': '*mut file'}, {'name': 'cmd', 'type': 'core::ffi::c_uint'}, {'name': 'arg', 'type': 'core::ffi::c_ulong'}], 'return_type': 'core::ffi::c_long'}`
+- New: `{'params': [{'name': 'file', 'type': '*mut file'}, {'name': 'cmd', 'type': 'ffi::c_uint'}, {'name': 'arg', 'type': 'ffi::c_ulong'}], 'return_type': 'ffi::c_long'}`
 
 ### Score Breakdown
 
 - direct_rust_use: `4.0`
 - safety_comment: `3.0`
-- wrapper_fix_hit: `4.0`
 - binding_only_penalty: `-5.0`
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.13/rust/kernel/workqueue.rs:187 `print_2_later` unsafe=0
-- .binddrift/worktrees/v6.13/rust/kernel/workqueue.rs:192 `print_2_later` unsafe=0
-- .binddrift/worktrees/v6.13/rust/kernel/workqueue.rs:197 `print_2_later` unsafe=1
-- .binddrift/worktrees/v6.13/rust/kernel/workqueue.rs:184 `// SAFETY: We only return `false` if the `work_struct` is already in a workqueue. The other`
-- wrapper_fix: `d4d791d4aac041fde6eeba0a8f9201d728b52373`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/miscdevice.rs:164 `None` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/miscdevice.rs:168 `// SAFETY: All zeros is a valid value for `bindings::file_operations`.`
+- wrapper_fix: `68aabb29a5469e4b7358e70e64a7fac433e27f06`
+
+## W-000019 SignatureDrift
+
+- Risk: Low
+- Score: 2.0
+- Symbol: firmware_request_nowarn
+- Explanation: firmware_request_nowarn changed across the selected Linux versions.
+- Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
+
+### C Evidence
+
+- Old: `{'params': [{'name': 'fw', 'type': '*mut *const firmware'}, {'name': 'name', 'type': '*const core::ffi::c_char'}, {'name': 'device', 'type': '*mut device'}], 'return_type': 'core::ffi::c_int'}`
+- New: `{'params': [{'name': 'fw', 'type': '*mut *const firmware'}, {'name': 'name', 'type': '*const ffi::c_char'}, {'name': 'device', 'type': '*mut device'}], 'return_type': 'ffi::c_int'}`
+
+### Score Breakdown
+
+- direct_rust_use: `4.0`
+- safety_comment: `3.0`
+- binding_only_penalty: `-5.0`
+
+### Rust Evidence
+
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/firmware.rs:24 `request_nowarn` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/firmware.rs:28 `/// Abstraction around a C `struct firmware`.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/firmware.rs:29 `///`
+- wrapper_fix: `a23b018c3bf646274f02edd46bf448c20c826d94`
 
 ## W-000021 SignatureDrift
 
 - Risk: Low
-- Score: 4.0
+- Score: 0.0
 - Symbol: from_kuid
 - Explanation: from_kuid changed across the selected Linux versions.
 - Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
@@ -851,70 +752,44 @@
 
 - direct_rust_use: `4.0`
 - safe_api_exposure: `4.0`
-- wrapper_fix_hit: `4.0`
 - binding_only_penalty: `-5.0`
 - added_symbol_without_old_c_evidence_penalty: `-3.0`
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.13/rust/kernel/task.rs:368 `Kuid::into_uid_in_current_ns` unsafe=1
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/task.rs:368 `Kuid::into_uid_in_current_ns` unsafe=1
 - safe API `Kuid::into_uid_in_current_ns`
 - wrapper_fix: `8ad1a41f7e23287f07a3516c700bc32501d4f104`
 
-## W-000013 SignatureDrift
+## W-000026 SignatureDrift
 
 - Risk: Low
-- Score: 3.0
-- Symbol: compat_ptr_ioctl
-- Explanation: compat_ptr_ioctl changed across the selected Linux versions.
+- Score: -1.0
+- Symbol: queue_work_on
+- Explanation: queue_work_on changed across the selected Linux versions.
 - Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
 
 ### C Evidence
 
-- Old: `{'params': [{'name': 'file', 'type': '*mut file'}, {'name': 'cmd', 'type': 'core::ffi::c_uint'}, {'name': 'arg', 'type': 'core::ffi::c_ulong'}], 'return_type': 'core::ffi::c_long'}`
-- New: `{'params': [{'name': 'file', 'type': '*mut file'}, {'name': 'cmd', 'type': 'ffi::c_uint'}, {'name': 'arg', 'type': 'ffi::c_ulong'}], 'return_type': 'ffi::c_long'}`
+- Old: `{'params': [{'name': 'cpu', 'type': 'core::ffi::c_int'}, {'name': 'wq', 'type': '*mut workqueue_struct'}, {'name': 'work', 'type': '*mut work_struct'}], 'return_type': 'bool_'}`
+- New: `{'params': [{'name': 'cpu', 'type': 'ffi::c_int'}, {'name': 'wq', 'type': '*mut workqueue_struct'}, {'name': 'work', 'type': '*mut work_struct'}], 'return_type': 'bool_'}`
 
 ### Score Breakdown
 
 - direct_rust_use: `4.0`
-- wrapper_fix_hit: `4.0`
 - binding_only_penalty: `-5.0`
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.13/rust/kernel/miscdevice.rs:164 `None` unsafe=0
-- wrapper_fix: `68aabb29a5469e4b7358e70e64a7fac433e27f06`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/workqueue.rs:197 `print_2_later` unsafe=1
+- wrapper_fix: `d4d791d4aac041fde6eeba0a8f9201d728b52373`
 
-## W-000020 SignatureDrift
-
-- Risk: Low
-- Score: 3.0
-- Symbol: firmware_request_platform
-- Explanation: firmware_request_platform changed across the selected Linux versions.
-- Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
-
-### C Evidence
-
-- Old: `{'params': [{'name': 'fw', 'type': '*mut *const firmware'}, {'name': 'name', 'type': '*const core::ffi::c_char'}, {'name': 'device', 'type': '*mut device'}], 'return_type': 'core::ffi::c_int'}`
-- New: `{'params': [{'name': 'fw', 'type': '*mut *const firmware'}, {'name': 'name', 'type': '*const ffi::c_char'}, {'name': 'device', 'type': '*mut device'}], 'return_type': 'ffi::c_int'}`
-
-### Score Breakdown
-
-- direct_rust_use: `4.0`
-- wrapper_fix_hit: `4.0`
-- binding_only_penalty: `-5.0`
-
-### Rust Evidence
-
-- .binddrift/worktrees/v6.13/rust/kernel/firmware.rs:13 `None` unsafe=0
-- wrapper_fix: `a23b018c3bf646274f02edd46bf448c20c826d94`
-
-## W-000028 SignatureDrift
+## W-000027 SignatureDrift
 
 - Risk: Low
-- Score: 3.0
-- Symbol: request_firmware_direct
-- Explanation: request_firmware_direct changed across the selected Linux versions.
+- Score: -1.0
+- Symbol: request_firmware
+- Explanation: request_firmware changed across the selected Linux versions.
 - Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
 
 ### C Evidence
@@ -925,18 +800,17 @@
 ### Score Breakdown
 
 - direct_rust_use: `4.0`
-- wrapper_fix_hit: `4.0`
 - binding_only_penalty: `-5.0`
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.13/rust/kernel/firmware.rs:13 `None` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/firmware.rs:20 `request` unsafe=0
 - wrapper_fix: `a23b018c3bf646274f02edd46bf448c20c826d94`
 
 ## W-000032 SignatureDrift
 
 - Risk: Low
-- Score: 3.0
+- Score: -1.0
 - Symbol: uid_eq
 - Explanation: uid_eq changed across the selected Linux versions.
 - Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
@@ -950,20 +824,19 @@
 
 - direct_rust_use: `4.0`
 - safety_comment: `3.0`
-- wrapper_fix_hit: `4.0`
 - binding_only_penalty: `-5.0`
 - added_symbol_without_old_c_evidence_penalty: `-3.0`
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.13/rust/kernel/task.rs:376 `eq` unsafe=1
-- .binddrift/worktrees/v6.13/rust/kernel/task.rs:375 `// SAFETY: Just an FFI call.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/task.rs:376 `eq` unsafe=1
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.13/rust/kernel/task.rs:375 `// SAFETY: Just an FFI call.`
 - wrapper_fix: `8ad1a41f7e23287f07a3516c700bc32501d4f104`
 
 ## W-000006 SignatureDrift
 
 - Risk: Low
-- Score: -1.0
+- Score: -5.0
 - Symbol: _find_last_bit
 - Explanation: _find_last_bit changed across the selected Linux versions.
 - Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
@@ -975,7 +848,6 @@
 
 ### Score Breakdown
 
-- wrapper_fix_hit: `4.0`
 - binding_only_penalty: `-5.0`
 
 ### Rust Evidence
@@ -985,7 +857,7 @@
 ## W-000007 SignatureDrift
 
 - Risk: Low
-- Score: -1.0
+- Score: -5.0
 - Symbol: _find_next_bit
 - Explanation: _find_next_bit changed across the selected Linux versions.
 - Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
@@ -997,7 +869,6 @@
 
 ### Score Breakdown
 
-- wrapper_fix_hit: `4.0`
 - binding_only_penalty: `-5.0`
 
 ### Rust Evidence
@@ -1007,7 +878,7 @@
 ## W-000008 SignatureDrift
 
 - Risk: Low
-- Score: -1.0
+- Score: -5.0
 - Symbol: _find_next_zero_bit
 - Explanation: _find_next_zero_bit changed across the selected Linux versions.
 - Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
@@ -1019,7 +890,6 @@
 
 ### Score Breakdown
 
-- wrapper_fix_hit: `4.0`
 - binding_only_penalty: `-5.0`
 
 ### Rust Evidence
@@ -1029,7 +899,7 @@
 ## W-000009 SignatureDrift
 
 - Risk: Low
-- Score: -1.0
+- Score: -5.0
 - Symbol: bitmap_free
 - Explanation: bitmap_free changed across the selected Linux versions.
 - Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
@@ -1041,7 +911,6 @@
 
 ### Score Breakdown
 
-- wrapper_fix_hit: `4.0`
 - binding_only_penalty: `-5.0`
 
 ### Rust Evidence
@@ -1051,7 +920,7 @@
 ## W-000010 SignatureDrift
 
 - Risk: Low
-- Score: -1.0
+- Score: -5.0
 - Symbol: bitmap_zalloc
 - Explanation: bitmap_zalloc changed across the selected Linux versions.
 - Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
@@ -1063,7 +932,6 @@
 
 ### Score Breakdown
 
-- wrapper_fix_hit: `4.0`
 - binding_only_penalty: `-5.0`
 
 ### Rust Evidence
@@ -1073,7 +941,7 @@
 ## W-000011 SignatureDrift
 
 - Risk: Low
-- Score: -1.0
+- Score: -5.0
 - Symbol: blk_queue_flag_clear
 - Explanation: blk_queue_flag_clear changed across the selected Linux versions.
 - Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
@@ -1085,7 +953,6 @@
 
 ### Score Breakdown
 
-- wrapper_fix_hit: `4.0`
 - binding_only_penalty: `-5.0`
 
 ### Rust Evidence
@@ -1095,7 +962,7 @@
 ## W-000012 SignatureDrift
 
 - Risk: Low
-- Score: -1.0
+- Score: -5.0
 - Symbol: blk_queue_flag_set
 - Explanation: blk_queue_flag_set changed across the selected Linux versions.
 - Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
@@ -1107,17 +974,58 @@
 
 ### Score Breakdown
 
-- wrapper_fix_hit: `4.0`
 - binding_only_penalty: `-5.0`
 
 ### Rust Evidence
 
 - wrapper_fix: `5ddb88f22eb97218d9295e69c39e0ff7cc64e09c`
 
+## W-000020 SignatureDrift
+
+- Risk: Low
+- Score: -5.0
+- Symbol: firmware_request_platform
+- Explanation: firmware_request_platform changed across the selected Linux versions.
+- Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
+
+### C Evidence
+
+- Old: `{'params': [{'name': 'fw', 'type': '*mut *const firmware'}, {'name': 'name', 'type': '*const core::ffi::c_char'}, {'name': 'device', 'type': '*mut device'}], 'return_type': 'core::ffi::c_int'}`
+- New: `{'params': [{'name': 'fw', 'type': '*mut *const firmware'}, {'name': 'name', 'type': '*const ffi::c_char'}, {'name': 'device', 'type': '*mut device'}], 'return_type': 'ffi::c_int'}`
+
+### Score Breakdown
+
+- binding_only_penalty: `-5.0`
+
+### Rust Evidence
+
+- wrapper_fix: `a23b018c3bf646274f02edd46bf448c20c826d94`
+
+## W-000028 SignatureDrift
+
+- Risk: Low
+- Score: -5.0
+- Symbol: request_firmware_direct
+- Explanation: request_firmware_direct changed across the selected Linux versions.
+- Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
+
+### C Evidence
+
+- Old: `{'params': [{'name': 'fw', 'type': '*mut *const firmware'}, {'name': 'name', 'type': '*const core::ffi::c_char'}, {'name': 'device', 'type': '*mut device'}], 'return_type': 'core::ffi::c_int'}`
+- New: `{'params': [{'name': 'fw', 'type': '*mut *const firmware'}, {'name': 'name', 'type': '*const ffi::c_char'}, {'name': 'device', 'type': '*mut device'}], 'return_type': 'ffi::c_int'}`
+
+### Score Breakdown
+
+- binding_only_penalty: `-5.0`
+
+### Rust Evidence
+
+- wrapper_fix: `a23b018c3bf646274f02edd46bf448c20c826d94`
+
 ## W-000035 FieldDrift
 
 - Risk: Low
-- Score: -1.0
+- Score: -5.0
 - Symbol: kunit_case
 - Explanation: kunit_case changed across the selected Linux versions.
 - Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
@@ -1129,7 +1037,6 @@
 
 ### Score Breakdown
 
-- wrapper_fix_hit: `4.0`
 - binding_only_penalty: `-5.0`
 
 ### Rust Evidence

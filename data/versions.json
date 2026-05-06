@@ -231,11 +231,11 @@
       "bindgen_version": null,
       "clang_version": null,
       "config_hash": null,
-      "date": "2026-05-03T15:25:47-07:00",
-      "git_commit": "6d35786de28116ecf78797a62b84e6bf3c45aa5a",
+      "date": "2026-05-05T09:11:52-07:00",
+      "git_commit": "9207d47f966be9f4d52e7e0119ac2b7a7e366f3e",
       "rustc_version": null,
       "tag": null,
-      "version_id": "HEAD_6d35786de281"
+      "version_id": "HEAD_9207d47f966b"
     }
   ]
 }

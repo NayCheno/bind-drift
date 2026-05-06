@@ -1,40 +1,9 @@
 # BindDrift Ranked Warnings
 
-## W-000006 SignatureDrift
-
-- Risk: High
-- Score: 21.0
-- Symbol: PTR_ERR
-- Explanation: PTR_ERR changed across the selected Linux versions.
-- Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
-
-### C Evidence
-
-- Old: `{'params': ['ptr'], 'return_type': 'return'}`
-- New: `{'params': ['opp'], 'return_type': 'return'}`
-
-### Score Breakdown
-
-- direct_rust_use: `4.0`
-- safe_api_exposure: `4.0`
-- contract_mapping: `3.0`
-- safety_comment: `3.0`
-- c_source_diff_strength: `3.0`
-- wrapper_fix_hit: `4.0`
-
-### Rust Evidence
-
-- .binddrift/worktrees/v6.16/rust/kernel/error.rs:414 `From<core::convert::Infallible>::to_result` unsafe=1
-- safe API `From<core::convert::Infallible>::to_result`
-- .binddrift/worktrees/v6.16/rust/kernel/error.rs:411 `// SAFETY: The FFI function does not deref the pointer.`
-- .binddrift/worktrees/v6.16/rust/kernel/error.rs:413 `// SAFETY: The FFI function does not deref the pointer.`
-- .binddrift/worktrees/v6.16/rust/kernel/error.rs:412 `IS_ERR_MAPPING`
-- wrapper_fix: `752417b3f0e7721f1d630f40da22d57e0dae043e`
-
 ## W-000005 FieldDrift
 
-- Risk: High
-- Score: 13.0
+- Risk: Low
+- Score: 6.0
 - Symbol: queue_limits
 - Explanation: queue_limits changed across the selected Linux versions.
 - Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
@@ -48,24 +17,20 @@
 
 - direct_rust_use: `4.0`
 - safe_api_exposure: `4.0`
-- contract_mapping: `3.0`
 - safety_comment: `3.0`
-- wrapper_fix_hit: `4.0`
 - binding_only_penalty: `-5.0`
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.16/rust/kernel/block/mq/gen_disk.rs:96 `GenDiskBuilder::capacity_sectors` unsafe=0
-- .binddrift/worktrees/v6.16/rust/kernel/block/mq/gen_disk.rs:97 `GenDiskBuilder::capacity_sectors` unsafe=1
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.16/rust/kernel/block/mq/gen_disk.rs:97 `GenDiskBuilder::capacity_sectors` unsafe=1
 - safe API `GenDiskBuilder::capacity_sectors`
-- .binddrift/worktrees/v6.16/rust/kernel/block/mq/gen_disk.rs:96 `// SAFETY: `bindings::queue_limits` contain only fields that are valid when zeroed.`
-- .binddrift/worktrees/v6.16/rust/kernel/block/mq/gen_disk.rs:95 `RESULT_RETURN`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.16/rust/kernel/block/mq/gen_disk.rs:96 `// SAFETY: `bindings::queue_limits` contain only fields that are valid when zeroed.`
 - wrapper_fix: `5e3b7009f116f684ac6b93d8924506154f3b1f6d`
 
 ## W-000004 FieldDrift
 
-- Risk: Medium
-- Score: 9.0
+- Risk: Low
+- Score: 5.0
 - Symbol: pci_dev
 - Explanation: pci_dev changed across the selected Linux versions.
 - Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
@@ -80,26 +45,25 @@
 - direct_rust_use: `4.0`
 - contract_mapping: `3.0`
 - safety_comment: `3.0`
-- wrapper_fix_hit: `4.0`
 - binding_only_penalty: `-5.0`
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.16/rust/kernel/pci.rs:62 `None` unsafe=0
-- .binddrift/worktrees/v6.16/rust/kernel/pci.rs:89 `None` unsafe=0
-- .binddrift/worktrees/v6.16/rust/kernel/pci.rs:257 `None` unsafe=0
-- .binddrift/worktrees/v6.16/rust/kernel/pci.rs:367 `None` unsafe=0
-- .binddrift/worktrees/v6.16/rust/kernel/pci.rs:474 `try_from` unsafe=1
-- .binddrift/worktrees/v6.16/rust/kernel/pci.rs:252 `/// # Invariants`
-- .binddrift/worktrees/v6.16/rust/kernel/pci.rs:253 `///`
-- .binddrift/worktrees/v6.16/rust/kernel/pci.rs:254 `/// A [`Device`] instance represents a valid `struct device` created by the C portion of the kernel.`
-- .binddrift/worktrees/v6.16/rust/kernel/pci.rs:257 `OPAQUE`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.16/rust/kernel/pci.rs:62 `None` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.16/rust/kernel/pci.rs:89 `remove_callback` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.16/rust/kernel/pci.rs:257 `None` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.16/rust/kernel/pci.rs:367 `as_raw` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.16/rust/kernel/pci.rs:474 `try_from` unsafe=1
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.16/rust/kernel/pci.rs:252 `/// # Invariants`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.16/rust/kernel/pci.rs:253 `///`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.16/rust/kernel/pci.rs:254 `/// A [`Device`] instance represents a valid `struct device` created by the C portion of the kernel.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.16/rust/kernel/pci.rs:257 `OPAQUE`
 - wrapper_fix: `7b948a2af6b5d64a25c14da8f63d8084ea527cd9`
 
 ## W-000001 SignatureDrift
 
 - Risk: Low
-- Score: 6.0
+- Score: -1.0
 - Symbol: dev_is_pci
 - Explanation: dev_is_pci changed across the selected Linux versions.
 - Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
@@ -112,23 +76,20 @@
 ### Score Breakdown
 
 - direct_rust_use: `4.0`
-- contract_mapping: `3.0`
 - safety_comment: `3.0`
-- wrapper_fix_hit: `4.0`
 - binding_only_penalty: `-5.0`
 - added_symbol_without_old_c_evidence_penalty: `-3.0`
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.16/rust/kernel/pci.rs:467 `try_from` unsafe=1
-- .binddrift/worktrees/v6.16/rust/kernel/pci.rs:465 `// SAFETY: By the type invariant of `Device`, `dev.as_raw()` is a valid pointer to a`
-- .binddrift/worktrees/v6.16/rust/kernel/pci.rs:464 `RESULT_RETURN`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.16/rust/kernel/pci.rs:467 `try_from` unsafe=1
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.16/rust/kernel/pci.rs:465 `// SAFETY: By the type invariant of `Device`, `dev.as_raw()` is a valid pointer to a`
 - wrapper_fix: `473b9f331718267815649cd93801da832200db71`
 
 ## W-000002 SignatureDrift
 
 - Risk: Low
-- Score: 3.0
+- Score: -1.0
 - Symbol: drm_gem_object_get
 - Explanation: drm_gem_object_get changed across the selected Linux versions.
 - Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
@@ -142,24 +103,23 @@
 
 - direct_rust_use: `4.0`
 - safety_comment: `3.0`
-- wrapper_fix_hit: `4.0`
 - binding_only_penalty: `-5.0`
 - added_symbol_without_old_c_evidence_penalty: `-3.0`
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.16/rust/kernel/drm/gem/mod.rs:61 `inc_ref` unsafe=1
-- .binddrift/worktrees/v6.16/rust/kernel/drm/gem/mod.rs:57 `// SAFETY: All gem objects are refcounted.`
-- .binddrift/worktrees/v6.16/rust/kernel/drm/gem/mod.rs:60 `// SAFETY: The existence of a shared reference guarantees that the refcount is non-zero.`
-- .binddrift/worktrees/v6.16/rust/kernel/drm/gem/mod.rs:65 `// SAFETY: We either hold the only refcount on `obj`, or one of many - meaning that no one`
-- weak lifetime name .binddrift/worktrees/v6.16/rust/kernel/drm/gem/mod.rs:61 `LIFETIME_NAMING_PATTERN`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.16/rust/kernel/drm/gem/mod.rs:61 `inc_ref` unsafe=1
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.16/rust/kernel/drm/gem/mod.rs:57 `// SAFETY: All gem objects are refcounted.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.16/rust/kernel/drm/gem/mod.rs:60 `// SAFETY: The existence of a shared reference guarantees that the refcount is non-zero.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.16/rust/kernel/drm/gem/mod.rs:65 `// SAFETY: We either hold the only refcount on `obj`, or one of many - meaning that no one`
+- weak lifetime name /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.16/rust/kernel/drm/gem/mod.rs:61 `LIFETIME_NAMING_PATTERN`
 - wrapper_fix: `38cb08c3fcd3f3b1d0225dcec8ae50fab5751549`
 - wrapper_fix: `5ae65bdcb867555540169ef57876658262a67d87`
 
 ## W-000003 SignatureDrift
 
 - Risk: Low
-- Score: 3.0
+- Score: -1.0
 - Symbol: drm_gem_object_put
 - Explanation: drm_gem_object_put changed across the selected Linux versions.
 - Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
@@ -173,15 +133,14 @@
 
 - direct_rust_use: `4.0`
 - safety_comment: `3.0`
-- wrapper_fix_hit: `4.0`
 - binding_only_penalty: `-5.0`
 - added_symbol_without_old_c_evidence_penalty: `-3.0`
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.16/rust/kernel/drm/gem/mod.rs:73 `dec_ref` unsafe=1
-- .binddrift/worktrees/v6.16/rust/kernel/drm/gem/mod.rs:70 `// SAFETY:`
-- .binddrift/worktrees/v6.16/rust/kernel/drm/gem/mod.rs:77 `/// Trait which must be implemented by drivers using base GEM objects.`
-- weak lifetime name .binddrift/worktrees/v6.16/rust/kernel/drm/gem/mod.rs:73 `LIFETIME_NAMING_PATTERN`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.16/rust/kernel/drm/gem/mod.rs:73 `dec_ref` unsafe=1
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.16/rust/kernel/drm/gem/mod.rs:70 `// SAFETY:`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.16/rust/kernel/drm/gem/mod.rs:77 `/// Trait which must be implemented by drivers using base GEM objects.`
+- weak lifetime name /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.16/rust/kernel/drm/gem/mod.rs:73 `LIFETIME_NAMING_PATTERN`
 - wrapper_fix: `38cb08c3fcd3f3b1d0225dcec8ae50fab5751549`
 - wrapper_fix: `5ae65bdcb867555540169ef57876658262a67d87`

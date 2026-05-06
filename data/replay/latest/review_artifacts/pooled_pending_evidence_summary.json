@@ -1,0 +1,16 @@
+{
+  "packets": 176,
+  "missing_matches": [],
+  "missing_warning_matches": 0,
+  "c_drift_supported_distribution": {
+    "partial": 176
+  },
+  "rust_exposure_distribution": {
+    "binding_use_only": 158,
+    "safe_api": 3,
+    "unsafe_wrapper": 15
+  },
+  "wrapper_fix_distribution": {
+    "present": 176
+  }
+}

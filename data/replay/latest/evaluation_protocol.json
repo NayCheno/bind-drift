@@ -40,7 +40,7 @@
       "latest-p014-v6.14-to-v6.15"
     ],
     "locked_test_pairs": [
-      "latest-p020-v7.0-to-HEAD_6d35786de281"
+      "latest-p020-v7.0-to-HEAD_9207d47f966b"
     ],
     "validation_pairs": [
       "latest-p015-v6.15-to-v6.16",

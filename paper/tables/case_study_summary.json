@@ -3,36 +3,31 @@
   "acceptance": {
     "absolute_local_paths_clean": true,
     "case_studies_minimum": true,
-    "drift_type_count_minimum": true,
-    "minimum_passes": true,
+    "drift_type_count_minimum": false,
+    "minimum_passes": false,
     "negative_case_present": true,
     "positive_labels_clean": true,
-    "semantic_true_cases_minimum": true,
+    "semantic_true_cases_minimum": false,
     "wrapper_fix_cases_minimum": true
   },
   "benign_drift_cases": 0,
-  "build_breakage_cases": 1,
+  "build_breakage_cases": 0,
   "case_drift_types": [
-    "AllocationFreeDrift",
-    "LayoutFieldDrift",
-    "NullabilityDrift",
-    "OwnershipRefcountDrift",
-    "SleepabilityContextDrift"
+    "SignatureDrift"
   ],
-  "case_studies": 8,
-  "drift_type_count": 5,
+  "case_studies": 6,
+  "drift_type_count": 1,
   "false_positive_cases": 0,
   "negative_case_studies": 1,
   "negative_label_distribution": {
     "FALSE_POSITIVE": 1
   },
-  "positive_case_studies": 8,
+  "positive_case_studies": 6,
   "positive_label_distribution": {
-    "TRUE_BUILD_BREAKAGE": 1,
-    "TRUE_SEMANTIC_DRIFT": 2,
+    "TRUE_SEMANTIC_DRIFT": 1,
     "TRUE_WRAPPER_FIX": 5
   },
-  "semantic_true_cases": 2,
+  "semantic_true_cases": 1,
   "unlabeled_cases": 0,
   "wrapper_fix_backed_cases": 5
 }

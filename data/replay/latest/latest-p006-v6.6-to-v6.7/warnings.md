@@ -3,7 +3,7 @@
 ## W-000002 FieldDrift
 
 - Risk: Low
-- Score: -1.0
+- Score: -5.0
 - Symbol: kunit_case
 - Explanation: kunit_case changed across the selected Linux versions.
 - Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
@@ -15,7 +15,6 @@
 
 ### Score Breakdown
 
-- wrapper_fix_hit: `4.0`
 - binding_only_penalty: `-5.0`
 
 ### Rust Evidence
@@ -26,7 +25,7 @@
 ## W-000001 SignatureDrift
 
 - Risk: Low
-- Score: -4.0
+- Score: -8.0
 - Symbol: compat_ptr_ioctl
 - Explanation: compat_ptr_ioctl changed across the selected Linux versions.
 - Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
@@ -38,7 +37,6 @@
 
 ### Score Breakdown
 
-- wrapper_fix_hit: `4.0`
 - binding_only_penalty: `-5.0`
 - added_symbol_without_old_c_evidence_penalty: `-3.0`
 

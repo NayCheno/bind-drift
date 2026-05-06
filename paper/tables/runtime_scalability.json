@@ -96,7 +96,7 @@
     ],
     "usable": true,
     "version_ids": [
-      "HEAD_6d35786de281",
+      "HEAD_9207d47f966b",
       "v6.1",
       "v6.10",
       "v6.11",
@@ -121,11 +121,11 @@
   },
   "runs": [
     {
-      "drift_facts": 17867,
-      "duration_seconds": 568.001,
+      "drift_facts": 16757,
+      "duration_seconds": 674.914,
       "pairs": 20,
       "paper_topk": 100,
-      "promoted_warnings": 331,
+      "promoted_warnings": 320,
       "run_id": "latest",
       "single_version_review_targets": 0,
       "status": "completed",

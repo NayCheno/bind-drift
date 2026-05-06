@@ -1,173 +1,160 @@
 {
   "rankers": [
     {
-      "auprc_on_pooled_review_set": 0.009,
+      "auprc_on_pooled_review_set": 0.0235,
       "bootstrap_ci": {
         "ndcg_at_20": [
-          0.0373,
-          0.4087
+          0.0,
+          0.2683
         ],
         "p_at_20": [
-          0.05,
-          0.4
+          0.0,
+          0.25
         ],
         "p_at_50": [
-          0.02,
-          0.16
+          0.0,
+          0.1
         ]
       },
-      "candidate_count": 39,
-      "evaluated_pool_rows": 278,
+      "candidate_count": 29,
+      "evaluated_pool_rows": 276,
       "evaluation_denominator": "complete_pooled_review_set",
       "kind": "primary",
       "label_distribution": {
-        "BENIGN_DRIFT": 36,
-        "FALSE_POSITIVE": 32,
-        "TRUE_BUILD_BREAKAGE": 3,
+        "BENIGN_DRIFT": 37,
+        "FALSE_POSITIVE": 169,
         "TRUE_SEMANTIC_DRIFT": 2,
-        "TRUE_WRAPPER_FIX": 130,
-        "UNCLEAR": 75
+        "TRUE_WRAPPER_FIX": 50,
+        "UNCLEAR": 18
       },
-      "labeled_at_100": 39,
-      "ndcg_at_20": 0.1966,
+      "labeled_at_100": 29,
+      "ndcg_at_20": 0.1848,
       "oracle_blind": true,
-      "p_at_10": 0.3,
-      "p_at_100": 0.04,
-      "p_at_20": 0.2,
-      "p_at_50": 0.08,
+      "p_at_10": 0.2,
+      "p_at_100": 0.02,
+      "p_at_20": 0.1,
+      "p_at_50": 0.04,
       "ranked_label_distribution": {
         "BENIGN_DRIFT": 26,
-        "FALSE_POSITIVE": 9,
-        "TRUE_SEMANTIC_DRIFT": 2,
-        "TRUE_WRAPPER_FIX": 2
+        "FALSE_POSITIVE": 1,
+        "TRUE_SEMANTIC_DRIFT": 2
       },
       "ranked_true_label_distribution": {
-        "TRUE_SEMANTIC_DRIFT": 2,
-        "TRUE_WRAPPER_FIX": 2
+        "TRUE_SEMANTIC_DRIFT": 2
       },
       "ranker": "binddrift_oracle_blind",
-      "review_pool_covered": 0.1403,
-      "review_pool_ranked_count": 39,
+      "review_pool_covered": 0.1051,
+      "review_pool_ranked_count": 29,
       "true_label_distribution": {
-        "TRUE_BUILD_BREAKAGE": 3,
         "TRUE_SEMANTIC_DRIFT": 2,
-        "TRUE_WRAPPER_FIX": 130
+        "TRUE_WRAPPER_FIX": 50
       },
-      "warning_volume": 331
+      "warning_volume": 320
     },
     {
-      "auprc_on_pooled_review_set": 0.0237,
+      "auprc_on_pooled_review_set": 0.1765,
       "bootstrap_ci": {
         "ndcg_at_20": [
-          0.0341,
-          0.4105
+          0.1657,
+          0.6286
         ],
         "p_at_20": [
-          0.05,
-          0.4
-        ],
-        "p_at_50": [
-          0.1,
-          0.34
-        ]
-      },
-      "candidate_count": 331,
-      "evaluated_pool_rows": 278,
-      "evaluation_denominator": "complete_pooled_review_set",
-      "kind": "ablation",
-      "label_distribution": {
-        "BENIGN_DRIFT": 36,
-        "FALSE_POSITIVE": 32,
-        "TRUE_BUILD_BREAKAGE": 3,
-        "TRUE_SEMANTIC_DRIFT": 2,
-        "TRUE_WRAPPER_FIX": 130,
-        "UNCLEAR": 75
-      },
-      "labeled_at_100": 100,
-      "ndcg_at_20": 0.2347,
-      "oracle_blind": true,
-      "p_at_10": 0.4,
-      "p_at_100": 0.11,
-      "p_at_20": 0.2,
-      "p_at_50": 0.22,
-      "ranked_label_distribution": {
-        "BENIGN_DRIFT": 25,
-        "FALSE_POSITIVE": 6,
-        "TRUE_BUILD_BREAKAGE": 1,
-        "TRUE_WRAPPER_FIX": 10,
-        "UNCLEAR": 58
-      },
-      "ranked_true_label_distribution": {
-        "TRUE_BUILD_BREAKAGE": 1,
-        "TRUE_WRAPPER_FIX": 10
-      },
-      "ranker": "no_graph",
-      "review_pool_covered": 0.3597,
-      "review_pool_ranked_count": 100,
-      "true_label_distribution": {
-        "TRUE_BUILD_BREAKAGE": 3,
-        "TRUE_SEMANTIC_DRIFT": 2,
-        "TRUE_WRAPPER_FIX": 130
-      },
-      "warning_volume": 331
-    },
-    {
-      "auprc_on_pooled_review_set": 0.0937,
-      "bootstrap_ci": {
-        "ndcg_at_20": [
-          0.3168,
-          0.7885
-        ],
-        "p_at_20": [
-          0.3,
-          0.75
+          0.2,
+          0.6
         ],
         "p_at_50": [
           0.12,
           0.38
         ]
       },
-      "candidate_count": 331,
-      "evaluated_pool_rows": 278,
+      "candidate_count": 320,
+      "evaluated_pool_rows": 276,
       "evaluation_denominator": "complete_pooled_review_set",
       "kind": "ablation",
       "label_distribution": {
-        "BENIGN_DRIFT": 36,
-        "FALSE_POSITIVE": 32,
-        "TRUE_BUILD_BREAKAGE": 3,
+        "BENIGN_DRIFT": 37,
+        "FALSE_POSITIVE": 169,
         "TRUE_SEMANTIC_DRIFT": 2,
-        "TRUE_WRAPPER_FIX": 130,
-        "UNCLEAR": 75
+        "TRUE_WRAPPER_FIX": 50,
+        "UNCLEAR": 18
       },
       "labeled_at_100": 100,
-      "ndcg_at_20": 0.5088,
+      "ndcg_at_20": 0.5616,
       "oracle_blind": true,
-      "p_at_10": 0.7,
-      "p_at_100": 0.32,
-      "p_at_20": 0.55,
+      "p_at_10": 0.8,
+      "p_at_100": 0.12,
+      "p_at_20": 0.4,
       "p_at_50": 0.24,
       "ranked_label_distribution": {
-        "BENIGN_DRIFT": 36,
-        "FALSE_POSITIVE": 29,
-        "TRUE_BUILD_BREAKAGE": 1,
-        "TRUE_SEMANTIC_DRIFT": 2,
-        "TRUE_WRAPPER_FIX": 29,
-        "UNCLEAR": 3
+        "BENIGN_DRIFT": 25,
+        "FALSE_POSITIVE": 63,
+        "TRUE_WRAPPER_FIX": 12
       },
       "ranked_true_label_distribution": {
-        "TRUE_BUILD_BREAKAGE": 1,
-        "TRUE_SEMANTIC_DRIFT": 2,
-        "TRUE_WRAPPER_FIX": 29
+        "TRUE_WRAPPER_FIX": 12
       },
-      "ranker": "no_impact_gate",
-      "review_pool_covered": 0.3597,
+      "ranker": "no_graph",
+      "review_pool_covered": 0.3623,
       "review_pool_ranked_count": 100,
       "true_label_distribution": {
-        "TRUE_BUILD_BREAKAGE": 3,
         "TRUE_SEMANTIC_DRIFT": 2,
-        "TRUE_WRAPPER_FIX": 130
+        "TRUE_WRAPPER_FIX": 50
       },
-      "warning_volume": 331
+      "warning_volume": 320
+    },
+    {
+      "auprc_on_pooled_review_set": 0.1163,
+      "bootstrap_ci": {
+        "ndcg_at_20": [
+          0.1116,
+          0.5826
+        ],
+        "p_at_20": [
+          0.15,
+          0.55
+        ],
+        "p_at_50": [
+          0.06,
+          0.26
+        ]
+      },
+      "candidate_count": 320,
+      "evaluated_pool_rows": 276,
+      "evaluation_denominator": "complete_pooled_review_set",
+      "kind": "ablation",
+      "label_distribution": {
+        "BENIGN_DRIFT": 37,
+        "FALSE_POSITIVE": 169,
+        "TRUE_SEMANTIC_DRIFT": 2,
+        "TRUE_WRAPPER_FIX": 50,
+        "UNCLEAR": 18
+      },
+      "labeled_at_100": 100,
+      "ndcg_at_20": 0.3093,
+      "oracle_blind": true,
+      "p_at_10": 0.5,
+      "p_at_100": 0.22,
+      "p_at_20": 0.35,
+      "p_at_50": 0.16,
+      "ranked_label_distribution": {
+        "BENIGN_DRIFT": 37,
+        "FALSE_POSITIVE": 37,
+        "TRUE_SEMANTIC_DRIFT": 2,
+        "TRUE_WRAPPER_FIX": 20,
+        "UNCLEAR": 4
+      },
+      "ranked_true_label_distribution": {
+        "TRUE_SEMANTIC_DRIFT": 2,
+        "TRUE_WRAPPER_FIX": 20
+      },
+      "ranker": "no_impact_gate",
+      "review_pool_covered": 0.3623,
+      "review_pool_ranked_count": 100,
+      "true_label_distribution": {
+        "TRUE_SEMANTIC_DRIFT": 2,
+        "TRUE_WRAPPER_FIX": 50
+      },
+      "warning_volume": 320
     }
   ]
 }

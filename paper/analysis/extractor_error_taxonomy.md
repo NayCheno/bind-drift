@@ -4,8 +4,8 @@ Strict extractor audit error categories are reported per extractor. Empty catego
 
 ## c_behavior_indicators
 
-- Precision: `0.96`
-- `PARSE_ERROR`: 4
+- Precision: `1.0`
+- Main errors: none in reviewed strict sample.
 
 ## c_functions
 
@@ -24,15 +24,13 @@ Strict extractor audit error categories are reported per extractor. Empty catego
 
 ## rust_error_mappings
 
-- Precision: `0.8933`
-- `FALSE_CONTRACT_MAPPING`: 1
-- `FALSE_USAGE_EDGE`: 5
-- `SYMBOL_MISMATCH`: 2
+- Precision: `1.0`
+- Main errors: none in reviewed strict sample.
 
 ## rust_lifetime_facts
 
-- Precision: `0.9733`
-- `PARSE_ERROR`: 2
+- Precision: `1.0`
+- Main errors: none in reviewed strict sample.
 
 ## rust_safe_api_exposures
 

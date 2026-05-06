@@ -13,12 +13,12 @@
         "canonical_review_file": "data/replay/latest/manual_review.csv",
         "canonical_single_version_review_targets_file": "data/replay/latest/single_version_review_targets.jsonl",
         "canonical_warning_file": "data/replay/latest/warnings.jsonl",
-        "drift_fact_count": 17867,
+        "drift_fact_count": 16757,
         "pair_count": 20,
         "paper_topk": 100,
-        "pooled_review_label_count": 278,
-        "pooled_review_set_count": 278,
-        "promoted_warning_count": 331,
+        "pooled_review_label_count": 276,
+        "pooled_review_set_count": 276,
+        "promoted_warning_count": 320,
         "resolved_paths": {
           "drift_facts": "data/replay/latest/drift_facts.jsonl",
           "evaluation_protocol": "data/replay/latest/evaluation_protocol.json",
@@ -34,15 +34,15 @@
         "run_dir": "data/replay/latest",
         "run_id": "latest",
         "sha256": {
-          "drift_facts.jsonl": "369e5c8bb0dff94f4fb4e6efe5b366d032a2f1a80bb617a0a05b07777af53838",
-          "evaluation_protocol.json": "302a55e865b95f33f829a40cb817be5d6e8d6c38daec9ca9b4fcbaa93b875959",
-          "manual_review.csv": "8fef42e73df2e898ab1f107b46cd6a8c8768d4777ebdb631a08e260acede3435",
-          "pooled_review_labels.csv": "924f925a71f533aec971231d5d7225dc349ef59c9b2e38dfee291d6b53361b72",
-          "pooled_review_manifest.json": "827d047401615058dd0414334fff57cdcb4def6bd8b3ffc8c08ef0049582b34f",
-          "pooled_review_set.jsonl": "455fafb567c75cf136b80906f0bce3c964f3659b7ce631471a54fc0760a2d6d2",
-          "promoted_warnings.jsonl": "8f1d3aa76e606aa62f2017b19e9992f7b9eda9339d10377a424aa246144f85c2",
+          "drift_facts.jsonl": "c64755be14a63245a9b14fe9ef7f300ce82f66871b7596665ad19ab94f84c646",
+          "evaluation_protocol.json": "f8ee618bd15df0b03a442829a4761001ac24cfe01c9baccc453c99a0af157203",
+          "manual_review.csv": "f999f73ccbc3615f44586a7d7c7fe93ba1899fcb35d885b646d2c9fc1eb27937",
+          "pooled_review_labels.csv": "1061302669e1fb6d60c3a5747791c123763d539463f9602895dcd9c275fb092c",
+          "pooled_review_manifest.json": "3d25ac308498eb62d985855bb585d672b551b1587c46b626c9e01e15198f87c4",
+          "pooled_review_set.jsonl": "ebf367ba46a8ab16b4138990e99ade200019fc896ef658944708d90ded178dba",
+          "promoted_warnings.jsonl": "49a886a54b3d59e624e5450a1e40b671ae88538d74e2fdd341a950027449ac4f",
           "single_version_review_targets.jsonl": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-          "warnings.jsonl": "cfe026268801f89b5c97db9d7b8d2f7a3c8ae8b1addfcef96e256b9b42f70861"
+          "warnings.jsonl": "4adab38c50e5620d773fe9eaa964e87477d6a631bb0bccd047cfacb4218961d8"
         },
         "single_version_review_targets": 0,
         "version_count": 21,
@@ -82,7 +82,7 @@
         "primary_warning_set": "oracle_blind_ranked_warnings",
         "protocol_version": "ccfb-strict-v1",
         "repo_relative_path": "data/replay/latest/evaluation_protocol.json",
-        "sha256": "302a55e865b95f33f829a40cb817be5d6e8d6c38daec9ca9b4fcbaa93b875959",
+        "sha256": "f8ee618bd15df0b03a442829a4761001ac24cfe01c9baccc453c99a0af157203",
         "splits": {
           "dev_pairs": [
             "latest-p002-v6.2-to-v6.3",
@@ -97,7 +97,7 @@
             "latest-p014-v6.14-to-v6.15"
           ],
           "locked_test_pairs": [
-            "latest-p020-v7.0-to-HEAD_6d35786de281"
+            "latest-p020-v7.0-to-HEAD_9207d47f966b"
           ],
           "validation_pairs": [
             "latest-p015-v6.15-to-v6.16",
@@ -175,11 +175,11 @@
           "unclear_is_not_counted_as_true_positive": true
         },
         "adjudication_notes_missing_rate": 0.0,
-        "cohen_kappa": 0.415,
+        "cohen_kappa": 0.1195,
         "label_coverage": 1.0,
         "label_leakage_check": "passed",
         "passes": true,
-        "reviewed_warnings": 278,
+        "reviewed_warnings": 276,
         "source_csv": "data/replay/latest/pooled_review_labels.csv"
       },
       "name": "manual_review_quality_gate",
@@ -191,42 +191,37 @@
         "acceptance": {
           "absolute_local_paths_clean": true,
           "case_studies_minimum": true,
-          "drift_type_count_minimum": true,
-          "minimum_passes": true,
+          "drift_type_count_minimum": false,
+          "minimum_passes": false,
           "negative_case_present": true,
           "positive_labels_clean": true,
-          "semantic_true_cases_minimum": true,
+          "semantic_true_cases_minimum": false,
           "wrapper_fix_cases_minimum": true
         },
         "benign_drift_cases": 0,
-        "build_breakage_cases": 1,
+        "build_breakage_cases": 0,
         "case_drift_types": [
-          "AllocationFreeDrift",
-          "LayoutFieldDrift",
-          "NullabilityDrift",
-          "OwnershipRefcountDrift",
-          "SleepabilityContextDrift"
+          "SignatureDrift"
         ],
-        "case_studies": 8,
-        "drift_type_count": 5,
+        "case_studies": 6,
+        "drift_type_count": 1,
         "false_positive_cases": 0,
         "negative_case_studies": 1,
         "negative_label_distribution": {
           "FALSE_POSITIVE": 1
         },
-        "passes": true,
-        "positive_case_studies": 8,
+        "passes": false,
+        "positive_case_studies": 6,
         "positive_label_distribution": {
-          "TRUE_BUILD_BREAKAGE": 1,
-          "TRUE_SEMANTIC_DRIFT": 2,
+          "TRUE_SEMANTIC_DRIFT": 1,
           "TRUE_WRAPPER_FIX": 5
         },
-        "semantic_true_cases": 2,
+        "semantic_true_cases": 1,
         "unlabeled_cases": 0,
         "wrapper_fix_backed_cases": 5
       },
       "name": "case_study_gate",
-      "passes": true
+      "passes": false
     },
     {
       "details": {
@@ -252,11 +247,74 @@
     },
     {
       "details": {
-        "files_with_local_paths": [],
-        "passes": true
+        "files_with_local_paths": [
+          "data/replay/latest/drift_facts.jsonl",
+          "data/replay/latest/latest-p002-v6.2-to-v6.3/drift_facts.jsonl",
+          "data/replay/latest/latest-p002-v6.2-to-v6.3/warnings.jsonl",
+          "data/replay/latest/latest-p002-v6.2-to-v6.3/warnings.md",
+          "data/replay/latest/latest-p003-v6.3-to-v6.4/drift_facts.jsonl",
+          "data/replay/latest/latest-p003-v6.3-to-v6.4/warnings.jsonl",
+          "data/replay/latest/latest-p003-v6.3-to-v6.4/warnings.md",
+          "data/replay/latest/latest-p004-v6.4-to-v6.5/drift_facts.jsonl",
+          "data/replay/latest/latest-p004-v6.4-to-v6.5/warnings.jsonl",
+          "data/replay/latest/latest-p004-v6.4-to-v6.5/warnings.md",
+          "data/replay/latest/latest-p005-v6.5-to-v6.6/drift_facts.jsonl",
+          "data/replay/latest/latest-p006-v6.6-to-v6.7/drift_facts.jsonl",
+          "data/replay/latest/latest-p007-v6.7-to-v6.8/drift_facts.jsonl",
+          "data/replay/latest/latest-p007-v6.7-to-v6.8/warnings.jsonl",
+          "data/replay/latest/latest-p007-v6.7-to-v6.8/warnings.md",
+          "data/replay/latest/latest-p008-v6.8-to-v6.9/drift_facts.jsonl",
+          "data/replay/latest/latest-p009-v6.9-to-v6.10/drift_facts.jsonl",
+          "data/replay/latest/latest-p010-v6.10-to-v6.11/drift_facts.jsonl",
+          "data/replay/latest/latest-p010-v6.10-to-v6.11/warnings.jsonl",
+          "data/replay/latest/latest-p010-v6.10-to-v6.11/warnings.md",
+          "data/replay/latest/latest-p011-v6.11-to-v6.12/drift_facts.jsonl",
+          "data/replay/latest/latest-p011-v6.11-to-v6.12/warnings.jsonl",
+          "data/replay/latest/latest-p011-v6.11-to-v6.12/warnings.md",
+          "data/replay/latest/latest-p012-v6.12-to-v6.13/drift_facts.jsonl",
+          "data/replay/latest/latest-p012-v6.12-to-v6.13/warnings.jsonl",
+          "data/replay/latest/latest-p012-v6.12-to-v6.13/warnings.md",
+          "data/replay/latest/latest-p013-v6.13-to-v6.14/drift_facts.jsonl",
+          "data/replay/latest/latest-p013-v6.13-to-v6.14/warnings.jsonl",
+          "data/replay/latest/latest-p013-v6.13-to-v6.14/warnings.md",
+          "data/replay/latest/latest-p014-v6.14-to-v6.15/drift_facts.jsonl",
+          "data/replay/latest/latest-p014-v6.14-to-v6.15/warnings.jsonl",
+          "data/replay/latest/latest-p014-v6.14-to-v6.15/warnings.md",
+          "data/replay/latest/latest-p015-v6.15-to-v6.16/drift_facts.jsonl",
+          "data/replay/latest/latest-p015-v6.15-to-v6.16/warnings.jsonl",
+          "data/replay/latest/latest-p015-v6.15-to-v6.16/warnings.md",
+          "data/replay/latest/latest-p016-v6.16-to-v6.17/drift_facts.jsonl",
+          "data/replay/latest/latest-p016-v6.16-to-v6.17/warnings.jsonl",
+          "data/replay/latest/latest-p016-v6.16-to-v6.17/warnings.md",
+          "data/replay/latest/latest-p017-v6.17-to-v6.18/drift_facts.jsonl",
+          "data/replay/latest/latest-p017-v6.17-to-v6.18/warnings.jsonl",
+          "data/replay/latest/latest-p017-v6.17-to-v6.18/warnings.md",
+          "data/replay/latest/latest-p018-v6.18-to-v6.19/drift_facts.jsonl",
+          "data/replay/latest/latest-p018-v6.18-to-v6.19/warnings.jsonl",
+          "data/replay/latest/latest-p018-v6.18-to-v6.19/warnings.md",
+          "data/replay/latest/latest-p019-v6.19-to-v7.0/drift_facts.jsonl",
+          "data/replay/latest/latest-p019-v6.19-to-v7.0/warnings.jsonl",
+          "data/replay/latest/latest-p019-v6.19-to-v7.0/warnings.md",
+          "data/replay/latest/latest-p020-v7.0-to-HEAD_9207d47f966b/drift_facts.jsonl",
+          "data/replay/latest/latest-p020-v7.0-to-HEAD_9207d47f966b/warnings.jsonl",
+          "data/replay/latest/latest-p020-v7.0-to-HEAD_9207d47f966b/warnings.md",
+          "data/replay/latest/promoted_warnings.jsonl",
+          "data/replay/latest/review_artifacts/aggregate_review_merge_summary.json",
+          "data/replay/latest/review_artifacts/evidence_packets.jsonl",
+          "data/replay/latest/review_artifacts/pooled_pending_evidence_packets.jsonl",
+          "data/replay/latest/review_artifacts/pooled_pending_reviewer1.jsonl",
+          "data/replay/latest/review_artifacts/pooled_pending_reviewer1_summary.json",
+          "data/replay/latest/review_artifacts/pooled_pending_reviewer2_summary.json",
+          "data/replay/latest/review_artifacts/reviewer1.jsonl",
+          "data/replay/latest/review_artifacts/reviewer2.jsonl",
+          "data/replay/latest/summary.json",
+          "data/replay/latest/warnings.jsonl",
+          "data/replay/latest/warnings.md"
+        ],
+        "passes": false
       },
       "name": "no_local_absolute_paths",
-      "passes": true
+      "passes": false
     }
   ],
   "claim_policy": "ranking and semantic claims are downgraded when strict gates fail",
@@ -266,37 +324,32 @@
       "acceptance": {
         "absolute_local_paths_clean": true,
         "case_studies_minimum": true,
-        "drift_type_count_minimum": true,
-        "minimum_passes": true,
+        "drift_type_count_minimum": false,
+        "minimum_passes": false,
         "negative_case_present": true,
         "positive_labels_clean": true,
-        "semantic_true_cases_minimum": true,
+        "semantic_true_cases_minimum": false,
         "wrapper_fix_cases_minimum": true
       },
       "benign_drift_cases": 0,
-      "build_breakage_cases": 1,
+      "build_breakage_cases": 0,
       "case_drift_types": [
-        "AllocationFreeDrift",
-        "LayoutFieldDrift",
-        "NullabilityDrift",
-        "OwnershipRefcountDrift",
-        "SleepabilityContextDrift"
+        "SignatureDrift"
       ],
-      "case_studies": 8,
-      "drift_type_count": 5,
+      "case_studies": 6,
+      "drift_type_count": 1,
       "false_positive_cases": 0,
       "negative_case_studies": 1,
       "negative_label_distribution": {
         "FALSE_POSITIVE": 1
       },
-      "passes": true,
-      "positive_case_studies": 8,
+      "passes": false,
+      "positive_case_studies": 6,
       "positive_label_distribution": {
-        "TRUE_BUILD_BREAKAGE": 1,
-        "TRUE_SEMANTIC_DRIFT": 2,
+        "TRUE_SEMANTIC_DRIFT": 1,
         "TRUE_WRAPPER_FIX": 5
       },
-      "semantic_true_cases": 2,
+      "semantic_true_cases": 1,
       "unlabeled_cases": 0,
       "wrapper_fix_backed_cases": 5
     },
@@ -315,21 +368,21 @@
         "unclear_is_not_counted_as_true_positive": true
       },
       "adjudication_notes_missing_rate": 0.0,
-      "cohen_kappa": 0.415,
+      "cohen_kappa": 0.1195,
       "label_coverage": 1.0,
       "label_leakage_check": "passed",
       "passes": true,
-      "reviewed_warnings": 278,
+      "reviewed_warnings": 276,
       "source_csv": "data/replay/latest/pooled_review_labels.csv"
     },
     "ranking": {
       "claim": "evidence gate claim only; ranking improvement not supported",
       "metrics": {
-        "ndcg_at_20": 0.1966,
-        "p_at_10": 0.3,
-        "p_at_100": 0.04,
-        "p_at_20": 0.2,
-        "p_at_50": 0.08
+        "ndcg_at_20": 0.1848,
+        "p_at_10": 0.2,
+        "p_at_100": 0.02,
+        "p_at_20": 0.1,
+        "p_at_50": 0.04
       },
       "passes": false
     },
@@ -350,9 +403,9 @@
       "total_samples": 600
     }
   },
-  "passes": true,
+  "passes": false,
   "protocol_version": "ccfb-strict-v1",
   "run_manifest": "data/replay/latest/run_manifest.json",
-  "status": "valid_with_downgrades",
+  "status": "failed",
   "strict_ccfb": true
 }

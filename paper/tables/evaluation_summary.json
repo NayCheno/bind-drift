@@ -15,129 +15,127 @@
   },
   "canonical_warning_file_review": {
     "label_distribution": {
-      "BENIGN_DRIFT": 35,
-      "FALSE_POSITIVE": 27,
+      "BENIGN_DRIFT": 37,
+      "FALSE_POSITIVE": 9,
       "TRUE_SEMANTIC_DRIFT": 2,
-      "TRUE_WRAPPER_FIX": 35,
-      "UNCLEAR": 1
+      "TRUE_WRAPPER_FIX": 41,
+      "UNCLEAR": 11
     },
     "labeled_warnings": 100,
     "per_type": {
       "FieldDrift": {
         "labeled_warnings": 22,
-        "precision": 0.4091,
-        "true_labeled_warnings": 9,
+        "precision": 0.2727,
+        "true_labeled_warnings": 6,
         "warnings": 22
       },
       "MacroConstDrift": {
-        "labeled_warnings": 25,
+        "labeled_warnings": 26,
         "precision": 0.0,
         "true_labeled_warnings": 0,
-        "warnings": 25
+        "warnings": 26
       },
       "SignatureDrift": {
-        "labeled_warnings": 53,
-        "precision": 0.5283,
-        "true_labeled_warnings": 28,
-        "warnings": 53
+        "labeled_warnings": 52,
+        "precision": 0.7115,
+        "true_labeled_warnings": 37,
+        "warnings": 52
       }
     },
-    "precision": 0.37,
+    "precision": 0.43,
     "precision_at_k": {
-      "10": 0.3,
-      "100": 0.37,
-      "50": 0.36
+      "10": 0.5,
+      "100": 0.43,
+      "50": 0.26
     },
-    "true_labeled_warnings": 37,
-    "unclear_warnings": 1
+    "true_labeled_warnings": 43,
+    "unclear_warnings": 11
   },
   "claim_boundary": "evidence-backed warning prioritization",
   "evaluation_protocol": "data/replay/latest/evaluation_protocol.json",
-  "evaluation_protocol_sha256": "302a55e865b95f33f829a40cb817be5d6e8d6c38daec9ca9b4fcbaa93b875959",
+  "evaluation_protocol_sha256": "f8ee618bd15df0b03a442829a4761001ac24cfe01c9baccc453c99a0af157203",
   "ground_truth_rows": {
     "build_breakage_events": 0,
     "wrapper_fix_candidates": 226,
     "wrapper_fix_events": 226
   },
   "manual_review": {
-    "filtered_labeled_warnings": 38,
+    "filtered_labeled_warnings": 29,
     "label_distribution": {
       "BENIGN_DRIFT": 26,
-      "FALSE_POSITIVE": 8,
-      "TRUE_SEMANTIC_DRIFT": 2,
-      "TRUE_WRAPPER_FIX": 2
+      "FALSE_POSITIVE": 1,
+      "TRUE_SEMANTIC_DRIFT": 2
     },
     "label_source_rows": 100,
-    "labeled_warnings": 38,
+    "labeled_warnings": 29,
     "per_type": {
       "MacroConstDrift": {
-        "labeled_warnings": 25,
+        "labeled_warnings": 26,
         "precision": 0.0,
         "true_labeled_warnings": 0,
         "warnings": 26
       },
       "SignatureDrift": {
-        "labeled_warnings": 13,
-        "precision": 0.3077,
-        "true_labeled_warnings": 4,
-        "warnings": 13
+        "labeled_warnings": 3,
+        "precision": 0.6667,
+        "true_labeled_warnings": 2,
+        "warnings": 3
       }
     },
-    "precision": 0.1053,
+    "precision": 0.069,
     "precision_at_k": {
-      "10": 0.3,
-      "100": 0.1053,
-      "20": 0.2,
-      "50": 0.1053
+      "10": 0.2,
+      "100": 0.069,
+      "20": 0.1,
+      "50": 0.069
     },
-    "true_labeled_warnings": 4,
+    "true_labeled_warnings": 2,
     "unclear_warnings": 0
   },
   "manual_review_agreement": {
-    "agreement_rate": 1.0,
-    "agreements": 100,
+    "agreement_rate": 0.5,
+    "agreements": 50,
     "double_labeled": 100
   },
   "note": "Build recall is sparse; symbol-level wrapper recall is an upper-bound, typed wrapper recall requires fix-kind compatibility plus an old-to-head time window, and semantic precision comes from manual labels.",
   "oracle_blind_primary_result": {
     "manual_review": {
-      "filtered_labeled_warnings": 38,
+      "filtered_labeled_warnings": 29,
       "label_distribution": {
         "BENIGN_DRIFT": 26,
-        "FALSE_POSITIVE": 8,
-        "TRUE_SEMANTIC_DRIFT": 2,
-        "TRUE_WRAPPER_FIX": 2
+        "FALSE_POSITIVE": 1,
+        "TRUE_SEMANTIC_DRIFT": 2
       },
       "label_source_rows": 100,
-      "labeled_warnings": 38,
+      "labeled_warnings": 29,
       "per_type": {
         "MacroConstDrift": {
-          "labeled_warnings": 25,
+          "labeled_warnings": 26,
           "precision": 0.0,
           "true_labeled_warnings": 0,
           "warnings": 26
         },
         "SignatureDrift": {
-          "labeled_warnings": 13,
-          "precision": 0.3077,
-          "true_labeled_warnings": 4,
-          "warnings": 13
+          "labeled_warnings": 3,
+          "precision": 0.6667,
+          "true_labeled_warnings": 2,
+          "warnings": 3
         }
       },
-      "precision": 0.1053,
+      "precision": 0.069,
       "precision_at_k": {
-        "10": 0.3,
-        "100": 0.1053,
-        "20": 0.2,
-        "50": 0.1053
+        "10": 0.2,
+        "100": 0.069,
+        "20": 0.1,
+        "50": 0.069
       },
-      "true_labeled_warnings": 4,
+      "true_labeled_warnings": 2,
       "unclear_warnings": 0
     },
     "oracle_blind": true,
-    "primary_candidate_count": 39,
+    "primary_candidate_count": 29,
     "ranker": "OracleBlindBindDrift",
-    "reported_top_k": 39,
+    "reported_top_k": 29,
     "score_component_keys": [
       "binding_diff",
       "c_source_diff",
@@ -151,19 +149,10 @@
       "weak_graph_only_penalty"
     ],
     "tier_distribution_top_k": {
-      "A": 39
+      "A": 29
     },
     "top_warning_uids": [
-      "5ec7e735433ea17d474dbc803baf4b16cb67fbddd317ec06ceaf246b4b06e33e",
-      "5c20a5fac8fbaeeb6434c09c2b2e7a057ef4e5bc9dd57c142e000d3287debb92",
       "ccf6ca0711b3a3fb07496b72daf90fe34a85e1a14e33485ddbfd4e0f281baa75",
-      "c589cacdd0e1ad9e37c9b5c3bf0a3622d5e7a9504443aee1b1c310dfc4be49fa",
-      "47ca2f5d932446898aae96f2ff01ea450d0498594eec0f6a7ee3e7ea67af774d",
-      "04e6913c1237813f12eb282288f7542d4952208e3113163866b9fef9e31e9487",
-      "a43f69159ca0eea7926e237192cc664924f3b30281339f73fecb06be4a8d8bb8",
-      "1ca09a4bede1c8a765de13bdf0c950a8a1f7255fd2d09ce37ee24268c9deb284",
-      "0b0ba5d3394e0ca64616163480a08f4348396704abb2d17a69253fdc09fd84a2",
-      "9c78646f531bef4f9f3b14a4a2eb9a999c08663e26144e04149684ce611c9f6e",
       "fb7e2736a90940dafdeab11f01efd3edc3514755cc23c325dd9f6e3d98a35106",
       "f89b22e87fc12421e8f26dcd6582875ba9916345c7426306a09ca17d972e70ab",
       "e51f428dfdc64b9b37d47e53eaa5a8f2c689753cfe2e244b05edc251d61d0287",
@@ -180,7 +169,6 @@
       "963e9c3f245df7dbddfb6510d5bdce385baa52647a535cc89dea31e01644d642",
       "8cb41542dc8aeb7669fc587becf200bdc3ba883d09a3ece47a575f059dcfe7d6",
       "8cb338b4e53ee4c1819885eef759ed2bbd759c1d0e7ff27b73628604a0eea56b",
-      "8645ff196e711daa122acfc658d64bc61af9d78ac17ef46170e199b03d508fb9",
       "8081fc10fb6ea3fe9c8c847dc3a87813225f0441b15bed9aba8531251a81485d",
       "5f36808b3fd93ccd3233e83aa0a5658afb4c5738b49340115aea4eee101847a5",
       "493f70becca5973ab1075fb10497c3955f5b0ae40ae4672ab23c68e6077d61a3",
@@ -194,116 +182,93 @@
       "0fc81c351aa66bd36715941dbe581b13aa8c66f6f104aa360301d27241f5cacf",
       "090dbc02e5a6d2502726518b3130cc21a6eea25a3cce8f8ea0f51fce4ed295e5"
     ],
-    "warning_count": 331
+    "warning_count": 320
   },
   "primary_warning_set": "oracle_blind_ranked_warnings",
-  "promoted_replay_warnings": 331,
+  "promoted_replay_warnings": 320,
   "protocol_version": "ccfb-strict-v1",
   "recall": {
     "build_breakage": null,
-    "typed_wrapper": 0.1818,
-    "wrapper_fix": 0.0161
+    "typed_wrapper": null,
+    "wrapper_fix": 0.0
   },
   "run_manifest": "data/replay/latest/run_manifest.json",
   "single_version_review_targets": 0,
   "symbol_level_wrapper_prediction": {
-    "f1": 0.0286,
-    "matched_symbols": 5,
-    "mrr": 0.006,
+    "f1": null,
+    "matched_symbols": 0,
+    "mrr": 0.0,
     "oracle_symbols": 311,
-    "precision": 0.1282,
+    "precision": 0.0,
     "precision_at_k": {
-      "10": 0.5,
-      "100": 0.1282,
-      "50": 0.1282
+      "10": 0.0,
+      "100": 0.0,
+      "50": 0.0
     },
-    "recall": 0.0161
+    "recall": 0.0
   },
   "typed_wrapper_compatibility_prediction": {
     "enforce_time": false,
-    "f1": 0.2247,
-    "fix_kind_distribution": {
-      "error_mapping": 4,
-      "layout": 1,
-      "signature": 5,
-      "sleepability": 1
-    },
+    "f1": null,
+    "fix_kind_distribution": {},
     "global_oracle_rows": 832,
-    "head_date": "2026-05-03T15:25:47-07:00",
-    "matched_fix_kind_distribution": {
-      "error_mapping": 4,
-      "signature": 5,
-      "sleepability": 1
-    },
-    "matched_oracle_rows": 10,
-    "matched_warnings": 5,
-    "mrr": 0.4082,
+    "head_date": "2026-05-05T09:11:52-07:00",
+    "matched_fix_kind_distribution": {},
+    "matched_oracle_rows": 0,
+    "matched_warnings": 0,
+    "mrr": null,
     "note": "Typed wrapper oracle requires symbol and warning-type/fix-kind compatibility. The old_to_head time window accepts wrapper fixes after the warning old-version date and no later than the replay head date; compatibility mode is an auxiliary upper-bound.",
-    "oracle_rows": 11,
-    "precision": 0.1282,
+    "oracle_rows": 0,
+    "precision": 0.0,
     "precision_at_k": {
-      "10": 0.5,
-      "100": 0.1282,
-      "50": 0.1282
+      "10": 0.0,
+      "100": 0.0,
+      "50": 0.0
     },
-    "recall": 0.9091,
-    "time_relation_distribution": {
-      "after_drift": 1,
-      "before_drift": 8,
-      "same_pair": 1
-    },
+    "recall": null,
+    "time_relation_distribution": {},
     "time_window": "compatibility"
   },
   "typed_wrapper_prediction": {
     "enforce_time": true,
-    "f1": 0.0449,
-    "fix_kind_distribution": {
-      "error_mapping": 4,
-      "layout": 1,
-      "signature": 5,
-      "sleepability": 1
-    },
+    "f1": null,
+    "fix_kind_distribution": {},
     "global_oracle_rows": 832,
-    "head_date": "2026-05-03T15:25:47-07:00",
-    "matched_fix_kind_distribution": {
-      "error_mapping": 2
-    },
-    "matched_oracle_rows": 2,
-    "matched_warnings": 1,
-    "mrr": 0.0909,
+    "head_date": "2026-05-05T09:11:52-07:00",
+    "matched_fix_kind_distribution": {},
+    "matched_oracle_rows": 0,
+    "matched_warnings": 0,
+    "mrr": null,
     "note": "Typed wrapper oracle requires symbol and warning-type/fix-kind compatibility. The old_to_head time window accepts wrapper fixes after the warning old-version date and no later than the replay head date; compatibility mode is an auxiliary upper-bound.",
-    "oracle_rows": 11,
-    "precision": 0.0256,
+    "oracle_rows": 0,
+    "precision": 0.0,
     "precision_at_k": {
-      "10": 0.1,
-      "100": 0.0256,
-      "50": 0.0256
+      "10": 0.0,
+      "100": 0.0,
+      "50": 0.0
     },
-    "recall": 0.1818,
-    "time_relation_distribution": {
-      "after_drift": 1,
-      "same_pair": 1
-    },
+    "recall": null,
+    "time_relation_distribution": {},
     "time_window": "old_to_head"
   },
   "warnings": 100,
   "wrapper_fix_candidates": 226,
   "wrapper_fix_prediction": {
-    "f1": 0.0286,
-    "matched_symbols": 5,
-    "mrr": 0.006,
+    "f1": null,
+    "matched_symbols": 0,
+    "mrr": 0.0,
     "oracle_symbols": 311,
-    "precision": 0.1282,
+    "precision": 0.0,
     "precision_at_k": {
-      "10": 0.5,
-      "100": 0.1282,
-      "50": 0.1282
+      "10": 0.0,
+      "100": 0.0,
+      "50": 0.0
     },
-    "recall": 0.0161
+    "recall": 0.0
   },
   "wrapper_oracle_source": {
     "database": ".binddrift/binddrift.sqlite3",
-    "head_date": "2026-05-03T15:25:47-07:00",
+    "head_date": "2026-05-05T09:11:52-07:00",
     "likely_wrapper_fix_events": 226,
     "table": "wrapper_fix_events"
   }

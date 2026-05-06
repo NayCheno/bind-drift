@@ -2,72 +2,72 @@
   "acceptance": {
     "c_behavior_indicators": {
       "minimum_precision": 0.75,
-      "observed_precision": 0.96,
-      "passes": true,
-      "pending": 0,
-      "review_complete": true,
-      "reviewed": 100,
+      "observed_precision": null,
+      "passes": false,
+      "pending": 100,
+      "review_complete": false,
+      "reviewed": 0,
       "sample_size_passes": true,
       "sampled": 100,
       "target_sample": 100
     },
     "c_functions": {
       "minimum_precision": 0.9,
-      "observed_precision": 1.0,
-      "passes": true,
-      "pending": 0,
-      "review_complete": true,
-      "reviewed": 100,
+      "observed_precision": null,
+      "passes": false,
+      "pending": 100,
+      "review_complete": false,
+      "reviewed": 0,
       "sample_size_passes": true,
       "sampled": 100,
       "target_sample": 100
     },
     "promoted_warning_evidence": {
       "minimum_precision": 0.3,
-      "observed_precision": 0.7,
-      "passes": true,
-      "pending": 0,
-      "review_complete": true,
-      "reviewed": 50,
+      "observed_precision": null,
+      "passes": false,
+      "pending": 50,
+      "review_complete": false,
+      "reviewed": 0,
       "sample_size_passes": true,
       "sampled": 50,
       "target_sample": 50
     },
     "rust_binding_uses": {
       "minimum_precision": 0.9,
-      "observed_precision": 1.0,
-      "passes": true,
-      "pending": 0,
-      "review_complete": true,
-      "reviewed": 100,
+      "observed_precision": null,
+      "passes": false,
+      "pending": 100,
+      "review_complete": false,
+      "reviewed": 0,
       "sample_size_passes": true,
       "sampled": 100,
       "target_sample": 100
     },
     "rust_error_mappings": {
       "minimum_precision": 0.8,
-      "observed_precision": 0.84,
-      "passes": true,
-      "pending": 0,
-      "review_complete": true,
-      "reviewed": 50,
+      "observed_precision": null,
+      "passes": false,
+      "pending": 50,
+      "review_complete": false,
+      "reviewed": 0,
       "sample_size_passes": true,
       "sampled": 50,
       "target_sample": 50
     },
     "rust_lifetime_facts": {
       "minimum_precision": 0.75,
-      "observed_precision": 0.96,
-      "passes": true,
-      "pending": 0,
-      "review_complete": true,
-      "reviewed": 50,
+      "observed_precision": null,
+      "passes": false,
+      "pending": 50,
+      "review_complete": false,
+      "reviewed": 0,
       "sample_size_passes": true,
       "sampled": 50,
       "target_sample": 50
     }
   },
-  "all_minimums_pass": true,
+  "all_minimums_pass": false,
   "error_types": [
     "BINDGEN_ARTIFACT",
     "FALSE_INDICATOR",
@@ -79,151 +79,94 @@
     "WRONG_SYMBOL"
   ],
   "metrics": {
-    "c_behavior_indicators_precision": 0.96,
-    "c_functions_precision": 1.0,
-    "promoted_warning_evidence_precision": 0.7,
-    "promoted_warnings_precision": 0.7,
-    "rust_binding_uses_precision": 1.0,
-    "rust_error_mappings_precision": 0.84,
-    "rust_lifetime_facts_precision": 0.96
+    "c_behavior_indicators_precision": null,
+    "c_functions_precision": null,
+    "promoted_warning_evidence_precision": null,
+    "promoted_warnings_precision": null,
+    "rust_binding_uses_precision": null,
+    "rust_error_mappings_precision": null,
+    "rust_lifetime_facts_precision": null
   },
   "note": "Extractor audit samples are deterministic and unfiltered. Precision is computed only from reviewed CSV rows with explicit is_correct labels; pending rows are not counted as passing.",
   "provenance": {
     "database_path": ".binddrift/binddrift.sqlite3",
     "manifest_artifact_sha256": {
-      "drift_facts.jsonl": "369e5c8bb0dff94f4fb4e6efe5b366d032a2f1a80bb617a0a05b07777af53838",
-      "evaluation_protocol.json": "302a55e865b95f33f829a40cb817be5d6e8d6c38daec9ca9b4fcbaa93b875959",
-      "manual_review.csv": "8fef42e73df2e898ab1f107b46cd6a8c8768d4777ebdb631a08e260acede3435",
-      "pooled_review_labels.csv": "924f925a71f533aec971231d5d7225dc349ef59c9b2e38dfee291d6b53361b72",
-      "pooled_review_manifest.json": "827d047401615058dd0414334fff57cdcb4def6bd8b3ffc8c08ef0049582b34f",
-      "pooled_review_set.jsonl": "455fafb567c75cf136b80906f0bce3c964f3659b7ce631471a54fc0760a2d6d2",
-      "promoted_warnings.jsonl": "8f1d3aa76e606aa62f2017b19e9992f7b9eda9339d10377a424aa246144f85c2",
+      "drift_facts.jsonl": "c64755be14a63245a9b14fe9ef7f300ce82f66871b7596665ad19ab94f84c646",
+      "evaluation_protocol.json": "f8ee618bd15df0b03a442829a4761001ac24cfe01c9baccc453c99a0af157203",
+      "manual_review.csv": "f999f73ccbc3615f44586a7d7c7fe93ba1899fcb35d885b646d2c9fc1eb27937",
+      "pooled_review_labels.csv": "1061302669e1fb6d60c3a5747791c123763d539463f9602895dcd9c275fb092c",
+      "pooled_review_manifest.json": "3d25ac308498eb62d985855bb585d672b551b1587c46b626c9e01e15198f87c4",
+      "pooled_review_set.jsonl": "ebf367ba46a8ab16b4138990e99ade200019fc896ef658944708d90ded178dba",
+      "promoted_warnings.jsonl": "49a886a54b3d59e624e5450a1e40b671ae88538d74e2fdd341a950027449ac4f",
       "single_version_review_targets.jsonl": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "warnings.jsonl": "cfe026268801f89b5c97db9d7b8d2f7a3c8ae8b1addfcef96e256b9b42f70861"
+      "warnings.jsonl": "4adab38c50e5620d773fe9eaa964e87477d6a631bb0bccd047cfacb4218961d8"
     },
     "manifest_run_id": "latest",
     "review_label_sources": {
       "previous_sample_labels_transferred": 0,
       "previous_sample_rows": 450,
-      "split_review_labels_transferred": 450,
-      "split_sources": [
-        {
-          "path": "data/audit/reviews/c_functions_review.csv",
-          "rows": 100,
-          "table": "c_functions",
-          "target_count_present": true,
-          "target_rows": 100
-        },
-        {
-          "path": "data/audit/reviews/rust_binding_uses_review.csv",
-          "rows": 100,
-          "table": "rust_binding_uses",
-          "target_count_present": true,
-          "target_rows": 100
-        },
-        {
-          "path": "data/audit/reviews/c_behavior_indicators_review.csv",
-          "rows": 100,
-          "table": "c_behavior_indicators",
-          "target_count_present": true,
-          "target_rows": 100
-        },
-        {
-          "path": "data/audit/reviews/rust_error_mappings_review.csv",
-          "rows": 50,
-          "table": "rust_error_mappings",
-          "target_count_present": true,
-          "target_rows": 50
-        },
-        {
-          "path": "data/audit/reviews/rust_lifetime_facts_review.csv",
-          "rows": 50,
-          "table": "rust_lifetime_facts",
-          "target_count_present": true,
-          "target_rows": 50
-        },
-        {
-          "path": "data/audit/reviews/promoted_warnings_review.csv",
-          "rows": 50,
-          "table": "promoted_warnings",
-          "target_count_present": true,
-          "target_rows": 50
-        }
-      ],
+      "split_review_labels_transferred": 0,
+      "split_sources": [],
       "stale_or_unmatched_previous_rows": 0,
       "stale_or_unmatched_split_rows": 0
     },
-    "sample_hash": "49c86cb9ca2c2102284410e0bb85ea33164d47cf20238993b242fc6301bb1a77",
+    "sample_hash": "4484601431fe8878c3f7e2bd46c91254e23c371ad82b1cd90bc38a67d526ed81",
     "sampled_rows": 450,
     "sampler_version": "extractor-audit-v2"
   },
   "sample_csv": "data/audit/extractor_sample.csv",
   "tables": {
     "c_behavior_indicators": {
-      "correct": 96,
-      "error_type_distribution": {
-        "REGEX_ARTIFACT": 4
-      },
-      "pending": 0,
-      "precision": 0.96,
-      "reviewed": 100,
+      "correct": 0,
+      "error_type_distribution": {},
+      "pending": 100,
+      "precision": null,
+      "reviewed": 0,
       "sampled": 100,
       "target_sample": 100
     },
     "c_functions": {
-      "correct": 100,
+      "correct": 0,
       "error_type_distribution": {},
-      "pending": 0,
-      "precision": 1.0,
-      "reviewed": 100,
+      "pending": 100,
+      "precision": null,
+      "reviewed": 0,
       "sampled": 100,
       "target_sample": 100
     },
     "promoted_warnings": {
-      "correct": 35,
-      "error_type_distribution": {
-        "BINDGEN_ARTIFACT": 6,
-        "FALSE_INDICATOR": 2,
-        "WRONG_LINE": 4,
-        "WRONG_SCOPE": 3
-      },
-      "pending": 0,
-      "precision": 0.7,
-      "reviewed": 50,
+      "correct": 0,
+      "error_type_distribution": {},
+      "pending": 50,
+      "precision": null,
+      "reviewed": 0,
       "sampled": 50,
       "target_sample": 50
     },
     "rust_binding_uses": {
-      "correct": 100,
+      "correct": 0,
       "error_type_distribution": {},
-      "pending": 0,
-      "precision": 1.0,
-      "reviewed": 100,
+      "pending": 100,
+      "precision": null,
+      "reviewed": 0,
       "sampled": 100,
       "target_sample": 100
     },
     "rust_error_mappings": {
-      "correct": 42,
-      "error_type_distribution": {
-        "FALSE_INDICATOR": 1,
-        "WRONG_SCOPE": 5,
-        "WRONG_SYMBOL": 2
-      },
-      "pending": 0,
-      "precision": 0.84,
-      "reviewed": 50,
+      "correct": 0,
+      "error_type_distribution": {},
+      "pending": 50,
+      "precision": null,
+      "reviewed": 0,
       "sampled": 50,
       "target_sample": 50
     },
     "rust_lifetime_facts": {
-      "correct": 48,
-      "error_type_distribution": {
-        "FALSE_INDICATOR": 1,
-        "REGEX_ARTIFACT": 1
-      },
-      "pending": 0,
-      "precision": 0.96,
-      "reviewed": 50,
+      "correct": 0,
+      "error_type_distribution": {},
+      "pending": 50,
+      "precision": null,
+      "reviewed": 0,
       "sampled": 50,
       "target_sample": 50
     }

@@ -1,1 +1,1 @@
-warning_id,pair_id,type,risk,score,symbol,reviewer1_label,reviewer1_notes,reviewer2_label,reviewer2_notes,adjudicated_label,adjudication_notes,label,reviewer_notes
+warning_uid,run_id,warning_id,pair_id,type,risk,rank,score,symbol,reviewer1_label,reviewer1_notes,reviewer2_label,reviewer2_notes,adjudicated_label,adjudication_notes,true_reason,false_reason,label,reviewer_notes

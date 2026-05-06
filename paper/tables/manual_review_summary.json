@@ -1,13 +1,13 @@
 {
   "agreement": {
-    "agreement_rate": 1.0,
-    "agreements": 100,
+    "agreement_rate": 0.5,
+    "agreements": 50,
     "double_labeled": 100
   },
   "all_labels_unclear": false,
   "labeled_warnings": 100,
   "manual_review_csv": "data/replay/latest/manual_review.csv",
   "source_run_id": "latest",
-  "true_labeled_warnings": 37,
+  "true_labeled_warnings": 43,
   "usable_for_main": true
 }

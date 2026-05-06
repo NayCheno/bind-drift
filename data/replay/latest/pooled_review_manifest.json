@@ -1,13 +1,13 @@
 {
   "label_file": "data/replay/latest/pooled_review_labels.csv",
   "labels": {
-    "coverage": 1.0,
-    "label_rows": 278,
-    "labeled_rows": 278
+    "coverage": 0.3623,
+    "label_rows": 276,
+    "labeled_rows": 100
   },
   "pool": "data/replay/latest/pooled_review_set.jsonl",
-  "pool_rows": 278,
-  "ranker_top100_union": 278,
+  "pool_rows": 276,
+  "ranker_top100_union": 276,
   "rankers": [
     "binddrift_oracle_blind",
     "binddrift_current",

@@ -1,0 +1,37 @@
+{
+  "decision_policy": [
+    "TRUE_BUILD_BREAKAGE only with explicit build oracle/log evidence; none was present in the evidence packets.",
+    "Binding-only rows were not upgraded to TRUE_WRAPPER_FIX based on broad oracle hits alone.",
+    "core::ffi to ffi generated binding spelling churn was treated as unsupported drift.",
+    "TRUE_WRAPPER_FIX was used only when direct Rust safe/unsafe exposure and same-path wrapper/helper evidence were both present."
+  ],
+  "input_path": "/home/nya/workspace/bind-drift/data/replay/latest/review_artifacts/pooled_pending_evidence_packets.jsonl",
+  "label_counts": {
+    "BENIGN_DRIFT": 148,
+    "FALSE_POSITIVE": 12,
+    "TRUE_BUILD_BREAKAGE": 0,
+    "TRUE_SEMANTIC_DRIFT": 0,
+    "TRUE_WRAPPER_FIX": 14,
+    "UNCLEAR": 2
+  },
+  "output_path": "/home/nya/workspace/bind-drift/data/replay/latest/review_artifacts/pooled_pending_reviewer1.jsonl",
+  "reviewer": "Reviewer 1",
+  "role": "balanced_slightly_tool_friendly_conservative",
+  "total_rows": 176,
+  "validation": {
+    "allowed_labels": [
+      "BENIGN_DRIFT",
+      "FALSE_POSITIVE",
+      "TRUE_BUILD_BREAKAGE",
+      "TRUE_SEMANTIC_DRIFT",
+      "TRUE_WRAPPER_FIX",
+      "UNCLEAR"
+    ],
+    "expected_rows": 176,
+    "max_note_words": 35,
+    "order_matches_evidence": true,
+    "row_count": 176,
+    "validation_error_count": 0,
+    "validation_errors": []
+  }
+}

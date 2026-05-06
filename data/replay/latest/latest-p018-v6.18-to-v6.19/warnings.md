@@ -1,108 +1,5 @@
 # BindDrift Ranked Warnings
 
-## W-000002 FieldDrift
-
-- Risk: High
-- Score: 13.0
-- Symbol: request
-- Explanation: request changed across the selected Linux versions.
-- Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
-
-### C Evidence
-
-- Old: `[{'name': 'q', 'type': '*mut request_queue'}, {'name': 'mq_ctx', 'type': '*mut blk_mq_ctx'}, {'name': 'mq_hctx', 'type': '*mut blk_mq_hw_ctx'}, {'name': 'cmd_flags', 'type': 'blk_opf_t'}, {'name': 'rq_flags', 'type': 'req_flags_t'}, {'name': 'tag', 'type': 'ffi::c_int'}, {'name': 'internal_tag', 'type': 'ffi::c_int'}, {'name': 'timeout', 'type': 'ffi::c_uint'}, {'name': '__data_len', 'type': 'ffi::c_uint'}, {'name': '__sector', 'type': 'sector_t'}, {'name': 'bio', 'type': '*mut bio'}, {'name': 'biotail', 'type': '*mut bio'}, {'name': '__bindgen_anon_1', 'type': 'request__bindgen_ty_1'}, {'name': 'part', 'type': '*mut block_device'}, {'name': 'alloc_time_ns', 'type': 'u64_'}, {'name': 'start_time_ns', 'type': 'u64_'}, {'name': 'io_start_time_ns', 'type': 'u64_'}, {'name': 'stats_sectors', 'type': 'ffi::c_ushort'}, {'name': 'nr_phys_segments', 'type': 'ffi::c_ushort'}, {'name': 'nr_integrity_segments', 'type': 'ffi::c_ushort'}, {'name': 'state', 'type': 'mq_rq_state'}, {'name': 'ref_', 'type': 'atomic_t'}, {'name': 'deadline', 'type': 'ffi::c_ulong'}, {'name': '__bindgen_anon_2', 'type': 'request__bindgen_ty_2'}, {'name': '__bindgen_anon_3', 'type': 'request__bindgen_ty_3'}, {'name': 'elv', 'type': 'request__bindgen_ty_4'}, {'name': 'flush', 'type': 'request__bindgen_ty_5'}, {'name': 'fifo_time', 'type': 'u64_'}, {'name': 'end_io', 'type': 'rq_end_io_fn'}, {'name': 'end_io_data', 'type': '*mut ffi::c_void'}]`
-- New: `[{'name': 'q', 'type': '*mut request_queue'}, {'name': 'mq_ctx', 'type': '*mut blk_mq_ctx'}, {'name': 'mq_hctx', 'type': '*mut blk_mq_hw_ctx'}, {'name': 'cmd_flags', 'type': 'blk_opf_t'}, {'name': 'rq_flags', 'type': 'req_flags_t'}, {'name': 'tag', 'type': 'ffi::c_int'}, {'name': 'internal_tag', 'type': 'ffi::c_int'}, {'name': 'timeout', 'type': 'ffi::c_uint'}, {'name': '__data_len', 'type': 'ffi::c_uint'}, {'name': '__sector', 'type': 'sector_t'}, {'name': 'bio', 'type': '*mut bio'}, {'name': 'biotail', 'type': '*mut bio'}, {'name': '__bindgen_anon_1', 'type': 'request__bindgen_ty_1'}, {'name': 'part', 'type': '*mut block_device'}, {'name': 'alloc_time_ns', 'type': 'u64_'}, {'name': 'start_time_ns', 'type': 'u64_'}, {'name': 'io_start_time_ns', 'type': 'u64_'}, {'name': 'stats_sectors', 'type': 'ffi::c_ushort'}, {'name': 'nr_phys_segments', 'type': 'ffi::c_ushort'}, {'name': 'nr_integrity_segments', 'type': 'ffi::c_ushort'}, {'name': 'phys_gap_bit', 'type': 'ffi::c_uchar'}, {'name': 'state', 'type': 'mq_rq_state'}, {'name': 'ref_', 'type': 'atomic_t'}, {'name': 'deadline', 'type': 'ffi::c_ulong'}, {'name': '__bindgen_anon_2', 'type': 'request__bindgen_ty_2'}, {'name': '__bindgen_anon_3', 'type': 'request__bindgen_ty_3'}, {'name': 'elv', 'type': 'request__bindgen_ty_4'}, {'name': 'flush', 'type': 'request__bindgen_ty_5'}, {'name': 'fifo_time', 'type': 'u64_'}, {'name': 'end_io', 'type': 'rq_end_io_fn'}, {'name': 'end_io_data', 'type': '*mut ffi::c_void'}]`
-
-### Score Breakdown
-
-- direct_rust_use: `4.0`
-- safe_api_exposure: `4.0`
-- contract_mapping: `3.0`
-- safety_comment: `3.0`
-- wrapper_fix_hit: `4.0`
-- binding_only_penalty: `-5.0`
-
-### Rust Evidence
-
-- .binddrift/worktrees/v6.19/rust/kernel/block/mq/operations.rs:158 `commit_rqs_callback` unsafe=0
-- .binddrift/worktrees/v6.19/rust/kernel/block/mq/operations.rs:214 `complete_callback` unsafe=0
-- .binddrift/worktrees/v6.19/rust/kernel/block/mq/operations.rs:219 `complete_callback` unsafe=0
-- .binddrift/worktrees/v6.19/rust/kernel/block/mq/operations.rs:246 `complete_callback` unsafe=0
-- .binddrift/worktrees/v6.19/rust/kernel/block/mq/request.rs:60 `None` unsafe=0
-- safe API `Request<T>::start_unchecked`
-- safe API `Request<T>::complete`
-- safe API `Request<T>::wrapper_ptr`
-- .binddrift/worktrees/v6.19/rust/kernel/block/mq/operations.rs:153 `/// # Safety`
-- .binddrift/worktrees/v6.19/rust/kernel/block/mq/operations.rs:154 `///`
-- .binddrift/worktrees/v6.19/rust/kernel/block/mq/operations.rs:155 `/// This function may only be called by blk-mq C infrastructure. `rq` must`
-- .binddrift/worktrees/v6.19/rust/kernel/block/mq/request.rs:76 `NONNULL_MAPPING`
-- .binddrift/worktrees/v6.19/rust/kernel/block/mq/request.rs:104 `RESULT_RETURN`
-- .binddrift/worktrees/v6.19/rust/kernel/block/mq/request.rs:60 `OPAQUE`
-- .binddrift/worktrees/v6.19/rust/kernel/block/mq/request.rs:63 `AREF`
-- .binddrift/worktrees/v6.19/rust/kernel/block/mq/request.rs:72 `AREF`
-- wrapper_fix: `28e848386b92645f93b9f2fdba5882c3ca7fb3e2`
-- wrapper_fix: `a307bf1db5448eccd72a1d7857f7661c6330d5ad`
-
-## W-000028 SignatureDrift
-
-- Risk: High
-- Score: 13.0
-- Symbol: dev_get_drvdata
-- Explanation: dev_get_drvdata changed across the selected Linux versions.
-- Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
-
-### C Evidence
-
-- Old: `{'params': ['&pdev->dev'], 'return_type': 'return'}`
-- New: `{'params': ['&intf->dev'], 'return_type': 'return'}`
-
-### Score Breakdown
-
-- direct_rust_use: `4.0`
-- contract_mapping: `3.0`
-- safety_comment: `3.0`
-- c_source_diff_strength: `3.0`
-
-### Rust Evidence
-
-- .binddrift/worktrees/v6.19/rust/kernel/device.rs:239 `None` unsafe=1
-- .binddrift/worktrees/v6.19/rust/kernel/device.rs:281 `None` unsafe=1
-- .binddrift/worktrees/v6.19/rust/kernel/device.rs:317 `None` unsafe=1
-- .binddrift/worktrees/v6.19/rust/kernel/device.rs:234 `///`
-- .binddrift/worktrees/v6.19/rust/kernel/device.rs:235 `/// - The type `T` must match the type of the `ForeignOwnable` previously stored by`
-- .binddrift/worktrees/v6.19/rust/kernel/device.rs:236 `///   [`Device::set_drvdata`].`
-- .binddrift/worktrees/v6.19/rust/kernel/device.rs:315 `RESULT_RETURN`
-
-## W-000001 FieldDrift
-
-- Risk: Medium
-- Score: 10.0
-- Symbol: queue_limits
-- Explanation: queue_limits changed across the selected Linux versions.
-- Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
-
-### C Evidence
-
-- Old: `[{'name': 'features', 'type': 'blk_features_t'}, {'name': 'flags', 'type': 'blk_flags_t'}, {'name': 'seg_boundary_mask', 'type': 'ffi::c_ulong'}, {'name': 'virt_boundary_mask', 'type': 'ffi::c_ulong'}, {'name': 'max_hw_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_dev_sectors', 'type': 'ffi::c_uint'}, {'name': 'chunk_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_user_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_segment_size', 'type': 'ffi::c_uint'}, {'name': 'min_segment_size', 'type': 'ffi::c_uint'}, {'name': 'physical_block_size', 'type': 'ffi::c_uint'}, {'name': 'logical_block_size', 'type': 'ffi::c_uint'}, {'name': 'alignment_offset', 'type': 'ffi::c_uint'}, {'name': 'io_min', 'type': 'ffi::c_uint'}, {'name': 'io_opt', 'type': 'ffi::c_uint'}, {'name': 'max_discard_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_hw_discard_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_user_discard_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_secure_erase_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_write_zeroes_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_wzeroes_unmap_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_hw_wzeroes_unmap_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_user_wzeroes_unmap_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_hw_zone_append_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_zone_append_sectors', 'type': 'ffi::c_uint'}, {'name': 'discard_granularity', 'type': 'ffi::c_uint'}, {'name': 'discard_alignment', 'type': 'ffi::c_uint'}, {'name': 'zone_write_granularity', 'type': 'ffi::c_uint'}, {'name': 'atomic_write_hw_max', 'type': 'ffi::c_uint'}, {'name': 'atomic_write_max_sectors', 'type': 'ffi::c_uint'}, {'name': 'atomic_write_hw_boundary', 'type': 'ffi::c_uint'}, {'name': 'atomic_write_boundary_sectors', 'type': 'ffi::c_uint'}, {'name': 'atomic_write_hw_unit_min', 'type': 'ffi::c_uint'}, {'name': 'atomic_write_unit_min', 'type': 'ffi::c_uint'}, {'name': 'atomic_write_hw_unit_max', 'type': 'ffi::c_uint'}, {'name': 'atomic_write_unit_max', 'type': 'ffi::c_uint'}, {'name': 'max_segments', 'type': 'ffi::c_ushort'}, {'name': 'max_integrity_segments', 'type': 'ffi::c_ushort'}, {'name': 'max_discard_segments', 'type': 'ffi::c_ushort'}, {'name': 'max_write_streams', 'type': 'ffi::c_ushort'}, {'name': 'write_stream_granularity', 'type': 'ffi::c_uint'}, {'name': 'max_open_zones', 'type': 'ffi::c_uint'}, {'name': 'max_active_zones', 'type': 'ffi::c_uint'}, {'name': 'dma_alignment', 'type': 'ffi::c_uint'}, {'name': 'dma_pad_mask', 'type': 'ffi::c_uint'}, {'name': 'integrity', 'type': 'blk_integrity'}]`
-- New: `[{'name': 'features', 'type': 'blk_features_t'}, {'name': 'flags', 'type': 'blk_flags_t'}, {'name': 'seg_boundary_mask', 'type': 'ffi::c_ulong'}, {'name': 'virt_boundary_mask', 'type': 'ffi::c_ulong'}, {'name': 'max_hw_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_dev_sectors', 'type': 'ffi::c_uint'}, {'name': 'chunk_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_user_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_segment_size', 'type': 'ffi::c_uint'}, {'name': 'max_fast_segment_size', 'type': 'ffi::c_uint'}, {'name': 'physical_block_size', 'type': 'ffi::c_uint'}, {'name': 'logical_block_size', 'type': 'ffi::c_uint'}, {'name': 'alignment_offset', 'type': 'ffi::c_uint'}, {'name': 'io_min', 'type': 'ffi::c_uint'}, {'name': 'io_opt', 'type': 'ffi::c_uint'}, {'name': 'max_discard_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_hw_discard_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_user_discard_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_secure_erase_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_write_zeroes_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_wzeroes_unmap_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_hw_wzeroes_unmap_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_user_wzeroes_unmap_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_hw_zone_append_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_zone_append_sectors', 'type': 'ffi::c_uint'}, {'name': 'discard_granularity', 'type': 'ffi::c_uint'}, {'name': 'discard_alignment', 'type': 'ffi::c_uint'}, {'name': 'zone_write_granularity', 'type': 'ffi::c_uint'}, {'name': 'atomic_write_hw_max', 'type': 'ffi::c_uint'}, {'name': 'atomic_write_max_sectors', 'type': 'ffi::c_uint'}, {'name': 'atomic_write_hw_boundary', 'type': 'ffi::c_uint'}, {'name': 'atomic_write_boundary_sectors', 'type': 'ffi::c_uint'}, {'name': 'atomic_write_hw_unit_min', 'type': 'ffi::c_uint'}, {'name': 'atomic_write_unit_min', 'type': 'ffi::c_uint'}, {'name': 'atomic_write_hw_unit_max', 'type': 'ffi::c_uint'}, {'name': 'atomic_write_unit_max', 'type': 'ffi::c_uint'}, {'name': 'max_segments', 'type': 'ffi::c_ushort'}, {'name': 'max_integrity_segments', 'type': 'ffi::c_ushort'}, {'name': 'max_discard_segments', 'type': 'ffi::c_ushort'}, {'name': 'max_write_streams', 'type': 'ffi::c_ushort'}, {'name': 'write_stream_granularity', 'type': 'ffi::c_uint'}, {'name': 'max_open_zones', 'type': 'ffi::c_uint'}, {'name': 'max_active_zones', 'type': 'ffi::c_uint'}, {'name': 'dma_alignment', 'type': 'ffi::c_uint'}, {'name': 'dma_pad_mask', 'type': 'ffi::c_uint'}, {'name': 'integrity', 'type': 'blk_integrity'}]`
-
-### Score Breakdown
-
-- direct_rust_use: `4.0`
-- safe_api_exposure: `4.0`
-- safety_comment: `3.0`
-- wrapper_fix_hit: `4.0`
-- binding_only_penalty: `-5.0`
-
-### Rust Evidence
-
-- .binddrift/worktrees/v6.19/rust/kernel/block/mq/gen_disk.rs:110 `GenDiskBuilder::capacity_sectors` unsafe=0
-- .binddrift/worktrees/v6.19/rust/kernel/block/mq/gen_disk.rs:111 `GenDiskBuilder::capacity_sectors` unsafe=1
-- safe API `GenDiskBuilder::capacity_sectors`
-- .binddrift/worktrees/v6.19/rust/kernel/block/mq/gen_disk.rs:106 `// SAFETY: T::QueueData was created by the call to `into_foreign()` above`
-- .binddrift/worktrees/v6.19/rust/kernel/block/mq/gen_disk.rs:110 `// SAFETY: `bindings::queue_limits` contain only fields that are valid when zeroed.`
-- wrapper_fix: `5e3b7009f116f684ac6b93d8924506154f3b1f6d`
-
 ## W-000003 MacroConstDrift
 
 - Risk: Medium
@@ -124,8 +21,8 @@
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:438 `None` unsafe=0
-- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:434 `/// Lock the pages covered when they are faulted in.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:438 `None` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:434 `/// Lock the pages covered when they are faulted in.`
 
 ## W-000004 MacroConstDrift
 
@@ -148,8 +45,8 @@
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:450 `None` unsafe=0
-- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:446 `/// Synchronous page faults. (DAX-specific)`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:450 `None` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:446 `/// Synchronous page faults. (DAX-specific)`
 
 ## W-000005 MacroConstDrift
 
@@ -172,8 +69,8 @@
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:429 `None` unsafe=0
-- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:425 `/// Memory mapped I/O or similar.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:429 `None` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:425 `/// Memory mapped I/O or similar.`
 
 ## W-000006 MacroConstDrift
 
@@ -196,8 +93,8 @@
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:456 `None` unsafe=0
-- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:452 `/// Wipe VMA contents in child on fork.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:456 `None` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:452 `/// Wipe VMA contents in child on fork.`
 
 ## W-000007 MacroConstDrift
 
@@ -220,8 +117,8 @@
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:432 `None` unsafe=0
-- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:428 `/// Do not copy this vma on fork.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:432 `None` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:428 `/// Do not copy this vma on fork.`
 
 ## W-000008 MacroConstDrift
 
@@ -244,8 +141,8 @@
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:405 `None` unsafe=0
-- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:401 `/// Mapping allows writes.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:405 `None` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:401 `/// Mapping allows writes.`
 
 ## W-000009 MacroConstDrift
 
@@ -268,8 +165,8 @@
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:465 `None` unsafe=0
-- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:461 `/// Can contain `struct page` and pure PFN pages.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:465 `None` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:461 `/// Can contain `struct page` and pure PFN pages.`
 
 ## W-000010 MacroConstDrift
 
@@ -292,8 +189,8 @@
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:444 `None` unsafe=0
-- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:440 `/// Should the VM suppress accounting.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:444 `None` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:440 `/// Should the VM suppress accounting.`
 
 ## W-000011 MacroConstDrift
 
@@ -316,8 +213,8 @@
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:426 `None` unsafe=0
-- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:422 `/// Page-ranges managed without `struct page`, just pure PFN.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:426 `None` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:422 `/// Page-ranges managed without `struct page`, just pure PFN.`
 
 ## W-000012 MacroConstDrift
 
@@ -340,8 +237,8 @@
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:435 `None` unsafe=0
-- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:431 `/// Cannot expand with mremap().`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:435 `None` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:431 `/// Cannot expand with mremap().`
 
 ## W-000013 MacroConstDrift
 
@@ -364,8 +261,8 @@
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:417 `None` unsafe=0
-- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:413 `/// Mapping may be updated to allow writes.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:417 `None` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:413 `/// Mapping may be updated to allow writes.`
 
 ## W-000014 MacroConstDrift
 
@@ -388,8 +285,8 @@
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:411 `None` unsafe=0
-- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:407 `/// Mapping is shared.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:411 `None` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:407 `/// Mapping is shared.`
 
 ## W-000015 MacroConstDrift
 
@@ -412,8 +309,8 @@
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:420 `None` unsafe=0
-- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:416 `/// Mapping may be updated to allow execution.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:420 `None` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:416 `/// Mapping may be updated to allow execution.`
 
 ## W-000016 MacroConstDrift
 
@@ -436,8 +333,8 @@
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:414 `None` unsafe=0
-- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:410 `/// Mapping may be updated to allow reads.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:414 `None` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:410 `/// Mapping may be updated to allow reads.`
 
 ## W-000017 MacroConstDrift
 
@@ -460,9 +357,9 @@
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:471 `None` unsafe=0
-- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:467 `/// MADV_NOHUGEPAGE marked this vma.`
-- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:470 `/// KSM may merge identical pages.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:471 `None` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:467 `/// MADV_NOHUGEPAGE marked this vma.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:470 `/// KSM may merge identical pages.`
 
 ## W-000018 MacroConstDrift
 
@@ -485,8 +382,8 @@
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:462 `None` unsafe=0
-- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:458 `/// Not soft dirty clean area.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:462 `None` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:458 `/// Not soft dirty clean area.`
 
 ## W-000019 MacroConstDrift
 
@@ -509,8 +406,8 @@
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:468 `None` unsafe=0
-- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:464 `/// MADV_HUGEPAGE marked this vma.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:468 `None` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:464 `/// MADV_HUGEPAGE marked this vma.`
 
 ## W-000020 MacroConstDrift
 
@@ -533,8 +430,8 @@
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:441 `None` unsafe=0
-- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:437 `/// Is a VM accounted object.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:441 `None` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:437 `/// Is a VM accounted object.`
 
 ## W-000021 MacroConstDrift
 
@@ -557,8 +454,8 @@
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:423 `None` unsafe=0
-- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:419 `/// Mapping may be updated to be shared.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:423 `None` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:419 `/// Mapping may be updated to be shared.`
 
 ## W-000022 MacroConstDrift
 
@@ -581,8 +478,8 @@
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:399 `None` unsafe=0
-- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:395 `/// No flags are set.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:399 `None` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:395 `/// No flags are set.`
 
 ## W-000023 MacroConstDrift
 
@@ -605,8 +502,8 @@
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:408 `None` unsafe=0
-- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:404 `/// Mapping allows execution.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:408 `None` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:404 `/// Mapping allows execution.`
 
 ## W-000024 MacroConstDrift
 
@@ -629,8 +526,8 @@
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:459 `None` unsafe=0
-- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:455 `/// Do not include in the core dump.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:459 `None` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:455 `/// Do not include in the core dump.`
 
 ## W-000025 MacroConstDrift
 
@@ -653,8 +550,8 @@
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:447 `None` unsafe=0
-- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:443 `/// Huge TLB Page VM.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:447 `None` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:443 `/// Huge TLB Page VM.`
 
 ## W-000026 MacroConstDrift
 
@@ -677,8 +574,8 @@
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:453 `None` unsafe=0
-- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:449 `/// Architecture-specific flag.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:453 `None` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:449 `/// Architecture-specific flag.`
 
 ## W-000027 MacroConstDrift
 
@@ -701,5 +598,74 @@
 
 ### Rust Evidence
 
-- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:402 `None` unsafe=0
-- .binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:398 `/// Mapping allows reads.`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:402 `None` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/mm/virt.rs:398 `/// Mapping allows reads.`
+
+## W-000002 FieldDrift
+
+- Risk: Medium
+- Score: 9.0
+- Symbol: request
+- Explanation: request changed across the selected Linux versions.
+- Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
+
+### C Evidence
+
+- Old: `[{'name': 'q', 'type': '*mut request_queue'}, {'name': 'mq_ctx', 'type': '*mut blk_mq_ctx'}, {'name': 'mq_hctx', 'type': '*mut blk_mq_hw_ctx'}, {'name': 'cmd_flags', 'type': 'blk_opf_t'}, {'name': 'rq_flags', 'type': 'req_flags_t'}, {'name': 'tag', 'type': 'ffi::c_int'}, {'name': 'internal_tag', 'type': 'ffi::c_int'}, {'name': 'timeout', 'type': 'ffi::c_uint'}, {'name': '__data_len', 'type': 'ffi::c_uint'}, {'name': '__sector', 'type': 'sector_t'}, {'name': 'bio', 'type': '*mut bio'}, {'name': 'biotail', 'type': '*mut bio'}, {'name': '__bindgen_anon_1', 'type': 'request__bindgen_ty_1'}, {'name': 'part', 'type': '*mut block_device'}, {'name': 'alloc_time_ns', 'type': 'u64_'}, {'name': 'start_time_ns', 'type': 'u64_'}, {'name': 'io_start_time_ns', 'type': 'u64_'}, {'name': 'stats_sectors', 'type': 'ffi::c_ushort'}, {'name': 'nr_phys_segments', 'type': 'ffi::c_ushort'}, {'name': 'nr_integrity_segments', 'type': 'ffi::c_ushort'}, {'name': 'state', 'type': 'mq_rq_state'}, {'name': 'ref_', 'type': 'atomic_t'}, {'name': 'deadline', 'type': 'ffi::c_ulong'}, {'name': '__bindgen_anon_2', 'type': 'request__bindgen_ty_2'}, {'name': '__bindgen_anon_3', 'type': 'request__bindgen_ty_3'}, {'name': 'elv', 'type': 'request__bindgen_ty_4'}, {'name': 'flush', 'type': 'request__bindgen_ty_5'}, {'name': 'fifo_time', 'type': 'u64_'}, {'name': 'end_io', 'type': 'rq_end_io_fn'}, {'name': 'end_io_data', 'type': '*mut ffi::c_void'}]`
+- New: `[{'name': 'q', 'type': '*mut request_queue'}, {'name': 'mq_ctx', 'type': '*mut blk_mq_ctx'}, {'name': 'mq_hctx', 'type': '*mut blk_mq_hw_ctx'}, {'name': 'cmd_flags', 'type': 'blk_opf_t'}, {'name': 'rq_flags', 'type': 'req_flags_t'}, {'name': 'tag', 'type': 'ffi::c_int'}, {'name': 'internal_tag', 'type': 'ffi::c_int'}, {'name': 'timeout', 'type': 'ffi::c_uint'}, {'name': '__data_len', 'type': 'ffi::c_uint'}, {'name': '__sector', 'type': 'sector_t'}, {'name': 'bio', 'type': '*mut bio'}, {'name': 'biotail', 'type': '*mut bio'}, {'name': '__bindgen_anon_1', 'type': 'request__bindgen_ty_1'}, {'name': 'part', 'type': '*mut block_device'}, {'name': 'alloc_time_ns', 'type': 'u64_'}, {'name': 'start_time_ns', 'type': 'u64_'}, {'name': 'io_start_time_ns', 'type': 'u64_'}, {'name': 'stats_sectors', 'type': 'ffi::c_ushort'}, {'name': 'nr_phys_segments', 'type': 'ffi::c_ushort'}, {'name': 'nr_integrity_segments', 'type': 'ffi::c_ushort'}, {'name': 'phys_gap_bit', 'type': 'ffi::c_uchar'}, {'name': 'state', 'type': 'mq_rq_state'}, {'name': 'ref_', 'type': 'atomic_t'}, {'name': 'deadline', 'type': 'ffi::c_ulong'}, {'name': '__bindgen_anon_2', 'type': 'request__bindgen_ty_2'}, {'name': '__bindgen_anon_3', 'type': 'request__bindgen_ty_3'}, {'name': 'elv', 'type': 'request__bindgen_ty_4'}, {'name': 'flush', 'type': 'request__bindgen_ty_5'}, {'name': 'fifo_time', 'type': 'u64_'}, {'name': 'end_io', 'type': 'rq_end_io_fn'}, {'name': 'end_io_data', 'type': '*mut ffi::c_void'}]`
+
+### Score Breakdown
+
+- direct_rust_use: `4.0`
+- safe_api_exposure: `4.0`
+- contract_mapping: `3.0`
+- safety_comment: `3.0`
+- binding_only_penalty: `-5.0`
+
+### Rust Evidence
+
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/block/mq/operations.rs:158 `complete_callback` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/block/mq/operations.rs:219 `complete_callback` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/block/mq/operations.rs:246 `complete_callback` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/block/mq/request.rs:60 `None` unsafe=0
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/block/mq/request.rs:72 `Request<T>::aref_from_raw` unsafe=0
+- safe API `Request<T>::aref_from_raw`
+- safe API `Request<T>::complete`
+- safe API `Request<T>::wrapper_ptr`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/block/mq/operations.rs:153 `/// # Safety`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/block/mq/operations.rs:154 `///`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/block/mq/operations.rs:155 `/// This function may only be called by blk-mq C infrastructure. `rq` must`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/block/mq/request.rs:76 `NONNULL_MAPPING`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/block/mq/request.rs:60 `OPAQUE`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/block/mq/request.rs:63 `AREF`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/block/mq/request.rs:72 `AREF`
+- wrapper_fix: `28e848386b92645f93b9f2fdba5882c3ca7fb3e2`
+- wrapper_fix: `a307bf1db5448eccd72a1d7857f7661c6330d5ad`
+
+## W-000001 FieldDrift
+
+- Risk: Low
+- Score: 6.0
+- Symbol: queue_limits
+- Explanation: queue_limits changed across the selected Linux versions.
+- Suggested action: Inspect the Rust safe abstraction and generated binding for stale assumptions.
+
+### C Evidence
+
+- Old: `[{'name': 'features', 'type': 'blk_features_t'}, {'name': 'flags', 'type': 'blk_flags_t'}, {'name': 'seg_boundary_mask', 'type': 'ffi::c_ulong'}, {'name': 'virt_boundary_mask', 'type': 'ffi::c_ulong'}, {'name': 'max_hw_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_dev_sectors', 'type': 'ffi::c_uint'}, {'name': 'chunk_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_user_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_segment_size', 'type': 'ffi::c_uint'}, {'name': 'min_segment_size', 'type': 'ffi::c_uint'}, {'name': 'physical_block_size', 'type': 'ffi::c_uint'}, {'name': 'logical_block_size', 'type': 'ffi::c_uint'}, {'name': 'alignment_offset', 'type': 'ffi::c_uint'}, {'name': 'io_min', 'type': 'ffi::c_uint'}, {'name': 'io_opt', 'type': 'ffi::c_uint'}, {'name': 'max_discard_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_hw_discard_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_user_discard_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_secure_erase_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_write_zeroes_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_wzeroes_unmap_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_hw_wzeroes_unmap_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_user_wzeroes_unmap_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_hw_zone_append_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_zone_append_sectors', 'type': 'ffi::c_uint'}, {'name': 'discard_granularity', 'type': 'ffi::c_uint'}, {'name': 'discard_alignment', 'type': 'ffi::c_uint'}, {'name': 'zone_write_granularity', 'type': 'ffi::c_uint'}, {'name': 'atomic_write_hw_max', 'type': 'ffi::c_uint'}, {'name': 'atomic_write_max_sectors', 'type': 'ffi::c_uint'}, {'name': 'atomic_write_hw_boundary', 'type': 'ffi::c_uint'}, {'name': 'atomic_write_boundary_sectors', 'type': 'ffi::c_uint'}, {'name': 'atomic_write_hw_unit_min', 'type': 'ffi::c_uint'}, {'name': 'atomic_write_unit_min', 'type': 'ffi::c_uint'}, {'name': 'atomic_write_hw_unit_max', 'type': 'ffi::c_uint'}, {'name': 'atomic_write_unit_max', 'type': 'ffi::c_uint'}, {'name': 'max_segments', 'type': 'ffi::c_ushort'}, {'name': 'max_integrity_segments', 'type': 'ffi::c_ushort'}, {'name': 'max_discard_segments', 'type': 'ffi::c_ushort'}, {'name': 'max_write_streams', 'type': 'ffi::c_ushort'}, {'name': 'write_stream_granularity', 'type': 'ffi::c_uint'}, {'name': 'max_open_zones', 'type': 'ffi::c_uint'}, {'name': 'max_active_zones', 'type': 'ffi::c_uint'}, {'name': 'dma_alignment', 'type': 'ffi::c_uint'}, {'name': 'dma_pad_mask', 'type': 'ffi::c_uint'}, {'name': 'integrity', 'type': 'blk_integrity'}]`
+- New: `[{'name': 'features', 'type': 'blk_features_t'}, {'name': 'flags', 'type': 'blk_flags_t'}, {'name': 'seg_boundary_mask', 'type': 'ffi::c_ulong'}, {'name': 'virt_boundary_mask', 'type': 'ffi::c_ulong'}, {'name': 'max_hw_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_dev_sectors', 'type': 'ffi::c_uint'}, {'name': 'chunk_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_user_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_segment_size', 'type': 'ffi::c_uint'}, {'name': 'max_fast_segment_size', 'type': 'ffi::c_uint'}, {'name': 'physical_block_size', 'type': 'ffi::c_uint'}, {'name': 'logical_block_size', 'type': 'ffi::c_uint'}, {'name': 'alignment_offset', 'type': 'ffi::c_uint'}, {'name': 'io_min', 'type': 'ffi::c_uint'}, {'name': 'io_opt', 'type': 'ffi::c_uint'}, {'name': 'max_discard_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_hw_discard_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_user_discard_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_secure_erase_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_write_zeroes_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_wzeroes_unmap_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_hw_wzeroes_unmap_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_user_wzeroes_unmap_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_hw_zone_append_sectors', 'type': 'ffi::c_uint'}, {'name': 'max_zone_append_sectors', 'type': 'ffi::c_uint'}, {'name': 'discard_granularity', 'type': 'ffi::c_uint'}, {'name': 'discard_alignment', 'type': 'ffi::c_uint'}, {'name': 'zone_write_granularity', 'type': 'ffi::c_uint'}, {'name': 'atomic_write_hw_max', 'type': 'ffi::c_uint'}, {'name': 'atomic_write_max_sectors', 'type': 'ffi::c_uint'}, {'name': 'atomic_write_hw_boundary', 'type': 'ffi::c_uint'}, {'name': 'atomic_write_boundary_sectors', 'type': 'ffi::c_uint'}, {'name': 'atomic_write_hw_unit_min', 'type': 'ffi::c_uint'}, {'name': 'atomic_write_unit_min', 'type': 'ffi::c_uint'}, {'name': 'atomic_write_hw_unit_max', 'type': 'ffi::c_uint'}, {'name': 'atomic_write_unit_max', 'type': 'ffi::c_uint'}, {'name': 'max_segments', 'type': 'ffi::c_ushort'}, {'name': 'max_integrity_segments', 'type': 'ffi::c_ushort'}, {'name': 'max_discard_segments', 'type': 'ffi::c_ushort'}, {'name': 'max_write_streams', 'type': 'ffi::c_ushort'}, {'name': 'write_stream_granularity', 'type': 'ffi::c_uint'}, {'name': 'max_open_zones', 'type': 'ffi::c_uint'}, {'name': 'max_active_zones', 'type': 'ffi::c_uint'}, {'name': 'dma_alignment', 'type': 'ffi::c_uint'}, {'name': 'dma_pad_mask', 'type': 'ffi::c_uint'}, {'name': 'integrity', 'type': 'blk_integrity'}]`
+
+### Score Breakdown
+
+- direct_rust_use: `4.0`
+- safe_api_exposure: `4.0`
+- safety_comment: `3.0`
+- binding_only_penalty: `-5.0`
+
+### Rust Evidence
+
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/block/mq/gen_disk.rs:111 `GenDiskBuilder::capacity_sectors` unsafe=1
+- safe API `GenDiskBuilder::capacity_sectors`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/block/mq/gen_disk.rs:106 `// SAFETY: T::QueueData was created by the call to `into_foreign()` above`
+- /home/nya/workspace/bind-drift/.binddrift/worktrees/v6.19/rust/kernel/block/mq/gen_disk.rs:110 `// SAFETY: `bindings::queue_limits` contain only fields that are valid when zeroed.`
+- wrapper_fix: `5e3b7009f116f684ac6b93d8924506154f3b1f6d`

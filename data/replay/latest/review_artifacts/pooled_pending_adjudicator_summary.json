@@ -1,0 +1,20 @@
+{
+  "row_count": 176,
+  "label_counts": {
+    "TRUE_BUILD_BREAKAGE": 0,
+    "TRUE_WRAPPER_FIX": 9,
+    "TRUE_SEMANTIC_DRIFT": 0,
+    "BENIGN_DRIFT": 0,
+    "FALSE_POSITIVE": 160,
+    "UNCLEAR": 7
+  },
+  "disagreement_counts": {
+    "none": 22,
+    "minor": 154,
+    "major": 0
+  },
+  "validation_errors": [],
+  "order_matches_evidence": true,
+  "labels_allowed": true,
+  "max_adjudication_note_words": 52
+}
