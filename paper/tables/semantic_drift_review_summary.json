@@ -1,25 +1,34 @@
 {
   "acceptance": {
+    "examples_per_semantic_type_passes": true,
+    "false_positive_taxonomy_generated": true,
     "minimum_non_wrapper_semantic_true_positives": 5,
-    "minimum_passes": false,
+    "minimum_passes": true,
+    "minimum_reviewed_semantic_targets": 200,
     "minimum_semantic_drift_types": 3,
+    "minimum_semantic_review_candidates": 400,
     "minimum_true_semantic_drift": 8,
-    "non_wrapper_semantic_passes": false,
-    "semantic_drift_type_passes": false,
-    "true_semantic_drift_passes": false
-  },
-  "candidates_reviewed": 100,
-  "claim_recommendation": "semantic drift claim must be downgraded to exploratory",
-  "examples_not_used_as_case_studies": [
-    {
-      "label": "FALSE_POSITIVE",
-      "pair_id": "latest-p012-v6.12-to-v6.13",
-      "semantic_target_type": "NullabilityDrift",
-      "symbol": "device_add_disk",
-      "type": "SignatureDrift",
-      "warning_id": "W-000016",
-      "warning_uid": "fd7adb7aa151991c0fadce9167e16b157fdd69559e3aaba40a8ec27f668cded0"
+    "non_wrapper_semantic_passes": true,
+    "per_type_quota": {
+      "AllocationFreeDrift": true,
+      "LayoutFieldDrift": true,
+      "NullabilityDrift": true,
+      "OwnershipRefcountDrift": true,
+      "SleepabilityContextDrift": true
     },
+    "reviewed_semantic_targets_passes": true,
+    "semantic_drift_type_passes": true,
+    "semantic_review_candidate_type_quota_passes": true,
+    "semantic_review_candidates_passes": true,
+    "true_semantic_drift_passes": true,
+    "unclear_rate_passes": true,
+    "wrapper_fix_not_counted_as_semantic": true
+  },
+  "candidates_reviewed": 304,
+  "claim_recommendation": "semantic review targets may be reported as a secondary contribution",
+  "drift_facts_sha256": "45ec718e8bcf22e4b5d91bf1bfa4924d0c414958aba123c4e0f96bde7018d8ef",
+  "drift_facts_source": "data/replay/latest/drift_facts.jsonl",
+  "examples_not_used_as_case_studies": [
     {
       "label": "TRUE_WRAPPER_FIX",
       "pair_id": "latest-p012-v6.12-to-v6.13",
@@ -31,60 +40,33 @@
     },
     {
       "label": "TRUE_WRAPPER_FIX",
-      "pair_id": "latest-p003-v6.3-to-v6.4",
+      "pair_id": "latest-p004-v6.4-to-v6.5",
       "semantic_target_type": "NullabilityDrift",
-      "symbol": "PTR_ERR",
-      "type": "SignatureDrift",
-      "warning_id": "W-000003",
-      "warning_uid": "d8f79e467f86c84e1f291c195f6e4cb94569fce965006cb105f6518d6dab57b3"
-    },
-    {
-      "label": "TRUE_WRAPPER_FIX",
-      "pair_id": "latest-p002-v6.2-to-v6.3",
-      "semantic_target_type": "NullabilityDrift",
-      "symbol": "REFCOUNT_INIT",
+      "symbol": "errname",
       "type": "SignatureDrift",
       "warning_id": "W-000001",
-      "warning_uid": "a3d89044e191c0409751d7986088db2623ef9ff2bb3853007fe5cd574b88a786"
-    },
-    {
-      "label": "UNCLEAR",
-      "pair_id": "latest-p010-v6.10-to-v6.11",
-      "semantic_target_type": "NullabilityDrift",
-      "symbol": "device_add_disk",
-      "type": "SignatureDrift",
-      "warning_id": "W-000003",
-      "warning_uid": "762ae9d89108b8018f94f2c47247c4de6e59c6d10b5187fca6d2d1b9bc69c0b7"
+      "warning_uid": "294099e6983e2b23170870a24c569e1b11781c73105816716babe3dd7be19618"
     },
     {
       "label": "TRUE_WRAPPER_FIX",
       "pair_id": "latest-p012-v6.12-to-v6.13",
       "semantic_target_type": "NullabilityDrift",
-      "symbol": "IS_ERR",
+      "symbol": "compat_ptr_ioctl",
       "type": "SignatureDrift",
-      "warning_id": "W-000002",
-      "warning_uid": "4b538a23e5b7e22f2cc86f95ffea064b2634aa0ab97449ad304889083dc27efd"
+      "warning_id": "W-000013",
+      "warning_uid": "2570299b655838a322feaa16b54e3321c64fdd5bef3c10262aa14254cfc9bf00"
     },
     {
-      "label": "TRUE_WRAPPER_FIX",
-      "pair_id": "latest-p007-v6.7-to-v6.8",
-      "semantic_target_type": "NullabilityDrift",
-      "symbol": "mdiobus_write",
-      "type": "SignatureDrift",
-      "warning_id": "W-000003",
-      "warning_uid": "46b1fb124f9b8010a0bbad8532aec2f2ce82c1cb9537c8e6d0662155e5c3b565"
-    },
-    {
-      "label": "TRUE_WRAPPER_FIX",
+      "label": "FALSE_POSITIVE",
       "pair_id": "latest-p012-v6.12-to-v6.13",
       "semantic_target_type": "NullabilityDrift",
-      "symbol": "REFCOUNT_INIT",
+      "symbol": "errno_to_blk_status",
       "type": "SignatureDrift",
-      "warning_id": "W-000004",
-      "warning_uid": "399880825c439eb15d3e73aa711d383a87e7dbba9e9a3173f6a97bdef4e841b7"
+      "warning_id": "W-000018",
+      "warning_uid": "0217c5aca3beed930cd6cd613e9717d4a78ab28013cffd3881c7d5c7ab7db42a"
     },
     {
-      "label": "TRUE_WRAPPER_FIX",
+      "label": "FALSE_POSITIVE",
       "pair_id": "latest-p012-v6.12-to-v6.13",
       "semantic_target_type": "NullabilityDrift",
       "symbol": "PTR_ERR",
@@ -93,58 +75,115 @@
       "warning_uid": "39859c860002f454586acf39f3d0df45a3189f1edc7868bad4cb189a795d4b8e"
     },
     {
-      "label": "TRUE_WRAPPER_FIX",
-      "pair_id": "latest-p004-v6.4-to-v6.5",
+      "label": "FALSE_POSITIVE",
+      "pair_id": "latest-p020-v7.0-to-HEAD_9207d47f966b",
       "semantic_target_type": "NullabilityDrift",
-      "symbol": "errname",
+      "symbol": "gpu_buddy_alloc_blocks",
+      "type": "SignatureDrift",
+      "warning_id": "W-000003",
+      "warning_uid": "58bf7f2f2d74c5ec6be9fcd8a9b33e90df0d6227323e4b82048987d533465397"
+    },
+    {
+      "label": "FALSE_POSITIVE",
+      "pair_id": "latest-p012-v6.12-to-v6.13",
+      "semantic_target_type": "NullabilityDrift",
+      "symbol": "IS_ERR",
+      "type": "SignatureDrift",
+      "warning_id": "W-000002",
+      "warning_uid": "4b538a23e5b7e22f2cc86f95ffea064b2634aa0ab97449ad304889083dc27efd"
+    },
+    {
+      "label": "FALSE_POSITIVE",
+      "pair_id": "latest-p012-v6.12-to-v6.13",
+      "semantic_target_type": "NullabilityDrift",
+      "symbol": "REFCOUNT_INIT",
+      "type": "SignatureDrift",
+      "warning_id": "W-000004",
+      "warning_uid": "399880825c439eb15d3e73aa711d383a87e7dbba9e9a3173f6a97bdef4e841b7"
+    },
+    {
+      "label": "FALSE_POSITIVE",
+      "pair_id": "latest-p010-v6.10-to-v6.11",
+      "semantic_target_type": "NullabilityDrift",
+      "symbol": "errno_to_blk_status",
+      "type": "SignatureDrift",
+      "warning_id": "W-000004",
+      "warning_uid": "d668e025ab0727df4a19529d3eaa4e08a0e8e04c23fa27b5dd2701fb50ba80c6"
+    },
+    {
+      "label": "FALSE_POSITIVE",
+      "pair_id": "latest-p012-v6.12-to-v6.13",
+      "semantic_target_type": "NullabilityDrift",
+      "symbol": "ERR_PTR",
       "type": "SignatureDrift",
       "warning_id": "W-000001",
-      "warning_uid": "294099e6983e2b23170870a24c569e1b11781c73105816716babe3dd7be19618"
+      "warning_uid": "619fc183747ad8095d328a64ad4dffb10c831cc475a5cc5f33de74ad0b4558ee"
     }
   ],
+  "examples_per_semantic_type": {
+    "AllocationFreeDrift": 9,
+    "LayoutFieldDrift": 8,
+    "OwnershipRefcountDrift": 5,
+    "SleepabilityContextDrift": 7
+  },
   "false_positive_taxonomy": {
-    "binding_only_or_generated_surface": 33,
-    "missing_evidence": 12,
-    "real_drift_without_rust_contract_impact": 14
+    "binding_only_or_generated_surface": 255,
+    "real_drift_without_rust_contract_impact": 2
   },
   "label_distribution": {
-    "BENIGN_DRIFT": 14,
-    "FALSE_POSITIVE": 33,
-    "TRUE_SEMANTIC_DRIFT": 2,
-    "TRUE_WRAPPER_FIX": 39,
-    "UNCLEAR": 12
+    "BENIGN_DRIFT": 2,
+    "FALSE_POSITIVE": 255,
+    "TRUE_BUILD_BREAKAGE": 1,
+    "TRUE_SEMANTIC_DRIFT": 29,
+    "TRUE_WRAPPER_FIX": 17
   },
-  "non_wrapper_semantic_true_positives": 2,
+  "non_wrapper_semantic_true_positives": 29,
   "note": "TRUE_WRAPPER_FIX is reported separately and is not counted as TRUE_SEMANTIC_DRIFT.",
+  "pooled_review_set_sha256": "7ef58da3e1fbb4ab68fc4748856627882c55c215d0d2db9812c707ba57ec7293",
+  "pooled_review_set_source": "data/replay/latest/pooled_review_set.jsonl",
   "quota": {
-    "AllocationFreeDrift": 20,
-    "LayoutFieldDrift": 20,
-    "NullabilityDrift": 20,
-    "OwnershipRefcountDrift": 20,
-    "SleepabilityContextDrift": 20
+    "AllocationFreeDrift": 80,
+    "LayoutFieldDrift": 80,
+    "NullabilityDrift": 80,
+    "OwnershipRefcountDrift": 80,
+    "SleepabilityContextDrift": 80
   },
   "quota_shortages": {},
-  "review_method": "adjudicated double-review labels reused from pooled/manual review artifacts; missing labels are not counted as reviewed",
+  "review_method": "binddrift-review adjudicated double-review labels reused from pooled/manual review artifacts; missing labels are not counted as reviewed",
   "review_sources": [
     "data/replay/latest/pooled_review_labels.csv",
     "data/replay/latest/manual_review.csv"
   ],
-  "semantic_drift_type_count": 2,
+  "reviewed_semantic_targets": 304,
+  "reviewed_type_distribution": {
+    "AllocationFreeDrift": 59,
+    "LayoutFieldDrift": 80,
+    "NullabilityDrift": 37,
+    "OwnershipRefcountDrift": 48,
+    "SleepabilityContextDrift": 80
+  },
+  "selection_policy": "label-blind semantic detector quotas over pre-adjudication pooled review candidates, promoted warnings, and drift facts; labels are joined only after target selection",
+  "semantic_drift_type_count": 4,
   "semantic_drift_types": [
     "AllocationFreeDrift",
-    "NullabilityDrift"
+    "LayoutFieldDrift",
+    "OwnershipRefcountDrift",
+    "SleepabilityContextDrift"
   ],
+  "semantic_review_candidates": 400,
   "target_review": "data/replay/latest/semantic_target_review.csv",
   "target_set": "data/replay/latest/semantic_target_review_set.jsonl",
-  "true_semantic_drift_count": 2,
-  "true_wrapper_fix_count": 39,
+  "true_semantic_drift_count": 29,
+  "true_wrapper_fix_count": 17,
   "type_distribution": {
-    "AllocationFreeDrift": 20,
-    "LayoutFieldDrift": 20,
-    "NullabilityDrift": 20,
-    "OwnershipRefcountDrift": 20,
-    "SleepabilityContextDrift": 20
+    "AllocationFreeDrift": 80,
+    "LayoutFieldDrift": 80,
+    "NullabilityDrift": 80,
+    "OwnershipRefcountDrift": 80,
+    "SleepabilityContextDrift": 80
   },
-  "warnings_sha256": "49a886a54b3d59e624e5450a1e40b671ae88538d74e2fdd341a950027449ac4f",
+  "unclear_count": 0,
+  "unclear_rate": 0.0,
+  "warnings_sha256": "e2d2f8d6bc0eb21a584fa3ae6cacedcd890aedf1fab912c8353ce35e38ac21e3",
   "warnings_source": "data/replay/latest/promoted_warnings.jsonl"
 }

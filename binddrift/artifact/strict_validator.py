@@ -1,14 +1,16 @@
 from __future__ import annotations
 
+import csv
 import json
 import subprocess
 import sys
+from collections import Counter
 from pathlib import Path
 from typing import Any
 
 from binddrift.artifact_paths import LOCAL_PATH_MARKERS, repo_relative, sanitize_local_paths
 from binddrift.config import Config
-from binddrift.detectors.semantic_review_targets import generate_semantic_review_targets
+from binddrift.detectors.semantic_review_targets import SEMANTIC_REVIEW_QUOTAS, generate_semantic_review_targets
 from binddrift.evaluation.protocol import assert_oracle_blind_components, load_evaluation_protocol
 from binddrift.paper.audit import generate_strict_extractor_audit
 from binddrift.paper.cases import generate_case_studies
@@ -267,12 +269,81 @@ def _ranking_gate(cfg: Config) -> dict[str, Any]:
 
 def _semantic_gate(cfg: Config) -> dict[str, Any]:
     data = _json(cfg, "paper/tables/semantic_drift_review_summary.json")
-    acceptance = data.get("acceptance") or {}
+    target_set = cfg.repo_root / str(data.get("target_set") or "data/replay/latest/semantic_target_review_set.jsonl")
+    target_review = cfg.repo_root / str(data.get("target_review") or "data/replay/latest/semantic_target_review.csv")
+    target_rows = read_warnings(target_set)
+    review_rows = _csv_rows(target_review)
+    labels = {row.get("warning_uid", ""): row.get("adjudicated_label", "").strip() for row in review_rows}
+    target_uids = [str(row.get("warning_uid") or "") for row in target_rows]
+    review_uids = [str(row.get("warning_uid") or "") for row in review_rows]
+    reviewed = [row for row in target_rows if labels.get(str(row.get("warning_uid") or ""))]
+    reviewed_labels = [labels[str(row.get("warning_uid") or "")] for row in reviewed]
+    true_semantic = [
+        row
+        for row in target_rows
+        if labels.get(str(row.get("warning_uid") or "")) == "TRUE_SEMANTIC_DRIFT"
+    ]
+    true_wrapper = [
+        row
+        for row in target_rows
+        if labels.get(str(row.get("warning_uid") or "")) == "TRUE_WRAPPER_FIX"
+    ]
+    non_wrapper_semantic = [row for row in true_semantic if not _semantic_has_wrapper_oracle(row)]
+    type_distribution = Counter(str(row.get("semantic_target_type") or row.get("type") or "") for row in target_rows)
+    semantic_examples_by_type = Counter(str(row.get("semantic_target_type") or "") for row in true_semantic)
+    unclear_count = sum(1 for label in reviewed_labels if label == "UNCLEAR")
+    unclear_rate = round(unclear_count / len(reviewed_labels), 4) if reviewed_labels else 1.0
+    recomputed = {
+        "semantic_review_candidates": len(target_rows),
+        "candidates_reviewed": len(reviewed),
+        "reviewed_semantic_targets": len(reviewed),
+        "true_semantic_drift_count": len(true_semantic),
+        "true_wrapper_fix_count": len(true_wrapper),
+        "non_wrapper_semantic_true_positives": len(non_wrapper_semantic),
+        "semantic_drift_type_count": len(semantic_examples_by_type),
+        "semantic_drift_types": sorted(semantic_examples_by_type),
+        "unclear_count": unclear_count,
+        "unclear_rate": unclear_rate,
+        "type_distribution": dict(type_distribution),
+        "examples_per_semantic_type": dict(semantic_examples_by_type),
+    }
+    summary_matches = {
+        "semantic_review_candidates": data.get("semantic_review_candidates") == recomputed["semantic_review_candidates"],
+        "candidates_reviewed": data.get("candidates_reviewed") == recomputed["candidates_reviewed"],
+        "reviewed_semantic_targets": data.get("reviewed_semantic_targets") == recomputed["reviewed_semantic_targets"],
+        "true_semantic_drift_count": data.get("true_semantic_drift_count") == recomputed["true_semantic_drift_count"],
+        "true_wrapper_fix_count": data.get("true_wrapper_fix_count") == recomputed["true_wrapper_fix_count"],
+        "non_wrapper_semantic_true_positives": data.get("non_wrapper_semantic_true_positives") == recomputed["non_wrapper_semantic_true_positives"],
+        "semantic_drift_type_count": data.get("semantic_drift_type_count") == recomputed["semantic_drift_type_count"],
+        "unclear_count": data.get("unclear_count") == recomputed["unclear_count"],
+        "unclear_rate": data.get("unclear_rate") == recomputed["unclear_rate"],
+    }
+    per_type_quota = {
+        category: type_distribution.get(category, 0) >= quota
+        for category, quota in SEMANTIC_REVIEW_QUOTAS.items()
+    }
+    checks = {
+        "target_set_exists": target_set.exists(),
+        "target_review_exists": target_review.exists(),
+        "target_review_matches_target_set": bool(target_rows) and target_uids == review_uids,
+        "summary_matches_recomputed_counts": all(summary_matches.values()),
+        "semantic_review_candidates": len(target_rows) >= 400,
+        "semantic_review_candidate_type_quota": all(per_type_quota.values()),
+        "reviewed_semantic_targets": len(reviewed) >= 200,
+        "true_semantic_drift": len(true_semantic) >= 8,
+        "non_wrapper_semantic_true_positives": len(non_wrapper_semantic) >= 5,
+        "semantic_drift_types": len(semantic_examples_by_type) >= 3,
+        "unclear_rate": unclear_rate <= 0.05,
+        "examples_per_semantic_type": bool(semantic_examples_by_type) and all(count >= 2 for count in semantic_examples_by_type.values()),
+        "wrapper_fix_only_not_counted_as_semantic": not any(labels.get(str(row.get("warning_uid") or "")) == "TRUE_WRAPPER_FIX" for row in true_semantic),
+        "false_positive_taxonomy_generated": bool(data.get("false_positive_taxonomy")),
+    }
     return {
-        "passes": bool(acceptance.get("minimum_passes")),
-        "true_semantic_drift_count": data.get("true_semantic_drift_count"),
-        "non_wrapper_semantic_true_positives": data.get("non_wrapper_semantic_true_positives"),
-        "semantic_drift_type_count": data.get("semantic_drift_type_count"),
+        "passes": all(checks.values()),
+        "checks": checks,
+        "summary_matches": summary_matches,
+        **recomputed,
+        "per_type_quota": per_type_quota,
         "claim": data.get("claim_recommendation"),
     }
 
@@ -456,9 +527,21 @@ def _csv_row_count(path: Path) -> int:
         return max(0, sum(1 for _line in fh) - 1)
 
 
+def _csv_rows(path: Path) -> list[dict[str, str]]:
+    if not path.exists():
+        return []
+    with path.open(newline="", encoding="utf-8") as fh:
+        return [{key: str(value or "") for key, value in row.items()} for row in csv.DictReader(fh)]
+
+
 def _jsonl_count(path: Path) -> int:
     with path.open(encoding="utf-8") as fh:
         return sum(1 for line in fh if line.strip())
+
+
+def _semantic_has_wrapper_oracle(warning: dict[str, Any]) -> bool:
+    evidence = list(warning.get("evidence_chain") or []) + list((warning.get("rust_side") or {}).get("oracle_hits") or [])
+    return any(isinstance(item, dict) and item.get("oracle_type") == "wrapper_fix" for item in evidence)
 
 
 def _blind_review_leakage(path: Path) -> list[str]:
