@@ -1,0 +1,25 @@
+{
+  "disagreement_counts": {
+    "none": 500
+  },
+  "label_counts": {
+    "BENIGN_DRIFT": 3,
+    "FALSE_POSITIVE": 450,
+    "TRUE_BUILD_BREAKAGE": 1,
+    "TRUE_SEMANTIC_DRIFT": 29,
+    "TRUE_WRAPPER_FIX": 17,
+    "UNCLEAR": 0
+  },
+  "labels_allowed": [
+    "BENIGN_DRIFT",
+    "FALSE_POSITIVE",
+    "TRUE_BUILD_BREAKAGE",
+    "TRUE_SEMANTIC_DRIFT",
+    "TRUE_WRAPPER_FIX",
+    "UNCLEAR"
+  ],
+  "max_adjudication_note_words": 25,
+  "order_matches_evidence": true,
+  "row_count": 500,
+  "validation_errors": []
+}

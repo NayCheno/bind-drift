@@ -1,0 +1,11 @@
+{
+  "missing_matches": [],
+  "missing_warning_matches": 0,
+  "packets": 500,
+  "source_packet_files": [
+    "data/replay/latest/review_artifacts/evidence_packets.jsonl",
+    "data/replay/latest/review_artifacts/pooled_pending_evidence_packets.jsonl",
+    "data/replay/latest/review_artifacts/m3_pending_evidence_packets.jsonl"
+  ],
+  "source_pooled_review_labels": "data/replay/latest/pooled_review_labels.csv"
+}

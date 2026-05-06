@@ -1,0 +1,22 @@
+{
+  "label_counts": {
+    "BENIGN_DRIFT": 1,
+    "FALSE_POSITIVE": 229,
+    "TRUE_BUILD_BREAKAGE": 1,
+    "TRUE_SEMANTIC_DRIFT": 27,
+    "TRUE_WRAPPER_FIX": 242,
+    "UNCLEAR": 0
+  },
+  "labels_allowed": [
+    "TRUE_BUILD_BREAKAGE",
+    "TRUE_WRAPPER_FIX",
+    "TRUE_SEMANTIC_DRIFT",
+    "BENIGN_DRIFT",
+    "FALSE_POSITIVE",
+    "UNCLEAR"
+  ],
+  "max_note_words": 29,
+  "order_matches_evidence": true,
+  "row_count": 500,
+  "validation_errors": []
+}

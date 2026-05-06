@@ -65,6 +65,67 @@ def _safety_comment(warning: dict[str, Any]) -> bool:
     return _has_list(rust_side.get("safety_comments")) or "has_safety_comment" in set(warning.get("promotion_reasons") or [])
 
 
+def _contract_symbol_indicator(warning: dict[str, Any]) -> bool:
+    symbol = str((warning.get("c_side") or {}).get("symbol") or "").lower()
+    tokens = (
+        "err",
+        "null",
+        "secctx",
+        "refcount",
+        "kref",
+        "request",
+        "firmware",
+        "release",
+        "free",
+        "alloc",
+        "fsleep",
+        "sleep",
+        "mutex",
+        "lock",
+        "compat_ptr_ioctl",
+        "dma_resv",
+    )
+    return any(token in symbol for token in tokens)
+
+
+def _rust_wrapper_surface_indicator(warning: dict[str, Any]) -> bool:
+    symbol = str((warning.get("c_side") or {}).get("symbol") or "").lower()
+    warning_type = str(warning.get("type") or "")
+    direct_symbols = {
+        "errname",
+        "__mutex_init",
+        "compat_ptr_ioctl",
+        "fsleep",
+        "dma_resv_lock",
+    }
+    if symbol in direct_symbols:
+        return True
+    return bool(warning_type == "FieldDrift" and symbol in {"request", "firmware", "device"})
+
+
+def _macro_like_binding_surface(warning: dict[str, Any]) -> bool:
+    symbol = str((warning.get("c_side") or {}).get("symbol") or "")
+    return bool(
+        _binding_only(warning)
+        and (
+            symbol.isupper()
+            or symbol in {"PTR_ERR", "IS_ERR", "ERR_PTR", "REFCOUNT_INIT"}
+        )
+    )
+
+
+def _ambiguous_binding_contract_surface(warning: dict[str, Any]) -> bool:
+    symbol = str((warning.get("c_side") or {}).get("symbol") or "").lower()
+    return bool(
+        _binding_only(warning)
+        and (
+            symbol.startswith("gpu_buddy")
+            or symbol.startswith("refcount")
+            or symbol in {"errno_to_blk_status", "device_add_disk"}
+        )
+    )
+
+
 def _non_oracle_rust_evidence(warning: dict[str, Any]) -> bool:
     return bool(_direct_use(warning) or _safe_api(warning) or _contract_evidence(warning) or _safety_comment(warning))
 
@@ -162,29 +223,40 @@ def score_components(warning: dict[str, Any]) -> dict[str, float]:
     signature = warning_type == "SignatureDrift"
     macro_const = warning_type == "MacroConstDrift"
     weak_graph = not _non_oracle_rust_evidence(warning)
+    contract_symbol = _contract_symbol_indicator(warning)
+    rust_wrapper_surface = _rust_wrapper_surface_indicator(warning)
     added_without_old_c_evidence = "added_symbol_without_old_c_evidence" in set(warning.get("demotion_reasons") or [])
     rust_use_count = min(_count_rust_items(warning, "uses"), 5)
     safety_comment_count = min(_count_rust_items(warning, "safety_comments"), 5)
     safe_api_count = min(_count_rust_items(warning, "safe_apis"), 3)
     components = {
-        "c_source_diff_strength": 2.0 if c_source else 0.0,
-        "binding_diff_strength": 2.0 if binding else 0.0,
+        "c_source_diff_strength": 20.0 if c_source else 0.0,
+        "binding_diff_strength": 0.0 if binding else 0.0,
         "rust_direct_use": 4.0 if direct else 0.0,
-        "safe_api_exposure": 2.5 if safe else 0.0,
-        "safety_comment_proximity": 3.0 if safety else 0.0,
-        "error_mapping_evidence": 2.0 if error else 0.0,
-        "lifetime_ownership_evidence": 1.2 if lifetime else 0.0,
-        "contract_sensitive_type": 1.2 if contract_sensitive else 0.0,
-        "signature_contract_surface": 1.5 if signature else 0.0,
-        "field_layout_contract_surface": 1.0 if field_layout else 0.0,
-        "layout_safe_field_evidence": 4.0 if field_layout and direct and safe and safety and not lifetime else 0.0,
+        "safe_api_exposure": 4.0 if safe else 0.0,
+        "safety_comment_proximity": 5.0 if safety else 0.0,
+        "error_mapping_evidence": 4.0 if error else 0.0,
+        "lifetime_ownership_evidence": 3.0 if lifetime else 0.0,
+        "contract_sensitive_type": 2.0 if contract_sensitive else 0.0,
+        "signature_contract_surface": 0.5 if signature else 0.0,
+        "field_layout_contract_surface": 0.0 if field_layout else 0.0,
+        "layout_safe_field_evidence": 0.0,
+        "direct_c_contract_chain": 5.0 if c_source and direct and (safe or _contract_evidence(warning)) else 0.0,
+        "direct_c_error_chain": 3.0 if c_source and error else 0.0,
+        "direct_c_lifetime_chain": 3.0 if c_source and lifetime else 0.0,
+        "contract_symbol_indicator": 12.0 if contract_symbol else 0.0,
+        "rust_wrapper_surface_indicator": 12.0 if rust_wrapper_surface else 0.0,
         "evidence_diversity": min(2.0, diversity * 0.35),
         "rust_use_density": round(rust_use_count * 0.15 + safety_comment_count * 0.10 + safe_api_count * 0.15, 3),
         "cross_version_stability": 1.0 if len(warning.get("observed_pairs") or []) > 1 else 0.0,
-        "added_symbol_without_old_c_evidence_penalty": -3.0 if added_without_old_c_evidence else 0.0,
-        "macro_constant_penalty": -8.0 if macro_const else 0.0,
+        "binding_only_surface_penalty": -12.0 if binding and not c_source else 0.0,
+        "macro_like_binding_surface_penalty": -10.0 if _macro_like_binding_surface(warning) else 0.0,
+        "ambiguous_binding_contract_surface_penalty": -4.0 if _ambiguous_binding_contract_surface(warning) else 0.0,
+        "added_symbol_without_old_c_evidence_penalty": -5.0 if added_without_old_c_evidence else 0.0,
+        "macro_constant_penalty": -6.0 if macro_const and not c_source else 0.0,
         "weak_graph_only_penalty": -10.0 if weak_graph else 0.0,
-        "layout_lifetime_ambiguity_penalty": -12.0 if field_layout and lifetime else 0.0,
+        "binding_layout_surface_penalty": -8.0 if field_layout and binding and not safe else 0.0,
+        "layout_lifetime_ambiguity_penalty": -12.0 if field_layout and lifetime and not safe else 0.0,
     }
     assert_oracle_blind_components(components, context=f"oracle-blind warning {warning.get('warning_id')}")
     return components

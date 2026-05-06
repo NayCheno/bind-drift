@@ -229,7 +229,8 @@ def _variant_warnings(
         ranked = rank_primary_warnings_oracle_blind(pool)
         return window(ranked), len(ranked)
     if name == "NoRanking":
-        return window(list(pool)), len(pool)
+        ranked = sorted(pool, key=lambda warning: (str(warning.get("pair_id") or ""), str(warning.get("warning_id") or ""), str(warning.get("warning_uid") or "")))
+        return window(ranked), len(pool)
     if name == "Random":
         ranked = _random_average_rows(pool, top_k=top_k)
         return ranked, len(pool)

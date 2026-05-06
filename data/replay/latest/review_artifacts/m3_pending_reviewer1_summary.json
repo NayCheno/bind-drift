@@ -1,0 +1,22 @@
+{
+  "allowed_labels": [
+    "BENIGN_DRIFT",
+    "FALSE_POSITIVE",
+    "TRUE_BUILD_BREAKAGE",
+    "TRUE_SEMANTIC_DRIFT",
+    "TRUE_WRAPPER_FIX",
+    "UNCLEAR"
+  ],
+  "generated_utc": "2026-05-06T02:48:46.411235+00:00",
+  "input_path": "data/replay/latest/review_artifacts/m3_pending_evidence_packets.jsonl",
+  "label_counts": {
+    "TRUE_BUILD_BREAKAGE": 1,
+    "TRUE_WRAPPER_FIX": 15,
+    "UNCLEAR": 228
+  },
+  "output_path": "data/replay/latest/review_artifacts/m3_pending_reviewer1.jsonl",
+  "reviewer": "Reviewer 1",
+  "row_count": 244,
+  "summary_path": "data/replay/latest/review_artifacts/m3_pending_reviewer1_summary.json",
+  "validation_errors": []
+}

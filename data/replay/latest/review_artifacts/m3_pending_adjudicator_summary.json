@@ -1,0 +1,17 @@
+{
+  "disagreement_counts": {
+    "minor": 220,
+    "none": 24
+  },
+  "label_counts": {
+    "BENIGN_DRIFT": 3,
+    "TRUE_BUILD_BREAKAGE": 1,
+    "TRUE_WRAPPER_FIX": 15,
+    "UNCLEAR": 225
+  },
+  "labels_allowed": true,
+  "max_adjudication_note_words": 47,
+  "order_matches_evidence": true,
+  "row_count": 244,
+  "validation_errors": []
+}

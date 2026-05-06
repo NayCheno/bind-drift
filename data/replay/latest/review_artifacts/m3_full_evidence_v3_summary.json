@@ -1,0 +1,14 @@
+{
+  "calibration_counts": {
+    "binding_only_or_no_rust_exposure": 381,
+    "binding_or_generated_only_evidence": 468,
+    "broad_family_wrapper_oracle_without_exact_symbol": 226,
+    "direct_same_symbol_wrapper_oracle": 17,
+    "has_direct_c_source_or_behavior_evidence": 259,
+    "has_rust_use_safe_api_comment_or_contract_evidence": 119,
+    "semantic_candidate_without_oracle": 29,
+    "unsupported_generated_binding_target": 239,
+    "weak_or_broad_wrapper_oracle": 15
+  },
+  "packets": 500
+}

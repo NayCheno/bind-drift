@@ -68,13 +68,13 @@ SPLIT_REVIEW_FIELDS = ["sample_id", "is_correct", "error_type", "notes"]
 SAMPLER_VERSION = "extractor-audit-v2"
 
 STRICT_AUDIT_TARGETS = {
-    "c_functions": 100,
-    "c_behavior_indicators": 100,
-    "rust_binding_uses": 100,
-    "rust_safe_api_exposures": 100,
-    "rust_error_mappings": 75,
-    "rust_lifetime_facts": 75,
-    "promoted_warning_evidence": 50,
+    "c_functions": 120,
+    "c_behavior_indicators": 120,
+    "rust_binding_uses": 120,
+    "rust_safe_api_exposures": 120,
+    "rust_error_mappings": 100,
+    "rust_lifetime_facts": 100,
+    "promoted_warning_evidence": 120,
 }
 
 STRICT_MIN_PRECISION = {
@@ -857,10 +857,10 @@ def _strict_acceptance(summary: dict[str, Any]) -> dict[str, Any]:
     agreement = summary["agreement"]
     acceptance["overall"] = {
         "total_samples": summary["total_samples"],
-        "minimum_samples": 600,
+        "minimum_samples": 800,
         "cohen_kappa": agreement["cohen_kappa"],
         "minimum_kappa": 0.70,
-        "passes": bool(summary["total_samples"] >= 600 and (agreement["cohen_kappa"] or 0.0) >= 0.70),
+        "passes": bool(summary["total_samples"] >= 800 and (agreement["cohen_kappa"] or 0.0) >= 0.70),
     }
     return acceptance
 

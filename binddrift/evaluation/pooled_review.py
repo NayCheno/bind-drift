@@ -66,6 +66,7 @@ def generate_pooled_review_set(
     rankers: list[str] | None = None,
     output: Path | None = None,
     labels_output: Path | None = None,
+    target_size: int = 500,
 ) -> dict[str, Any]:
     manifest = validate_run_manifest(cfg)
     run_dir = canonical_run_dir(cfg, run_id)
@@ -74,6 +75,7 @@ def generate_pooled_review_set(
     rankers = rankers or DEFAULT_RANKERS
     warnings = read_warnings(Path(manifest["resolved_paths"]["warnings"]))
     promoted = read_warnings(Path(manifest["resolved_paths"]["promoted_warnings"]))
+    drift_facts = read_warnings(Path(manifest["resolved_paths"]["drift_facts"]))
     ranked_by_source = ranker_outputs(cfg, warnings, promoted, rankers, run_manifest=str(run_dir / "run_manifest.json"))
 
     by_uid: dict[str, dict[str, Any]] = {}
@@ -83,10 +85,18 @@ def generate_pooled_review_set(
             uid = ensure_warning_uid(warning)
             by_uid.setdefault(uid, dict(warning))
             source_ranks[uid][source] = rank
+    ranker_top100_union = len(by_uid)
 
     for warning in _stratified_by_type(promoted, 120) + _stratified_by_pair(promoted, 80):
         uid = ensure_warning_uid(warning)
         by_uid.setdefault(uid, dict(warning))
+
+    if len(by_uid) < target_size:
+        promoted_uids = set(by_uid)
+        needed = target_size - len(by_uid)
+        for warning in _review_candidates_from_drift_facts(drift_facts, promoted_uids, needed):
+            uid = ensure_warning_uid(warning)
+            by_uid.setdefault(uid, dict(warning))
 
     rows = _compress_pool(by_uid, source_ranks)
     for row in rows:
@@ -107,11 +117,13 @@ def generate_pooled_review_set(
         "run_id": run_id,
         "pool_rows": len(rows),
         "rankers": rankers,
-        "ranker_top100_union": len(by_uid),
+        "ranker_top100_union": ranker_top100_union,
         "labels": label_summary,
         "pool": repo_relative(cfg, output),
         "label_file": repo_relative(cfg, labels_output),
-        "selection_policy": "ranker_top100_union_plus_type_and_pair_stratified_samples",
+        "selection_policy": "ranker_top100_union_plus_type_pair_and_unpromoted_drift_fact_stratified_samples",
+        "blind_to_ranker": True,
+        "ranker_top100_coverage": _ranker_top100_coverage(rows, ranked_by_source),
     }
     manifest_path.write_text(json.dumps(manifest_data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return {**manifest_data, "pool": str(output), "label_file": str(labels_output), "manifest": str(manifest_path)}
@@ -247,6 +259,63 @@ def _stratified_by_pair(warnings: list[dict[str, Any]], limit: int) -> list[dict
     return rows[:limit]
 
 
+def _review_candidates_from_drift_facts(facts: list[dict[str, Any]], existing_uids: set[str], limit: int) -> list[dict[str, Any]]:
+    candidates: list[dict[str, Any]] = []
+    for fact in facts:
+        if fact.get("promotion_status") == "promoted":
+            continue
+        c_side = fact.get("c_side") or {}
+        if not (fact.get("pair_id") and (fact.get("old_version") or c_side.get("old_version")) and (fact.get("new_version") or c_side.get("new_version")) and c_side.get("symbol")):
+            continue
+        row = dict(fact)
+        row["record_kind"] = "pooled_review_candidate"
+        row["warning_id"] = row.get("warning_id") or row.get("fact_id", "")
+        row["risk"] = row.get("risk") or "Low"
+        row["score"] = row.get("score", 0.0)
+        row["rank"] = row.get("rank", "")
+        row["review_candidate_source"] = "unpromoted_drift_fact"
+        row["suggested_action"] = row.get("suggested_action") or "Review as a low-priority drift fact boundary sample."
+        uid = ensure_warning_uid(row)
+        if uid not in existing_uids:
+            candidates.append(row)
+
+    rows: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for row in _stratified_by_type(candidates, limit // 2) + _stratified_by_pair(candidates, limit):
+        uid = ensure_warning_uid(row)
+        if uid in seen:
+            continue
+        rows.append(row)
+        seen.add(uid)
+        if len(rows) >= limit:
+            break
+    if len(rows) < limit:
+        for row in sorted(candidates, key=lambda item: (str(item.get("pair_id")), str(item.get("type")), str((item.get("c_side") or {}).get("symbol")))):
+            uid = ensure_warning_uid(row)
+            if uid in seen:
+                continue
+            rows.append(row)
+            seen.add(uid)
+            if len(rows) >= limit:
+                break
+    return rows[:limit]
+
+
+def _ranker_top100_coverage(pool_rows: list[dict[str, Any]], ranked_by_source: dict[str, list[dict[str, Any]]]) -> dict[str, Any]:
+    pool_uids = {ensure_warning_uid(row) for row in pool_rows}
+    coverage: dict[str, Any] = {}
+    for source, ranked in ranked_by_source.items():
+        top = ranked[:100]
+        top_uids = {ensure_warning_uid(warning) for warning in top}
+        covered = len(top_uids & pool_uids)
+        coverage[source] = {
+            "top100": len(top_uids),
+            "covered": covered,
+            "coverage": round(covered / len(top_uids), 4) if top_uids else 1.0,
+        }
+    return coverage
+
+
 def _compress_pool(by_uid: dict[str, dict[str, Any]], source_ranks: dict[str, dict[str, int]]) -> list[dict[str, Any]]:
     rows = list(by_uid.values())
     if len(rows) <= 500:
@@ -281,6 +350,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--run", default="latest")
     parser.add_argument("--rankers", default=",".join(DEFAULT_RANKERS))
     parser.add_argument("--output")
+    parser.add_argument("--target-size", type=int, default=500)
     args = parser.parse_args(argv)
     cfg = Config.from_args(repo_root=args.repo_root)
     output = Path(args.output).resolve() if args.output else None
@@ -289,6 +359,7 @@ def main(argv: list[str] | None = None) -> int:
         run_id=args.run,
         rankers=[item for item in args.rankers.split(",") if item],
         output=output,
+        target_size=args.target_size,
     )
     print(json.dumps(result, indent=2, sort_keys=True))
     return 0

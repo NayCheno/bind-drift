@@ -31,6 +31,16 @@ def test_artifact_validator_reports_m2_ranking_ready() -> None:
     assert all(ranking["checks"].values())
 
 
+def test_artifact_validator_reports_m3_review_ready() -> None:
+    result = validate_artifact(Config.from_args(repo_root="."), strict_ccfb=True, stage="m3")
+
+    assert result["passes"] is True
+    assert result["stage"] == "m3"
+    role_check = next(check for check in result["checks"] if check["name"] == "binddrift_review_role_artifacts")
+    assert role_check["passes"] is True
+    assert role_check["details"]["blind_evidence_packets"] is True
+
+
 def test_artifact_validate_module_command_accepts_stage() -> None:
     result = subprocess.run(
         [sys.executable, "-m", "binddrift.artifact", "validate", "--strict-ccfb", "--stage", "m0"],

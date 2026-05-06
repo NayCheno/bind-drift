@@ -17,8 +17,8 @@
         "locked_split_hash": "348bb27b4824ad39b8283bbfe8865e552a4bde0e2eac488bc2ec04adc71dc8b5",
         "pair_count": 20,
         "paper_topk": 100,
-        "pooled_review_label_count": 276,
-        "pooled_review_set_count": 276,
+        "pooled_review_label_count": 500,
+        "pooled_review_set_count": 500,
         "promoted_warning_count": 320,
         "resolved_paths": {
           "drift_facts": "data/replay/latest/drift_facts.jsonl",
@@ -38,9 +38,9 @@
           "drift_facts.jsonl": "45ec718e8bcf22e4b5d91bf1bfa4924d0c414958aba123c4e0f96bde7018d8ef",
           "evaluation_protocol.json": "7c3ad8140c7d11ddd748dd52100112f617b516cd35b1a1dfa41d41e515783e94",
           "manual_review.csv": "f999f73ccbc3615f44586a7d7c7fe93ba1899fcb35d885b646d2c9fc1eb27937",
-          "pooled_review_labels.csv": "1061302669e1fb6d60c3a5747791c123763d539463f9602895dcd9c275fb092c",
-          "pooled_review_manifest.json": "3d25ac308498eb62d985855bb585d672b551b1587c46b626c9e01e15198f87c4",
-          "pooled_review_set.jsonl": "ebf367ba46a8ab16b4138990e99ade200019fc896ef658944708d90ded178dba",
+          "pooled_review_labels.csv": "928be7b3f78eefdc28d214661d8af57ac26fe2b8c9f98c10fe5949ce7823c298",
+          "pooled_review_manifest.json": "15c49eed8ecffa6d916c2a51199447141be0bec273da758969d80aaa8b83442e",
+          "pooled_review_set.jsonl": "7ef58da3e1fbb4ab68fc4748856627882c55c215d0d2db9812c707ba57ec7293",
           "promoted_warnings.jsonl": "e2d2f8d6bc0eb21a584fa3ae6cacedcd890aedf1fab912c8353ce35e38ac21e3",
           "single_version_review_targets.jsonl": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
           "warnings.jsonl": "c393edc237fee79cb4f56111e60de5ce4173e094f4ef96f953baafecd2cd658c"
@@ -143,10 +143,17 @@
         "passes": true,
         "score_component_keys": [
           "added_symbol_without_old_c_evidence_penalty",
+          "ambiguous_binding_contract_surface_penalty",
           "binding_diff_strength",
+          "binding_layout_surface_penalty",
+          "binding_only_surface_penalty",
           "c_source_diff_strength",
           "contract_sensitive_type",
+          "contract_symbol_indicator",
           "cross_version_stability",
+          "direct_c_contract_chain",
+          "direct_c_error_chain",
+          "direct_c_lifetime_chain",
           "error_mapping_evidence",
           "evidence_diversity",
           "field_layout_contract_surface",
@@ -154,8 +161,10 @@
           "layout_safe_field_evidence",
           "lifetime_ownership_evidence",
           "macro_constant_penalty",
+          "macro_like_binding_surface_penalty",
           "rust_direct_use",
           "rust_use_density",
+          "rust_wrapper_surface_indicator",
           "safe_api_exposure",
           "safety_comment_proximity",
           "signature_contract_surface",
@@ -176,27 +185,135 @@
     {
       "details": {
         "acceptance": {
-          "adjudication_notes_missing_rate_ok": true,
-          "all_main_labels_adjudicated": true,
-          "cohen_kappa_reported": true,
-          "disagreement_examples_minimum": true,
+          "adjudication_complete": true,
+          "adjudication_notes_missing": true,
+          "agreement_rate": true,
+          "cohen_kappa": true,
           "double_review_complete": true,
-          "label_leakage_check_passed": true,
+          "label_coverage": true,
+          "label_leakage_check": true,
           "minimum_passes": true,
-          "pooled_label_coverage_ok": true,
           "pooled_review_labels_primary_source": true,
+          "pooled_review_size": true,
           "required_columns_present": true,
-          "unclear_is_not_counted_as_true_positive": true
+          "reviewer_disagreement_examples": true,
+          "unclear_is_not_counted_as_true_positive": true,
+          "unclear_rate": true
         },
         "adjudication_notes_missing_rate": 0.0,
-        "cohen_kappa": 0.1195,
+        "agreement_rate": 0.922,
+        "cohen_kappa": 0.8118,
         "label_coverage": 1.0,
         "label_leakage_check": "passed",
         "passes": true,
-        "reviewed_warnings": 276,
-        "source_csv": "data/replay/latest/pooled_review_labels.csv"
+        "ranker_top100_coverage": {
+          "binddrift_current": {
+            "coverage": 1.0,
+            "covered": 100,
+            "top100": 100
+          },
+          "binddrift_oracle_blind": {
+            "coverage": 1.0,
+            "covered": 100,
+            "top100": 100
+          },
+          "binding_diff": {
+            "coverage": 1.0,
+            "covered": 100,
+            "top100": 100
+          },
+          "c_indicator": {
+            "coverage": 1.0,
+            "covered": 0,
+            "top100": 0
+          },
+          "c_signature": {
+            "coverage": 1.0,
+            "covered": 100,
+            "top100": 100
+          },
+          "no_graph": {
+            "coverage": 1.0,
+            "covered": 100,
+            "top100": 100
+          },
+          "no_impact_gate": {
+            "coverage": 1.0,
+            "covered": 100,
+            "top100": 100
+          },
+          "no_ranking": {
+            "coverage": 1.0,
+            "covered": 100,
+            "top100": 100
+          },
+          "random": {
+            "coverage": 1.0,
+            "covered": 100,
+            "top100": 100
+          },
+          "rust_use": {
+            "coverage": 1.0,
+            "covered": 100,
+            "top100": 100
+          }
+        },
+        "reviewed_warnings": 500,
+        "reviewer_disagreement_examples": {
+          "examples": 10,
+          "minimum_required": 10,
+          "path": "paper/analysis/reviewer_disagreement_examples.md"
+        },
+        "source_csv": "data/replay/latest/pooled_review_labels.csv",
+        "strict_checks": {
+          "adjudication_complete": true,
+          "adjudication_notes_missing": true,
+          "agreement_rate": true,
+          "blind_to_ranker": true,
+          "cohen_kappa": true,
+          "double_review_complete": true,
+          "label_coverage": true,
+          "label_leakage_check": true,
+          "pooled_review_size": true,
+          "ranker_top100_coverage": true,
+          "reviewer_disagreement_examples": true,
+          "unclear_rate": true
+        },
+        "unclear_rate": 0.0
       },
       "name": "manual_review_quality_gate",
+      "passes": true
+    },
+    {
+      "details": {
+        "blind_evidence_packets": true,
+        "blind_review_leakage": {},
+        "blind_role_artifacts": true,
+        "count_matches": {
+          "adjudicator": true,
+          "evidence_collector": true,
+          "reviewer1": true,
+          "reviewer2": true
+        },
+        "counts": {
+          "adjudicator": 500,
+          "evidence_collector": 500,
+          "reviewer1": 500,
+          "reviewer2": 500
+        },
+        "merge_complete": true,
+        "merge_report": "data/replay/latest/review_artifacts/m3_final_merge_report.json",
+        "passes": true,
+        "reported_roles": [
+          "adjudicator",
+          "evidence_collector",
+          "reviewer1",
+          "reviewer2"
+        ],
+        "reviewed_warnings": 500,
+        "role_summary": "data/replay/latest/review_artifacts/m3_final_role_summary.json"
+      },
+      "name": "binddrift_review_role_artifacts",
       "passes": true
     },
     {
@@ -204,52 +321,53 @@
         "absolute_local_paths": 0,
         "acceptance": {
           "absolute_local_paths_clean": true,
-          "case_studies_minimum": true,
+          "case_studies_minimum": false,
           "drift_type_count_minimum": true,
-          "minimum_passes": true,
-          "negative_case_present": true,
+          "minimum_passes": false,
+          "negative_case_studies_minimum": true,
+          "non_wrapper_semantic_cases_minimum": true,
           "positive_labels_clean": true,
-          "semantic_true_cases_minimum": true,
-          "wrapper_fix_cases_minimum": true
+          "semantic_true_cases_minimum": false,
+          "wrapper_fix_backed_cases_limit": false
         },
         "benign_drift_cases": 0,
         "build_breakage_cases": 0,
         "case_drift_types": [
           "AllocationFreeDrift",
-          "LayoutFieldDrift",
           "NullabilityDrift",
           "OwnershipRefcountDrift",
           "SleepabilityContextDrift"
         ],
-        "case_studies": 7,
-        "drift_type_count": 5,
+        "case_studies": 6,
+        "drift_type_count": 4,
         "false_positive_cases": 0,
-        "negative_case_studies": 1,
+        "negative_case_studies": 2,
         "negative_label_distribution": {
-          "FALSE_POSITIVE": 1
+          "FALSE_POSITIVE": 2
         },
-        "passes": true,
-        "positive_case_studies": 7,
+        "non_wrapper_semantic_cases": 2,
+        "passes": false,
+        "positive_case_studies": 6,
         "positive_label_distribution": {
           "TRUE_SEMANTIC_DRIFT": 2,
-          "TRUE_WRAPPER_FIX": 5
+          "TRUE_WRAPPER_FIX": 4
         },
         "semantic_true_cases": 2,
         "unlabeled_cases": 0,
-        "wrapper_fix_backed_cases": 5
+        "wrapper_fix_backed_cases": 4
       },
       "name": "case_study_gate",
-      "passes": true
+      "passes": false
     },
     {
       "details": {
         "agreement": {
           "agreement_rate": 1.0,
           "cohen_kappa": 1.0,
-          "reviewed_pairs": 600
+          "reviewed_pairs": 800
         },
         "passes": true,
-        "total_samples": 600
+        "total_samples": 800
       },
       "name": "strict_extractor_audit_gate",
       "passes": true
@@ -278,61 +396,138 @@
       "absolute_local_paths": 0,
       "acceptance": {
         "absolute_local_paths_clean": true,
-        "case_studies_minimum": true,
+        "case_studies_minimum": false,
         "drift_type_count_minimum": true,
-        "minimum_passes": true,
-        "negative_case_present": true,
+        "minimum_passes": false,
+        "negative_case_studies_minimum": true,
+        "non_wrapper_semantic_cases_minimum": true,
         "positive_labels_clean": true,
-        "semantic_true_cases_minimum": true,
-        "wrapper_fix_cases_minimum": true
+        "semantic_true_cases_minimum": false,
+        "wrapper_fix_backed_cases_limit": false
       },
       "benign_drift_cases": 0,
       "build_breakage_cases": 0,
       "case_drift_types": [
         "AllocationFreeDrift",
-        "LayoutFieldDrift",
         "NullabilityDrift",
         "OwnershipRefcountDrift",
         "SleepabilityContextDrift"
       ],
-      "case_studies": 7,
-      "drift_type_count": 5,
+      "case_studies": 6,
+      "drift_type_count": 4,
       "false_positive_cases": 0,
-      "negative_case_studies": 1,
+      "negative_case_studies": 2,
       "negative_label_distribution": {
-        "FALSE_POSITIVE": 1
+        "FALSE_POSITIVE": 2
       },
-      "passes": true,
-      "positive_case_studies": 7,
+      "non_wrapper_semantic_cases": 2,
+      "passes": false,
+      "positive_case_studies": 6,
       "positive_label_distribution": {
         "TRUE_SEMANTIC_DRIFT": 2,
-        "TRUE_WRAPPER_FIX": 5
+        "TRUE_WRAPPER_FIX": 4
       },
       "semantic_true_cases": 2,
       "unlabeled_cases": 0,
-      "wrapper_fix_backed_cases": 5
+      "wrapper_fix_backed_cases": 4
     },
     "manual_review_quality": {
       "acceptance": {
-        "adjudication_notes_missing_rate_ok": true,
-        "all_main_labels_adjudicated": true,
-        "cohen_kappa_reported": true,
-        "disagreement_examples_minimum": true,
+        "adjudication_complete": true,
+        "adjudication_notes_missing": true,
+        "agreement_rate": true,
+        "cohen_kappa": true,
         "double_review_complete": true,
-        "label_leakage_check_passed": true,
+        "label_coverage": true,
+        "label_leakage_check": true,
         "minimum_passes": true,
-        "pooled_label_coverage_ok": true,
         "pooled_review_labels_primary_source": true,
+        "pooled_review_size": true,
         "required_columns_present": true,
-        "unclear_is_not_counted_as_true_positive": true
+        "reviewer_disagreement_examples": true,
+        "unclear_is_not_counted_as_true_positive": true,
+        "unclear_rate": true
       },
       "adjudication_notes_missing_rate": 0.0,
-      "cohen_kappa": 0.1195,
+      "agreement_rate": 0.922,
+      "cohen_kappa": 0.8118,
       "label_coverage": 1.0,
       "label_leakage_check": "passed",
       "passes": true,
-      "reviewed_warnings": 276,
-      "source_csv": "data/replay/latest/pooled_review_labels.csv"
+      "ranker_top100_coverage": {
+        "binddrift_current": {
+          "coverage": 1.0,
+          "covered": 100,
+          "top100": 100
+        },
+        "binddrift_oracle_blind": {
+          "coverage": 1.0,
+          "covered": 100,
+          "top100": 100
+        },
+        "binding_diff": {
+          "coverage": 1.0,
+          "covered": 100,
+          "top100": 100
+        },
+        "c_indicator": {
+          "coverage": 1.0,
+          "covered": 0,
+          "top100": 0
+        },
+        "c_signature": {
+          "coverage": 1.0,
+          "covered": 100,
+          "top100": 100
+        },
+        "no_graph": {
+          "coverage": 1.0,
+          "covered": 100,
+          "top100": 100
+        },
+        "no_impact_gate": {
+          "coverage": 1.0,
+          "covered": 100,
+          "top100": 100
+        },
+        "no_ranking": {
+          "coverage": 1.0,
+          "covered": 100,
+          "top100": 100
+        },
+        "random": {
+          "coverage": 1.0,
+          "covered": 100,
+          "top100": 100
+        },
+        "rust_use": {
+          "coverage": 1.0,
+          "covered": 100,
+          "top100": 100
+        }
+      },
+      "reviewed_warnings": 500,
+      "reviewer_disagreement_examples": {
+        "examples": 10,
+        "minimum_required": 10,
+        "path": "paper/analysis/reviewer_disagreement_examples.md"
+      },
+      "source_csv": "data/replay/latest/pooled_review_labels.csv",
+      "strict_checks": {
+        "adjudication_complete": true,
+        "adjudication_notes_missing": true,
+        "agreement_rate": true,
+        "blind_to_ranker": true,
+        "cohen_kappa": true,
+        "double_review_complete": true,
+        "label_coverage": true,
+        "label_leakage_check": true,
+        "pooled_review_size": true,
+        "ranker_top100_coverage": true,
+        "reviewer_disagreement_examples": true,
+        "unclear_rate": true
+      },
+      "unclear_rate": 0.0
     },
     "ranking": {
       "candidate_oracle_only": 0,
@@ -361,11 +556,11 @@
       },
       "claim": "ranking improvement claim supported on pooled labels",
       "comparison": {
-        "best_simple_baseline": "no_ranking",
+        "best_simple_baseline": "rust_use",
         "deltas": {
-          "ndcg_at_20": 0.3331,
-          "p_at_20": 0.3,
-          "p_at_50": 0.5
+          "ndcg_at_20": 0.5394,
+          "p_at_20": 0.6,
+          "p_at_50": 0.64
         },
         "minimum_conditions_passed": 3,
         "paired_bootstrap_significance": {
@@ -374,28 +569,28 @@
           "metrics": {
             "ndcg_at_20": {
               "bootstrap_delta_ci": [
-                0.0946,
-                0.5522
+                0.3485,
+                0.8284
               ],
-              "observed_delta": 0.3331,
+              "observed_delta": 0.5394,
               "p_value_primary_not_better": 0.002,
               "significant_primary_better": true
             },
             "p_at_20": {
               "bootstrap_delta_ci": [
-                0.1,
-                0.5
+                0.4,
+                0.8
               ],
-              "observed_delta": 0.3,
+              "observed_delta": 0.6,
               "p_value_primary_not_better": 0.002,
               "significant_primary_better": true
             },
             "p_at_50": {
               "bootstrap_delta_ci": [
-                0.36,
-                0.66
+                0.5,
+                0.76
               ],
-              "observed_delta": 0.5,
+              "observed_delta": 0.64,
               "p_value_primary_not_better": 0.002,
               "significant_primary_better": true
             }
@@ -406,14 +601,14 @@
         "primary_ranker": "binddrift_oracle_blind"
       },
       "metrics": {
-        "auprc_on_pooled_review_set": 0.7938,
+        "auprc_on_pooled_review_set": 0.9444,
         "candidate_count": 320,
-        "ndcg_at_20": 0.8514,
-        "p_at_10": 0.9,
-        "p_at_100": 0.52,
-        "p_at_20": 0.8,
-        "p_at_50": 0.76,
-        "review_pool_ranked_count": 276
+        "ndcg_at_20": 1.0,
+        "p_at_10": 1.0,
+        "p_at_100": 0.43,
+        "p_at_20": 1.0,
+        "p_at_50": 0.86,
+        "review_pool_ranked_count": 272
       },
       "passes": true,
       "top100_generated_binding_only": 0,
@@ -430,10 +625,10 @@
       "agreement": {
         "agreement_rate": 1.0,
         "cohen_kappa": 1.0,
-        "reviewed_pairs": 600
+        "reviewed_pairs": 800
       },
       "passes": true,
-      "total_samples": 600
+      "total_samples": 800
     }
   },
   "passes": false,
@@ -441,6 +636,7 @@
   "run_manifest": "data/replay/latest/run_manifest.json",
   "stage": "final",
   "stage_required_checks": [
+    "binddrift_review_role_artifacts",
     "case_study_gate",
     "evaluation_protocol_valid",
     "manual_review_quality_gate",

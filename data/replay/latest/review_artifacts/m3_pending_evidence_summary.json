@@ -1,0 +1,32 @@
+{
+  "binding_support_distribution": {
+    "partial": 3,
+    "yes": 241
+  },
+  "build_breakage_distribution": {
+    "absent": 243,
+    "present": 1
+  },
+  "c_drift_supported_distribution": {
+    "partial": 244
+  },
+  "generated_at": "2026-05-06T02:45:52.498153+00:00",
+  "match_methods": {
+    "warning_uid": 244
+  },
+  "missing_matches": [],
+  "missing_warning_matches": 0,
+  "packets": 244,
+  "pending_blank_adjudicated_label_rows": 244,
+  "rust_exposure_distribution": {
+    "binding_use_only": 232,
+    "none": 11,
+    "safe_api": 1
+  },
+  "source_labels_csv": "data/replay/latest/pooled_review_labels.csv",
+  "source_review_set_jsonl": "data/replay/latest/pooled_review_set.jsonl",
+  "wrapper_fix_distribution": {
+    "absent": 228,
+    "present": 16
+  }
+}

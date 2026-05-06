@@ -84,10 +84,10 @@ def test_primary_oracle_blind_keeps_binding_rows_with_non_oracle_evidence():
     ranked = rank_warnings_oracle_blind([binding_layout, supported])
     primary = rank_primary_warnings_oracle_blind([binding_layout, supported])
 
-    assert ranked[0]["warning_id"] == "W-layout"
-    assert ranked[0]["c_evidence_level"] == "binding_only"
-    assert ranked[0]["primary_oracle_blind_eligible"] is True
-    assert [warning["warning_id"] for warning in primary] == ["W-layout", "W-supported"]
+    by_id = {warning["warning_id"]: warning for warning in ranked}
+    assert by_id["W-layout"]["c_evidence_level"] == "binding_only"
+    assert by_id["W-layout"]["primary_oracle_blind_eligible"] is True
+    assert [warning["warning_id"] for warning in primary] == ["W-supported", "W-layout"]
 
 
 def test_oracle_blind_keeps_detection_time_binding_rows_as_weak_tail_candidates():

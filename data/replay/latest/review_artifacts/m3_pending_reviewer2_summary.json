@@ -1,0 +1,15 @@
+{
+  "input_path": "data/replay/latest/review_artifacts/m3_pending_evidence_packets.jsonl",
+  "label_counts": {
+    "BENIGN_DRIFT": 220,
+    "TRUE_BUILD_BREAKAGE": 1,
+    "TRUE_WRAPPER_FIX": 15,
+    "UNCLEAR": 8
+  },
+  "output_path": "data/replay/latest/review_artifacts/m3_pending_reviewer2.jsonl",
+  "reviewer": "Reviewer 2",
+  "row_count": 244,
+  "standard": "binddrift-review Reviewer 2 strict standard",
+  "summary_path": "data/replay/latest/review_artifacts/m3_pending_reviewer2_summary.json",
+  "validation_errors": []
+}

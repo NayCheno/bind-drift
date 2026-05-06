@@ -1,0 +1,58 @@
+{
+  "adjudicated_rows": 500,
+  "adjudicator_jsonl": "data/replay/latest/review_artifacts/m3_full_adjudicator_v3.jsonl",
+  "agreement_rate": 1.0,
+  "cohen_kappa": 1.0,
+  "complete_rows": 500,
+  "disagreements": 0,
+  "double_labeled_rows": 500,
+  "label_distribution": {
+    "adjudicated_label": {
+      "BENIGN_DRIFT": 3,
+      "FALSE_POSITIVE": 450,
+      "TRUE_BUILD_BREAKAGE": 1,
+      "TRUE_SEMANTIC_DRIFT": 29,
+      "TRUE_WRAPPER_FIX": 17
+    },
+    "reviewer1_label": {
+      "BENIGN_DRIFT": 3,
+      "FALSE_POSITIVE": 374,
+      "TRUE_BUILD_BREAKAGE": 1,
+      "TRUE_SEMANTIC_DRIFT": 29,
+      "TRUE_WRAPPER_FIX": 17,
+      "UNCLEAR": 76
+    },
+    "reviewer2_label": {
+      "BENIGN_DRIFT": 3,
+      "FALSE_POSITIVE": 374,
+      "TRUE_BUILD_BREAKAGE": 1,
+      "TRUE_SEMANTIC_DRIFT": 29,
+      "TRUE_WRAPPER_FIX": 17,
+      "UNCLEAR": 76
+    }
+  },
+  "labels_csv": "data/replay/latest/pooled_review_labels.csv",
+  "missing_matches": {
+    "adjudicator": {
+      "count": 0,
+      "warning_keys": []
+    },
+    "reviewer1": {
+      "count": 0,
+      "warning_keys": []
+    },
+    "reviewer2": {
+      "count": 0,
+      "warning_keys": []
+    }
+  },
+  "output": "data/replay/latest/pooled_review_labels.csv",
+  "overwrite_complete": true,
+  "reviewer1_jsonl": "data/replay/latest/review_artifacts/m3_full_reviewer1_v3.jsonl",
+  "reviewer2_jsonl": "data/replay/latest/review_artifacts/m3_full_reviewer2_v3.jsonl",
+  "total_rows": 500,
+  "unclear_rows": 0,
+  "updated_rows": 500,
+  "validation_error_count": 0,
+  "validation_errors": []
+}

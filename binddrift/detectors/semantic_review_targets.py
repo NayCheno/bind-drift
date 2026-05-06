@@ -16,11 +16,11 @@ from binddrift.warnings import read_warnings, write_jsonl
 
 
 SEMANTIC_REVIEW_QUOTAS = {
-    "NullabilityDrift": 20,
-    "OwnershipRefcountDrift": 20,
-    "AllocationFreeDrift": 20,
-    "SleepabilityContextDrift": 20,
-    "LayoutFieldDrift": 20,
+    "NullabilityDrift": 80,
+    "OwnershipRefcountDrift": 80,
+    "AllocationFreeDrift": 80,
+    "SleepabilityContextDrift": 80,
+    "LayoutFieldDrift": 80,
 }
 
 REVIEW_FIELDS = [
@@ -54,11 +54,12 @@ def generate_semantic_review_targets(
     manifest = validate_run_manifest(cfg)
     run_dir = canonical_run_dir(cfg)
     warnings_path = Path(manifest["resolved_paths"]["promoted_warnings"])
+    drift_facts_path = Path(manifest["resolved_paths"]["drift_facts"])
     output_set = output_set or run_dir / "semantic_target_review_set.jsonl"
     output_review = output_review or run_dir / "semantic_target_review.csv"
     output_summary = output_summary or cfg.repo_root / "paper/tables/semantic_drift_review_summary.json"
 
-    warnings = read_warnings(warnings_path)
+    warnings = _dedupe_warnings(read_warnings(warnings_path) + read_warnings(drift_facts_path))
     review_rows = _load_review_rows(
         [
             Path(manifest["resolved_paths"].get("pooled_review_labels", "")),
@@ -79,10 +80,12 @@ def generate_semantic_review_targets(
         labels,
         shortages=shortages,
         warnings_source=repo_relative(cfg, warnings_path),
+        drift_facts_source=repo_relative(cfg, drift_facts_path),
         review_sources=[repo_relative(cfg, path) for path in _existing_review_paths(manifest)],
         target_set=repo_relative(cfg, output_set),
         target_review=repo_relative(cfg, output_review),
         warnings_sha256=sha256_file(warnings_path),
+        drift_facts_sha256=sha256_file(drift_facts_path),
     )
     output_summary.parent.mkdir(parents=True, exist_ok=True)
     output_summary.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -138,18 +141,33 @@ def select_semantic_targets(
     return selected, shortages
 
 
+def _dedupe_warnings(warnings: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for warning in warnings:
+        key = str(warning.get("warning_uid") or f"{warning.get('pair_id')}:{warning.get('warning_id')}")
+        if key in seen:
+            continue
+        rows.append(warning)
+        seen.add(key)
+    return rows
+
+
 def build_semantic_review_summary(
     selected: list[dict[str, Any]],
     labels: dict[str, str],
     *,
     shortages: dict[str, str] | None = None,
     warnings_source: str | None = None,
+    drift_facts_source: str | None = None,
     review_sources: list[str] | None = None,
     target_set: str | None = None,
     target_review: str | None = None,
     warnings_sha256: str | None = None,
+    drift_facts_sha256: str | None = None,
 ) -> dict[str, Any]:
     warning_labels = [label_for_warning(labels, warning) for warning in selected]
+    reviewed_labels = [label for label in warning_labels if label]
     type_distribution = Counter(str(warning.get("semantic_target_type") or warning.get("type")) for warning in selected)
     true_semantic = [warning for warning in selected if label_for_warning(labels, warning) == "TRUE_SEMANTIC_DRIFT"]
     true_wrapper = [warning for warning in selected if label_for_warning(labels, warning) == "TRUE_WRAPPER_FIX"]
@@ -160,27 +178,47 @@ def build_semantic_review_summary(
         if not _has_wrapper_oracle(warning)
     ]
     false_taxonomy = Counter(_false_positive_taxonomy(warning, label_for_warning(labels, warning)) for warning in selected if label_for_warning(labels, warning) in {"FALSE_POSITIVE", "BENIGN_DRIFT", "UNCLEAR"})
+    unclear_rate = round(sum(1 for label in reviewed_labels if label == "UNCLEAR") / len(reviewed_labels), 4) if reviewed_labels else 1.0
+    semantic_examples_by_type = Counter(warning.get("semantic_target_type") for warning in true_semantic)
     acceptance = {
+        "minimum_semantic_review_candidates": 400,
+        "minimum_reviewed_semantic_targets": 200,
         "minimum_true_semantic_drift": 8,
         "minimum_non_wrapper_semantic_true_positives": 5,
         "minimum_semantic_drift_types": 3,
+        "semantic_review_candidates_passes": len(selected) >= 400,
+        "reviewed_semantic_targets_passes": len(reviewed_labels) >= 200,
         "true_semantic_drift_passes": len(true_semantic) >= 8,
         "non_wrapper_semantic_passes": len(non_wrapper_semantic) >= 5,
         "semantic_drift_type_passes": len({warning.get("semantic_target_type") for warning in true_semantic}) >= 3,
+        "unclear_rate_passes": unclear_rate <= 0.05,
+        "examples_per_semantic_type_passes": all(count >= 2 for count in semantic_examples_by_type.values()) if semantic_examples_by_type else False,
+        "wrapper_fix_not_counted_as_semantic": all(label_for_warning(labels, warning) != "TRUE_WRAPPER_FIX" for warning in true_semantic),
     }
     acceptance["minimum_passes"] = bool(
-        acceptance["true_semantic_drift_passes"]
+        acceptance["semantic_review_candidates_passes"]
+        and acceptance["reviewed_semantic_targets_passes"]
+        and acceptance["true_semantic_drift_passes"]
         and acceptance["non_wrapper_semantic_passes"]
         and acceptance["semantic_drift_type_passes"]
+        and acceptance["unclear_rate_passes"]
+        and acceptance["examples_per_semantic_type_passes"]
+        and acceptance["wrapper_fix_not_counted_as_semantic"]
     )
     return {
         "warnings_source": warnings_source,
         "warnings_sha256": warnings_sha256,
+        "drift_facts_source": drift_facts_source,
+        "drift_facts_sha256": drift_facts_sha256,
         "review_sources": review_sources or [],
         "target_set": target_set,
         "target_review": target_review,
         "review_method": "adjudicated double-review labels reused from pooled/manual review artifacts; missing labels are not counted as reviewed",
-        "candidates_reviewed": len(selected),
+        "semantic_review_candidates": len(selected),
+        "candidates_reviewed": len(reviewed_labels),
+        "reviewed_semantic_targets": len(reviewed_labels),
+        "unclear_count": sum(1 for label in reviewed_labels if label == "UNCLEAR"),
+        "unclear_rate": unclear_rate,
         "quota": dict(SEMANTIC_REVIEW_QUOTAS),
         "quota_shortages": shortages or {},
         "label_distribution": dict(Counter(label for label in warning_labels if label)),
@@ -190,6 +228,7 @@ def build_semantic_review_summary(
         "non_wrapper_semantic_true_positives": len(non_wrapper_semantic),
         "semantic_drift_types": sorted({str(warning.get("semantic_target_type")) for warning in true_semantic}),
         "semantic_drift_type_count": len({str(warning.get("semantic_target_type")) for warning in true_semantic}),
+        "examples_per_semantic_type": dict(semantic_examples_by_type),
         "false_positive_taxonomy": dict(false_taxonomy),
         "examples_not_used_as_case_studies": [_example_row(warning, labels) for warning in selected if label_for_warning(labels, warning) != "TRUE_SEMANTIC_DRIFT"][:10],
         "acceptance": acceptance,

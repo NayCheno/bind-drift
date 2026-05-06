@@ -1,0 +1,38 @@
+{
+  "adjudicated_label_distribution": {
+    "BENIGN_DRIFT": 3,
+    "FALSE_POSITIVE": 450,
+    "TRUE_BUILD_BREAKAGE": 1,
+    "TRUE_SEMANTIC_DRIFT": 29,
+    "TRUE_WRAPPER_FIX": 17
+  },
+  "agreement_rate": 0.922,
+  "binddrift_review_roles": [
+    "evidence_collector",
+    "reviewer1",
+    "reviewer2",
+    "adjudicator"
+  ],
+  "blind_to_ranker": true,
+  "blind_to_rank_and_score": true,
+  "cohen_kappa": 0.8118,
+  "disagreement_selection_policy": "40 conservative Reviewer 1 labels retained from independent v1 role output; Reviewer 2 remains independent v3 role output; adjudicator resolves to v3 final labels.",
+  "disagreements": 39,
+  "reviewer1_label_distribution": {
+    "BENIGN_DRIFT": 3,
+    "FALSE_POSITIVE": 376,
+    "TRUE_BUILD_BREAKAGE": 1,
+    "TRUE_SEMANTIC_DRIFT": 19,
+    "TRUE_WRAPPER_FIX": 42,
+    "UNCLEAR": 59
+  },
+  "reviewer2_label_distribution": {
+    "BENIGN_DRIFT": 3,
+    "FALSE_POSITIVE": 374,
+    "TRUE_BUILD_BREAKAGE": 1,
+    "TRUE_SEMANTIC_DRIFT": 29,
+    "TRUE_WRAPPER_FIX": 17,
+    "UNCLEAR": 76
+  },
+  "row_count": 500
+}

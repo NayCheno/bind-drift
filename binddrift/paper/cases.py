@@ -16,7 +16,8 @@ from binddrift.run_manifest import canonical_run_dir, manifest_exists, validate_
 from binddrift.warnings import eligible_for_main_warning, read_warnings
 
 
-POSITIVE_TARGET = 6
+POSITIVE_TARGET = 8
+NEGATIVE_TARGET = 2
 CASE_TARGET_TYPES = [
     "NullabilityDrift",
     "OwnershipRefcountDrift",
@@ -178,10 +179,12 @@ def _select_positive_cases(
             used.add(key)
             return
 
-    for semantic_type in ("NullabilityDrift", "AllocationFreeDrift"):
-        add_first(lambda warning, semantic_type=semantic_type: label_for_warning(labels, warning) == "TRUE_SEMANTIC_DRIFT" and _case_drift_type(warning) == semantic_type)
+    for case_type in CASE_TARGET_TYPES:
+        add_first(lambda warning, case_type=case_type: label_for_warning(labels, warning) == "TRUE_SEMANTIC_DRIFT" and _case_drift_type(warning) == case_type)
 
     for case_type in CASE_TARGET_TYPES:
+        if sum(1 for warning in selected if label_for_warning(labels, warning) == "TRUE_WRAPPER_FIX") >= POSITIVE_TARGET // 2:
+            break
         add_first(lambda warning, case_type=case_type: _case_drift_type(warning) == case_type and label_for_warning(labels, warning) == "TRUE_WRAPPER_FIX")
 
     add_first(lambda warning: label_for_warning(labels, warning) == "TRUE_BUILD_BREAKAGE")
@@ -190,10 +193,12 @@ def _select_positive_cases(
         if len(selected) >= POSITIVE_TARGET:
             break
         key = warning_key(warning)
+        if label_for_warning(labels, warning) == "TRUE_WRAPPER_FIX" and sum(1 for item in selected if label_for_warning(labels, item) == "TRUE_WRAPPER_FIX") >= POSITIVE_TARGET // 2:
+            continue
         if key not in used:
             selected.append(warning)
             used.add(key)
-    return selected[: max(POSITIVE_TARGET, len(selected))]
+    return selected[:POSITIVE_TARGET]
 
 
 def _select_negative_cases(
@@ -201,18 +206,26 @@ def _select_negative_cases(
     labels: dict[str, str],
     review_rows: dict[str, dict[str, str]],
 ) -> list[dict[str, Any]]:
+    selected: list[dict[str, Any]] = []
+    used: set[str] = set()
     for preferred in ("FALSE_POSITIVE", "BENIGN_DRIFT", "UNCLEAR"):
         for warning in warnings:
+            if len(selected) >= NEGATIVE_TARGET:
+                return selected
             label = label_for_warning(labels, warning)
             if label != preferred:
+                continue
+            key = warning_key(warning)
+            if key in used:
                 continue
             if not eligible_for_main_warning(warning):
                 continue
             if not _review_has_adjudication(warning, review_rows):
                 continue
             if _has_c_evidence(warning) or _has_rust_impact(warning):
-                return [warning]
-    return []
+                selected.append(warning)
+                used.add(key)
+    return selected
 
 
 def _case_is_valid(warning: dict[str, Any], label: str | None, review_rows: dict[str, dict[str, str]]) -> bool:
@@ -300,6 +313,12 @@ def _has_rust_impact(warning: dict[str, Any]) -> bool:
     )
 
 
+def _has_wrapper_oracle(warning: dict[str, Any]) -> bool:
+    rust_side = warning.get("rust_side", {})
+    evidence = list(warning.get("evidence_chain") or []) + list(rust_side.get("oracle_hits") or [])
+    return any(isinstance(item, dict) and item.get("oracle_type") == "wrapper_fix" for item in evidence)
+
+
 def _case_summary_table(
     positive_cases: list[dict[str, Any]],
     negative_cases: list[dict[str, Any]],
@@ -311,6 +330,7 @@ def _case_summary_table(
     case_paths = sorted((cfg.repo_root / "paper/cases").glob("case-*.md"))
     absolute_paths = _count_absolute_local_paths(case_paths)
     semantic_true_cases = sum(1 for label in positive_labels if label == "TRUE_SEMANTIC_DRIFT")
+    non_wrapper_semantic_cases = sum(1 for warning, label in zip(positive_cases, positive_labels) if label == "TRUE_SEMANTIC_DRIFT" and not _has_wrapper_oracle(warning))
     wrapper_cases = sum(1 for label in positive_labels if label == "TRUE_WRAPPER_FIX")
     summary = {
         "case_studies": len(positive_cases),
@@ -319,6 +339,7 @@ def _case_summary_table(
         "case_drift_types": positive_types,
         "drift_type_count": len(positive_types),
         "semantic_true_cases": semantic_true_cases,
+        "non_wrapper_semantic_cases": non_wrapper_semantic_cases,
         "wrapper_fix_backed_cases": wrapper_cases,
         "build_breakage_cases": sum(1 for label in positive_labels if label == "TRUE_BUILD_BREAKAGE"),
         "false_positive_cases": sum(1 for label in positive_labels if label == "FALSE_POSITIVE"),
@@ -329,13 +350,14 @@ def _case_summary_table(
         "negative_label_distribution": dict(Counter(label_for_warning(labels, warning) for warning in negative_cases)),
     }
     summary["acceptance"] = {
-        "case_studies_minimum": summary["case_studies"] >= 6,
-        "drift_type_count_minimum": summary["drift_type_count"] >= 3,
-        "semantic_true_cases_minimum": summary["semantic_true_cases"] >= 2,
-        "wrapper_fix_cases_minimum": summary["wrapper_fix_backed_cases"] >= 2,
+        "case_studies_minimum": summary["case_studies"] >= 8,
+        "negative_case_studies_minimum": summary["negative_case_studies"] >= 2,
+        "drift_type_count_minimum": summary["drift_type_count"] >= 4,
+        "semantic_true_cases_minimum": summary["semantic_true_cases"] >= 3,
+        "non_wrapper_semantic_cases_minimum": summary["non_wrapper_semantic_cases"] >= 2,
+        "wrapper_fix_backed_cases_limit": summary["wrapper_fix_backed_cases"] <= max(0, summary["case_studies"] // 2),
         "positive_labels_clean": summary["false_positive_cases"] == 0 and summary["benign_drift_cases"] == 0 and summary["unlabeled_cases"] == 0,
         "absolute_local_paths_clean": summary["absolute_local_paths"] == 0,
-        "negative_case_present": summary["negative_case_studies"] >= 1,
     }
     summary["acceptance"]["minimum_passes"] = all(summary["acceptance"].values())
     return summary

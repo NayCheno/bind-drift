@@ -1,13 +1,66 @@
 {
+  "blind_to_ranker": true,
   "label_file": "data/replay/latest/pooled_review_labels.csv",
   "labels": {
-    "coverage": 0.3623,
-    "label_rows": 276,
-    "labeled_rows": 100
+    "coverage": 1.0,
+    "label_rows": 500,
+    "labeled_rows": 500
   },
   "pool": "data/replay/latest/pooled_review_set.jsonl",
-  "pool_rows": 276,
-  "ranker_top100_union": 276,
+  "pool_rows": 500,
+  "ranker_top100_coverage": {
+    "binddrift_current": {
+      "coverage": 1.0,
+      "covered": 100,
+      "top100": 100
+    },
+    "binddrift_oracle_blind": {
+      "coverage": 1.0,
+      "covered": 100,
+      "top100": 100
+    },
+    "binding_diff": {
+      "coverage": 1.0,
+      "covered": 100,
+      "top100": 100
+    },
+    "c_indicator": {
+      "coverage": 1.0,
+      "covered": 0,
+      "top100": 0
+    },
+    "c_signature": {
+      "coverage": 1.0,
+      "covered": 100,
+      "top100": 100
+    },
+    "no_graph": {
+      "coverage": 1.0,
+      "covered": 100,
+      "top100": 100
+    },
+    "no_impact_gate": {
+      "coverage": 1.0,
+      "covered": 100,
+      "top100": 100
+    },
+    "no_ranking": {
+      "coverage": 1.0,
+      "covered": 100,
+      "top100": 100
+    },
+    "random": {
+      "coverage": 1.0,
+      "covered": 100,
+      "top100": 100
+    },
+    "rust_use": {
+      "coverage": 1.0,
+      "covered": 100,
+      "top100": 100
+    }
+  },
+  "ranker_top100_union": 255,
   "rankers": [
     "binddrift_oracle_blind",
     "binddrift_current",
@@ -21,5 +74,5 @@
     "random"
   ],
   "run_id": "latest",
-  "selection_policy": "ranker_top100_union_plus_type_and_pair_stratified_samples"
+  "selection_policy": "ranker_top100_union_plus_type_pair_and_unpromoted_drift_fact_stratified_samples"
 }

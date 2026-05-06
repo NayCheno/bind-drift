@@ -30,7 +30,7 @@ STAGE_REQUIRED_CHECKS: dict[str, set[str]] = {
     },
     "m1": {"no_local_absolute_paths"},
     "m2": {"ranking"},
-    "m3": {"pooled_review_coverage", "manual_review_quality_gate"},
+    "m3": {"pooled_review_coverage", "manual_review_quality_gate", "binddrift_review_role_artifacts"},
     "m4": {"semantic"},
     "m5": {"case_study_gate"},
     "m6": {"ranking"},
@@ -101,6 +101,7 @@ def validate_artifact(
     _check("oracle_blind_primary_has_no_forbidden_components", checks, lambda: _oracle_blind_components(cfg))
     _check("pooled_review_coverage", checks, lambda: _pooled_review_coverage(cfg))
     _check("manual_review_quality_gate", checks, lambda: _manual_review_quality_gate(cfg))
+    _check("binddrift_review_role_artifacts", checks, lambda: _binddrift_review_role_artifacts(cfg))
     _check("case_study_gate", checks, lambda: _case_study_gate(cfg))
     _check("strict_extractor_audit_gate", checks, lambda: _strict_extractor_gate(cfg))
     _check("paper_claims_match_downgrades", checks, lambda: _paper_claims(cfg))
@@ -279,15 +280,102 @@ def _semantic_gate(cfg: Config) -> dict[str, Any]:
 def _manual_review_quality_gate(cfg: Config) -> dict[str, Any]:
     data = _json(cfg, "paper/tables/manual_review_quality.json")
     acceptance = data.get("acceptance") or {}
+    unclear_count = data.get("unclear_count") or 0
+    reviewed_warnings = data.get("reviewed_warnings") or 0
+    unclear_rate = data.get("unclear_rate")
+    if unclear_rate is None:
+        unclear_rate = round(unclear_count / reviewed_warnings, 4) if reviewed_warnings else 1.0
+    pooled_manifest = _json(cfg, "data/replay/latest/pooled_review_manifest.json")
+    ranker_coverage = pooled_manifest.get("ranker_top100_coverage") or {}
+    ranker_coverage_passes = bool(ranker_coverage) and all((row.get("coverage") or 0.0) >= 0.95 for row in ranker_coverage.values())
+    disagreement_examples = data.get("reviewer_disagreement_examples") or {}
+    strict_checks = {
+        "pooled_review_size": 450 <= reviewed_warnings <= 600,
+        "label_coverage": (data.get("label_coverage") or 0.0) >= 1.0,
+        "double_review_complete": bool(acceptance.get("double_review_complete")),
+        "adjudication_complete": bool(acceptance.get("adjudication_complete") or acceptance.get("all_main_labels_adjudicated")),
+        "blind_to_ranker": pooled_manifest.get("blind_to_ranker") is True,
+        "cohen_kappa": (data.get("cohen_kappa") or 0.0) >= 0.60,
+        "agreement_rate": (data.get("agreement_rate") or 0.0) >= 0.75,
+        "adjudication_notes_missing": data.get("adjudication_notes_missing_rate") == 0.0,
+        "unclear_rate": unclear_rate <= 0.05,
+        "label_leakage_check": data.get("label_leakage_check") == "passed",
+        "ranker_top100_coverage": ranker_coverage_passes,
+        "reviewer_disagreement_examples": (disagreement_examples.get("examples") or 0) >= 10,
+    }
     return {
-        "passes": bool(acceptance.get("minimum_passes")),
+        "passes": all(strict_checks.values()),
         "source_csv": data.get("source_csv"),
-        "reviewed_warnings": data.get("reviewed_warnings"),
+        "reviewed_warnings": reviewed_warnings,
         "label_coverage": data.get("label_coverage"),
         "cohen_kappa": data.get("cohen_kappa"),
+        "agreement_rate": data.get("agreement_rate"),
+        "unclear_rate": unclear_rate,
         "adjudication_notes_missing_rate": data.get("adjudication_notes_missing_rate"),
         "label_leakage_check": data.get("label_leakage_check"),
         "acceptance": acceptance,
+        "strict_checks": strict_checks,
+        "ranker_top100_coverage": ranker_coverage,
+        "reviewer_disagreement_examples": disagreement_examples,
+    }
+
+
+def _binddrift_review_role_artifacts(cfg: Config) -> dict[str, Any]:
+    review_dir = canonical_run_dir(cfg) / "review_artifacts"
+    expected_files = {
+        "evidence_collector": review_dir / "m3_final_evidence_packets.jsonl",
+        "reviewer1": review_dir / "m3_final_reviewer1.jsonl",
+        "reviewer2": review_dir / "m3_final_reviewer2.jsonl",
+        "adjudicator": review_dir / "m3_final_adjudicator.jsonl",
+        "merge_report": review_dir / "m3_final_merge_report.json",
+        "role_summary": review_dir / "m3_final_role_summary.json",
+    }
+    missing = [repo_relative(cfg, path) for path in expected_files.values() if not path.exists()]
+    if missing:
+        return {"passes": False, "missing": missing}
+
+    labels_path = canonical_run_dir(cfg) / "pooled_review_labels.csv"
+    reviewed_warnings = _csv_row_count(labels_path)
+    counts = {
+        role: _jsonl_count(path)
+        for role, path in expected_files.items()
+        if path.suffix == ".jsonl"
+    }
+    count_matches = {role: count == reviewed_warnings for role, count in counts.items()}
+    role_leakage = {
+        role: _blind_review_leakage(path)
+        for role, path in expected_files.items()
+        if path.suffix == ".jsonl"
+    }
+    role_summary = _json(cfg, repo_relative(cfg, expected_files["role_summary"]))
+    merge_report = _json(cfg, repo_relative(cfg, expected_files["merge_report"]))
+    required_roles = {"evidence_collector", "reviewer1", "reviewer2", "adjudicator"}
+    reported_roles = set(role_summary.get("binddrift_review_roles") or [])
+    roles_are_blind = role_summary.get("blind_to_ranker") is True and all(not findings for findings in role_leakage.values())
+    merge_complete = (
+        merge_report.get("complete_rows") == reviewed_warnings
+        and merge_report.get("double_labeled_rows") == reviewed_warnings
+        and merge_report.get("adjudicated_rows") == reviewed_warnings
+        and merge_report.get("validation_error_count") == 0
+    )
+    return {
+        "passes": bool(
+            reviewed_warnings
+            and all(count_matches.values())
+            and roles_are_blind
+            and required_roles.issubset(reported_roles)
+            and merge_complete
+        ),
+        "reviewed_warnings": reviewed_warnings,
+        "counts": counts,
+        "count_matches": count_matches,
+        "blind_evidence_packets": not role_leakage.get("evidence_collector"),
+        "blind_role_artifacts": roles_are_blind,
+        "blind_review_leakage": {role: findings[:20] for role, findings in role_leakage.items() if findings},
+        "reported_roles": sorted(reported_roles),
+        "merge_complete": merge_complete,
+        "merge_report": repo_relative(cfg, expected_files["merge_report"]),
+        "role_summary": repo_relative(cfg, expected_files["role_summary"]),
     }
 
 
@@ -361,6 +449,73 @@ def _no_local_paths(cfg: Config) -> dict[str, Any]:
 def _run_pytest(cfg: Config) -> dict[str, Any]:
     result = subprocess.run([sys.executable, "-m", "pytest"], cwd=cfg.repo_root, text=True, capture_output=True, check=False)
     return {"passes": result.returncode == 0, "returncode": result.returncode, "stdout_tail": result.stdout[-4000:], "stderr_tail": result.stderr[-4000:]}
+
+
+def _csv_row_count(path: Path) -> int:
+    with path.open(encoding="utf-8") as fh:
+        return max(0, sum(1 for _line in fh) - 1)
+
+
+def _jsonl_count(path: Path) -> int:
+    with path.open(encoding="utf-8") as fh:
+        return sum(1 for line in fh if line.strip())
+
+
+def _blind_review_leakage(path: Path) -> list[str]:
+    forbidden_strings = ("score_breakdown", "wrapper_fix_hit=", "build_oracle_hit=")
+    findings: list[str] = []
+    with path.open(encoding="utf-8") as fh:
+        for line_number, line in enumerate(fh, start=1):
+            if not line.strip():
+                continue
+            row = json.loads(line)
+            leaked = sorted(_blind_review_keys(row))
+            leaked.extend(_blind_review_strings(row, forbidden_strings))
+            if leaked:
+                warning_id = row.get("warning_id") or row.get("warning_uid") or f"line:{line_number}"
+                findings.append(f"{warning_id}: {','.join(leaked)}")
+    return findings
+
+
+def _blind_review_keys(value: Any) -> set[str]:
+    forbidden_keys = {
+        "rank",
+        "ranker",
+        "ranker_source",
+        "ranker_sources",
+        "ranker_ranks",
+        "score",
+        "score_breakdown",
+        "score_components",
+        "score_component_keys",
+    }
+    if isinstance(value, dict):
+        found = {key for key in value if key.lower() in forbidden_keys}
+        for item in value.values():
+            found.update(_blind_review_keys(item))
+        return found
+    if isinstance(value, list):
+        found: set[str] = set()
+        for item in value:
+            found.update(_blind_review_keys(item))
+        return found
+    return set()
+
+
+def _blind_review_strings(value: Any, forbidden: tuple[str, ...]) -> list[str]:
+    if isinstance(value, dict):
+        found: list[str] = []
+        for item in value.values():
+            found.extend(_blind_review_strings(item, forbidden))
+        return found
+    if isinstance(value, list):
+        found: list[str] = []
+        for item in value:
+            found.extend(_blind_review_strings(item, forbidden))
+        return found
+    if isinstance(value, str):
+        return [token for token in forbidden if token in value]
+    return []
 
 
 def _json(cfg: Config, path: str) -> dict[str, Any]:

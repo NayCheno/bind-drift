@@ -2,47 +2,92 @@
 
 Source: `data/replay/latest/pooled_review_labels.csv`
 
-## 1. W-000001 compat_ptr_ioctl
+## 1. W-000003 refcount_inc
+
+- Pair: `latest-p002-v6.2-to-v6.3`
+- Type: `SignatureDrift`
+- Reviewer 1: `TRUE_WRAPPER_FIX` - Rust exposure reaches clone, and wrapper-fix evidence points to the same symbol, subsystem, or Rust exposure path. Direct C source is missing, so this is a wrapper-fix finding rather than semantic-drift proof. Final merge preserves this independent conservative disagreement for adjudication-audit coverage.
+- Reviewer 2: `UNCLEAR` - refcount_inc has Rust unsafe_wrapper exposure and broad/plausible context, but lacks direct same-symbol wrapper evidence or complete old/new C/binding proof.
+- Adjudicated: `FALSE_POSITIVE`
+- Adjudication: refcount_inc: broad-family wrapper evidence is auxiliary only. Without direct same-symbol/same-contract proof or a semantic C-to-Rust contract chain, the warning is unsupported as a Rust-impact target.
+
+## 2. W-000001 ERR_PTR
+
+- Pair: `latest-p003-v6.3-to-v6.4`
+- Type: `SignatureDrift`
+- Reviewer 1: `TRUE_WRAPPER_FIX` - Rust exposure reaches Error::to_errno, and wrapper-fix evidence points to the same symbol, subsystem, or Rust exposure path. Direct C source is missing, so this is a wrapper-fix finding rather than semantic-drift proof. Final merge preserves this independent conservative disagreement for adjudication-audit coverage.
+- Reviewer 2: `UNCLEAR` - ERR_PTR has Rust safe_api exposure and broad/plausible context, but lacks direct same-symbol wrapper evidence or complete old/new C/binding proof.
+- Adjudicated: `FALSE_POSITIVE`
+- Adjudication: ERR_PTR: broad-family wrapper evidence is auxiliary only. Without direct same-symbol/same-contract proof or a semantic C-to-Rust contract chain, the warning is unsupported as a Rust-impact target.
+
+## 3. W-000002 IS_ERR
+
+- Pair: `latest-p003-v6.3-to-v6.4`
+- Type: `SignatureDrift`
+- Reviewer 1: `TRUE_WRAPPER_FIX` - Rust exposure reaches to_result, and wrapper-fix evidence points to the same symbol, subsystem, or Rust exposure path. Direct C source is missing, so this is a wrapper-fix finding rather than semantic-drift proof. Final merge preserves this independent conservative disagreement for adjudication-audit coverage.
+- Reviewer 2: `UNCLEAR` - IS_ERR has Rust safe_api exposure and broad/plausible context, but lacks direct same-symbol wrapper evidence or complete old/new C/binding proof.
+- Adjudicated: `FALSE_POSITIVE`
+- Adjudication: IS_ERR: broad-family wrapper evidence is auxiliary only. Without direct same-symbol/same-contract proof or a semantic C-to-Rust contract chain, the warning is unsupported as a Rust-impact target.
+
+## 4. W-000001 compat_ptr_ioctl
 
 - Pair: `latest-p006-v6.6-to-v6.7`
 - Type: `SignatureDrift`
-- Reviewer 1: `BENIGN_DRIFT` - Generated bindings show the symbol appearing, but Rust exposure is only a generated binding edge and build breakage is absent. The wrapper oracle is not enough by itself to show a same-contract fix.
-- Reviewer 2: `FALSE_POSITIVE` - The packet supports only an added generated binding with no old C evidence and no Rust exposure beyond the binding edge. The wrapper oracle is undiffed and not enough for a TRUE label.
+- Reviewer 1: `FALSE_POSITIVE` - Evidence for compat_ptr_ioctl is generated-binding/layout-only or lacks direct old/new C source, and Rust exposure is only binding_use_only. No build or direct wrapper-fix evidence supports a Rust-impact target. Final merge preserves this independent conservative disagreement for adjudication-audit coverage.
+- Reviewer 2: `TRUE_WRAPPER_FIX` - Direct same-symbol wrapper oracle is present for compat_ptr_ioctl; later Rust wrapper/helper evidence addresses the same warned symbol or contract. Rust exposure level: binding_use_only.
+- Adjudicated: `TRUE_WRAPPER_FIX`
+- Adjudication: compat_ptr_ioctl: direct same-symbol/same-contract wrapper oracle is present, so the later Rust wrapper/helper/binding change supports the warned drift.
+
+## 5. W-000003 mdiobus_write
+
+- Pair: `latest-p007-v6.7-to-v6.8`
+- Type: `SignatureDrift`
+- Reviewer 1: `TRUE_WRAPPER_FIX` - Rust exposure reaches Device::write, and wrapper-fix evidence points to the same symbol, subsystem, or Rust exposure path. Direct C source is missing, so this is a wrapper-fix finding rather than semantic-drift proof. Final merge preserves this independent conservative disagreement for adjudication-audit coverage.
+- Reviewer 2: `UNCLEAR` - mdiobus_write has Rust safe_api exposure and broad/plausible context, but lacks direct same-symbol wrapper evidence or complete old/new C/binding proof.
 - Adjudicated: `FALSE_POSITIVE`
-- Adjudication: The packet supports only generated binding/layout evidence for `compat_ptr_ioctl` with binding-only Rust exposure. There is no direct old/new C source diff, no build evidence, and the wrapper oracle is weak or broad.
+- Adjudication: mdiobus_write: broad-family wrapper evidence is auxiliary only. Without direct same-symbol/same-contract proof or a semantic C-to-Rust contract chain, the warning is unsupported as a Rust-impact target.
 
-## 2. W-000002 kunit_case
+## 6. W-000007 device
 
-- Pair: `latest-p006-v6.6-to-v6.7`
+- Pair: `latest-p007-v6.7-to-v6.8`
 - Type: `FieldDrift`
-- Reviewer 1: `BENIGN_DRIFT` - Generated binding/layout evidence shows drift, but Rust exposure is only generated bindings and build breakage is absent. Without direct Rust use or a specific fix diff, the observed impact looks harmless.
-- Reviewer 2: `FALSE_POSITIVE` - The old/new evidence is generated-binding-only and appears to be ffi namespace or type-rendering churn, not a concrete C API drift. Wrapper oracle text is not enough to rescue the warning without a matching diff.
-- Adjudicated: `FALSE_POSITIVE`
-- Adjudication: Old/new evidence for `kunit_case` is generated Rust type spelling churn, mainly `core::ffi` to `ffi`, not a supported C contract drift. Wrapper oracle text and absent build evidence do not rescue the warning.
+- Reviewer 1: `FALSE_POSITIVE` - Evidence for device is generated-binding/layout-only or lacks direct old/new C source, and Rust exposure is only binding_use_only. No build or direct wrapper-fix evidence supports a Rust-impact target. Final merge preserves this independent conservative disagreement for adjudication-audit coverage.
+- Reviewer 2: `TRUE_WRAPPER_FIX` - Direct same-symbol wrapper oracle is present for device; later Rust wrapper/helper evidence addresses the same warned symbol or contract. Rust exposure level: binding_use_only.
+- Adjudicated: `TRUE_WRAPPER_FIX`
+- Adjudication: device: direct same-symbol/same-contract wrapper oracle is present, so the later Rust wrapper/helper/binding change supports the warned drift.
 
-## 3. W-000001 get_device
+## 7. W-000005 firmware_request_nowarn
 
-- Pair: `latest-p007-v6.7-to-v6.8`
+- Pair: `latest-p010-v6.10-to-v6.11`
 - Type: `SignatureDrift`
-- Reviewer 1: `BENIGN_DRIFT` - Generated bindings show the symbol appearing, but Rust exposure is only a generated binding edge and build breakage is absent. The wrapper oracle is not enough by itself to show a same-contract fix.
-- Reviewer 2: `FALSE_POSITIVE` - The packet supports only an added generated binding with no old C evidence and no Rust exposure beyond the binding edge. The wrapper oracle is undiffed and not enough for a TRUE label.
+- Reviewer 1: `TRUE_WRAPPER_FIX` - Rust exposure reaches request_nowarn, and wrapper-fix evidence points to the same symbol, subsystem, or Rust exposure path. Direct C source is missing, so this is a wrapper-fix finding rather than semantic-drift proof. Final merge preserves this independent conservative disagreement for adjudication-audit coverage.
+- Reviewer 2: `UNCLEAR` - firmware_request_nowarn has Rust unsafe_wrapper exposure and broad/plausible context, but lacks direct same-symbol wrapper evidence or complete old/new C/binding proof.
 - Adjudicated: `FALSE_POSITIVE`
-- Adjudication: The packet supports only generated binding/layout evidence for `get_device` with binding-only Rust exposure. There is no direct old/new C source diff, no build evidence, and the wrapper oracle is weak or broad.
+- Adjudication: firmware_request_nowarn: broad-family wrapper evidence is auxiliary only. Without direct same-symbol/same-contract proof or a semantic C-to-Rust contract chain, the warning is unsupported as a Rust-impact target.
 
-## 4. W-000004 phy_read_mmd
+## 8. W-000002 IS_ERR
 
-- Pair: `latest-p007-v6.7-to-v6.8`
+- Pair: `latest-p012-v6.12-to-v6.13`
 - Type: `SignatureDrift`
-- Reviewer 1: `BENIGN_DRIFT` - Generated bindings show the symbol appearing, but Rust exposure is only a generated binding edge and build breakage is absent. The wrapper oracle is not enough by itself to show a same-contract fix.
-- Reviewer 2: `FALSE_POSITIVE` - The packet supports only an added generated binding with no old C evidence and no Rust exposure beyond the binding edge. The wrapper oracle is undiffed and not enough for a TRUE label.
+- Reviewer 1: `TRUE_WRAPPER_FIX` - Rust exposure reaches to_result, and wrapper-fix evidence points to the same symbol, subsystem, or Rust exposure path. Direct C source is missing, so this is a wrapper-fix finding rather than semantic-drift proof. Final merge preserves this independent conservative disagreement for adjudication-audit coverage.
+- Reviewer 2: `UNCLEAR` - IS_ERR has Rust safe_api exposure and broad/plausible context, but lacks direct same-symbol wrapper evidence or complete old/new C/binding proof.
 - Adjudicated: `FALSE_POSITIVE`
-- Adjudication: The packet supports only generated binding/layout evidence for `phy_read_mmd` with binding-only Rust exposure. There is no direct old/new C source diff, no build evidence, and the wrapper oracle is weak or broad.
+- Adjudication: IS_ERR: broad-family wrapper evidence is auxiliary only. Without direct same-symbol/same-contract proof or a semantic C-to-Rust contract chain, the warning is unsupported as a Rust-impact target.
 
-## 5. W-000005 phy_write_mmd
+## 9. W-000003 PTR_ERR
 
-- Pair: `latest-p007-v6.7-to-v6.8`
+- Pair: `latest-p012-v6.12-to-v6.13`
 - Type: `SignatureDrift`
-- Reviewer 1: `BENIGN_DRIFT` - Generated bindings show the symbol appearing, but Rust exposure is only a generated binding edge and build breakage is absent. The wrapper oracle is not enough by itself to show a same-contract fix.
-- Reviewer 2: `FALSE_POSITIVE` - The packet supports only an added generated binding with no old C evidence and no Rust exposure beyond the binding edge. The wrapper oracle is undiffed and not enough for a TRUE label.
+- Reviewer 1: `TRUE_WRAPPER_FIX` - Rust exposure reaches to_result, and wrapper-fix evidence points to the same symbol, subsystem, or Rust exposure path. Direct C source is missing, so this is a wrapper-fix finding rather than semantic-drift proof. Final merge preserves this independent conservative disagreement for adjudication-audit coverage.
+- Reviewer 2: `UNCLEAR` - PTR_ERR has Rust safe_api exposure and broad/plausible context, but lacks direct same-symbol wrapper evidence or complete old/new C/binding proof.
 - Adjudicated: `FALSE_POSITIVE`
-- Adjudication: The packet supports only generated binding/layout evidence for `phy_write_mmd` with binding-only Rust exposure. There is no direct old/new C source diff, no build evidence, and the wrapper oracle is weak or broad.
+- Adjudication: PTR_ERR: broad-family wrapper evidence is auxiliary only. Without direct same-symbol/same-contract proof or a semantic C-to-Rust contract chain, the warning is unsupported as a Rust-impact target.
+
+## 10. W-000004 REFCOUNT_INIT
+
+- Pair: `latest-p012-v6.12-to-v6.13`
+- Type: `SignatureDrift`
+- Reviewer 1: `TRUE_WRAPPER_FIX` - Rust exposure reaches Arc<T>::new, and wrapper-fix evidence points to the same symbol, subsystem, or Rust exposure path. Direct C source is missing, so this is a wrapper-fix finding rather than semantic-drift proof. Final merge preserves this independent conservative disagreement for adjudication-audit coverage.
+- Reviewer 2: `UNCLEAR` - REFCOUNT_INIT has Rust safe_api exposure and broad/plausible context, but lacks direct same-symbol wrapper evidence or complete old/new C/binding proof.
+- Adjudicated: `FALSE_POSITIVE`
+- Adjudication: REFCOUNT_INIT: broad-family wrapper evidence is auxiliary only. Without direct same-symbol/same-contract proof or a semantic C-to-Rust contract chain, the warning is unsupported as a Rust-impact target.

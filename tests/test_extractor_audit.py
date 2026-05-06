@@ -21,13 +21,13 @@ def test_strict_extractor_audit_artifacts_exist_and_meet_thresholds() -> None:
         assert fh
     assert rows
     assert set(STRICT_FIELDS).issubset(rows[0])
-    assert len(rows) >= 600
+    assert len(rows) >= sum(STRICT_AUDIT_TARGETS.values())
     assert all(row["reviewer1_label"] for row in rows)
     assert all(row["reviewer2_label"] for row in rows)
     assert all(row["adjudicated_label"] for row in rows)
 
     summary = json.loads(summary_path.read_text(encoding="utf-8"))
-    assert summary["total_samples"] == 600
+    assert summary["total_samples"] == sum(STRICT_AUDIT_TARGETS.values())
     assert summary["all_minimums_pass"] is True
     assert summary["agreement"]["cohen_kappa"] >= 0.70
     for extractor, target in STRICT_AUDIT_TARGETS.items():
@@ -39,5 +39,6 @@ def test_strict_extractor_audit_reports_promoted_warning_precision_gate() -> Non
     summary = json.loads(Path("paper/tables/strict_extractor_audit.json").read_text(encoding="utf-8"))
     promoted = summary["extractors"]["promoted_warning_evidence"]
 
+    assert promoted["sampled"] >= 100
     assert promoted["precision"] >= 0.85
     assert summary["acceptance"]["promoted_warning_evidence"]["passes"] is True

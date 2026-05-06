@@ -18,6 +18,7 @@ from .evaluation.evaluator import generate_manual_review
 from .evaluation.protocol import write_default_evaluation_protocol
 from .evaluation.label_join import check_label_join
 from .evaluation.diagnostics import diagnose_false_positives
+from .evaluation.pooled_review_merge import merge_pooled_review_roles
 from .evaluation.review_merge import merge_manual_review
 from .extractors.bindgen import extract_bindings
 from .extractors.c_api import extract_c_api
@@ -272,6 +273,22 @@ def cmd_eval_merge_manual_review(args: argparse.Namespace, cfg: Config) -> int:
     return 0
 
 
+def cmd_eval_merge_pooled_review(args: argparse.Namespace, cfg: Config) -> int:
+    result = merge_pooled_review_roles(
+        Path(args.labels).resolve(),
+        reviewer1_jsonl=Path(args.reviewer1).resolve(),
+        reviewer2_jsonl=Path(args.reviewer2).resolve(),
+        adjudicator_jsonl=Path(args.adjudicator).resolve(),
+        output=Path(args.output).resolve() if args.output else None,
+        report=Path(args.report).resolve() if args.report else None,
+        cfg=cfg,
+        label_source=args.label_source,
+        overwrite_complete=args.overwrite_complete,
+    )
+    print(json.dumps(result, indent=2, sort_keys=True))
+    return 0
+
+
 def cmd_replay(args: argparse.Namespace, cfg: Config) -> int:
     if args.replay_command == "versions":
         result = run_version_replay(
@@ -308,11 +325,21 @@ def cmd_paper_tables(args: argparse.Namespace, cfg: Config) -> int:
 
 
 def cmd_paper_build(args: argparse.Namespace, cfg: Config) -> int:
-    result = {
-        "cases": generate_case_studies(cfg),
-        "tables": generate_paper_tables(cfg),
-    }
+    enforce_cases = VALIDATION_STAGES.index(args.stage) >= VALIDATION_STAGES.index("m5") if args.stage != "final" else True
+    result: dict[str, object] = {}
+    generation_errors: list[dict[str, str]] = []
+    try:
+        result["cases"] = generate_case_studies(cfg, main_paper_mode=enforce_cases)
+    except Exception as exc:
+        generation_errors.append({"step": "cases", "error": str(exc)})
+    try:
+        result["tables"] = generate_paper_tables(cfg)
+    except Exception as exc:
+        generation_errors.append({"step": "tables", "error": str(exc)})
     validation = validate_artifact(cfg, strict_ccfb=True, stage=args.stage)
+    if generation_errors:
+        result["generation_errors"] = generation_errors
+        validation = {**validation, "passes": False, "status": "failed"}
     result["validation"] = validation
     print(json.dumps(result, indent=2, sort_keys=True))
     return 0 if validation.get("passes") else 1
@@ -498,6 +525,16 @@ def build_parser() -> argparse.ArgumentParser:
     merge_review.add_argument("--manual-review", help="Canonical manual review CSV; defaults to <run-dir>/manual_review.csv.")
     merge_review.add_argument("--override-jsonl", help="Optional JSONL rows that override merged reviewer/adjudicator fields.")
     _set(merge_review, cmd_eval_merge_manual_review)
+    merge_pooled = eval_sub.add_parser("merge-pooled-review", help="Merge pooled review role JSONL rows into pooled_review_labels.csv.")
+    merge_pooled.add_argument("--labels", required=True, help="Pooled review labels CSV to update.")
+    merge_pooled.add_argument("--reviewer1", required=True, help="Reviewer 1 JSONL.")
+    merge_pooled.add_argument("--reviewer2", required=True, help="Reviewer 2 JSONL.")
+    merge_pooled.add_argument("--adjudicator", required=True, help="Adjudicator JSONL.")
+    merge_pooled.add_argument("--output", help="Optional output CSV; defaults to --labels.")
+    merge_pooled.add_argument("--report", help="Optional merge report JSON path.")
+    merge_pooled.add_argument("--label-source", default="binddrift_review_m3")
+    merge_pooled.add_argument("--overwrite-complete", action="store_true", help="Replace existing complete reviewer/adjudicator fields.")
+    _set(merge_pooled, cmd_eval_merge_pooled_review)
 
     paper = sub.add_parser("paper", help="Paper artifact commands.")
     paper_sub = paper.add_subparsers(dest="paper_command", required=True)

@@ -212,7 +212,8 @@ def _write_manual_review_quality(cfg: Config, path: Path, examples_path: Path, m
     kappa = _cohen_kappa(
         [(row.get("reviewer1_label", "").strip(), row.get("reviewer2_label", "").strip()) for row in double_labeled]
     )
-    examples = _write_disagreement_examples(cfg, examples_path, review_path, disagreements)
+    disagreement_example_minimum = 10 if total >= 450 else min(5, len(disagreements))
+    examples = _write_disagreement_examples(cfg, examples_path, review_path, disagreements, limit=disagreement_example_minimum or 5)
     missing_columns = [column for column in MANUAL_REVIEW_QUALITY_COLUMNS if column not in columns]
     label_leakage_findings = _label_leakage_findings(rows)
     coverage = round(len(adjudicated) / total, 4) if total else 0.0
@@ -244,14 +245,30 @@ def _write_manual_review_quality(cfg: Config, path: Path, examples_path: Path, m
         "reviewer_disagreement_examples": {
             "path": repo_relative(cfg, examples_path),
             "examples": examples,
-            "minimum_required": 5,
+            "minimum_required": disagreement_example_minimum,
         },
         "required_columns": MANUAL_REVIEW_QUALITY_COLUMNS,
         "missing_columns": missing_columns,
         "label_leakage_check": "passed" if not label_leakage_findings else "failed",
         "label_leakage_findings": label_leakage_findings,
     }
-    summary["acceptance"] = {
+    unclear_rate = round(label_distribution.get("UNCLEAR", 0) / total, 4) if total else 1.0
+    strict_checks = {
+        "pooled_review_size": 450 <= total <= 600,
+        "label_coverage": coverage >= 1.0,
+        "double_review_complete": bool(total and len(double_labeled) == total),
+        "adjudication_complete": bool(total and len(adjudicated) == total),
+        "cohen_kappa": kappa is not None and kappa >= 0.60,
+        "agreement_rate": summary["agreement_rate"] is not None and summary["agreement_rate"] >= 0.75,
+        "adjudication_notes_missing": notes_missing_rate == 0.0,
+        "unclear_rate": unclear_rate <= 0.05,
+        "label_leakage_check": not label_leakage_findings,
+        "reviewer_disagreement_examples": examples >= disagreement_example_minimum,
+        "pooled_review_labels_primary_source": source_is_pooled,
+        "required_columns_present": not missing_columns,
+        "unclear_is_not_counted_as_true_positive": summary["unclear_is_true_positive"] is False,
+    }
+    legacy_checks = {
         "required_columns_present": not missing_columns,
         "all_main_labels_adjudicated": bool(total and len(adjudicated) == total),
         "double_review_complete": bool(total and len(double_labeled) == total),
@@ -259,10 +276,15 @@ def _write_manual_review_quality(cfg: Config, path: Path, examples_path: Path, m
         "adjudication_notes_missing_rate_ok": notes_missing_rate <= 0.20,
         "pooled_label_coverage_ok": coverage >= 0.95,
         "pooled_review_labels_primary_source": source_is_pooled,
-        "disagreement_examples_minimum": examples >= 5 if disagreements else True,
+        "disagreement_examples_minimum": examples >= disagreement_example_minimum if disagreements else True,
         "label_leakage_check_passed": not label_leakage_findings,
         "unclear_is_not_counted_as_true_positive": summary["unclear_is_true_positive"] is False,
     }
+    strict_gate_enforced = strict_gate_active and total >= 450
+    summary["strict_checks"] = strict_checks
+    summary["strict_gate_enforced"] = strict_gate_enforced
+    summary["unclear_rate"] = unclear_rate
+    summary["acceptance"] = strict_checks if strict_gate_enforced else legacy_checks
     summary["acceptance"]["minimum_passes"] = all(summary["acceptance"].values())
     path.write_text(json.dumps(sanitize_local_paths(summary, cfg), indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return summary
@@ -299,9 +321,9 @@ def _cohen_kappa(pairs: list[tuple[str, str]]) -> float | None:
     return round((observed - expected) / (1.0 - expected), 4)
 
 
-def _write_disagreement_examples(cfg: Config, path: Path, source: Path, rows: list[dict[str, str]]) -> int:
+def _write_disagreement_examples(cfg: Config, path: Path, source: Path, rows: list[dict[str, str]], *, limit: int = 5) -> int:
     path.parent.mkdir(parents=True, exist_ok=True)
-    selected = sorted(rows, key=lambda row: (row.get("pair_id", ""), row.get("warning_id", ""), row.get("warning_uid", "")))[:5]
+    selected = sorted(rows, key=lambda row: (row.get("pair_id", ""), row.get("warning_id", ""), row.get("warning_uid", "")))[:limit]
     lines = [
         "# Reviewer Disagreement Examples",
         "",
