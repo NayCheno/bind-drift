@@ -141,7 +141,9 @@
     },
     {
       "details": {
+        "forbidden_oracle_feature_keys": [],
         "passes": true,
+        "ranker": "BindDrift-oracle-blind",
         "score_component_keys": [
           "added_symbol_without_old_c_evidence_penalty",
           "ambiguous_binding_contract_surface_penalty",
@@ -173,6 +175,101 @@
         ]
       },
       "name": "oracle_blind_primary_has_no_forbidden_components",
+      "passes": true
+    },
+    {
+      "details": {
+        "checks": {
+          "build_oracle_auxiliary_only": true,
+          "current_scorer_difference_explained": true,
+          "dataflow_figure_embedded_in_draft": true,
+          "dataflow_figure_file_has_three_layers": true,
+          "dataflow_figure_file_present": true,
+          "dataflow_figure_has_evaluation_sink": true,
+          "dataflow_figure_has_no_oracle_to_primary_edges": true,
+          "forbidden_oracle_feature_keys_empty": true,
+          "internal_key_absent_from_paper": true,
+          "legacy_display_name_absent_from_paper": true,
+          "no_primary_score_edge": true,
+          "primary_ranker_name_in_paper": true,
+          "score_component_keys_reported": true,
+          "wrapper_fix_not_detection_or_promotion_evidence": true,
+          "wrapper_oracle_auxiliary_only": true
+        },
+        "figure": "paper/figures/ranking-dataflow.md",
+        "figure_edges": [
+          [
+            "B",
+            "S"
+          ],
+          [
+            "BO",
+            "L"
+          ],
+          [
+            "C",
+            "S"
+          ],
+          [
+            "E",
+            "S"
+          ],
+          [
+            "K",
+            "M"
+          ],
+          [
+            "L",
+            "M"
+          ],
+          [
+            "R",
+            "S"
+          ],
+          [
+            "S",
+            "K"
+          ],
+          [
+            "WO",
+            "L"
+          ]
+        ],
+        "forbidden_figure_edges": [],
+        "forbidden_oracle_feature_keys": [],
+        "passes": true,
+        "primary_ranker_display_name": "BindDrift-oracle-blind",
+        "score_component_keys": [
+          "added_symbol_without_old_c_evidence_penalty",
+          "ambiguous_binding_contract_surface_penalty",
+          "binding_diff_strength",
+          "binding_layout_surface_penalty",
+          "binding_only_surface_penalty",
+          "c_source_diff_strength",
+          "contract_sensitive_type",
+          "contract_symbol_indicator",
+          "cross_version_stability",
+          "direct_c_contract_chain",
+          "direct_c_error_chain",
+          "direct_c_lifetime_chain",
+          "error_mapping_evidence",
+          "evidence_diversity",
+          "field_layout_contract_surface",
+          "layout_lifetime_ambiguity_penalty",
+          "layout_safe_field_evidence",
+          "lifetime_ownership_evidence",
+          "macro_constant_penalty",
+          "macro_like_binding_surface_penalty",
+          "rust_direct_use",
+          "rust_use_density",
+          "rust_wrapper_surface_indicator",
+          "safe_api_exposure",
+          "safety_comment_proximity",
+          "signature_contract_surface",
+          "weak_graph_only_penalty"
+        ]
+      },
+      "name": "oracle_blind_narrative_gate",
       "passes": true
     },
     {
@@ -2336,15 +2433,24 @@
   "passes": true,
   "protocol_version": "ccfb-strict-v2",
   "run_manifest": "data/replay/latest/run_manifest.json",
-  "stage": "m1",
+  "stage": "final",
   "stage_required_checks": [
     "arm64_external_validity_gate",
+    "binddrift_review_role_artifacts",
+    "case_study_gate",
     "evaluation_protocol_valid",
+    "m8_paper_submission_gate",
+    "manual_review_quality_gate",
     "no_local_absolute_paths",
+    "oracle_blind_narrative_gate",
     "oracle_blind_primary_has_no_forbidden_components",
     "paper_claims_match_downgrades",
+    "pooled_review_coverage",
+    "ranking",
     "required_tables_exist",
-    "run_manifest_valid"
+    "run_manifest_valid",
+    "semantic",
+    "strict_extractor_audit_gate"
   ],
   "status": "ccfb_ready",
   "strict_ccfb": true

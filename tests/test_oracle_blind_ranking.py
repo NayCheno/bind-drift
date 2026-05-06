@@ -1,4 +1,9 @@
-from binddrift.ranking.oracle_blind_scorer import rank_primary_warnings_oracle_blind, rank_warnings_oracle_blind, score_components
+from binddrift.ranking.oracle_blind_scorer import (
+    oracle_blind_result_summary,
+    rank_primary_warnings_oracle_blind,
+    rank_warnings_oracle_blind,
+    score_components,
+)
 
 
 def test_oracle_blind_ranking_ignores_wrapper_oracle_hits():
@@ -27,6 +32,24 @@ def test_oracle_blind_ranking_ignores_wrapper_oracle_hits():
     assert "wrapper_fix_hit" not in components
     assert ranked[0]["oracle_blind"] is True
     assert ranked[0]["oracle_blind_score"] == ranked[1]["oracle_blind_score"]
+
+
+def test_oracle_blind_summary_reports_display_name_and_empty_forbidden_keys():
+    warning = {
+        "warning_id": "W-1",
+        "warning_uid": "uid-1",
+        "type": "SignatureDrift",
+        "c_evidence_level": "c_source_diff",
+        "fact_source": "c_api_diff",
+        "promotion_reasons": ["direct_binding_use"],
+        "rust_side": {"uses": [{"rust_file": "x.rs"}]},
+    }
+
+    summary = oracle_blind_result_summary([warning])
+
+    assert summary["ranker"] == "BindDrift-oracle-blind"
+    assert summary["score_component_keys"]
+    assert summary["forbidden_oracle_feature_keys"] == []
 
 
 def test_oracle_blind_tier_d_stays_below_supported_warning():

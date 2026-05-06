@@ -9,6 +9,7 @@ from binddrift.evaluation.protocol import assert_oracle_blind_components
 ORACLE_COMPONENTS = {"build_oracle_hit", "wrapper_fix_hit"}
 C_SOURCE_EVIDENCE_LEVELS = {"c_source_diff", "c_behavior_indicator"}
 ORACLE_PROMOTION_REASONS = {"oracle_hit"}
+PRIMARY_RANKER_DISPLAY_NAME = "BindDrift-oracle-blind"
 
 
 def _has_list(value: Any) -> bool:
@@ -316,15 +317,17 @@ def rank_primary_warnings_oracle_blind(warnings: list[dict[str, Any]]) -> list[d
 def oracle_blind_result_summary(warnings: list[dict[str, Any]], top_k: int = 100) -> dict[str, Any]:
     ranked = rank_primary_warnings_oracle_blind(warnings)
     top = ranked[:top_k]
+    score_keys = sorted({key for warning in top for key in (warning.get("score_components") or {})})
     return {
         "oracle_blind": True,
-        "ranker": "OracleBlindBindDrift",
+        "ranker": PRIMARY_RANKER_DISPLAY_NAME,
         "warning_count": len(warnings),
         "primary_candidate_count": len(ranked),
         "reported_top_k": len(top),
         "top_warning_uids": [warning.get("warning_uid") for warning in top],
         "tier_distribution_top_k": _count_by(top, "eligibility_tier"),
-        "score_component_keys": sorted({key for warning in top for key in (warning.get("score_components") or {})}),
+        "score_component_keys": score_keys,
+        "forbidden_oracle_feature_keys": sorted(ORACLE_COMPONENTS & set(score_keys)),
     }
 
 

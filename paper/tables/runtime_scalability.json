@@ -1,6 +1,7 @@
 {
   "main_evidence_gate": {
     "candidate_run_ids": [
+      "arm64",
       "latest"
     ],
     "canonical_run_id": "latest",
@@ -92,6 +93,12 @@
           "no_completed_pairs"
         ],
         "run_id": "replay-20260504T210428Z"
+      },
+      {
+        "reasons": [
+          "superseded_by:latest"
+        ],
+        "run_id": "arm64"
       }
     ],
     "usable": true,
@@ -120,6 +127,14 @@
     ]
   },
   "runs": [
+    {
+      "duration_seconds": 472.353,
+      "pairs": 7,
+      "promoted_warnings": 100,
+      "run_id": "arm64",
+      "status": "completed",
+      "versions": 8
+    },
     {
       "drift_facts": 16757,
       "duration_seconds": 674.914,

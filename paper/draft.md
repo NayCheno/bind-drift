@@ -16,7 +16,7 @@ emitted warning is a review target for maintainers. The current canonical
 replay spans 21 Linux snapshots from `v6.1` through `v7.0` plus `HEAD`, covers
 20 adjacent version pairs, records 16,757 drift facts, and promotes 320
 Rust-impact warnings. A 500-item pooled review set is double-reviewed and
-adjudicated. The strict oracle-blind ranking gate reports
+adjudicated. The strict `BindDrift-oracle-blind` ranking gate reports
 P@10 = 1.00, P@20 = 1.00, P@50 = 0.86, P@100 = 0.43, and NDCG@20 = 1.00,
 improving P@20 by 0.60, P@50 by 0.64, and NDCG@20 by 0.5394 over the
 strongest simple baseline in the shared pooled-label evaluation. The final
@@ -99,13 +99,57 @@ Fourth, detectors produce two layers of output. Drift facts record low-level
 cross-version changes in signatures, fields, layouts, macro/constants, helpers,
 and behavior indicators. Promoted warnings are the subset with Rust-impact
 evidence, such as direct binding use, safe API exposure, safety comments,
-error/lifetime mappings, or wrapper-fix evidence.
+or error/lifetime mappings. Build-breakage and wrapper-fix evidence is not
+used to promote warnings in the paper's primary ranking; it is retained for
+labels and auxiliary validation.
 
-Fifth, the primary oracle-blind ranker scores warnings with detection-time
-features: C-side drift strength, Rust exposure, unsafe proximity, safe API
-relevance, contract evidence, fanout penalties, repeated occurrence, and
-evidence-chain richness. Build-breakage and wrapper-fix oracles are retained
-only for auxiliary validation and are not inputs to the primary score.
+Fifth, the primary ranker, `BindDrift-oracle-blind`, scores warnings with
+detection-time features: C-side drift strength, Rust exposure, unsafe proximity,
+safe API relevance, contract evidence, fanout penalties, repeated occurrence,
+and evidence-chain richness. This is separate from the current scorer used for
+auxiliary diagnosis, which may contain build/wrapper oracle components and is
+therefore not reported as the paper's primary ranking result.
+
+Figure 1 gives the oracle-blind data flow used for the paper claim. The
+build-breakage oracle is used only for labels and auxiliary validation. The
+wrapper-fix oracle is auxiliary validation, while symbol-level wrapper matching
+is treated as an upper bound. Neither oracle has a data path into the
+`BindDrift-oracle-blind` primary score.
+
+```mermaid
+flowchart LR
+  subgraph D["Detection-time features"]
+    C["C-side drift facts"]
+    B["Generated binding diffs"]
+    R["Rust exposure evidence"]
+    E["Evidence-chain features"]
+  end
+
+  subgraph P["Primary oracle-blind ranking"]
+    S["BindDrift-oracle-blind score"]
+    K["Top-K review targets"]
+  end
+
+  subgraph A["Auxiliary validation oracles"]
+    BO["Build-breakage oracle"]
+    WO["Wrapper-fix oracle"]
+    L["Labels and auxiliary validation"]
+  end
+
+  subgraph V["Evaluation and validation"]
+    M["Metrics, labels, and audit gates"]
+  end
+
+  C --> S
+  B --> S
+  R --> S
+  E --> S
+  S --> K
+  BO --> L
+  WO --> L
+  K --> M
+  L --> M
+```
 
 ## 4. Implementation
 
@@ -127,7 +171,7 @@ The CCF-B-strength evaluation is organized around five research questions:
 - RQ1: Can BindDrift extract reliable cross-language drift facts?
 - RQ2: Does evidence gating reduce review volume while preserving useful
   review targets?
-- RQ3: Does oracle-blind ranking improve top-K review yield over strong
+- RQ3: Does `BindDrift-oracle-blind` improve top-K review yield over strong
   baselines?
 - RQ4: What semantic drift patterns appear in adjudicated cases?
 - RQ5: How reproducible is the artifact across versioned toolchains?
@@ -166,17 +210,24 @@ agreement rate 0.922. The final pooled labels are 1 `TRUE_BUILD_BREAKAGE`,
 BindDrift surfaces useful review targets, not a claim that every warning is a
 confirmed defect.
 
-Baselines compare BindDrift against binding-diff, C-signature, C-indicator,
-Rust-use, no-ranking, ablated variants, and random variants on the same pooled
-label set. The strict pooled ranking table reports oracle-blind P@10 = 1.00,
-P@20 = 1.00, P@50 = 0.86, P@100 = 0.43, NDCG@20 = 1.00, and AUPRC = 0.9444.
+Baselines compare `BindDrift-oracle-blind` against binding-diff, C-signature,
+C-indicator, Rust-use, no-ranking, ablated variants, and random variants on the
+same pooled label set. The strict pooled ranking table reports
+`BindDrift-oracle-blind` P@10 = 1.00, P@20 = 1.00, P@50 = 0.86, P@100 = 0.43,
+NDCG@20 = 1.00, and AUPRC = 0.9444.
+RQ3 follows the same data-flow split as Figure 1: detection-time features feed
+`BindDrift-oracle-blind`, auxiliary validation oracles feed labels and
+validation checks, and the evaluation and validation node consumes both the
+Top-K output and auxiliary labels after ranking. Neither oracle has a data path
+into Top-K selection or the primary score.
 The strongest simple baseline is `rust_use`, with P@20 = 0.40, P@50 = 0.22,
-and NDCG@20 = 0.4606. The strict ranking gate passes: BindDrift improves
-oracle-blind top-K review yield over the strongest simple baseline by 0.60
-P@20, 0.64 P@50, and 0.5394 NDCG@20 in the shared pooled-label evaluation.
-The wrapper-fix oracle is auxiliary validation, while symbol-level wrapper
-matching is treated as an upper bound. The paper tables are generated from
-artifact outputs, not hand-entered numbers.
+and NDCG@20 = 0.4606. The strict ranking gate passes:
+`BindDrift-oracle-blind` improves top-K review yield over the strongest simple
+baseline by 0.60 P@20, 0.64 P@50, and 0.5394 NDCG@20 in the shared
+pooled-label evaluation.
+The build-breakage oracle and wrapper-fix oracle are auxiliary validation only;
+they support labels and validation checks, not the primary score. The paper
+tables are generated from artifact outputs, not hand-entered numbers.
 
 The targeted semantic review pass samples 400 semantic target candidates and
 reviews 304 adjudicated rows
@@ -241,8 +292,8 @@ cases, and has no local absolute paths in the generated case artifacts.
 Internal validity threats include regex parser incompleteness, missing generated
 binding outputs, toolchain/config differences, and oracle limitations. BindDrift
 mitigates these by recording extraction diagnostics, environment metadata,
-config hashes, and explicit separation between primary oracle-blind ranking and
-auxiliary build/wrapper evidence.
+config hashes, and explicit separation between `BindDrift-oracle-blind`
+ranking and auxiliary build/wrapper evidence.
 
 Construct validity threats include the ambiguity of semantic drift labels and
 the fact that warnings are review targets rather than confirmed defects. The

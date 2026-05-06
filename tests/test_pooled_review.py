@@ -227,14 +227,35 @@ def test_ranking_recompute_mismatch_detects_stale_tables() -> None:
         "pool_sha256": "a",
         "labels_sha256": "b",
         "pool_size": 2,
-        "rankers": [{"ranker": "binddrift_oracle_blind", "p_at_20": 1.0}],
+        "rankers": [{"ranker": "binddrift_oracle_blind", "kind": "primary", "p_at_20": 1.0}],
     }
     stale = {
         **table,
-        "rankers": [{"ranker": "binddrift_oracle_blind", "p_at_20": 0.0}],
+        "rankers": [{"ranker": "binddrift_oracle_blind", "kind": "primary", "p_at_20": 0.0}],
     }
 
     assert "rankers" in _ranking_table_mismatches(stale, table)
+
+
+def test_ranking_recompute_mismatch_ignores_auxiliary_current_ranker() -> None:
+    table = {
+        "pool_sha256": "a",
+        "labels_sha256": "b",
+        "pool_size": 2,
+        "rankers": [
+            {"ranker": "binddrift_oracle_blind", "kind": "primary", "p_at_20": 1.0},
+            {"ranker": "binddrift_current", "kind": "auxiliary", "p_at_100": 0.43},
+        ],
+    }
+    recomputed = {
+        **table,
+        "rankers": [
+            {"ranker": "binddrift_oracle_blind", "kind": "primary", "p_at_20": 1.0},
+            {"ranker": "binddrift_current", "kind": "auxiliary", "p_at_100": 0.42},
+        ],
+    }
+
+    assert _ranking_table_mismatches(table, recomputed) == []
 
 
 def test_strict_m6_acceptance_requires_no_oracle_leakage() -> None:

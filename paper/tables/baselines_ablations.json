@@ -30,10 +30,10 @@
     "topk_minimum_gate": false
   },
   "counts": {
-    "binding_functions": 203216,
+    "binding_functions": 264836,
     "build_breakage_events": 0,
     "c_functions": 116540,
-    "graph_edges": 569950,
+    "graph_edges": 667405,
     "promoted_warning_pool": 320,
     "rust_binding_uses": 15121,
     "warnings": 100
@@ -110,7 +110,7 @@
         "true_labeled_warnings": 43,
         "unclear_warnings": 9
       },
-      "note": "Primary oracle-blind BindDrift top-100 ranked warnings.",
+      "note": "Primary BindDrift-oracle-blind top-100 ranked warnings.",
       "oracle_blind": true,
       "score_component_keys": [
         "added_symbol_without_old_c_evidence_penalty",

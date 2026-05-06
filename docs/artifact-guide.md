@@ -115,6 +115,11 @@ The command rewrites `paper/tables/*.json`, `paper/cases/*.md`,
 `paper/analysis/*.md`, and `paper/tables/artifact_reproducibility.json`; it
 returns a non-zero exit code if the strict gate fails.
 
+The strict gate includes the oracle-blind ranking check used by the paper:
+`BindDrift-oracle-blind` must report its primary score component keys, the
+forbidden oracle feature key list must be `[]`, and build/wrapper oracles may
+appear only in labels or auxiliary validation.
+
 For the arm64 external-validity slice, repeat a small run over the latest eight
 release tags in the artifact snapshot, which are expected to resolve to
 `v6.13` through `v7.0` for the submitted data. Use a separate run id so the

@@ -85,58 +85,58 @@
       "version_id": "v6.12"
     },
     {
-      "binding_functions": 11293,
+      "binding_functions": 17248,
       "c_functions": 2345,
-      "graph_edges": 25448,
+      "graph_edges": 35331,
       "rust_binding_uses": 383,
       "version_id": "v6.13"
     },
     {
-      "binding_functions": 12428,
+      "binding_functions": 18954,
       "c_functions": 3062,
-      "graph_edges": 30608,
+      "graph_edges": 40654,
       "rust_binding_uses": 436,
       "version_id": "v6.14"
     },
     {
-      "binding_functions": 12451,
+      "binding_functions": 19052,
       "c_functions": 3269,
-      "graph_edges": 31271,
+      "graph_edges": 41627,
       "rust_binding_uses": 501,
       "version_id": "v6.15"
     },
     {
-      "binding_functions": 13265,
+      "binding_functions": 20519,
       "c_functions": 4075,
-      "graph_edges": 35376,
+      "graph_edges": 47272,
       "rust_binding_uses": 885,
       "version_id": "v6.16"
     },
     {
-      "binding_functions": 14870,
+      "binding_functions": 23280,
       "c_functions": 4634,
-      "graph_edges": 39580,
+      "graph_edges": 53300,
       "rust_binding_uses": 1011,
       "version_id": "v6.17"
     },
     {
-      "binding_functions": 15309,
+      "binding_functions": 23869,
       "c_functions": 5770,
-      "graph_edges": 41933,
+      "graph_edges": 55729,
       "rust_binding_uses": 1600,
       "version_id": "v6.18"
     },
     {
-      "binding_functions": 16620,
+      "binding_functions": 25713,
       "c_functions": 6236,
-      "graph_edges": 44330,
+      "graph_edges": 58081,
       "rust_binding_uses": 1721,
       "version_id": "v6.19"
     },
     {
-      "binding_functions": 16880,
+      "binding_functions": 26101,
       "c_functions": 6312,
-      "graph_edges": 44987,
+      "graph_edges": 58994,
       "rust_binding_uses": 1739,
       "version_id": "v7.0"
     },
@@ -163,16 +163,16 @@
     }
   ],
   "counts": {
-    "binding_consts": 566663,
-    "binding_functions": 203216,
-    "binding_structs": 68270,
+    "binding_consts": 785728,
+    "binding_functions": 264836,
+    "binding_structs": 87417,
     "build_breakage_events": 0,
     "c_behavior_indicators": 12392,
     "c_functions": 116540,
     "c_macros": 266683,
     "c_structs": 16250,
-    "drift_events": 31508,
-    "graph_edges": 569950,
+    "drift_events": 31756,
+    "graph_edges": 667405,
     "layout_facts": 0,
     "rust_binding_uses": 15121,
     "rust_error_mappings": 4170,
@@ -268,58 +268,58 @@
       "version_id": "v6.12"
     },
     {
-      "binding_functions": 11293,
+      "binding_functions": 17248,
       "c_functions": 2345,
-      "graph_edges": 25448,
+      "graph_edges": 35331,
       "rust_binding_uses": 383,
       "version_id": "v6.13"
     },
     {
-      "binding_functions": 12428,
+      "binding_functions": 18954,
       "c_functions": 3062,
-      "graph_edges": 30608,
+      "graph_edges": 40654,
       "rust_binding_uses": 436,
       "version_id": "v6.14"
     },
     {
-      "binding_functions": 12451,
+      "binding_functions": 19052,
       "c_functions": 3269,
-      "graph_edges": 31271,
+      "graph_edges": 41627,
       "rust_binding_uses": 501,
       "version_id": "v6.15"
     },
     {
-      "binding_functions": 13265,
+      "binding_functions": 20519,
       "c_functions": 4075,
-      "graph_edges": 35376,
+      "graph_edges": 47272,
       "rust_binding_uses": 885,
       "version_id": "v6.16"
     },
     {
-      "binding_functions": 14870,
+      "binding_functions": 23280,
       "c_functions": 4634,
-      "graph_edges": 39580,
+      "graph_edges": 53300,
       "rust_binding_uses": 1011,
       "version_id": "v6.17"
     },
     {
-      "binding_functions": 15309,
+      "binding_functions": 23869,
       "c_functions": 5770,
-      "graph_edges": 41933,
+      "graph_edges": 55729,
       "rust_binding_uses": 1600,
       "version_id": "v6.18"
     },
     {
-      "binding_functions": 16620,
+      "binding_functions": 25713,
       "c_functions": 6236,
-      "graph_edges": 44330,
+      "graph_edges": 58081,
       "rust_binding_uses": 1721,
       "version_id": "v6.19"
     },
     {
-      "binding_functions": 16880,
+      "binding_functions": 26101,
       "c_functions": 6312,
-      "graph_edges": 44987,
+      "graph_edges": 58994,
       "rust_binding_uses": 1739,
       "version_id": "v7.0"
     },
@@ -333,6 +333,7 @@
   ],
   "main_evidence_gate": {
     "candidate_run_ids": [
+      "arm64",
       "latest"
     ],
     "canonical_run_id": "latest",
@@ -424,6 +425,12 @@
           "no_completed_pairs"
         ],
         "run_id": "replay-20260504T210428Z"
+      },
+      {
+        "reasons": [
+          "superseded_by:latest"
+        ],
+        "run_id": "arm64"
       }
     ],
     "usable": true,

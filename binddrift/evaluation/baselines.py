@@ -8,7 +8,7 @@ from typing import Any
 from binddrift.config import Config
 from binddrift.artifact_paths import repo_relative
 from binddrift.db import connect, initialize
-from binddrift.ranking.oracle_blind_scorer import rank_primary_warnings_oracle_blind
+from binddrift.ranking.oracle_blind_scorer import PRIMARY_RANKER_DISPLAY_NAME, rank_primary_warnings_oracle_blind
 from binddrift.ranking.scorer import score_breakdown as ranking_score_breakdown
 from binddrift.warnings import read_warnings, split_main_and_single_version
 from .metrics import TRUE_LABELS, label_for_warning, labeled_summary, load_manual_labels, oracle_summary
@@ -63,7 +63,7 @@ def generate_baselines(
             wrapper_events,
             version_dates,
             head_date,
-            "Primary oracle-blind BindDrift top-100 ranked warnings.",
+            f"Primary {PRIMARY_RANKER_DISPLAY_NAME} top-100 ranked warnings.",
             oracle_blind=True,
         )
     )
@@ -225,7 +225,7 @@ def _variant_warnings(
     if name == "RustUseOnly":
         ranked = sorted(pool, key=lambda warning: (_rust_use_count(warning), str(warning.get("warning_uid"))), reverse=True)
         return window(ranked), len(pool)
-    if name == "OracleBlindBindDrift":
+    if name in {"OracleBlindBindDrift", PRIMARY_RANKER_DISPLAY_NAME}:
         ranked = rank_primary_warnings_oracle_blind(pool)
         return window(ranked), len(ranked)
     if name == "NoRanking":

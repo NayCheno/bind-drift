@@ -40,9 +40,14 @@ def test_paper_draft_preserves_claim_boundary() -> None:
 
     required = [
         "binddrift prioritizes review targets for rust-for-linux cross-language api and contract drift",
+        "`binddrift-oracle-blind`",
         "warning prioritization",
         "review target",
         "evidence chain",
+        "detection-time features",
+        "auxiliary validation oracles",
+        "evaluation and validation",
+        "neither oracle has a data path",
         "cross-version replay",
         "manual adjudication",
         "strict ranking gate passes",
@@ -90,6 +95,10 @@ def test_paper_draft_preserves_claim_boundary() -> None:
     assert "`true_wrapper_fix` is not counted as `true_semantic_drift`" in full_normalized
     assert "not every warning is a confirmed bug" in full_normalized
     assert "wrapper-fix oracle is auxiliary validation" in full_normalized
+    assert "build-breakage oracle and wrapper-fix oracle are auxiliary validation only" in full_normalized
+    assert "oracleblindbinddrift" not in full_normalized
+    assert "binddrift_oracle_blind" not in full_normalized
+    assert Path("paper/figures/ranking-dataflow.md").exists()
 
 
 def test_table_index_records_sha256_provenance() -> None:

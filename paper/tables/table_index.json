@@ -17,7 +17,7 @@
   "baselines_ablations": {
     "available": true,
     "path": "paper/tables/baselines_ablations.json",
-    "sha256": "5ca0a3f49a682ff6255ba9a93270e5dacc0ccd12e2555a3af44bf86f93dcbcf3"
+    "sha256": "9704ce1d967454dfdc9d65217bc637a15268db61ab4a163c0bed2c6fdeba1c4e"
   },
   "evaluation_protocol": {
     "available": true,
@@ -27,7 +27,7 @@
   "evaluation_summary": {
     "available": true,
     "path": "paper/tables/evaluation_summary.json",
-    "sha256": "421b489b5e430c2a244474b2b992903b32f7c7280d11b6830eb21b8040b9d9c9"
+    "sha256": "0f57686c6151215511cf9d59e2296ba71f3605e42242df411e0dd8d792b45e96"
   },
   "extractor_audit": {
     "available": true,
@@ -37,7 +37,7 @@
   "fact_counts": {
     "available": true,
     "path": "paper/tables/fact_counts.json",
-    "sha256": "edc1d29e944572e38c21659d82347d4897aa737531f3a94f610f33b8071a8a7e"
+    "sha256": "eddfebacc74dc8e6a90b3be9ac33ecb2f9b81cbe7102d80049323aedca87fb71"
   },
   "manual_review_quality": {
     "available": true,
@@ -67,7 +67,7 @@
   "replay_summary": {
     "available": true,
     "path": "paper/tables/replay_summary.json",
-    "sha256": "f65ed982018520e12edb52f3659cf68089755ea988068fe0090d54fab218b636"
+    "sha256": "c218f09bede0a665ee9b2a0e6a87b4d95e1104e46cafd6ace9cbdbf841a81bd8"
   },
   "reviewer_disagreement_examples": {
     "available": true,
@@ -82,7 +82,7 @@
   "runtime_scalability": {
     "available": true,
     "path": "paper/tables/runtime_scalability.json",
-    "sha256": "9ee0c56e02bee282feeb1c31c6b751b9da497aadc51df34969b2ef3ce7ef65a0"
+    "sha256": "c81f4c55c41cb148fe17f18eb8c71c349fa1ecf9ccabf49114df40767d80888f"
   },
   "strict_extractor_audit": {
     "available": true,

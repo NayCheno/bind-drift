@@ -25,9 +25,69 @@ def test_artifact_validator_reports_m2_ranking_ready() -> None:
 
     assert result["passes"] is True
     assert result["stage"] == "m2"
+    assert "oracle_blind_narrative_gate" in result["stage_required_checks"]
     ranking = result["hard_gates"]["ranking"]
     assert ranking["passes"] is True
     assert all(ranking["checks"].values())
+    narrative = next(check for check in result["checks"] if check["name"] == "oracle_blind_narrative_gate")
+    assert narrative["passes"] is True
+    assert narrative["details"]["primary_ranker_display_name"] == "BindDrift-oracle-blind"
+    assert narrative["details"]["forbidden_oracle_feature_keys"] == []
+    assert all(narrative["details"]["checks"].values())
+
+
+def test_artifact_validator_rejects_m2_forbidden_oracle_feature_keys() -> None:
+    path = Path("paper/tables/evaluation_summary.json")
+    original = path.read_text(encoding="utf-8")
+    try:
+        payload = json.loads(original)
+        primary = payload["oracle_blind_primary_result"]
+        primary["score_component_keys"] = list(primary.get("score_component_keys") or []) + ["wrapper_fix_hit"]
+        primary["forbidden_oracle_feature_keys"] = ["wrapper_fix_hit"]
+        path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+        result = validate_artifact(Config.from_args(repo_root="."), strict_ccfb=True, stage="m2")
+
+        assert result["passes"] is False
+        component = next(check for check in result["checks"] if check["name"] == "oracle_blind_primary_has_no_forbidden_components")
+        assert component["passes"] is False
+        assert "wrapper_fix_hit" in component["error"]
+    finally:
+        path.write_text(original, encoding="utf-8")
+
+
+def test_artifact_validator_rejects_m2_oracle_edges_into_primary_figure() -> None:
+    figure = Path("paper/figures/ranking-dataflow.md")
+    original = figure.read_text(encoding="utf-8")
+    try:
+        figure.write_text(original.replace("  L --> M\n", "  L --> K\n"), encoding="utf-8")
+
+        result = validate_artifact(Config.from_args(repo_root="."), strict_ccfb=True, stage="m2")
+
+        assert result["passes"] is False
+        narrative = next(check for check in result["checks"] if check["name"] == "oracle_blind_narrative_gate")
+        assert narrative["passes"] is False
+        assert narrative["details"]["checks"]["dataflow_figure_has_no_oracle_to_primary_edges"] is False
+        assert narrative["details"]["forbidden_figure_edges"] == ["L->K"]
+    finally:
+        figure.write_text(original, encoding="utf-8")
+
+
+def test_artifact_validator_rejects_m2_dashed_oracle_edges_into_primary_figure() -> None:
+    figure = Path("paper/figures/ranking-dataflow.md")
+    original = figure.read_text(encoding="utf-8")
+    try:
+        figure.write_text(original.replace("  BO --> L\n", '  BO -. "validation only" .-> S\n'), encoding="utf-8")
+
+        result = validate_artifact(Config.from_args(repo_root="."), strict_ccfb=True, stage="m2")
+
+        assert result["passes"] is False
+        narrative = next(check for check in result["checks"] if check["name"] == "oracle_blind_narrative_gate")
+        assert narrative["passes"] is False
+        assert narrative["details"]["checks"]["dataflow_figure_has_no_oracle_to_primary_edges"] is False
+        assert narrative["details"]["forbidden_figure_edges"] == ["BO->S"]
+    finally:
+        figure.write_text(original, encoding="utf-8")
 
 
 def test_artifact_validator_reports_m1_external_validity_ready() -> None:

@@ -107,6 +107,7 @@
   },
   "note": "Build recall is sparse; symbol-level wrapper recall is an upper-bound, typed wrapper recall requires fix-kind compatibility plus an old-to-head time window, and semantic precision comes from manual labels.",
   "oracle_blind_primary_result": {
+    "forbidden_oracle_feature_keys": [],
     "manual_review": {
       "filtered_labeled_warnings": 91,
       "label_distribution": {
@@ -150,7 +151,7 @@
     },
     "oracle_blind": true,
     "primary_candidate_count": 320,
-    "ranker": "OracleBlindBindDrift",
+    "ranker": "BindDrift-oracle-blind",
     "reported_top_k": 100,
     "score_component_keys": [
       "added_symbol_without_old_c_evidence_penalty",

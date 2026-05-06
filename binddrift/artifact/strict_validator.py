@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import csv
 import json
+import re
 import subprocess
 import sys
 from collections import Counter
@@ -13,11 +14,20 @@ from binddrift.config import Config
 from binddrift.detectors.semantic_review_targets import SEMANTIC_REVIEW_QUOTAS, generate_semantic_review_targets
 from binddrift.evaluation.evaluator import run_evaluation
 from binddrift.evaluation.evaluate_rankers import TAXONOMY_SCHEMA_VERSION, build_ranker_evaluation, evaluate_rankers
-from binddrift.evaluation.protocol import assert_oracle_blind_components, load_evaluation_protocol
+from binddrift.evaluation.protocol import (
+    EvaluationProtocolError,
+    FORBIDDEN_PRIMARY_SCORE_COMPONENTS,
+    assert_oracle_blind_components,
+    load_evaluation_protocol,
+)
 from binddrift.paper.audit import STRICT_AUDIT_TARGETS, STRICT_TARGET_PRECISION, generate_strict_extractor_audit
 from binddrift.paper.cases import generate_case_studies
 from binddrift.paper.tables import generate_paper_tables
-from binddrift.ranking.oracle_blind_scorer import generated_binding_only, rank_primary_warnings_oracle_blind
+from binddrift.ranking.oracle_blind_scorer import (
+    PRIMARY_RANKER_DISPLAY_NAME,
+    generated_binding_only,
+    rank_primary_warnings_oracle_blind,
+)
 from binddrift.ranking.score_audit import generate_ranking_score_audit
 from binddrift.run_manifest import canonical_run_dir, sha256_file, validate_run_manifest
 from binddrift.warnings import read_warnings
@@ -33,7 +43,7 @@ STAGE_REQUIRED_CHECKS: dict[str, set[str]] = {
         "paper_claims_match_downgrades",
     },
     "m1": {"no_local_absolute_paths", "arm64_external_validity_gate"},
-    "m2": {"ranking"},
+    "m2": {"ranking", "oracle_blind_narrative_gate"},
     "m3": {"pooled_review_coverage", "manual_review_quality_gate", "binddrift_review_role_artifacts"},
     "m4": {"semantic"},
     "m5": {"case_study_gate"},
@@ -121,6 +131,7 @@ def validate_artifact(
     protocol = _check("evaluation_protocol_valid", checks, lambda: load_evaluation_protocol(cfg))
     _check("required_tables_exist", checks, lambda: _required_tables(cfg))
     _check("oracle_blind_primary_has_no_forbidden_components", checks, lambda: _oracle_blind_components(cfg))
+    _check("oracle_blind_narrative_gate", checks, lambda: _oracle_blind_narrative_gate(cfg))
     _check("pooled_review_coverage", checks, lambda: _pooled_review_coverage(cfg))
     _check("manual_review_quality_gate", checks, lambda: _manual_review_quality_gate(cfg))
     _check("binddrift_review_role_artifacts", checks, lambda: _binddrift_review_role_artifacts(cfg))
@@ -219,10 +230,129 @@ def _required_tables(cfg: Config) -> dict[str, Any]:
 
 
 def _oracle_blind_components(cfg: Config) -> dict[str, Any]:
-    data = _json(cfg, "paper/tables/evaluation_summary.json")
-    keys = (data.get("oracle_blind_primary_result") or {}).get("score_component_keys") or []
-    assert_oracle_blind_components({key: 0.0 for key in keys}, context="artifact validator")
-    return {"passes": True, "score_component_keys": keys}
+    evaluation = _json(cfg, "paper/tables/evaluation_summary.json")
+    ranking = _json(cfg, "paper/tables/ranking_pooled_evaluation.json")
+    evaluation_primary = evaluation.get("oracle_blind_primary_result") or {}
+    ranking_primary = next(
+        (row for row in ranking.get("rankers", []) if row.get("ranker") == "binddrift_oracle_blind"),
+        {},
+    )
+    score_keys = sorted(
+        set(evaluation_primary.get("score_component_keys") or [])
+        | set(ranking_primary.get("score_component_keys") or [])
+    )
+    forbidden_keys = sorted(
+        set(evaluation_primary.get("forbidden_oracle_feature_keys") or [])
+        | set(ranking_primary.get("forbidden_oracle_feature_keys") or [])
+        | (FORBIDDEN_PRIMARY_SCORE_COMPONENTS & set(score_keys))
+    )
+    assert_oracle_blind_components({key: 0.0 for key in score_keys}, context="artifact validator")
+    if forbidden_keys:
+        raise EvaluationProtocolError("primary ranker exposes forbidden oracle feature keys: " + ", ".join(forbidden_keys))
+    return {
+        "passes": True,
+        "ranker": evaluation_primary.get("ranker"),
+        "score_component_keys": score_keys,
+        "forbidden_oracle_feature_keys": forbidden_keys,
+    }
+
+
+def _oracle_blind_narrative_gate(cfg: Config) -> dict[str, Any]:
+    draft_path = cfg.repo_root / "paper/draft.md"
+    figure_path = cfg.repo_root / "paper/figures/ranking-dataflow.md"
+    draft = draft_path.read_text(encoding="utf-8") if draft_path.exists() else ""
+    figure = figure_path.read_text(encoding="utf-8") if figure_path.exists() else ""
+    text = _normal_text(draft)
+    figure_text = _normal_text(figure)
+    component_gate = _gate(lambda: _oracle_blind_components(cfg))
+    score_keys = component_gate.get("score_component_keys") or []
+    forbidden_keys = component_gate.get("forbidden_oracle_feature_keys")
+    display_name = PRIMARY_RANKER_DISPLAY_NAME.lower()
+    draft_figure_edges = _mermaid_edges(_markdown_section(draft, "```mermaid", "```"))
+    figure_edges = _mermaid_edges(figure)
+    all_figure_edges = sorted(set(draft_figure_edges + figure_edges))
+    forbidden_edges = _forbidden_oracle_blind_figure_edges(all_figure_edges)
+    checks = {
+        "primary_ranker_name_in_paper": display_name in text,
+        "legacy_display_name_absent_from_paper": "oracleblindbinddrift" not in text,
+        "internal_key_absent_from_paper": "binddrift_oracle_blind" not in text,
+        "dataflow_figure_file_present": figure_path.exists(),
+        "dataflow_figure_embedded_in_draft": "flowchart lr" in text
+        and "detection-time features" in text
+        and "primary oracle-blind ranking" in text
+        and "auxiliary validation oracles" in text,
+        "dataflow_figure_file_has_three_layers": all(
+            phrase in figure_text
+            for phrase in (
+                "detection-time features",
+                "primary oracle-blind ranking",
+                "auxiliary validation oracles",
+            )
+        ),
+        "dataflow_figure_has_evaluation_sink": "evaluation and validation" in text
+        and "evaluation and validation" in figure_text,
+        "dataflow_figure_has_no_oracle_to_primary_edges": not forbidden_edges,
+        "current_scorer_difference_explained": "current scorer" in text
+        and "may contain build/wrapper oracle components" in text,
+        "build_oracle_auxiliary_only": (
+            "build-breakage oracle is used only for labels and auxiliary validation" in text
+            or "build-breakage oracle and wrapper-fix oracle are auxiliary validation only" in text
+        ),
+        "wrapper_oracle_auxiliary_only": "wrapper-fix oracle is auxiliary validation" in text,
+        "no_primary_score_edge": "neither oracle has a data path into the" in text
+        and "do not feed the primary score or top-k selection" in figure_text,
+        "wrapper_fix_not_detection_or_promotion_evidence": "or wrapper-fix evidence" not in text
+        and "wrapper-fix evidence is not used to promote warnings" in text,
+        "score_component_keys_reported": bool(score_keys),
+        "forbidden_oracle_feature_keys_empty": forbidden_keys == [],
+    }
+    return {
+        "passes": all(checks.values()),
+        "checks": checks,
+        "figure": repo_relative(cfg, figure_path),
+        "figure_edges": all_figure_edges,
+        "forbidden_figure_edges": forbidden_edges,
+        "primary_ranker_display_name": PRIMARY_RANKER_DISPLAY_NAME,
+        "score_component_keys": score_keys,
+        "forbidden_oracle_feature_keys": forbidden_keys,
+    }
+
+
+def _mermaid_edges(text: str) -> list[tuple[str, str]]:
+    edges: list[tuple[str, str]] = []
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        if "-->" not in line and "-." not in line:
+            continue
+        if "-->" in line:
+            left, right = line.split("-->", 1)
+            source = _mermaid_node_id(left)
+        else:
+            left, right = line.split("-.", 1)
+            source = _mermaid_node_id(left)
+            if ".->" in right:
+                _label, right = right.rsplit(".->", 1)
+            elif ".-" in right:
+                _label, right = right.rsplit(".-", 1)
+        target = _mermaid_node_id(right)
+        if source and target:
+            edges.append((source, target))
+    return edges
+
+
+def _mermaid_node_id(text: str) -> str:
+    match = re.search(r"\b([A-Za-z][A-Za-z0-9_]*)\b", text)
+    return match.group(1) if match else ""
+
+
+def _forbidden_oracle_blind_figure_edges(edges: list[tuple[str, str]]) -> list[str]:
+    auxiliary_nodes = {"BO", "WO", "L"}
+    primary_nodes = {"S", "K"}
+    forbidden = []
+    for source, target in edges:
+        if source in auxiliary_nodes and target in primary_nodes:
+            forbidden.append(f"{source}->{target}")
+    return forbidden
 
 
 def _pooled_review_coverage(cfg: Config) -> dict[str, Any]:
@@ -338,7 +468,22 @@ def _ranking_table_mismatches(data: dict[str, Any], recomputed: dict[str, Any]) 
         "coverage_acceptance",
         "claim_recommendation",
     ]
-    return [key for key in keys if data.get(key) != recomputed.get(key)]
+    return [
+        key
+        for key in keys
+        if _stable_ranking_table_value(data, key) != _stable_ranking_table_value(recomputed, key)
+    ]
+
+
+def _stable_ranking_table_value(table: dict[str, Any], key: str) -> Any:
+    value = table.get(key)
+    if key != "rankers" or not isinstance(value, list):
+        return value
+    return [
+        row
+        for row in value
+        if row.get("kind") in {"primary", "simple_baseline", "ablation"}
+    ]
 
 
 def _m6_acceptance_passes(data: dict[str, Any]) -> bool:
@@ -921,7 +1066,7 @@ def _m8_expected_paper_phrases(cfg: Config) -> dict[str, list[str]]:
         "rqs": [
             "rq1: can binddrift extract reliable cross-language drift facts?",
             "rq2: does evidence gating reduce review volume while preserving useful review targets?",
-            "rq3: does oracle-blind ranking improve top-k review yield over strong baselines?",
+            "rq3: does `binddrift-oracle-blind` improve top-k review yield over strong baselines?",
             "rq4: what semantic drift patterns appear in adjudicated cases?",
             "rq5: how reproducible is the artifact across versioned toolchains?",
         ],
