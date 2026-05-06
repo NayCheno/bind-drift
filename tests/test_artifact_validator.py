@@ -298,6 +298,96 @@ def test_artifact_validator_reports_m5_manual_review_ready() -> None:
     assert all(manual["strict_checks"].values())
 
 
+def test_artifact_validator_reports_m6_case_study_ready() -> None:
+    result = validate_artifact(Config.from_args(repo_root="."), strict_ccfb=True, stage="m6")
+
+    assert result["passes"] is True
+    assert result["stage"] == "m6"
+    assert "case_study_gate" in result["stage_required_checks"]
+    case_gate = result["hard_gates"]["case_studies"]
+    assert case_gate["passes"] is True
+    assert case_gate["draft_main_case_count"] == 3
+    assert case_gate["false_positive_negative_cases"] >= 1
+    assert all(case_gate["checks"].values())
+
+
+def test_artifact_validator_rejects_m6_when_body_case_is_missing() -> None:
+    draft_path = Path("paper/draft.md")
+    original = draft_path.read_text(encoding="utf-8")
+    try:
+        draft_path.write_text(original.replace("### Case 3:", "### Appendix Case 3:", 1), encoding="utf-8")
+
+        result = validate_artifact(Config.from_args(repo_root="."), strict_ccfb=True, stage="m6")
+
+        assert result["passes"] is False
+        case_gate = result["hard_gates"]["case_studies"]
+        assert case_gate["passes"] is False
+        assert case_gate["checks"]["draft_main_case_studies_exactly_three"] is False
+    finally:
+        draft_path.write_text(original, encoding="utf-8")
+
+
+def test_artifact_validator_rejects_m6_when_body_case_family_is_missing() -> None:
+    draft_path = Path("paper/draft.md")
+    original = draft_path.read_text(encoding="utf-8")
+    try:
+        modified = original.replace("### Case 2: Sleepability/Context Drift", "### Case 2: Nullability/Error Drift", 1)
+        draft_path.write_text(modified, encoding="utf-8")
+
+        result = validate_artifact(Config.from_args(repo_root="."), strict_ccfb=True, stage="m6")
+
+        assert result["passes"] is False
+        case_gate = result["hard_gates"]["case_studies"]
+        assert case_gate["passes"] is False
+        assert case_gate["checks"]["draft_main_case_families"] is False
+    finally:
+        draft_path.write_text(original, encoding="utf-8")
+
+
+def test_artifact_validator_rejects_m6_positive_non_true_label() -> None:
+    path = Path("paper/tables/case_study_summary.json")
+    original = path.read_text(encoding="utf-8")
+    try:
+        payload = json.loads(original)
+        payload["positive_label_distribution"]["UNCLEAR"] = 1
+        payload["positive_label_distribution"]["TRUE_WRAPPER_FIX"] -= 1
+        payload["acceptance"]["minimum_passes"] = True
+        path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+        result = validate_artifact(Config.from_args(repo_root="."), strict_ccfb=True, stage="m6")
+
+        assert result["passes"] is False
+        case_gate = result["hard_gates"]["case_studies"]
+        assert case_gate["passes"] is False
+        assert case_gate["checks"]["artifact_positive_labels_all_true"] is False
+    finally:
+        path.write_text(original, encoding="utf-8")
+
+
+def test_artifact_validator_rejects_m6_case_overclaim() -> None:
+    draft_path = Path("paper/draft.md")
+    original = draft_path.read_text(encoding="utf-8")
+    try:
+        draft_path.write_text(
+            original.replace(
+                "The main paper uses three representative case studies.",
+                "The main paper uses three representative case studies. These are confirmed defects.",
+                1,
+            ),
+            encoding="utf-8",
+        )
+
+        result = validate_artifact(Config.from_args(repo_root="."), strict_ccfb=True, stage="m6")
+
+        assert result["passes"] is False
+        case_gate = result["hard_gates"]["case_studies"]
+        assert case_gate["passes"] is False
+        assert case_gate["checks"]["draft_uses_review_target_boundary"] is False
+        assert "confirmed defect" in case_gate["forbidden_case_claims_found"]
+    finally:
+        draft_path.write_text(original, encoding="utf-8")
+
+
 def test_artifact_validator_rejects_m5_posthoc_role_summary() -> None:
     path = Path("data/replay/latest/review_artifacts/m3_final_role_summary.json")
     original = path.read_text(encoding="utf-8")

@@ -14,6 +14,7 @@ from binddrift.config import Config
 from binddrift.detectors.semantic_review_targets import SEMANTIC_REVIEW_QUOTAS, generate_semantic_review_targets
 from binddrift.evaluation.evaluator import run_evaluation
 from binddrift.evaluation.evaluate_rankers import TAXONOMY_SCHEMA_VERSION, build_ranker_evaluation, evaluate_rankers
+from binddrift.evaluation.metrics import TRUE_LABELS
 from binddrift.evaluation.protocol import (
     EvaluationProtocolError,
     FORBIDDEN_PRIMARY_SCORE_COMPONENTS,
@@ -1010,7 +1011,68 @@ def _rq_sections(draft: str) -> dict[str, str]:
 
 def _case_study_gate(cfg: Config) -> dict[str, Any]:
     data = _json(cfg, "paper/tables/case_study_summary.json")
-    return {"passes": bool((data.get("acceptance") or {}).get("minimum_passes")), **data}
+    draft_path = cfg.repo_root / "paper/draft.md"
+    draft = draft_path.read_text(encoding="utf-8") if draft_path.exists() else ""
+    section = _markdown_section(draft, "## 6. Case Studies", "## 7. Threats To Validity")
+    appendix_start = section.find("Artifact appendix.")
+    main_section = section if appendix_start < 0 else section[:appendix_start]
+    normalized = _normal_text(section)
+    main_normalized = _normal_text(main_section)
+    main_case_headings = re.findall(r"^### Case \d+:", main_section, flags=re.MULTILINE)
+    positive_labels = data.get("positive_label_distribution") or {}
+    true_labels = set(TRUE_LABELS)
+    positive_label_total = sum(int(count or 0) for count in positive_labels.values())
+    forbidden_case_claims = [
+        "confirmed bug",
+        "confirmed bugs",
+        "confirmed defect",
+        "confirmed defects",
+        "bug detector",
+        "defect detector",
+        "automatic bug detection",
+        "automatically detects bugs",
+        "automatically detect bugs",
+        "detects real bugs automatically",
+        "proves safety",
+        "proves rust abstraction",
+    ]
+    acceptance = data.get("acceptance") or {}
+    negative_labels = data.get("negative_label_distribution") or {}
+    checks = {
+        "summary_minimum_passes": acceptance.get("minimum_passes") is True,
+        "artifact_positive_cases_minimum": (data.get("positive_case_studies") or 0) >= 8,
+        "artifact_negative_cases_minimum": (data.get("negative_case_studies") or 0) >= 2,
+        "artifact_false_positive_negative_case": (data.get("false_positive_negative_cases") or 0) >= 1
+        and (negative_labels.get("FALSE_POSITIVE") or 0) >= 1,
+        "artifact_evidence_chain_complete": (data.get("case_evidence_chain_missing_count") or 0) == 0,
+        "artifact_positive_labels_all_true": bool(positive_labels)
+        and set(positive_labels).issubset(true_labels)
+        and positive_label_total == (data.get("positive_case_studies") or 0),
+        "artifact_positive_labels_clean": (data.get("false_positive_cases") or 0) == 0
+        and (data.get("benign_drift_cases") or 0) == 0
+        and (data.get("unlabeled_cases") or 0) == 0,
+        "draft_case_section_present": bool(section.strip()),
+        "draft_main_case_studies_exactly_three": len(main_case_headings) == 3,
+        "draft_main_case_families": all(
+            phrase in main_normalized
+            for phrase in (
+                "nullability/error drift",
+                "sleepability/context drift",
+                "allocation/free",
+            )
+        ),
+        "draft_uses_review_target_boundary": "review target" in normalized
+        and not any(phrase in normalized for phrase in forbidden_case_claims),
+        "draft_reports_appendix_counts": f"{data.get('positive_case_studies')} positive warning-backed case studies" in normalized
+        and f"{data.get('negative_case_studies')} negative/failure-analysis cases" in normalized,
+    }
+    return {
+        "passes": all(checks.values()),
+        "checks": checks,
+        "draft_main_case_count": len(main_case_headings),
+        "forbidden_case_claims_found": [phrase for phrase in forbidden_case_claims if phrase in normalized],
+        **data,
+    }
 
 
 def _strict_extractor_gate(cfg: Config) -> dict[str, Any]:

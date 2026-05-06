@@ -373,8 +373,37 @@ histories once full binding generation is available.
 
 ## 6. Case Studies
 
-The artifact includes 8 positive warning-backed case studies generated only
-from adjudicated true positives:
+The main paper uses three representative case studies. Each case follows the
+same evidence chain: old C contract, new C contract, generated binding or
+helper exposure, Rust safe or unsafe dependency, binddrift-review adjudication,
+and maintainer review implication.
+
+### Case 1: Nullability/Error Drift (`errname`)
+
+`errname` is a wrapper-fix-backed nullability/error case. The C-side evidence
+records the return-convention drift, the Rust evidence reaches `Error::name`,
+and adjudication labels the warning `TRUE_WRAPPER_FIX`. The case illustrates
+that BindDrift treats later wrapper/helper changes as auxiliary validation for a
+review target, not as standalone proof of semantic drift.
+
+### Case 2: Sleepability/Context Drift (`init_wait`)
+
+`init_wait` is an adjudicated `TRUE_SEMANTIC_DRIFT` case. The C macro/helper
+contract changes across the replay pair, and the Rust evidence reaches
+`CondVar::new` through an unsafe initialization path. The case shows why
+contract drift can matter even when the compiler accepts the current binding
+shape.
+
+### Case 3: Allocation/Free / Lifetime Drift (`dma_free_attrs`)
+
+`dma_free_attrs` is an allocation/free semantic case. The C signature and free
+contract evidence reaches the Rust DMA drop path through an unsafe binding use,
+and adjudication labels the warning `TRUE_SEMANTIC_DRIFT`. The review question
+is whether the ownership abstraction remains synchronized with the changed C
+free-side contract.
+
+Artifact appendix. The artifact includes 8 positive warning-backed case studies
+generated only from adjudicated true positives:
 
 - `security_secid_to_secctx`: nullability/error semantic drift reaches
   `SecurityCtx::from_secid`.
@@ -391,14 +420,14 @@ from adjudicated true positives:
 - `__mutex_init`: another wrapper-fix-backed sleepability/context drift reaches
   Rust synchronization helper code.
 
-The suite also includes 2 negative/failure-analysis cases:
+The appendix suite also includes 2 negative/failure-analysis cases:
 
 - `refcount_set`: ownership/refcount evidence is rejected because broad-family
   wrapper evidence is auxiliary only.
 - `kunit_case`: layout/field evidence is rejected because the case lacks a
   direct same-contract Rust-impact chain.
 
-Each case is classified as a review target rather than a confirmed defect. No
+Each case is classified as a review target rather than a defect claim. No
 positive case study is unlabeled, false positive, benign drift, or
 single-version-only. The full case suite covers five drift target categories,
 contains 4 semantic true cases, 4 non-wrapper semantic cases, 4 wrapper-fix-backed

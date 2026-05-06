@@ -3,6 +3,7 @@ import json
 
 from binddrift.config import Config
 from binddrift.db import connect, initialize, upsert_many
+from binddrift.evaluation.metrics import TRUE_LABELS
 from binddrift.evaluation.protocol import write_default_evaluation_protocol
 from binddrift.paper.cases import _has_case_evidence_chain, generate_case_studies
 from binddrift.run_manifest import evaluation_protocol_split_hash, sha256_file
@@ -381,6 +382,7 @@ def test_case_suite_artifact_meets_strict_summary_gates() -> None:
 
     assert "case_studies" in summary
     assert "negative_case_studies" in summary
+    assert "false_positive_negative_cases" in summary
     assert "acceptance" in summary
     assert "raw_warning_type_count" in summary
     assert "case_evidence_chain_missing_count" in summary
@@ -389,6 +391,7 @@ def test_case_suite_artifact_meets_strict_summary_gates() -> None:
     if summary["acceptance"]["minimum_passes"]:
         assert summary["case_studies"] >= 8
         assert summary["negative_case_studies"] >= 2
+        assert summary["false_positive_negative_cases"] >= 1
         assert summary["drift_type_count"] >= 4
         assert summary["raw_warning_type_count"] >= 3
         assert summary["semantic_true_cases"] >= 3
@@ -396,6 +399,8 @@ def test_case_suite_artifact_meets_strict_summary_gates() -> None:
         assert summary["wrapper_fix_backed_cases"] <= summary["case_studies"] // 2
         assert summary["case_evidence_chain_missing_count"] == 0
     assert summary["false_positive_cases"] == 0
+    assert set(summary["positive_label_distribution"]).issubset(TRUE_LABELS)
+    assert summary["negative_label_distribution"]["FALSE_POSITIVE"] >= 1
     assert summary["benign_drift_cases"] == 0
     assert summary["unlabeled_cases"] == 0
     assert summary["absolute_local_paths"] == 0

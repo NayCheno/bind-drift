@@ -18,6 +18,7 @@ from binddrift.warnings import eligible_for_main_warning, read_warnings
 
 POSITIVE_TARGET = 8
 NEGATIVE_TARGET = 2
+FALSE_POSITIVE_NEGATIVE_TARGET = 1
 CASE_TARGET_TYPES = [
     "NullabilityDrift",
     "OwnershipRefcountDrift",
@@ -406,6 +407,7 @@ def _case_summary_table(
     cfg: Config,
 ) -> dict[str, Any]:
     positive_labels = [label_for_warning(labels, warning) for warning in positive_cases]
+    negative_labels = [label_for_warning(labels, warning) for warning in negative_cases]
     all_cases = positive_cases + negative_cases
     all_types = sorted({_case_drift_type(warning) for warning in all_cases})
     positive_types = sorted({_case_drift_type(warning) for warning in positive_cases})
@@ -441,17 +443,20 @@ def _case_summary_table(
         "wrapper_fix_backed_cases": wrapper_cases,
         "build_breakage_cases": sum(1 for label in positive_labels if label == "TRUE_BUILD_BREAKAGE"),
         "false_positive_cases": sum(1 for label in positive_labels if label == "FALSE_POSITIVE"),
+        "false_positive_negative_cases": sum(1 for label in negative_labels if label == "FALSE_POSITIVE"),
         "benign_drift_cases": sum(1 for label in positive_labels if label == "BENIGN_DRIFT"),
         "unlabeled_cases": sum(1 for label in positive_labels if not label),
         "absolute_local_paths": absolute_paths,
         "case_evidence_chain_missing": missing_evidence_chain,
         "case_evidence_chain_missing_count": len(missing_evidence_chain),
         "positive_label_distribution": dict(Counter(positive_labels)),
-        "negative_label_distribution": dict(Counter(label_for_warning(labels, warning) for warning in negative_cases)),
+        "negative_label_distribution": dict(Counter(negative_labels)),
     }
     summary["acceptance"] = {
         "case_studies_minimum": summary["case_studies"] >= 8,
         "negative_case_studies_minimum": summary["negative_case_studies"] >= 2,
+        "negative_false_positive_case": summary["false_positive_negative_cases"] >= FALSE_POSITIVE_NEGATIVE_TARGET,
+        "positive_labels_all_true": all(label in TRUE_LABELS for label in positive_labels),
         "drift_type_count_minimum": summary["drift_type_count"] >= 4,
         "raw_warning_type_count_minimum": summary["raw_warning_type_count"] >= 3,
         "semantic_true_cases_minimum": summary["semantic_true_cases"] >= 3,
