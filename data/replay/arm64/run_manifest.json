@@ -1,0 +1,28 @@
+{
+  "canonical_database": ".binddrift/binddrift.sqlite3",
+  "canonical_drift_facts_file": "data/replay/arm64/drift_facts.jsonl",
+  "canonical_evaluation_protocol_file": "data/replay/arm64/evaluation_protocol.json",
+  "canonical_promoted_warnings_file": "data/replay/arm64/promoted_warnings.jsonl",
+  "canonical_review_file": "data/replay/arm64/manual_review.csv",
+  "canonical_single_version_review_targets_file": "data/replay/arm64/single_version_review_targets.jsonl",
+  "canonical_warning_file": "data/replay/arm64/warnings.jsonl",
+  "drift_fact_count": 7086,
+  "locked_split_hash": "f83bbd75caa176c030e2a4f3ed4bc0260a926032e12b4ac59fa6c4035dc2c23f",
+  "pair_count": 7,
+  "paper_topk": 100,
+  "promoted_warning_count": 248,
+  "reviewed_warning_count": 100,
+  "run_dir": "data/replay/arm64",
+  "run_id": "arm64",
+  "sha256": {
+    "drift_facts.jsonl": "e0356f8c43b5d4368d9da51825af6fe7990727e375fd568484e561ec6a231140",
+    "evaluation_protocol.json": "24524be577ddb9fad4e60fc2bb48e9dc661b6cbfaa85ceaa5cb3de8dbe2b13ab",
+    "manual_review.csv": "ba443a0764c943ba2084ce702a12759fd557afc51b98b9ee2fc76b05ad7e50c2",
+    "promoted_warnings.jsonl": "f6c9fb649ea0e6214df15f286d71560b3a6e61b6159fcaf791766bc5dcf8aeec",
+    "single_version_review_targets.jsonl": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "warnings.jsonl": "c23abb119eb3563d019cf24047409e3fd26470441299829467313a83e2fd9b9e"
+  },
+  "single_version_review_targets": 0,
+  "version_count": 8,
+  "warning_count": 100
+}

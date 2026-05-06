@@ -30,6 +30,19 @@ def test_artifact_validator_reports_m2_ranking_ready() -> None:
     assert all(ranking["checks"].values())
 
 
+def test_artifact_validator_reports_m1_external_validity_ready() -> None:
+    result = validate_artifact(Config.from_args(repo_root="."), strict_ccfb=True, stage="m1")
+
+    assert result["passes"] is True
+    assert result["stage"] == "m1"
+    external = next(check for check in result["checks"] if check["name"] == "arm64_external_validity_gate")
+    assert external["passes"] is True
+    assert external["details"]["version_count"] >= 8
+    assert external["details"]["completed_pairs"] >= 7
+    assert external["details"]["failed_pairs"] == 0
+    assert all(external["details"]["checks"].values())
+
+
 def test_artifact_validator_reports_m3_review_ready() -> None:
     result = validate_artifact(Config.from_args(repo_root="."), strict_ccfb=True, stage="m3")
 

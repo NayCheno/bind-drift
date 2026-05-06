@@ -162,6 +162,45 @@ def test_version_replay_records_pair_outputs(tmp_path: Path):
     assert (tmp_path / "data/toolchain_matrix.json").exists()
 
 
+def test_version_replay_custom_run_id_does_not_clear_latest(tmp_path: Path):
+    _make_tagged_linux_repo(tmp_path)
+    cfg = Config.from_args(repo_root=tmp_path)
+    latest_dir = tmp_path / "data/replay/latest"
+    latest_dir.mkdir(parents=True)
+    (latest_dir / "keep.txt").write_text("canonical replay stays intact\n", encoding="utf-8")
+
+    summary = run_version_replay(
+        cfg,
+        run_id="arm64",
+        start="v6.1",
+        include_head=False,
+        roots=["include"],
+        build_bindings=False,
+        configure=False,
+        max_files=10,
+        arch="arm64",
+    )
+
+    assert summary["run_id"] == "arm64"
+    assert Path(summary["run_dir"]).name == "arm64"
+    assert summary["arch"] == "arm64"
+    assert (tmp_path / "data/replay/arm64/run_manifest.json").exists()
+    assert (tmp_path / "data/replay/arm64/toolchain_matrix.json").exists()
+    assert (tmp_path / "data/replay/arm64/versions.json").exists()
+    assert (tmp_path / "data/replay/arm64/pairs.json").exists()
+    assert (tmp_path / ".binddrift/replay/arm64/binddrift.sqlite3").exists()
+    assert not (tmp_path / "data/toolchain_matrix.json").exists()
+    assert not (tmp_path / "data/versions.json").exists()
+    assert (latest_dir / "keep.txt").read_text(encoding="utf-8") == "canonical replay stays intact\n"
+    conn = connect(tmp_path / ".binddrift/replay/arm64/binddrift.sqlite3")
+    initialize(conn)
+    assert conn.execute("SELECT arch FROM replay_runs WHERE run_id='arm64'").fetchone()["arch"] == "arm64"
+    canonical = connect(cfg.database)
+    initialize(canonical)
+    assert canonical.execute("SELECT COUNT(*) AS n FROM replay_runs WHERE run_id='arm64'").fetchone()["n"] == 0
+    assert canonical.execute("SELECT COUNT(*) AS n FROM replay_runs WHERE run_id='latest'").fetchone()["n"] == 0
+
+
 def test_mark_stale_replay_runs_closes_interrupted_rows(tmp_path: Path):
     cfg = Config.from_args(repo_root=tmp_path)
     conn = connect(cfg.database)

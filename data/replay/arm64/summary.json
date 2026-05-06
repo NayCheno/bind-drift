@@ -1,0 +1,32 @@
+{
+  "aggregate_drift_facts": "data/replay/arm64/drift_facts.jsonl",
+  "aggregate_promoted_warnings": "data/replay/arm64/promoted_warnings.jsonl",
+  "aggregate_warnings": "data/replay/arm64/warnings.jsonl",
+  "arch": "arm64",
+  "completed_pairs": 7,
+  "drift_facts": 7086,
+  "duration_seconds": 472.353,
+  "failed_pairs": 0,
+  "manual_review": "data/replay/arm64/manual_review.csv",
+  "pairs": 7,
+  "pairs_file": "data/replay/arm64/pairs.json",
+  "paper_topk": 100,
+  "promoted_replay_warnings": 248,
+  "ranking": {
+    "dropped_unpromoted": 0,
+    "input_warnings": 248,
+    "report": "data/replay/arm64/warnings.md",
+    "warning_file": "data/replay/arm64/warnings.jsonl",
+    "warnings": 248
+  },
+  "run_dir": "data/replay/arm64",
+  "run_id": "arm64",
+  "run_manifest": "data/replay/arm64/run_manifest.json",
+  "single_version_review_targets": 0,
+  "stale_previous": {
+    "pairs": 0,
+    "runs": 0
+  },
+  "versions": 8,
+  "warnings": 100
+}

@@ -97,7 +97,7 @@ def cmd_extract_commits(args: argparse.Namespace, cfg: Config) -> int:
 
 
 def cmd_dataset_versions(args: argparse.Namespace, cfg: Config) -> int:
-    result = select_versions(cfg, start=args.start, include_head=not args.no_head, fetch=args.fetch_tags, limit=args.limit)
+    result = select_versions(cfg, start=args.start, include_head=not args.no_head, fetch=args.fetch_tags, limit=args.limit, arch=args.arch)
     print(json.dumps(result, indent=2, sort_keys=True))
     return 0
 
@@ -294,6 +294,7 @@ def cmd_replay(args: argparse.Namespace, cfg: Config) -> int:
         result = run_version_replay(
             cfg,
             start=args.start,
+            run_id=args.run_id,
             include_head=args.include_head,
             fetch_tags=args.fetch_tags,
             limit=args.limit,
@@ -391,6 +392,7 @@ def build_parser() -> argparse.ArgumentParser:
     versions.add_argument("--limit", type=int, help="Keep only the last N release tags before HEAD.")
     versions.add_argument("--fetch-tags", action="store_true", help="Fetch tags in the Linux source tree before selection.")
     versions.add_argument("--no-head", action="store_true", help="Do not append the current HEAD pseudo-version.")
+    versions.add_argument("--arch", default="x86_64", help="Architecture metadata to record for selected versions.")
     _set(versions, cmd_dataset_versions)
     worktree = dataset_sub.add_parser("worktree", help="Create or reuse a managed replay worktree for a ref.")
     worktree.add_argument("ref", help="Git tag, commit, branch, or HEAD:<short> pseudo-ref.")
@@ -477,6 +479,7 @@ def build_parser() -> argparse.ArgumentParser:
     replay.add_argument("replay_command", nargs="?", choices=["run", "versions"], default="run", help="Replay mode: `run` for the pilot or `versions` for adjacent-version replay.")
     replay.add_argument("--commit-limit", type=int, default=50, help="Number of commits to import.")
     replay.add_argument("--c-max-files", type=int, default=50, help="Number of C files to scan in the pilot.")
+    replay.add_argument("--run-id", default="latest", help="Replay output run id under data/replay/.")
     replay.add_argument("--start", default="v6.1", help="First release tag to include for `replay versions`.")
     replay.add_argument("--limit", type=int, help="Keep only the last N selected refs before replay.")
     replay.add_argument("--include-head", action=argparse.BooleanOptionalAction, default=True, help="Include the current HEAD pseudo-version.")

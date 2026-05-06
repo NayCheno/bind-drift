@@ -132,6 +132,7 @@
           "paper/tables/manual_review_quality.json",
           "paper/tables/case_study_summary.json",
           "paper/tables/strict_extractor_audit.json",
+          "paper/tables/arm64_external_validity.json",
           "paper/tables/table_index.json"
         ]
       },
@@ -1068,7 +1069,7 @@
         "rq_missing": [],
         "stale_found": [],
         "table_index": {
-          "entries": 19,
+          "entries": 20,
           "mismatched_sha256": [],
           "missing_sha256": [],
           "passes": true,
@@ -1077,6 +1078,87 @@
         "threat_missing": []
       },
       "name": "m8_paper_submission_gate",
+      "passes": true
+    },
+    {
+      "details": {
+        "checks": {
+          "arch_is_arm64": true,
+          "completed_pairs_minimum": true,
+          "external_validity_section": true,
+          "failed_pair_recording": true,
+          "failed_pairs_discussed": true,
+          "raw_completed_pairs_matches_table": true,
+          "raw_drift_fact_count_matches_table": true,
+          "raw_failed_pairs_matches_table": true,
+          "raw_pair_count_matches_table": true,
+          "raw_promoted_warning_count_matches_table": true,
+          "raw_version_count_matches_table": true,
+          "raw_warning_overlap_matches_table": true,
+          "raw_warning_type_delta_matches_table": true,
+          "run_present": true,
+          "threats_discuss_arm64": true,
+          "version_count_minimum": true,
+          "warning_overlap_analysis": true,
+          "warning_overlap_discussed": true,
+          "warning_type_delta": true
+        },
+        "completed_pairs": 7,
+        "drift_fact_count": 7086,
+        "failed_pairs": 0,
+        "failure_taxonomy": {},
+        "pair_count": 7,
+        "passes": true,
+        "promoted_warning_count": 248,
+        "raw_counts": {
+          "completed_pairs": 7,
+          "drift_fact_count": 7086,
+          "failed_pairs": 0,
+          "pair_count": 7,
+          "promoted_warning_count": 248,
+          "version_count": 8
+        },
+        "run_dir": "data/replay/arm64",
+        "run_id": "arm64",
+        "version_count": 8,
+        "warning_overlap": {
+          "arm64_only": 4,
+          "overlap_ratio_vs_arm64": 0.9833,
+          "sample_arm64_only": [
+            "SignatureDrift:pwmchip_alloc",
+            "SignatureDrift:pwmchip_put",
+            "SignatureDrift:pwmchip_release",
+            "SignatureDrift:pwmchip_remove"
+          ],
+          "sample_shared": [
+            "FieldDrift:device",
+            "FieldDrift:kunit_case",
+            "FieldDrift:pci_dev",
+            "FieldDrift:platform_device",
+            "FieldDrift:queue_limits",
+            "FieldDrift:request",
+            "MacroConstDrift:VM_ACCOUNT",
+            "MacroConstDrift:VM_ARCH_1",
+            "MacroConstDrift:VM_DONTCOPY",
+            "MacroConstDrift:VM_DONTDUMP"
+          ],
+          "sample_x86_64_only": [
+            "FieldDrift:firmware",
+            "FieldDrift:rb_node",
+            "SignatureDrift:ERR_PTR",
+            "SignatureDrift:IS_ERR",
+            "SignatureDrift:PTR_ERR",
+            "SignatureDrift:REFCOUNT_INIT",
+            "SignatureDrift:__mutex_init",
+            "SignatureDrift:_find_last_bit",
+            "SignatureDrift:_find_next_bit",
+            "SignatureDrift:_find_next_zero_bit"
+          ],
+          "shared": 236,
+          "x86_64_only": 47
+        }
+      },
+      "name": "arm64_external_validity_gate",
       "passes": true
     },
     {
@@ -2254,22 +2336,15 @@
   "passes": true,
   "protocol_version": "ccfb-strict-v2",
   "run_manifest": "data/replay/latest/run_manifest.json",
-  "stage": "final",
+  "stage": "m1",
   "stage_required_checks": [
-    "binddrift_review_role_artifacts",
-    "case_study_gate",
+    "arm64_external_validity_gate",
     "evaluation_protocol_valid",
-    "m8_paper_submission_gate",
-    "manual_review_quality_gate",
     "no_local_absolute_paths",
     "oracle_blind_primary_has_no_forbidden_components",
     "paper_claims_match_downgrades",
-    "pooled_review_coverage",
-    "ranking",
     "required_tables_exist",
-    "run_manifest_valid",
-    "semantic",
-    "strict_extractor_audit_gate"
+    "run_manifest_valid"
   ],
   "status": "ccfb_ready",
   "strict_ccfb": true

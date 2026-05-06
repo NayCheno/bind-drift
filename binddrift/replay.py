@@ -60,8 +60,11 @@ def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-def _run_id() -> str:
-    return REPLAY_RUN_ID
+def _run_id(run_id: str | None = None) -> str:
+    selected = run_id or REPLAY_RUN_ID
+    if selected != sanitize_ref(selected):
+        raise ValueError(f"invalid replay run_id {selected!r}; use letters, digits, dots, underscores, or hyphens")
+    return selected
 
 
 def _reset_replay_run_outputs(cfg: Config, run_id: str, run_dir: Path) -> None:
@@ -104,6 +107,28 @@ def _cfg_for_replay_run(cfg: Config, run_dir: Path) -> Config:
         drift_facts_jsonl=run_dir / "drift_facts.jsonl",
         report_md=run_dir / "warnings.md",
     )
+
+
+def _cfg_for_isolated_replay_run(cfg: Config, run_id: str, run_dir: Path) -> Config:
+    run_state = cfg.state_dir / "replay" / run_id
+    return replace(
+        cfg,
+        build_root=run_state / "build",
+        worktree_root=run_state / "worktrees",
+        database=run_state / "binddrift.sqlite3",
+        data_dir=run_dir,
+        warnings_jsonl=run_dir / "warnings.jsonl",
+        drift_facts_jsonl=run_dir / "drift_facts.jsonl",
+        report_md=run_dir / "warnings.md",
+    )
+
+
+def _reset_isolated_replay_state(cfg: Config) -> None:
+    for path in (cfg.build_root, cfg.worktree_root):
+        if path.exists():
+            shutil.rmtree(path)
+    if cfg.database.exists():
+        cfg.database.unlink()
 
 
 def _persist_run(cfg: Config, row: dict[str, Any]) -> None:
@@ -289,6 +314,7 @@ def _append_jsonl(path: Path, rows: list[dict[str, Any]]) -> None:
 def run_version_replay(
     cfg: Config,
     start: str = "v6.1",
+    run_id: str | None = None,
     include_head: bool = True,
     fetch_tags: bool = False,
     limit: int | None = None,
@@ -301,7 +327,7 @@ def run_version_replay(
     stop_on_error: bool = False,
     toolchain: str = "auto",
 ) -> dict[str, Any]:
-    """Run adjacent-version replay into the fixed latest replay output.
+    """Run adjacent-version replay into a named replay output.
 
     The implementation is intentionally sequential even though the public CLI
     records `jobs`: SQLite writes, Linux worktrees, and kernel object trees are
@@ -309,14 +335,23 @@ def run_version_replay(
     future parallel executor can preserve the same experiment interface.
     """
 
-    cfg.ensure_dirs()
-    stale = mark_stale_replay_runs(cfg)
-    run_id = _run_id()
+    run_id = _run_id(run_id)
     run_dir = cfg.data_dir / "replay" / run_id
-    _reset_replay_run_outputs(cfg, run_id, run_dir)
-    refs_result = select_versions(cfg, start=start, include_head=include_head, fetch=fetch_tags, limit=limit)
+    run_cfg = cfg if run_id == REPLAY_RUN_ID else _cfg_for_isolated_replay_run(cfg, run_id, run_dir)
+    run_cfg.ensure_dirs()
+    stale = mark_stale_replay_runs(run_cfg)
+    if run_id != REPLAY_RUN_ID:
+        _reset_isolated_replay_state(run_cfg)
+    _reset_replay_run_outputs(run_cfg, run_id, run_dir)
+    refs_result = select_versions(run_cfg, start=start, include_head=include_head, fetch=fetch_tags, limit=limit, arch=arch)
     refs = refs_result["refs"]
-    matrix = write_toolchain_matrix(cfg, refs, refs_result["version_rows"]) if toolchain == "auto" else None
+    matrix_path = run_dir / "toolchain_matrix.json" if run_id != REPLAY_RUN_ID else None
+    if toolchain == "auto" and matrix_path is not None:
+        matrix = write_toolchain_matrix(run_cfg, refs, refs_result["version_rows"], output=matrix_path)
+    elif toolchain == "auto":
+        matrix = write_toolchain_matrix(run_cfg, refs, refs_result["version_rows"])
+    else:
+        matrix = None
     specs_by_version = {
         entry["version_id"]: entry for entry in (matrix or {}).get("entries", [])
     }
@@ -344,7 +379,7 @@ def run_version_replay(
         "summary": "{}",
         "error": None,
     }
-    _persist_run(cfg, run_row)
+    _persist_run(run_cfg, run_row)
 
     processed: dict[str, dict[str, Any]] = {}
     pairs: list[dict[str, Any]] = []
@@ -378,12 +413,12 @@ def run_version_replay(
             "report_md": str(pair_dir / "warnings.md"),
             "error": None,
         }
-        _persist_pair(cfg, pair_row)
+        _persist_pair(run_cfg, pair_row)
         try:
             for version in (old_version, new_version):
                 if version["version_id"] not in processed:
                     processed[version["version_id"]] = _extract_version(
-                        cfg,
+                        run_cfg,
                         version,
                         roots=c_roots,
                         max_files=max_files,
@@ -392,7 +427,7 @@ def run_version_replay(
                         arch=arch,
                         toolchain_spec=version.get("toolchain") if toolchain == "auto" else None,
                     )
-            pair_cfg = _cfg_for_pair(cfg, Path(processed[new_version["version_id"]]["worktree"]["path"]), pair_dir)
+            pair_cfg = _cfg_for_pair(run_cfg, Path(processed[new_version["version_id"]]["worktree"]["path"]), pair_dir)
             tier1 = run_tier1_with_context(
                 pair_cfg,
                 old=old_version["version_id"],
@@ -443,7 +478,7 @@ def run_version_replay(
                 }
             )
             if stop_on_error:
-                _persist_pair(cfg, pair_row)
+                _persist_pair(run_cfg, pair_row)
                 run_row.update(
                     {
                         "completed_at": _now(),
@@ -463,29 +498,32 @@ def run_version_replay(
                         "error": str(exc)[-4000:],
                     }
                 )
-                _persist_run(cfg, run_row)
+                _persist_run(run_cfg, run_row)
                 raise
-        _persist_pair(cfg, pair_row)
+        _persist_pair(run_cfg, pair_row)
         pairs.append(pair_row)
 
     completed = sum(1 for pair in pairs if pair["status"] == "completed")
     failed = sum(1 for pair in pairs if pair["status"] != "completed")
     sanitize_local_path_tree(run_dir, cfg)
     drift_fact_count = aggregate_pair_jsonl(run_dir, "drift_facts.jsonl", aggregate_drift_facts, cfg=cfg)
-    aggregate_ranking = rank_warnings(_cfg_for_replay_run(cfg, run_dir))
+    replay_output_cfg = _cfg_for_replay_run(run_cfg, run_dir)
+    aggregate_ranking = rank_warnings(replay_output_cfg)
     main_warnings, single_version_targets = split_main_and_single_version(read_warnings(aggregate_warnings))
-    run_cfg = _cfg_for_replay_run(cfg, run_dir)
-    write_jsonl(aggregate_promoted_warnings, main_warnings, cfg=run_cfg)
-    write_jsonl(aggregate_warnings, main_warnings[:100], cfg=run_cfg)
-    write_jsonl(run_dir / "single_version_review_targets.jsonl", single_version_targets, cfg=run_cfg)
+    write_jsonl(aggregate_promoted_warnings, main_warnings, cfg=replay_output_cfg)
+    write_jsonl(aggregate_warnings, main_warnings[:100], cfg=replay_output_cfg)
+    write_jsonl(run_dir / "single_version_review_targets.jsonl", single_version_targets, cfg=replay_output_cfg)
     aggregate_review = generate_manual_review(
-        _cfg_for_replay_run(cfg, run_dir),
+        replay_output_cfg,
         main_warnings[:100],
         top_k=100,
     )
     should_write_manifest = bool(completed and failed == 0 and aggregate_ranking["warnings"] > 0)
+    pairs_file = run_dir / "pairs.json"
+    pairs_file.write_text(json.dumps(sanitize_local_paths({"pairs": pairs}, cfg), indent=2, sort_keys=True) + "\n", encoding="utf-8")
     summary = {
         "run_id": run_id,
+        "arch": arch,
         "versions": len(versions),
         "pairs": len(pairs),
         "completed_pairs": completed,
@@ -501,7 +539,9 @@ def run_version_replay(
         "aggregate_drift_facts": str(aggregate_drift_facts),
         "drift_facts": drift_fact_count,
         "manual_review": str(aggregate_review),
+        "pairs_file": str(pairs_file),
         "run_dir": str(run_dir),
+        "run_database": str(run_cfg.database),
         "run_manifest": str(run_dir / "run_manifest.json") if should_write_manifest else None,
         "stale_previous": stale,
     }
@@ -514,8 +554,8 @@ def run_version_replay(
             "summary": json.dumps(artifact_summary, sort_keys=True),
         }
     )
-    _persist_run(cfg, run_row)
+    _persist_run(run_cfg, run_row)
     if should_write_manifest:
-        write_default_evaluation_protocol(cfg, run_id=run_id)
-        write_run_manifest(cfg, run_id=run_id)
+        write_default_evaluation_protocol(replay_output_cfg, run_id=run_id)
+        write_run_manifest(replay_output_cfg, run_id=run_id)
     return summary

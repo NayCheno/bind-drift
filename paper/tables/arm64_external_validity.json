@@ -1,0 +1,81 @@
+{
+  "acceptance": {
+    "arch_is_arm64": true,
+    "completed_pairs_minimum": true,
+    "failed_pair_recording": true,
+    "run_present": true,
+    "version_count_minimum": true,
+    "warning_overlap_analysis": true,
+    "warning_type_delta": true
+  },
+  "arch": "arm64",
+  "completed_pairs": 7,
+  "drift_fact_count": 7086,
+  "failed_pairs": 0,
+  "failure_taxonomy": {},
+  "failures": [],
+  "pair_count": 7,
+  "passes": true,
+  "promoted_warning_count": 248,
+  "run_dir": "data/replay/arm64",
+  "run_id": "arm64",
+  "schema_version": "arm64-external-validity-v1",
+  "version_count": 8,
+  "warning_overlap": {
+    "arm64_only": 4,
+    "overlap_ratio_vs_arm64": 0.9833,
+    "sample_arm64_only": [
+      "SignatureDrift:pwmchip_alloc",
+      "SignatureDrift:pwmchip_put",
+      "SignatureDrift:pwmchip_release",
+      "SignatureDrift:pwmchip_remove"
+    ],
+    "sample_shared": [
+      "FieldDrift:device",
+      "FieldDrift:kunit_case",
+      "FieldDrift:pci_dev",
+      "FieldDrift:platform_device",
+      "FieldDrift:queue_limits",
+      "FieldDrift:request",
+      "MacroConstDrift:VM_ACCOUNT",
+      "MacroConstDrift:VM_ARCH_1",
+      "MacroConstDrift:VM_DONTCOPY",
+      "MacroConstDrift:VM_DONTDUMP"
+    ],
+    "sample_x86_64_only": [
+      "FieldDrift:firmware",
+      "FieldDrift:rb_node",
+      "SignatureDrift:ERR_PTR",
+      "SignatureDrift:IS_ERR",
+      "SignatureDrift:PTR_ERR",
+      "SignatureDrift:REFCOUNT_INIT",
+      "SignatureDrift:__mutex_init",
+      "SignatureDrift:_find_last_bit",
+      "SignatureDrift:_find_next_bit",
+      "SignatureDrift:_find_next_zero_bit"
+    ],
+    "shared": 236,
+    "x86_64_only": 47
+  },
+  "warning_type_delta": [
+    {
+      "arm64": 13,
+      "delta_arm64_minus_x86_64": -12,
+      "type": "FieldDrift",
+      "x86_64": 25
+    },
+    {
+      "arm64": 26,
+      "delta_arm64_minus_x86_64": 0,
+      "type": "MacroConstDrift",
+      "x86_64": 26
+    },
+    {
+      "arm64": 209,
+      "delta_arm64_minus_x86_64": -60,
+      "type": "SignatureDrift",
+      "x86_64": 269
+    }
+  ],
+  "x86_64_reference_run": "data/replay/latest"
+}

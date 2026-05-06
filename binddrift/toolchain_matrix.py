@@ -363,7 +363,12 @@ def bootstrap_commands(cfg: Config, entries: list[dict[str, Any]]) -> list[list[
     return commands
 
 
-def write_toolchain_matrix(cfg: Config, refs: list[str], version_rows: list[dict[str, Any]]) -> dict[str, Any]:
+def write_toolchain_matrix(
+    cfg: Config,
+    refs: list[str],
+    version_rows: list[dict[str, Any]],
+    output: Path | None = None,
+) -> dict[str, Any]:
     cfg.ensure_dirs()
     entries = [make_toolchain_spec(cfg, ref, row) for ref, row in zip(refs, version_rows, strict=True)]
     matrix = {
@@ -378,7 +383,8 @@ def write_toolchain_matrix(cfg: Config, refs: list[str], version_rows: list[dict
             "https://rust-for-linux.com/rust-version-policy",
         ],
     }
-    path = cfg.data_dir / "toolchain_matrix.json"
+    path = output or cfg.data_dir / "toolchain_matrix.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(matrix, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     matrix["written_to"] = str(path)
     return matrix

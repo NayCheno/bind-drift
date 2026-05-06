@@ -13,7 +13,7 @@ from binddrift.evaluation.protocol import FORBIDDEN_PRIMARY_SCORE_COMPONENTS, PR
 from binddrift.evaluation.metrics import load_manual_labels, manual_review_agreement, warning_label_key
 from binddrift.paper.audit import generate_extractor_audit, generate_strict_extractor_audit
 from binddrift.ranking.oracle_blind_scorer import rank_primary_warnings_oracle_blind
-from binddrift.run_manifest import canonical_run_dir, manifest_exists, repo_relative, resolve_manifest_path, sha256_file, validate_run_manifest
+from binddrift.run_manifest import canonical_run_dir, count_jsonl, manifest_exists, repo_relative, resolve_manifest_path, sha256_file, validate_run_manifest
 from binddrift.warnings import read_warnings
 
 
@@ -55,6 +55,7 @@ def generate_paper_tables(cfg: Config) -> dict[str, object]:
     manual_quality = tables_dir / "manual_review_quality.json"
     disagreement_examples = cfg.repo_root / "paper/analysis/reviewer_disagreement_examples.md"
     runtime = tables_dir / "runtime_scalability.json"
+    arm64_external = tables_dir / "arm64_external_validity.json"
     _write_replay_summary(cfg, replay_summary)
     _write_fact_counts(cfg, fact_counts)
     _write_manual_review_summary(cfg, manual_review, manifest=manifest)
@@ -63,6 +64,7 @@ def generate_paper_tables(cfg: Config) -> dict[str, object]:
     if manual_quality_summary["strict_gate_active"] and not manual_quality_summary["acceptance"]["minimum_passes"]:
         raise RuntimeError("manual_review_quality strict gate failed")
     _write_runtime_scalability(cfg, runtime, manifest=manifest)
+    _write_arm64_external_validity(cfg, arm64_external)
     audit = generate_extractor_audit(cfg, manifest=manifest)
     strict_audit = generate_strict_extractor_audit(cfg, manifest=manifest)
     known = {
@@ -76,6 +78,7 @@ def generate_paper_tables(cfg: Config) -> dict[str, object]:
         "manual_review_quality": manual_quality,
         "reviewer_disagreement_examples": disagreement_examples,
         "runtime_scalability": runtime,
+        "arm64_external_validity": arm64_external,
         "ranking_pooled_evaluation": tables_dir / "ranking_pooled_evaluation.json",
         "ranking_score_audit": tables_dir / "ranking_score_audit.json",
         "baseline_strict_comparison": tables_dir / "baseline_strict_comparison.json",
@@ -390,6 +393,163 @@ def _write_runtime_scalability(cfg: Config, path: Path, manifest: dict[str, Any]
         rows.append(item)
     payload = {"runs": rows, "main_evidence_gate": _main_replay_gate(conn, cfg)}
     path.write_text(json.dumps(sanitize_local_paths(payload, cfg), indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def _write_arm64_external_validity(cfg: Config, path: Path, run_id: str = "arm64") -> None:
+    x86_dir = canonical_run_dir(cfg)
+    arm_dir = cfg.data_dir / "replay" / run_id
+    x86_promoted = x86_dir / "promoted_warnings.jsonl"
+    arm_promoted = arm_dir / "promoted_warnings.jsonl"
+    summary = _load_json_file(arm_dir / "summary.json")
+    versions = _load_json_file(arm_dir / "versions.json")
+    pairs_payload = _load_json_file(arm_dir / "pairs.json")
+    x86_warnings = read_warnings(x86_promoted) if x86_promoted.exists() else []
+    arm_warnings = read_warnings(arm_promoted) if arm_promoted.exists() else []
+    run_row, db_pair_rows = _replay_run_metadata(cfg, run_id, arm_dir)
+    pair_rows = pairs_payload.get("pairs") or db_pair_rows
+    failures = [
+        {
+            "pair_id": row.get("pair_id"),
+            "old_version": row.get("old_version"),
+            "new_version": row.get("new_version"),
+            "status": row.get("status"),
+            "build_status": row.get("build_status"),
+            "error": row.get("error"),
+        }
+        for row in pair_rows
+        if row.get("status") != "completed"
+    ]
+    failure_taxonomy = Counter(str(row.get("status") or "unknown") for row in failures)
+    arm_keys = {_warning_overlap_key(warning) for warning in arm_warnings}
+    x86_keys = {_warning_overlap_key(warning) for warning in x86_warnings}
+    arm_keys.discard("")
+    x86_keys.discard("")
+    shared = sorted(arm_keys & x86_keys)
+    arm_only = sorted(arm_keys - x86_keys)
+    x86_only = sorted(x86_keys - arm_keys)
+    arm_type_counts = Counter(str(warning.get("type") or "UNKNOWN") for warning in arm_warnings)
+    x86_type_counts = Counter(str(warning.get("type") or "UNKNOWN") for warning in x86_warnings)
+    type_delta = [
+        {
+            "type": warning_type,
+            "x86_64": x86_type_counts.get(warning_type, 0),
+            "arm64": arm_type_counts.get(warning_type, 0),
+            "delta_arm64_minus_x86_64": arm_type_counts.get(warning_type, 0) - x86_type_counts.get(warning_type, 0),
+        }
+        for warning_type in sorted(set(arm_type_counts) | set(x86_type_counts))
+    ]
+    version_count = int(summary.get("versions") or _version_count_from_versions_file(versions) or _version_count_from_pairs(pair_rows))
+    pair_count = int(summary.get("pairs") or len(pair_rows))
+    completed_pairs = int(summary.get("completed_pairs") or sum(1 for row in pair_rows if row.get("status") == "completed"))
+    failed_pairs = int(summary.get("failed_pairs") or len(failures))
+    drift_fact_count = count_jsonl(arm_dir / "drift_facts.jsonl")
+    promoted_warning_count = count_jsonl(arm_promoted)
+    failed_pair_recording = failed_pairs == len(failures) and all(str(row.get("error") or "").strip() for row in failures)
+    if failed_pairs == 0:
+        failed_pair_recording = True
+    arch = str(summary.get("arch") or run_row.get("arch") or _arch_from_versions_file(versions) or "")
+    acceptance = {
+        "run_present": arm_dir.exists() and bool(summary),
+        "arch_is_arm64": arch == "arm64",
+        "version_count_minimum": version_count >= 8,
+        "completed_pairs_minimum": completed_pairs >= 7,
+        "failed_pair_recording": failed_pair_recording,
+        "warning_overlap_analysis": bool(x86_keys or arm_keys),
+        "warning_type_delta": bool(type_delta),
+    }
+    payload = {
+        "schema_version": "arm64-external-validity-v1",
+        "run_id": run_id,
+        "run_dir": repo_relative(cfg, arm_dir),
+        "arch": arch or None,
+        "x86_64_reference_run": repo_relative(cfg, x86_dir),
+        "version_count": version_count,
+        "pair_count": pair_count,
+        "completed_pairs": completed_pairs,
+        "failed_pairs": failed_pairs,
+        "drift_fact_count": drift_fact_count,
+        "promoted_warning_count": promoted_warning_count,
+        "warning_overlap": {
+            "shared": len(shared),
+            "arm64_only": len(arm_only),
+            "x86_64_only": len(x86_only),
+            "overlap_ratio_vs_arm64": round(len(shared) / len(arm_keys), 4) if arm_keys else None,
+            "sample_shared": shared[:10],
+            "sample_arm64_only": arm_only[:10],
+            "sample_x86_64_only": x86_only[:10],
+        },
+        "warning_type_delta": type_delta,
+        "failures": failures,
+        "failure_taxonomy": dict(sorted(failure_taxonomy.items())),
+        "acceptance": acceptance,
+        "passes": all(acceptance.values()),
+    }
+    path.write_text(json.dumps(sanitize_local_paths(payload, cfg), indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def _replay_run_metadata(cfg: Config, run_id: str, run_dir: Path) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    db_paths = [
+        cfg.state_dir / "replay" / run_id / "binddrift.sqlite3",
+        run_dir / "binddrift.sqlite3",
+        cfg.database,
+    ]
+    for db_path in db_paths:
+        if not db_path.exists():
+            continue
+        conn = connect(db_path)
+        initialize(conn)
+        run = conn.execute("SELECT * FROM replay_runs WHERE run_id=?", (run_id,)).fetchone()
+        if not run:
+            continue
+        pairs = [
+            dict(row)
+            for row in conn.execute(
+                "SELECT pair_id, old_version, new_version, status, build_status, error FROM replay_pairs WHERE run_id=? ORDER BY pair_index",
+                (run_id,),
+            )
+        ]
+        return dict(run), pairs
+    return {}, []
+
+
+def _load_json_file(path: Path) -> dict[str, Any]:
+    if not path.exists():
+        return {}
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return {}
+
+
+def _warning_overlap_key(warning: dict[str, Any]) -> str:
+    c_side = warning.get("c_side") or {}
+    symbol = str(c_side.get("symbol") or warning.get("symbol") or "").strip()
+    warning_type = str(warning.get("type") or "").strip()
+    return f"{warning_type}:{symbol}" if warning_type and symbol else ""
+
+
+def _version_count_from_versions_file(data: dict[str, Any]) -> int:
+    versions = data.get("versions")
+    return len(versions) if isinstance(versions, list) else 0
+
+
+def _arch_from_versions_file(data: dict[str, Any]) -> str | None:
+    versions = data.get("versions")
+    if not isinstance(versions, list):
+        return None
+    arches = {str(row.get("arch") or "") for row in versions if isinstance(row, dict)}
+    arches.discard("")
+    return arches.pop() if len(arches) == 1 else None
+
+
+def _version_count_from_pairs(rows: list[dict[str, Any]]) -> int:
+    versions = {
+        str(value)
+        for row in rows
+        for value in (row.get("old_version"), row.get("new_version"))
+        if value
+    }
+    return len(versions)
 
 
 def _validate_table_consistency(cfg: Config, manifest: dict[str, Any] | None) -> None:

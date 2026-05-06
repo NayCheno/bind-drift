@@ -115,13 +115,16 @@ The command rewrites `paper/tables/*.json`, `paper/cases/*.md`,
 `paper/analysis/*.md`, and `paper/tables/artifact_reproducibility.json`; it
 returns a non-zero exit code if the strict gate fails.
 
-For the arm64 external-validity slice, repeat a small run over the latest six
-release tags:
+For the arm64 external-validity slice, repeat a small run over the latest eight
+release tags in the artifact snapshot, which are expected to resolve to
+`v6.13` through `v7.0` for the submitted data. Use a separate run id so the
+canonical x86_64 replay under `data/replay/latest` remains intact:
 
 ```bash
 uv run binddrift replay versions \
+  --run-id arm64 \
   --start v6.1 \
-  --limit 6 \
+  --limit 8 \
   --no-include-head \
   --build-bindings \
   --configure \

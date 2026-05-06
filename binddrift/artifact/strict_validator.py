@@ -32,7 +32,7 @@ STAGE_REQUIRED_CHECKS: dict[str, set[str]] = {
         "oracle_blind_primary_has_no_forbidden_components",
         "paper_claims_match_downgrades",
     },
-    "m1": {"no_local_absolute_paths"},
+    "m1": {"no_local_absolute_paths", "arm64_external_validity_gate"},
     "m2": {"ranking"},
     "m3": {"pooled_review_coverage", "manual_review_quality_gate", "binddrift_review_role_artifacts"},
     "m4": {"semantic"},
@@ -128,6 +128,7 @@ def validate_artifact(
     _check("strict_extractor_audit_gate", checks, lambda: _strict_extractor_gate(cfg))
     _check("paper_claims_match_downgrades", checks, lambda: _paper_claims(cfg))
     _check("m8_paper_submission_gate", checks, lambda: _m8_paper_submission_gate(cfg))
+    _check("arm64_external_validity_gate", checks, lambda: _arm64_external_validity_gate(cfg))
     _check("no_local_absolute_paths", checks, lambda: _no_local_paths(cfg))
     if run_tests:
         _check("pytest", checks, lambda: _run_pytest(cfg))
@@ -210,6 +211,7 @@ def _required_tables(cfg: Config) -> dict[str, Any]:
         "paper/tables/manual_review_quality.json",
         "paper/tables/case_study_summary.json",
         "paper/tables/strict_extractor_audit.json",
+        "paper/tables/arm64_external_validity.json",
         "paper/tables/table_index.json",
     ]
     missing = [path for path in paths if not (cfg.repo_root / path).exists()]
@@ -613,6 +615,109 @@ def _strict_extractor_gate(cfg: Config) -> dict[str, Any]:
         "parser_limitations": data.get("parser_limitations"),
         "review_provenance": data.get("review_provenance"),
     }
+
+
+def _arm64_external_validity_gate(cfg: Config) -> dict[str, Any]:
+    data = _json(cfg, "paper/tables/arm64_external_validity.json")
+    acceptance = data.get("acceptance") or {}
+    run_dir = _artifact_path(cfg, str(data.get("run_dir") or "data/replay/arm64"))
+    versions = _json_file(run_dir / "versions.json").get("versions") or []
+    pairs = _json_file(run_dir / "pairs.json").get("pairs") or []
+    arm_warnings = read_warnings(run_dir / "promoted_warnings.jsonl")
+    x86_warnings = read_warnings(canonical_run_dir(cfg) / "promoted_warnings.jsonl")
+    raw = {
+        "version_count": len(versions),
+        "pair_count": len(pairs),
+        "completed_pairs": sum(1 for pair in pairs if pair.get("status") == "completed"),
+        "failed_pairs": sum(1 for pair in pairs if pair.get("status") != "completed"),
+        "drift_fact_count": _jsonl_count(run_dir / "drift_facts.jsonl") if (run_dir / "drift_facts.jsonl").exists() else 0,
+        "promoted_warning_count": len(arm_warnings),
+    }
+    arm_keys = {_warning_overlap_key(warning) for warning in arm_warnings}
+    x86_keys = {_warning_overlap_key(warning) for warning in x86_warnings}
+    arm_keys.discard("")
+    x86_keys.discard("")
+    raw_overlap = {
+        "shared": len(arm_keys & x86_keys),
+        "arm64_only": len(arm_keys - x86_keys),
+        "x86_64_only": len(x86_keys - arm_keys),
+    }
+    raw_type_delta = _warning_type_delta(x86_warnings, arm_warnings)
+    draft_text = _normal_text((cfg.repo_root / "paper/draft.md").read_text(encoding="utf-8"))
+    discussion_checks = {
+        "external_validity_section": "arm64 external-validity slice" in draft_text,
+        "warning_overlap_discussed": "warning overlap" in draft_text,
+        "failed_pairs_discussed": "failed pairs" in draft_text or "failed pair" in draft_text,
+        "threats_discuss_arm64": "arm64" in draft_text and "external validity" in draft_text,
+    }
+    checks = {
+        "run_present": acceptance.get("run_present") is True,
+        "arch_is_arm64": acceptance.get("arch_is_arm64") is True,
+        "version_count_minimum": acceptance.get("version_count_minimum") is True,
+        "completed_pairs_minimum": acceptance.get("completed_pairs_minimum") is True,
+        "failed_pair_recording": acceptance.get("failed_pair_recording") is True,
+        "warning_overlap_analysis": acceptance.get("warning_overlap_analysis") is True,
+        "warning_type_delta": acceptance.get("warning_type_delta") is True,
+        "raw_version_count_matches_table": raw["version_count"] == data.get("version_count"),
+        "raw_pair_count_matches_table": raw["pair_count"] == data.get("pair_count"),
+        "raw_completed_pairs_matches_table": raw["completed_pairs"] == data.get("completed_pairs"),
+        "raw_failed_pairs_matches_table": raw["failed_pairs"] == data.get("failed_pairs"),
+        "raw_drift_fact_count_matches_table": raw["drift_fact_count"] == data.get("drift_fact_count"),
+        "raw_promoted_warning_count_matches_table": raw["promoted_warning_count"] == data.get("promoted_warning_count"),
+        "raw_warning_overlap_matches_table": raw_overlap == {
+            key: (data.get("warning_overlap") or {}).get(key)
+            for key in ("shared", "arm64_only", "x86_64_only")
+        },
+        "raw_warning_type_delta_matches_table": raw_type_delta == data.get("warning_type_delta"),
+        **discussion_checks,
+    }
+    return {
+        "passes": all(checks.values()),
+        "checks": checks,
+        "run_id": data.get("run_id"),
+        "run_dir": data.get("run_dir"),
+        "version_count": data.get("version_count"),
+        "pair_count": data.get("pair_count"),
+        "completed_pairs": data.get("completed_pairs"),
+        "failed_pairs": data.get("failed_pairs"),
+        "drift_fact_count": data.get("drift_fact_count"),
+        "promoted_warning_count": data.get("promoted_warning_count"),
+        "warning_overlap": data.get("warning_overlap"),
+        "raw_counts": raw,
+        "failure_taxonomy": data.get("failure_taxonomy"),
+    }
+
+
+def _artifact_path(cfg: Config, value: str) -> Path:
+    path = Path(value)
+    return path if path.is_absolute() else cfg.repo_root / path
+
+
+def _json_file(path: Path) -> dict[str, Any]:
+    if not path.exists():
+        return {}
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _warning_overlap_key(warning: dict[str, Any]) -> str:
+    c_side = warning.get("c_side") or {}
+    symbol = str(c_side.get("symbol") or warning.get("symbol") or "").strip()
+    warning_type = str(warning.get("type") or "").strip()
+    return f"{warning_type}:{symbol}" if warning_type and symbol else ""
+
+
+def _warning_type_delta(x86_warnings: list[dict[str, Any]], arm_warnings: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    x86_counts = Counter(str(warning.get("type") or "UNKNOWN") for warning in x86_warnings)
+    arm_counts = Counter(str(warning.get("type") or "UNKNOWN") for warning in arm_warnings)
+    return [
+        {
+            "type": warning_type,
+            "x86_64": x86_counts.get(warning_type, 0),
+            "arm64": arm_counts.get(warning_type, 0),
+            "delta_arm64_minus_x86_64": arm_counts.get(warning_type, 0) - x86_counts.get(warning_type, 0),
+        }
+        for warning_type in sorted(set(x86_counts) | set(arm_counts))
+    ]
 
 
 def _strict_parser_limitations_cover_extractors(data: dict[str, Any]) -> bool:

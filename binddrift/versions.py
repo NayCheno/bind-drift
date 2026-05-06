@@ -41,6 +41,7 @@ def select_versions(
     include_head: bool = True,
     fetch: bool = False,
     limit: int | None = None,
+    arch: str = "x86_64",
 ) -> dict[str, Any]:
     cfg.ensure_dirs()
     fetch_result = fetch_tags(cfg) if fetch else None
@@ -51,7 +52,7 @@ def select_versions(
     if include_head:
         head = git_output(cfg.linux_tree, ["rev-parse", "--short=12", "HEAD"], default="HEAD")
         refs.append(f"HEAD:{head}")
-    rows = [version_row(cfg.linux_tree, ref) for ref in refs]
+    rows = [version_row(cfg.linux_tree, ref, arch=arch) for ref in refs]
     conn = connect(cfg.database)
     initialize(conn)
     upsert_many(conn, "versions", rows)
@@ -70,7 +71,7 @@ def select_versions(
     }
 
 
-def version_row(repo: Path, ref: str) -> dict[str, Any]:
+def version_row(repo: Path, ref: str, arch: str = "x86_64") -> dict[str, Any]:
     git_ref = ref.split(":", 1)[0] if ref.startswith("HEAD:") else ref
     peeled_ref = f"{git_ref}^{{commit}}"
     commit = git_output(repo, ["rev-parse", peeled_ref], default=git_output(repo, ["rev-parse", git_ref], default=git_ref))
@@ -81,7 +82,7 @@ def version_row(repo: Path, ref: str) -> dict[str, Any]:
         "git_commit": commit,
         "tag": tag,
         "date": date,
-        "arch": "x86_64",
+        "arch": arch,
         "config_hash": None,
         "rustc_version": None,
         "clang_version": None,

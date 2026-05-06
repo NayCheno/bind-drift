@@ -142,6 +142,20 @@ promoted Rust-impact warnings, the 500-row pooled review set, the 304 reviewed
 semantic targets, and the generated case-study suite. `paper/tables/table_index.json`
 records sha256 provenance for every generated main table.
 
+An arm64 external-validity slice replays 8 release tags from `v6.13` through
+`v7.0`, covering 7 adjacent pairs with Rust-enabled arm64 binding generation.
+All 7 pairs complete, so there are 0 failed pairs; failed pairs would be
+reported with pair status, build status, and error text rather than silently
+skipped. The slice records 7,086 drift facts and 248 promoted Rust-impact
+warnings. Warning overlap with the x86_64 replay is high: 236 warning
+type/symbol keys are shared, 4 are arm64-only, and 47 are x86_64-only. The
+architecture delta is concentrated in `SignatureDrift`, where arm64 reports
+209 warnings versus 269 on x86_64; `MacroConstDrift` is unchanged at 26 on both
+architectures, and `FieldDrift` drops from 25 on x86_64 to 13 on arm64. This
+slice supports external validity for the replay and prioritization pipeline,
+while the main pooled-label claims remain anchored to the canonical x86_64
+review set.
+
 Manual semantic evaluation uses a blind pooled review set. Two reviewers label
 warnings independently, then an adjudicator records the final label; this manual
 adjudication is the only source of semantic precision claims. All 500 pooled
@@ -240,9 +254,15 @@ Wrapper-fix-backed labels and semantic labels are reported separately, and
 remains a threat even with double review and adjudication, so the paper reports
 semantic labels as stale-contract review targets rather than confirmed bugs.
 
-External validity threats include focusing on Linux/Rust-for-Linux and x86_64.
-Future work should evaluate additional architectures, rust-next branches, and
-complete release-tag histories once full binding generation is available.
+External validity threats include focusing on Linux/Rust-for-Linux and using
+x86_64 as the main labeled evaluation architecture. The arm64 external-validity
+slice reduces this threat by showing that the replay and warning-prioritization
+pipeline runs across 8 arm64 release tags with 7 completed pairs, explicit
+failed-pair reporting, and warning overlap/type-delta analysis. It does not
+remove the threat entirely: arm64 is still Linux mainline, uses the same
+Rust-for-Linux surfaces, and does not add independent manual labels. Future
+work should evaluate rust-next branches, additional architectures, and complete
+release-tag histories once full binding generation is available.
 
 ## 8. Related Work
 

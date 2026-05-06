@@ -152,6 +152,117 @@ def test_manual_review_summary_marks_all_unclear_as_not_main(tmp_path: Path):
     assert summary["usable_for_main"] is False
 
 
+def test_arm64_external_validity_table_reports_overlap_and_failures(tmp_path: Path):
+    cfg = Config.from_args(repo_root=tmp_path)
+    latest = tmp_path / "data/replay/latest"
+    arm64 = tmp_path / "data/replay/arm64"
+    latest.mkdir(parents=True)
+    arm64.mkdir(parents=True)
+    latest_warning = {
+        "warning_id": "W-x86",
+        "run_id": "latest",
+        "pair_id": "latest-p001-v6.1-to-v6.2",
+        "old_version": "v6.1",
+        "new_version": "v6.2",
+        "type": "SignatureDrift",
+        "c_side": {"symbol": "foo"},
+    }
+    arm64_warning = {
+        **latest_warning,
+        "warning_id": "W-arm64",
+        "run_id": "arm64",
+        "pair_id": "arm64-p001-v6.1-to-v6.2",
+    }
+    latest_warning["warning_uid"] = make_warning_uid(latest_warning)
+    arm64_warning["warning_uid"] = make_warning_uid(arm64_warning)
+    (latest / "promoted_warnings.jsonl").write_text(json.dumps(latest_warning, sort_keys=True) + "\n", encoding="utf-8")
+    (arm64 / "promoted_warnings.jsonl").write_text(json.dumps(arm64_warning, sort_keys=True) + "\n", encoding="utf-8")
+    (arm64 / "drift_facts.jsonl").write_text('{"fact_id":"F-1"}\n', encoding="utf-8")
+    (arm64 / "summary.json").write_text(
+        json.dumps(
+            {
+                "run_id": "arm64",
+                "versions": 8,
+                "pairs": 7,
+                "completed_pairs": 7,
+                "failed_pairs": 0,
+            },
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    conn = connect(cfg.database)
+    initialize(conn)
+    upsert_many(
+        conn,
+        "replay_runs",
+        [
+            {
+                "run_id": "arm64",
+                "started_at": "2026-05-04T00:00:00+00:00",
+                "completed_at": "2026-05-04T00:01:00+00:00",
+                "status": "completed",
+                "start_ref": "v6.1",
+                "include_head": 0,
+                "build_bindings": 1,
+                "configure": 1,
+                "jobs": 1,
+                "arch": "arm64",
+                "c_roots": "[]",
+                "max_files": None,
+                "refs": "[]",
+                "summary": "{}",
+                "error": None,
+            }
+        ],
+    )
+    upsert_many(
+        conn,
+        "replay_pairs",
+        [
+            {
+                "pair_id": f"arm64-p{index:03d}",
+                "run_id": "arm64",
+                "pair_index": index,
+                "old_ref": f"v6.{index}",
+                "new_ref": f"v6.{index + 1}",
+                "old_version": f"v6.{index}",
+                "new_version": f"v6.{index + 1}",
+                "old_commit": "old",
+                "new_commit": "new",
+                "started_at": "2026-05-04T00:00:00+00:00",
+                "completed_at": "2026-05-04T00:01:00+00:00",
+                "status": "completed",
+                "warning_count": 1,
+                "build_status": "built",
+                "extraction_summary": "{}",
+                "evaluation_summary": "{}",
+                "warnings_jsonl": None,
+                "report_md": None,
+                "error": None,
+            }
+            for index in range(1, 8)
+        ],
+    )
+
+    generate_paper_tables(cfg)
+
+    table = json.loads((tmp_path / "paper/tables/arm64_external_validity.json").read_text(encoding="utf-8"))
+    assert table["passes"] is True
+    assert table["arch"] == "arm64"
+    assert table["version_count"] == 8
+    assert table["completed_pairs"] == 7
+    assert table["drift_fact_count"] == 1
+    assert table["promoted_warning_count"] == 1
+    assert table["warning_overlap"]["shared"] == 1
+    assert table["warning_type_delta"] == [
+        {"type": "SignatureDrift", "x86_64": 1, "arm64": 1, "delta_arm64_minus_x86_64": 0}
+    ]
+    index = json.loads((tmp_path / "paper/tables/table_index.json").read_text(encoding="utf-8"))
+    assert index["arm64_external_validity"]["available"] is True
+
+
 def test_extractor_audit_transfers_matching_previous_sample_labels(tmp_path: Path):
     cfg = Config.from_args(repo_root=tmp_path)
     conn = connect(cfg.database)

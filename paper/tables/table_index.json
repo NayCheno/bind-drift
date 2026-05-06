@@ -4,6 +4,11 @@
     "path": "paper/tables/ablation_strict_comparison.json",
     "sha256": "b80dfd3c62ece05aa830da74c8a07c1df917d9439c35de0872535de8b7e9192f"
   },
+  "arm64_external_validity": {
+    "available": true,
+    "path": "paper/tables/arm64_external_validity.json",
+    "sha256": "7a4903d81f42eb24babd5ef0827d9633519589745b4c5ff859b8d11ae999418d"
+  },
   "baseline_strict_comparison": {
     "available": true,
     "path": "paper/tables/baseline_strict_comparison.json",

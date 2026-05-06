@@ -1,0 +1,94 @@
+{
+  "fetch": null,
+  "start": "v6.1",
+  "versions": [
+    {
+      "arch": "arm64",
+      "bindgen_version": null,
+      "clang_version": null,
+      "config_hash": null,
+      "date": "2025-01-19T15:51:45-08:00",
+      "git_commit": "ffd294d346d185b70e28b1a28abe367bbfe53c04",
+      "rustc_version": null,
+      "tag": "v6.13",
+      "version_id": "v6.13"
+    },
+    {
+      "arch": "arm64",
+      "bindgen_version": null,
+      "clang_version": null,
+      "config_hash": null,
+      "date": "2025-03-24T07:02:41-07:00",
+      "git_commit": "38fec10eb60d687e30c8c6b5420d86e8149f7557",
+      "rustc_version": null,
+      "tag": "v6.14",
+      "version_id": "v6.14"
+    },
+    {
+      "arch": "arm64",
+      "bindgen_version": null,
+      "clang_version": null,
+      "config_hash": null,
+      "date": "2025-05-25T16:09:23-07:00",
+      "git_commit": "0ff41df1cb268fc69e703a08a57ee14ae967d0ca",
+      "rustc_version": null,
+      "tag": "v6.15",
+      "version_id": "v6.15"
+    },
+    {
+      "arch": "arm64",
+      "bindgen_version": null,
+      "clang_version": null,
+      "config_hash": null,
+      "date": "2025-07-27T14:26:38-07:00",
+      "git_commit": "038d61fd642278bab63ee8ef722c50d10ab01e8f",
+      "rustc_version": null,
+      "tag": "v6.16",
+      "version_id": "v6.16"
+    },
+    {
+      "arch": "arm64",
+      "bindgen_version": null,
+      "clang_version": null,
+      "config_hash": null,
+      "date": "2025-09-28T14:39:22-07:00",
+      "git_commit": "e5f0a698b34ed76002dc5cff3804a61c80233a7a",
+      "rustc_version": null,
+      "tag": "v6.17",
+      "version_id": "v6.17"
+    },
+    {
+      "arch": "arm64",
+      "bindgen_version": null,
+      "clang_version": null,
+      "config_hash": null,
+      "date": "2025-11-30T14:42:10-08:00",
+      "git_commit": "7d0a66e4bb9081d75c82ec4957c50034cb0ea449",
+      "rustc_version": null,
+      "tag": "v6.18",
+      "version_id": "v6.18"
+    },
+    {
+      "arch": "arm64",
+      "bindgen_version": null,
+      "clang_version": null,
+      "config_hash": null,
+      "date": "2026-02-08T13:03:27-08:00",
+      "git_commit": "05f7e89ab9731565d8a62e3b5d1ec206485eeb0b",
+      "rustc_version": null,
+      "tag": "v6.19",
+      "version_id": "v6.19"
+    },
+    {
+      "arch": "arm64",
+      "bindgen_version": null,
+      "clang_version": null,
+      "config_hash": null,
+      "date": "2026-04-12T13:48:06-07:00",
+      "git_commit": "028ef9c96e96197026887c0f092424679298aae8",
+      "rustc_version": null,
+      "tag": "v7.0",
+      "version_id": "v7.0"
+    }
+  ]
+}
