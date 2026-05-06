@@ -205,6 +205,41 @@ def test_artifact_validator_reports_m4_semantic_ready() -> None:
     assert semantic["true_semantic_drift_count"] >= 8
     assert semantic["non_wrapper_semantic_true_positives"] >= 5
     assert semantic["semantic_drift_type_count"] >= 3
+    m4_check = next(check for check in result["checks"] if check["name"] == "m4_false_positive_gate")
+    assert m4_check["passes"] is True
+    assert m4_check["details"]["checks"]["p_at_20_stable_b_target"] is True
+    assert m4_check["details"]["checks"]["taxonomy_examples"] is True
+    assert m4_check["details"]["checks"]["draft_threats_admit_semantic_label_subjectivity"] is True
+    assert set(m4_check["details"]["observed_taxonomy"]) == {
+        "binding_only_or_generated_surface",
+        "weak_rust_reachability",
+        "real_c_drift_no_rust_contract_impact",
+        "macro_constant_over_prioritization",
+        "layout_ambiguity",
+    }
+
+
+def test_artifact_validator_m4_requires_semantic_label_subjectivity_threat() -> None:
+    draft_path = Path("paper/draft.md")
+    original = draft_path.read_text(encoding="utf-8")
+    required_sentence = "Semantic labels have unavoidable subjectivity."
+    try:
+        assert required_sentence in original
+        modified = original.replace(required_sentence, "Semantic labels are adjudicated through the review protocol.")
+        modified = modified.replace(
+            "Semantic labels have\nunavoidable subjectivity",
+            "Semantic labels are adjudicated through the review protocol",
+        )
+        draft_path.write_text(modified, encoding="utf-8")
+
+        result = validate_artifact(Config.from_args(repo_root="."), strict_ccfb=True, stage="m4")
+
+        m4_check = next(check for check in result["checks"] if check["name"] == "m4_false_positive_gate")
+        assert result["passes"] is False
+        assert m4_check["passes"] is False
+        assert m4_check["details"]["checks"]["draft_threats_admit_semantic_label_subjectivity"] is False
+    finally:
+        draft_path.write_text(original, encoding="utf-8")
 
 
 def test_artifact_validator_recomputes_m4_semantic_counts() -> None:

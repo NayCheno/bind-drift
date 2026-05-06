@@ -12,7 +12,7 @@
   "baseline_strict_comparison": {
     "available": true,
     "path": "paper/tables/baseline_strict_comparison.json",
-    "sha256": "03e9d1989cc9d6cc6f5db790ec9db573a7e2f64e72fe6dad1a684a0a7300949e"
+    "sha256": "125b40fc159c72826e4a94bbd46ce61d7d9395b36ba68a52c8b6a4079b4196bb"
   },
   "baselines_ablations": {
     "available": true,
@@ -39,6 +39,16 @@
     "path": "paper/tables/fact_counts.json",
     "sha256": "eddfebacc74dc8e6a90b3be9ac33ecb2f9b81cbe7102d80049323aedca87fb71"
   },
+  "false_positive_taxonomy": {
+    "available": true,
+    "path": "paper/tables/false_positive_taxonomy.json",
+    "sha256": "bb333add3401abc7319843dec9e7163d82d7970f43733dde55573d4d25fbddab"
+  },
+  "false_positive_taxonomy_analysis": {
+    "available": true,
+    "path": "paper/analysis/false_positive_taxonomy.md",
+    "sha256": "50c244614854d5db4fd8f90671c5fafb878a989b40a8c3641d5f308c20888eb3"
+  },
   "manual_review_quality": {
     "available": true,
     "path": "paper/tables/manual_review_quality.json",
@@ -52,7 +62,7 @@
   "ranking_pooled_evaluation": {
     "available": true,
     "path": "paper/tables/ranking_pooled_evaluation.json",
-    "sha256": "613d19614ad6fe5960cee814ef32ad6568a0cc3b7b0ccfb448708918a9237f0f"
+    "sha256": "0b57d2770f666fd33a477d598bb8c81d0ef0d29c8e9508b8f5eb5279f5da8473"
   },
   "ranking_score_audit": {
     "available": true,

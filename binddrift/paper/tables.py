@@ -10,6 +10,7 @@ from binddrift.artifact_paths import sanitize_local_paths
 from binddrift.config import Config
 from binddrift.db import connect, initialize
 from binddrift.evaluation.protocol import FORBIDDEN_PRIMARY_SCORE_COMPONENTS, PROTOCOL_VERSION, load_evaluation_protocol
+from binddrift.evaluation.evaluate_rankers import TAXONOMY_SCHEMA_VERSION
 from binddrift.evaluation.metrics import load_manual_labels, manual_review_agreement, warning_label_key
 from binddrift.paper.audit import generate_extractor_audit, generate_strict_extractor_audit
 from binddrift.ranking.oracle_blind_scorer import rank_primary_warnings_oracle_blind
@@ -39,6 +40,15 @@ MANUAL_REVIEW_QUALITY_COLUMNS = [
     "adjudicated_label",
     "adjudication_notes",
 ]
+M4_FALSE_POSITIVE_TAXONOMY_SCHEMA_VERSION = "m4-false-positive-taxonomy-v1"
+M4_FALSE_POSITIVE_TAXONOMY = {
+    "binding_only_or_generated_surface",
+    "weak_rust_reachability",
+    "real_c_drift_no_rust_contract_impact",
+    "macro_constant_over_prioritization",
+    "layout_ambiguity",
+}
+M4_PRIMARY_METRICS = ("p_at_10", "p_at_20", "p_at_50", "p_at_100", "ndcg_at_20", "auprc_on_pooled_review_set")
 
 
 def generate_paper_tables(cfg: Config) -> dict[str, object]:
@@ -54,12 +64,15 @@ def generate_paper_tables(cfg: Config) -> dict[str, object]:
     manual_review = tables_dir / "manual_review_summary.json"
     manual_quality = tables_dir / "manual_review_quality.json"
     disagreement_examples = cfg.repo_root / "paper/analysis/reviewer_disagreement_examples.md"
+    false_positive_taxonomy = tables_dir / "false_positive_taxonomy.json"
+    false_positive_taxonomy_analysis = cfg.repo_root / "paper/analysis/false_positive_taxonomy.md"
     runtime = tables_dir / "runtime_scalability.json"
     arm64_external = tables_dir / "arm64_external_validity.json"
     _write_replay_summary(cfg, replay_summary)
     _write_fact_counts(cfg, fact_counts)
     _write_manual_review_summary(cfg, manual_review, manifest=manifest)
     manual_quality_summary = _write_manual_review_quality(cfg, manual_quality, disagreement_examples, manifest=manifest)
+    _write_false_positive_taxonomy(cfg, false_positive_taxonomy, false_positive_taxonomy_analysis, manifest=manifest)
     _validate_table_consistency(cfg, manifest)
     if manual_quality_summary["strict_gate_active"] and not manual_quality_summary["acceptance"]["minimum_passes"]:
         raise RuntimeError("manual_review_quality strict gate failed")
@@ -77,6 +90,8 @@ def generate_paper_tables(cfg: Config) -> dict[str, object]:
         "manual_review_summary": manual_review,
         "manual_review_quality": manual_quality,
         "reviewer_disagreement_examples": disagreement_examples,
+        "false_positive_taxonomy": false_positive_taxonomy,
+        "false_positive_taxonomy_analysis": false_positive_taxonomy_analysis,
         "runtime_scalability": runtime,
         "arm64_external_validity": arm64_external,
         "ranking_pooled_evaluation": tables_dir / "ranking_pooled_evaluation.json",
@@ -364,6 +379,206 @@ def _label_leakage_findings(rows: list[dict[str, str]]) -> list[str]:
         if "oracle_score" in label_source or "ranker_score" in label_source:
             findings.append(row.get("warning_uid") or warning_label_key(row.get("warning_id"), row.get("pair_id")))
     return sorted(set(findings))
+
+
+def _write_false_positive_taxonomy(
+    cfg: Config,
+    path: Path,
+    analysis_path: Path,
+    manifest: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    run_dir = canonical_run_dir(cfg)
+    pool_path = run_dir / "pooled_review_set.jsonl"
+    labels_path = run_dir / "pooled_review_labels.csv"
+    if manifest:
+        pool_path = Path(manifest["resolved_paths"].get("pooled_review_set") or pool_path)
+        labels_path = Path(manifest["resolved_paths"].get("pooled_review_labels") or labels_path)
+    pool_rows = read_warnings(pool_path) if pool_path.exists() else []
+    label_rows, _columns = _read_review_rows(labels_path)
+    labels_by_uid = {row.get("warning_uid", ""): row for row in label_rows if row.get("warning_uid")}
+    labeled_rows = [row for row in label_rows if row.get("adjudicated_label", "").strip()]
+    false_positive_rows: list[dict[str, Any]] = []
+    for warning in pool_rows:
+        uid = str(warning.get("warning_uid") or "")
+        review = labels_by_uid.get(uid, {})
+        label = review.get("adjudicated_label", "").strip()
+        if label not in {"FALSE_POSITIVE", "BENIGN_DRIFT"}:
+            continue
+        bucket = _m4_false_positive_bucket(warning, label, review)
+        false_positive_rows.append(
+            {
+                "warning": warning,
+                "review": review,
+                "label": label,
+                "taxonomy": bucket,
+            }
+        )
+    taxonomy = Counter(row["taxonomy"] for row in false_positive_rows)
+    examples_by_taxonomy: dict[str, list[dict[str, Any]]] = {bucket: [] for bucket in sorted(taxonomy)}
+    for row in sorted(false_positive_rows, key=_m4_taxonomy_sort_key):
+        bucket = row["taxonomy"]
+        if len(examples_by_taxonomy.setdefault(bucket, [])) >= 5:
+            continue
+        examples_by_taxonomy[bucket].append(_m4_taxonomy_example(row))
+    ranking = _load_json_file(cfg.repo_root / "paper/tables/ranking_pooled_evaluation.json")
+    primary = next((row for row in ranking.get("rankers", []) if row.get("ranker") == "binddrift_oracle_blind"), {})
+    comparison = ranking.get("comparison_against_best_simple_baseline") or {}
+    deltas = comparison.get("deltas") or {}
+    main_metrics = {metric: primary.get(metric) for metric in M4_PRIMARY_METRICS}
+    observed_categories = set(taxonomy)
+    examples_cover_observed = all(examples_by_taxonomy.get(bucket) for bucket in observed_categories)
+    acceptance = {
+        "primary_metrics_are_topk_or_ranking_metrics": sorted(metric for metric, value in main_metrics.items() if value is not None)
+        == sorted(M4_PRIMARY_METRICS),
+        "overall_precision_not_primary_metric": "precision" not in primary and "overall_precision" not in primary,
+        "p_at_10_stable_b_target": (primary.get("p_at_10") or 0.0) >= 0.90,
+        "p_at_20_stable_b_target": (primary.get("p_at_20") or 0.0) >= 0.80,
+        "p_at_50_stable_b_target": (primary.get("p_at_50") or 0.0) >= 0.70,
+        "p_at_100_reported": primary.get("p_at_100") is not None,
+        "ndcg_at_20_stable_b_target": (primary.get("ndcg_at_20") or 0.0) >= 0.90,
+        "auprc_reported": primary.get("auprc_on_pooled_review_set") is not None,
+        "best_baseline_delta_p_at_20_stable_b_target": (deltas.get("p_at_20") or 0.0) >= 0.30,
+        "false_positive_taxonomy_present": bool(taxonomy),
+        "false_positive_taxonomy_schema": observed_categories <= M4_FALSE_POSITIVE_TAXONOMY,
+        "false_positive_taxonomy_examples": examples_cover_observed,
+        "m4_taxonomy_categories_covered": observed_categories == M4_FALSE_POSITIVE_TAXONOMY,
+    }
+    acceptance["minimum_passes"] = all(acceptance.values())
+    label_distribution = Counter(row.get("adjudicated_label", "").strip() for row in labeled_rows)
+    payload = {
+        "schema_version": M4_FALSE_POSITIVE_TAXONOMY_SCHEMA_VERSION,
+        "claim_boundary": "top-k review prioritization, not overall warning-set precision",
+        "pooled_review_set": repo_relative(cfg, pool_path),
+        "pooled_review_labels": repo_relative(cfg, labels_path),
+        "pooled_review_rows": len(pool_rows),
+        "labeled_rows": len(labeled_rows),
+        "false_positive_count": label_distribution.get("FALSE_POSITIVE", 0),
+        "benign_drift_count": label_distribution.get("BENIGN_DRIFT", 0),
+        "taxonomy_scope": "FALSE_POSITIVE plus BENIGN_DRIFT rows, because both are non-true review-target outcomes used to explain false-positive risk.",
+        "taxonomy_scope_rows": len(false_positive_rows),
+        "taxonomy": {bucket: taxonomy.get(bucket, 0) for bucket in sorted(M4_FALSE_POSITIVE_TAXONOMY)},
+        "allowed_taxonomy": sorted(M4_FALSE_POSITIVE_TAXONOMY),
+        "examples_by_taxonomy": examples_by_taxonomy,
+        "main_ranking_metrics": main_metrics,
+        "best_simple_baseline": (ranking.get("best_simple_baseline") or {}).get("ranker"),
+        "best_simple_baseline_deltas": deltas,
+        "label_distribution": {label: label_distribution.get(label, 0) for label in REVIEW_LABELS},
+        "acceptance": acceptance,
+    }
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(sanitize_local_paths(payload, cfg), indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    _write_false_positive_taxonomy_analysis(cfg, analysis_path, payload)
+    return payload
+
+
+def _m4_false_positive_bucket(warning: dict[str, Any], label: str, review: dict[str, str]) -> str:
+    symbol = str((warning.get("c_side") or {}).get("symbol") or "")
+    warning_type = str(warning.get("type") or "")
+    fact_source = str(warning.get("fact_source") or "")
+    if label == "BENIGN_DRIFT":
+        return "real_c_drift_no_rust_contract_impact"
+    if warning_type == "MacroConstDrift" or fact_source == "macro_diff" or symbol.isupper():
+        return "macro_constant_over_prioritization"
+    if warning_type in {"FieldDrift", "LayoutDrift", "LayoutFieldDrift"} or fact_source == "layout_diff":
+        return "layout_ambiguity"
+    if not _m4_has_rust_reachability(warning):
+        return "weak_rust_reachability"
+    if warning.get("c_evidence_level") == "binding_only" or fact_source == "binding_diff" or _mentions(review, "generated binding"):
+        return "binding_only_or_generated_surface"
+    return "real_c_drift_no_rust_contract_impact"
+
+
+def _m4_has_rust_reachability(warning: dict[str, Any]) -> bool:
+    rust_side = warning.get("rust_side") or {}
+    reasons = set(warning.get("promotion_reasons") or [])
+    return bool(
+        rust_side.get("uses")
+        or rust_side.get("safe_apis")
+        or "direct_binding_use" in reasons
+        or "exposes_safe_api" in reasons
+    )
+
+
+def _mentions(row: dict[str, str], needle: str) -> bool:
+    haystack = " ".join(
+        row.get(field, "")
+        for field in ("reviewer1_notes", "reviewer2_notes", "adjudication_notes")
+    ).lower()
+    return needle.lower() in haystack
+
+
+def _m4_taxonomy_sort_key(row: dict[str, Any]) -> tuple[int, str, str, str]:
+    warning = row["warning"]
+    ranks = warning.get("ranker_ranks") or {}
+    rank = int(ranks.get("binddrift_oracle_blind") or 1_000_000)
+    return (
+        rank,
+        str(warning.get("pair_id") or ""),
+        str(warning.get("warning_id") or ""),
+        str(warning.get("warning_uid") or ""),
+    )
+
+
+def _m4_taxonomy_example(row: dict[str, Any]) -> dict[str, Any]:
+    warning = row["warning"]
+    review = row["review"]
+    ranks = warning.get("ranker_ranks") or {}
+    return {
+        "warning_uid": warning.get("warning_uid"),
+        "warning_id": warning.get("warning_id"),
+        "pair_id": warning.get("pair_id"),
+        "rank": ranks.get("binddrift_oracle_blind"),
+        "label": row["label"],
+        "taxonomy": row["taxonomy"],
+        "type": warning.get("type"),
+        "symbol": (warning.get("c_side") or {}).get("symbol"),
+        "c_evidence_level": warning.get("c_evidence_level"),
+        "fact_source": warning.get("fact_source"),
+        "rust_reachability": "present" if _m4_has_rust_reachability(warning) else "weak_or_absent",
+        "adjudication_note": review.get("adjudication_notes", ""),
+    }
+
+
+def _write_false_positive_taxonomy_analysis(cfg: Config, path: Path, payload: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    lines = [
+        "# False-Positive Taxonomy",
+        "",
+        "This analysis explains false-positive risk for the pooled review set. It is used to support a top-K review-prioritization claim, not an overall warning-set precision claim.",
+        "",
+        "## Ranking Metrics",
+        "",
+    ]
+    metrics = payload.get("main_ranking_metrics") or {}
+    for metric in M4_PRIMARY_METRICS:
+        lines.append(f"- `{metric}`: `{metrics.get(metric)}`")
+    lines.extend(
+        [
+            "",
+            "## Taxonomy",
+            "",
+            f"- Pooled rows: `{payload.get('pooled_review_rows')}`",
+            f"- `FALSE_POSITIVE` rows: `{payload.get('false_positive_count')}`",
+            f"- `BENIGN_DRIFT` rows: `{payload.get('benign_drift_count')}`",
+            "",
+        ]
+    )
+    taxonomy = payload.get("taxonomy") or {}
+    examples = payload.get("examples_by_taxonomy") or {}
+    for bucket in sorted(M4_FALSE_POSITIVE_TAXONOMY):
+        lines.extend([f"### `{bucket}`", "", f"Count: `{taxonomy.get(bucket, 0)}`", ""])
+        bucket_examples = examples.get(bucket) or []
+        if not bucket_examples:
+            lines.extend(["No example available in the current pooled taxonomy.", ""])
+            continue
+        for example in bucket_examples[:3]:
+            lines.extend(
+                [
+                    f"- `{example.get('warning_id')}` `{example.get('pair_id')}` `{example.get('symbol')}`: {example.get('adjudication_note')}",
+                ]
+            )
+        lines.append("")
+    path.write_text(sanitize_local_paths("\n".join(lines).rstrip() + "\n", cfg), encoding="utf-8")
 
 
 def _write_runtime_scalability(cfg: Config, path: Path, manifest: dict[str, Any] | None = None) -> None:
@@ -766,7 +981,7 @@ def _ranking_taxonomy_schema_passes(report: dict[str, Any]) -> bool:
     allowed = set(report.get("allowed_taxonomy") or [])
     examples = report.get("examples") or []
     return bool(
-        report.get("schema_version") == "m6-ranking-taxonomy-v1"
+        report.get("schema_version") == TAXONOMY_SCHEMA_VERSION
         and report.get("schema_valid") is True
         and taxonomy
         and report.get("count") == sum(taxonomy.values())

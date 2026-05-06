@@ -22,7 +22,7 @@ from binddrift.evaluation.protocol import (
 )
 from binddrift.paper.audit import STRICT_AUDIT_TARGETS, STRICT_TARGET_PRECISION, generate_strict_extractor_audit
 from binddrift.paper.cases import generate_case_studies
-from binddrift.paper.tables import generate_paper_tables
+from binddrift.paper.tables import M4_FALSE_POSITIVE_TAXONOMY, M4_PRIMARY_METRICS, generate_paper_tables
 from binddrift.ranking.oracle_blind_scorer import (
     PRIMARY_RANKER_DISPLAY_NAME,
     generated_binding_only,
@@ -52,7 +52,7 @@ STAGE_REQUIRED_CHECKS: dict[str, set[str]] = {
         "semantic",
         "strict_extractor_audit_gate",
     },
-    "m4": {"semantic"},
+    "m4": {"semantic", "m4_false_positive_gate"},
     "m5": {"case_study_gate"},
     "m6": {"ranking"},
     "m7": {"strict_extractor_audit_gate"},
@@ -143,6 +143,7 @@ def validate_artifact(
     _check("manual_review_quality_gate", checks, lambda: _manual_review_quality_gate(cfg))
     _check("binddrift_review_role_artifacts", checks, lambda: _binddrift_review_role_artifacts(cfg))
     _check("m3_research_question_gate", checks, lambda: _m3_research_question_gate(cfg))
+    _check("m4_false_positive_gate", checks, lambda: _m4_false_positive_gate(cfg))
     _check("case_study_gate", checks, lambda: _case_study_gate(cfg))
     _check("strict_extractor_audit_gate", checks, lambda: _strict_extractor_gate(cfg))
     _check("paper_claims_match_downgrades", checks, lambda: _paper_claims(cfg))
@@ -228,6 +229,7 @@ def _required_tables(cfg: Config) -> dict[str, Any]:
         "paper/tables/ranking_score_audit.json",
         "paper/tables/semantic_drift_review_summary.json",
         "paper/tables/manual_review_quality.json",
+        "paper/tables/false_positive_taxonomy.json",
         "paper/tables/case_study_summary.json",
         "paper/tables/strict_extractor_audit.json",
         "paper/tables/arm64_external_validity.json",
@@ -452,6 +454,57 @@ def _ranking_gate(cfg: Config) -> dict[str, Any]:
         "top100_oracle_only": top100_oracle_only,
         "candidate_oracle_only": candidate_oracle_only,
         "claim": data.get("claim_recommendation"),
+    }
+
+
+def _m4_false_positive_gate(cfg: Config) -> dict[str, Any]:
+    data = _json(cfg, "paper/tables/false_positive_taxonomy.json")
+    ranking = _json(cfg, "paper/tables/ranking_pooled_evaluation.json")
+    primary = next((row for row in ranking.get("rankers", []) if row.get("ranker") == "binddrift_oracle_blind"), {})
+    comparison = ranking.get("comparison_against_best_simple_baseline") or {}
+    deltas = comparison.get("deltas") or {}
+    acceptance = data.get("acceptance") or {}
+    taxonomy = data.get("taxonomy") or {}
+    examples = data.get("examples_by_taxonomy") or {}
+    manual_quality = _json(cfg, "paper/tables/manual_review_quality.json")
+    label_distribution = manual_quality.get("label_distribution") or {}
+    observed = {bucket for bucket, count in taxonomy.items() if count}
+    draft = (cfg.repo_root / "paper/draft.md").read_text(encoding="utf-8").lower()
+    threat_section = draft[draft.find("## 7. threats to validity") :] if "## 7. threats to validity" in draft else draft
+    draft_text = re.sub(r"\s+", " ", draft)
+    threat_text = re.sub(r"\s+", " ", threat_section)
+    checks = {
+        "taxonomy_table_exists": bool(data),
+        "pooled_false_positive_count": data.get("false_positive_count") == label_distribution.get("FALSE_POSITIVE"),
+        "taxonomy_schema": observed <= M4_FALSE_POSITIVE_TAXONOMY,
+        "taxonomy_categories_covered": observed == M4_FALSE_POSITIVE_TAXONOMY,
+        "taxonomy_examples": bool(observed) and all(examples.get(bucket) for bucket in observed),
+        "p_at_10_stable_b_target": (primary.get("p_at_10") or 0.0) >= 0.90,
+        "p_at_20_stable_b_target": (primary.get("p_at_20") or 0.0) >= 0.80,
+        "p_at_50_stable_b_target": (primary.get("p_at_50") or 0.0) >= 0.70,
+        "p_at_100_reported": primary.get("p_at_100") is not None,
+        "ndcg_at_20_stable_b_target": (primary.get("ndcg_at_20") or 0.0) >= 0.90,
+        "auprc_reported": primary.get("auprc_on_pooled_review_set") is not None,
+        "best_baseline_delta_p_at_20_stable_b_target": (deltas.get("p_at_20") or 0.0) >= 0.30,
+        "table_acceptance": acceptance.get("minimum_passes") is True,
+        "primary_metrics_are_topk_or_ranking_metrics": sorted(
+            metric for metric, value in (data.get("main_ranking_metrics") or {}).items() if value is not None
+        )
+        == sorted(M4_PRIMARY_METRICS),
+        "draft_uses_topk_prioritization_story": "top-k review-prioritization" in draft_text or "top-k review prioritization" in draft_text,
+        "draft_threats_admit_low_overall_warning_precision": "overall warning-set precision is low" in threat_text,
+        "draft_threats_keep_prioritization_claim": "method targets prioritization" in threat_text,
+        "draft_threats_admit_semantic_label_subjectivity": "semantic labels have unavoidable subjectivity" in threat_text,
+        "draft_does_not_make_overall_precision_primary": "overall precision as a primary metric" not in draft_text,
+    }
+    return {
+        "passes": all(checks.values()),
+        "checks": checks,
+        "metrics": {metric: primary.get(metric) for metric in M4_PRIMARY_METRICS},
+        "best_baseline_deltas": deltas,
+        "taxonomy": taxonomy,
+        "observed_taxonomy": sorted(observed),
+        "claim": data.get("claim_boundary"),
     }
 
 

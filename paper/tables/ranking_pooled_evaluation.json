@@ -993,7 +993,7 @@
       }
     ],
     "schema_valid": true,
-    "schema_version": "m6-ranking-taxonomy-v1",
+    "schema_version": "m4-ranking-taxonomy-v2",
     "taxonomy": {
       "binding_or_layout_tail_candidate": 4
     },
@@ -1003,10 +1003,10 @@
   "top_false_positive_taxonomy": {
     "allowed_taxonomy": [
       "binding_only_or_generated_surface",
-      "macro_or_constant_surface_overprioritized",
-      "signature_change_without_adjudicated_rust_contract_impact",
-      "weak_contract_mapping_or_scope_mismatch",
-      "weak_or_missing_rust_reachability"
+      "layout_ambiguity",
+      "macro_constant_over_prioritization",
+      "real_c_drift_no_rust_contract_impact",
+      "weak_rust_reachability"
     ],
     "count": 57,
     "examples": [
@@ -1035,7 +1035,7 @@
         "pair_id": "latest-p012-v6.12-to-v6.13",
         "rank": 46,
         "symbol": "PTR_ERR",
-        "taxonomy": "macro_or_constant_surface_overprioritized",
+        "taxonomy": "macro_constant_over_prioritization",
         "type": "SignatureDrift",
         "warning_id": "W-000003",
         "warning_uid": "39859c860002f454586acf39f3d0df45a3189f1edc7868bad4cb189a795d4b8e"
@@ -1055,7 +1055,7 @@
         "pair_id": "latest-p012-v6.12-to-v6.13",
         "rank": 48,
         "symbol": "IS_ERR",
-        "taxonomy": "macro_or_constant_surface_overprioritized",
+        "taxonomy": "macro_constant_over_prioritization",
         "type": "SignatureDrift",
         "warning_id": "W-000002",
         "warning_uid": "4b538a23e5b7e22f2cc86f95ffea064b2634aa0ab97449ad304889083dc27efd"
@@ -1085,7 +1085,7 @@
         "pair_id": "latest-p012-v6.12-to-v6.13",
         "rank": 51,
         "symbol": "rb_node",
-        "taxonomy": "binding_only_or_generated_surface",
+        "taxonomy": "layout_ambiguity",
         "type": "FieldDrift",
         "warning_id": "W-000037",
         "warning_uid": "c4db15ef412f4f82fb1709ab6fc668ce3ecdeb046df1d7f3cde9429b65f60b7c"
@@ -1095,7 +1095,7 @@
         "pair_id": "latest-p012-v6.12-to-v6.13",
         "rank": 52,
         "symbol": "REFCOUNT_INIT",
-        "taxonomy": "macro_or_constant_surface_overprioritized",
+        "taxonomy": "macro_constant_over_prioritization",
         "type": "SignatureDrift",
         "warning_id": "W-000004",
         "warning_uid": "399880825c439eb15d3e73aa711d383a87e7dbba9e9a3173f6a97bdef4e841b7"
@@ -1112,10 +1112,11 @@
       }
     ],
     "schema_valid": true,
-    "schema_version": "m6-ranking-taxonomy-v1",
+    "schema_version": "m4-ranking-taxonomy-v2",
     "taxonomy": {
-      "binding_only_or_generated_surface": 49,
-      "macro_or_constant_surface_overprioritized": 8
+      "binding_only_or_generated_surface": 42,
+      "layout_ambiguity": 7,
+      "macro_constant_over_prioritization": 8
     },
     "unknown_taxonomy": [],
     "window": "primary_top_100"

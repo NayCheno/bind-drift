@@ -21,13 +21,13 @@ SIMPLE_BASELINES = {"binding_diff", "c_signature", "c_indicator", "rust_use", "n
 ABLATIONS = {"no_graph", "no_impact_gate"}
 TOP_K = 100
 KS = (10, 20, 50, 100)
-TAXONOMY_SCHEMA_VERSION = "m6-ranking-taxonomy-v1"
+TAXONOMY_SCHEMA_VERSION = "m4-ranking-taxonomy-v2"
 FALSE_POSITIVE_TAXONOMY = {
-    "macro_or_constant_surface_overprioritized",
     "binding_only_or_generated_surface",
-    "signature_change_without_adjudicated_rust_contract_impact",
-    "weak_or_missing_rust_reachability",
-    "weak_contract_mapping_or_scope_mismatch",
+    "weak_rust_reachability",
+    "real_c_drift_no_rust_contract_impact",
+    "macro_constant_over_prioritization",
+    "layout_ambiguity",
 }
 FALSE_NEGATIVE_TAXONOMY = {
     "not_ranked_by_primary_candidate_filter",
@@ -632,15 +632,17 @@ def _taxonomy_report(
 
 def _false_positive_bucket(warning: dict[str, Any], _rank: int | None = None) -> str:
     symbol = str((warning.get("c_side") or {}).get("symbol") or "")
-    if symbol.isupper():
-        return "macro_or_constant_surface_overprioritized"
-    if warning.get("c_evidence_level") == "binding_only":
-        return "binding_only_or_generated_surface"
-    if warning.get("type") == "SignatureDrift":
-        return "signature_change_without_adjudicated_rust_contract_impact"
+    warning_type = str(warning.get("type") or "")
+    fact_source = str(warning.get("fact_source") or "")
+    if warning_type == "MacroConstDrift" or fact_source == "macro_diff" or symbol.isupper():
+        return "macro_constant_over_prioritization"
+    if warning_type in {"FieldDrift", "LayoutDrift", "LayoutFieldDrift"} or fact_source == "layout_diff":
+        return "layout_ambiguity"
     if not _has_rust_reachability(warning):
-        return "weak_or_missing_rust_reachability"
-    return "weak_contract_mapping_or_scope_mismatch"
+        return "weak_rust_reachability"
+    if warning.get("c_evidence_level") == "binding_only" or fact_source == "binding_diff":
+        return "binding_only_or_generated_surface"
+    return "real_c_drift_no_rust_contract_impact"
 
 
 def _false_negative_bucket(warning: dict[str, Any], rank: int | None = None) -> str:

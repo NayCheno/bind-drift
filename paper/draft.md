@@ -270,6 +270,15 @@ P@50 = 0.22, and NDCG@20 = 0.4606. The strict ranking gate passes:
 baseline by 0.60 P@20, 0.64 P@50, and 0.5394 NDCG@20 in the shared pooled-label
 evaluation.
 
+False-positive risk is therefore reported as a taxonomy rather than as the
+paper's main metric for the top-K review prioritization claim. In the 500-row
+pooled review set, 450 rows are `FALSE_POSITIVE` and 3 are `BENIGN_DRIFT`; the
+M4 taxonomy uses these non-true review outcomes to explain why ranking matters.
+The categories are weak Rust reachability (275 rows), layout ambiguity (61),
+macro/constant over-prioritization (60), binding-only/generated surface evidence
+(54), and real C drift without Rust contract impact (3). The generated taxonomy
+table includes examples for every observed category.
+
 Interpretation. These labels support a claim that BindDrift surfaces useful
 review targets, not a claim that every warning is a confirmed defect. The
 build-breakage oracle and wrapper-fix oracle are auxiliary validation only; they
@@ -295,7 +304,7 @@ adjudicated rows across nullability, ownership/refcount, allocation/free,
 sleepability/context, and layout/field categories.
 
 Result. It finds 29 `TRUE_SEMANTIC_DRIFT` rows, 17 `TRUE_WRAPPER_FIX` rows, 1
-build-breakage row, 3 benign rows, and 255 false-positive rows, with no unclear
+build-breakage row, 2 benign rows, and 255 false-positive rows, with no unclear
 rows. The semantic gate passes with 29 non-wrapper semantic true positives and
 4 semantic drift types. The artifact also includes 8 positive warning-backed
 case studies and 2 negative/failure-analysis cases selected from adjudicated
@@ -392,9 +401,14 @@ review guide separates `TRUE_SEMANTIC_DRIFT`, `TRUE_WRAPPER_FIX`,
 `BENIGN_DRIFT`, `FALSE_POSITIVE`, and `UNCLEAR`, and the evaluation uses the
 adjudicated label for paper metrics. Not every warning is a confirmed bug.
 Wrapper-fix-backed labels and semantic labels are reported separately, and
-`TRUE_WRAPPER_FIX` is not counted as `TRUE_SEMANTIC_DRIFT`. Label ambiguity
-remains a threat even with double review and adjudication, so the paper reports
-semantic labels as stale-contract review targets rather than confirmed bugs.
+`TRUE_WRAPPER_FIX` is not counted as `TRUE_SEMANTIC_DRIFT`. Semantic labels have
+unavoidable subjectivity even with double review and adjudication, so the paper
+reports semantic labels as stale-contract review targets rather than confirmed
+bugs.
+The overall warning-set precision is low, and BindDrift does not optimize for
+exhaustive bug finding across every promoted warning. The method targets
+prioritization: top-K ranking metrics, baseline lift, and the false-positive
+taxonomy are the primary evidence for maintainer review workload reduction.
 
 External validity threats include focusing on Linux/Rust-for-Linux and using
 x86_64 as the main labeled evaluation architecture. The arm64 external-validity

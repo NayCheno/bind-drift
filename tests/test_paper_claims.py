@@ -16,6 +16,7 @@ def test_paper_draft_preserves_claim_boundary() -> None:
     manual = json.loads(Path("paper/tables/manual_review_quality.json").read_text(encoding="utf-8"))
     semantic = json.loads(Path("paper/tables/semantic_drift_review_summary.json").read_text(encoding="utf-8"))
     cases = json.loads(Path("paper/tables/case_study_summary.json").read_text(encoding="utf-8"))
+    false_positive_taxonomy = json.loads(Path("paper/tables/false_positive_taxonomy.json").read_text(encoding="utf-8"))
     primary = next(row for row in ranking["rankers"] if row["ranker"] == "binddrift_oracle_blind")
     deltas = ranking["comparison_against_best_simple_baseline"]["deltas"]
     abstract = _section(full_text, "## Abstract", "## 1. Introduction")
@@ -52,6 +53,8 @@ def test_paper_draft_preserves_claim_boundary() -> None:
         "adjudicated binddrift-review label set",
         "strict ranking gate passes",
         "semantic gate passes",
+        "top-k review prioritization",
+        "false-positive risk is therefore reported as a taxonomy",
     ]
     for phrase in required:
         assert phrase in text
@@ -77,11 +80,18 @@ def test_paper_draft_preserves_claim_boundary() -> None:
         f"{deltas['p_at_50']:.2f} p@50",
         f"{deltas['ndcg_at_20']:.4f} ndcg@20",
         f"{semantic['true_semantic_drift_count']} `true_semantic_drift` rows",
+        f"{semantic['label_distribution']['BENIGN_DRIFT']} benign rows",
         f"{semantic['non_wrapper_semantic_true_positives']} non-wrapper semantic true positives",
         f"{semantic['semantic_drift_type_count']} semantic drift types",
         "cohen's kappa = 1.0",
         f"{cases['positive_case_studies']} positive warning-backed case studies",
         f"{cases['negative_case_studies']} negative/failure-analysis cases",
+        f"{false_positive_taxonomy['false_positive_count']} rows are `false_positive`",
+        f"weak rust reachability ({false_positive_taxonomy['taxonomy']['weak_rust_reachability']} rows)",
+        f"layout ambiguity ({false_positive_taxonomy['taxonomy']['layout_ambiguity']})",
+        f"macro/constant over-prioritization ({false_positive_taxonomy['taxonomy']['macro_constant_over_prioritization']})",
+        f"binding-only/generated surface evidence ({false_positive_taxonomy['taxonomy']['binding_only_or_generated_surface']})",
+        f"real c drift without rust contract impact ({false_positive_taxonomy['taxonomy']['real_c_drift_no_rust_contract_impact']})",
     ]
     for phrase in expected_numbers:
         assert phrase in text
@@ -94,6 +104,10 @@ def test_paper_draft_preserves_claim_boundary() -> None:
     assert "tier 2 semantic findings are review targets" in full_normalized
     assert "`true_wrapper_fix` is not counted as `true_semantic_drift`" in full_normalized
     assert "not every warning is a confirmed bug" in full_normalized
+    assert "overall warning-set precision is low" in full_normalized
+    assert "method targets prioritization" in full_normalized
+    assert "semantic labels have unavoidable subjectivity" in full_normalized
+    assert "overall precision as a primary metric" not in full_normalized
     assert "llm-assisted independent double review" in full_normalized
     assert "binddrift-review role artifacts" in full_normalized
     assert "manual semantic evaluation" not in full_normalized

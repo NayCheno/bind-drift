@@ -115,4 +115,9 @@ def test_semantic_review_artifacts_exist_and_are_adjudicated() -> None:
     assert summary["true_semantic_drift_count"] >= 8
     assert summary["non_wrapper_semantic_true_positives"] >= 5
     assert summary["semantic_drift_type_count"] >= 3
+    assert summary["false_positive_taxonomy"]
+    assert summary["false_positive_taxonomy_examples"]
+    for bucket, count in summary["false_positive_taxonomy"].items():
+        assert count >= 0
+        assert summary["false_positive_taxonomy_examples"].get(bucket)
     assert summary["claim_recommendation"] == "semantic review targets may be reported as a secondary contribution"

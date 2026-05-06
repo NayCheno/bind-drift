@@ -23,6 +23,14 @@ SEMANTIC_REVIEW_QUOTAS = {
     "LayoutFieldDrift": 80,
 }
 
+M4_FALSE_POSITIVE_TAXONOMY = {
+    "binding_only_or_generated_surface",
+    "weak_rust_reachability",
+    "real_c_drift_no_rust_contract_impact",
+    "macro_constant_over_prioritization",
+    "layout_ambiguity",
+}
+
 REVIEW_FIELDS = [
     "warning_uid",
     "warning_id",
@@ -194,7 +202,13 @@ def build_semantic_review_summary(
         for warning in true_semantic
         if not _has_wrapper_oracle(warning)
     ]
-    false_taxonomy = Counter(_false_positive_taxonomy(warning, label_for_warning(labels, warning)) for warning in selected if label_for_warning(labels, warning) in {"FALSE_POSITIVE", "BENIGN_DRIFT", "UNCLEAR"})
+    false_taxonomy_rows = [
+        warning
+        for warning in selected
+        if label_for_warning(labels, warning) in {"FALSE_POSITIVE", "BENIGN_DRIFT", "UNCLEAR"}
+    ]
+    false_taxonomy = Counter(_false_positive_taxonomy(warning, label_for_warning(labels, warning)) for warning in false_taxonomy_rows)
+    false_taxonomy_examples = _taxonomy_examples(false_taxonomy_rows, labels)
     unclear_rate = round(sum(1 for label in reviewed_labels if label == "UNCLEAR") / len(reviewed_labels), 4) if reviewed_labels else 1.0
     semantic_examples_by_type = Counter(warning.get("semantic_target_type") for warning in true_semantic)
     per_type_quota = {
@@ -260,6 +274,8 @@ def build_semantic_review_summary(
         "semantic_drift_type_count": len({str(warning.get("semantic_target_type")) for warning in true_semantic}),
         "examples_per_semantic_type": dict(semantic_examples_by_type),
         "false_positive_taxonomy": dict(false_taxonomy),
+        "false_positive_taxonomy_allowed": sorted(M4_FALSE_POSITIVE_TAXONOMY | {"missing_evidence"}),
+        "false_positive_taxonomy_examples": false_taxonomy_examples,
         "examples_not_used_as_case_studies": [_example_row(warning, labels) for warning in selected if label_for_warning(labels, warning) != "TRUE_SEMANTIC_DRIFT"][:10],
         "acceptance": acceptance,
         "claim_recommendation": (
@@ -408,13 +424,45 @@ def _has_wrapper_oracle(warning: dict[str, Any]) -> bool:
 
 
 def _false_positive_taxonomy(warning: dict[str, Any], label: str) -> str:
+    symbol = str((warning.get("c_side") or {}).get("symbol") or "")
+    warning_type = str(warning.get("type") or "")
+    fact_source = str(warning.get("fact_source") or "")
     if label == "UNCLEAR":
         return "missing_evidence"
     if label == "BENIGN_DRIFT":
-        return "real_drift_without_rust_contract_impact"
-    if warning.get("c_evidence_level") == "binding_only":
+        return "real_c_drift_no_rust_contract_impact"
+    if warning_type == "MacroConstDrift" or fact_source == "macro_diff" or symbol.isupper():
+        return "macro_constant_over_prioritization"
+    if warning_type in {"FieldDrift", "LayoutDrift", "LayoutFieldDrift"} or fact_source == "layout_diff":
+        return "layout_ambiguity"
+    if not _has_rust_reachability(warning):
+        return "weak_rust_reachability"
+    if warning.get("c_evidence_level") == "binding_only" or fact_source == "binding_diff":
         return "binding_only_or_generated_surface"
-    return "unsupported_or_mismapped_contract"
+    return "real_c_drift_no_rust_contract_impact"
+
+
+def _has_rust_reachability(warning: dict[str, Any]) -> bool:
+    rust_side = warning.get("rust_side") or {}
+    reasons = set(warning.get("promotion_reasons") or [])
+    return bool(
+        rust_side.get("uses")
+        or rust_side.get("safe_apis")
+        or "direct_binding_use" in reasons
+        or "exposes_safe_api" in reasons
+    )
+
+
+def _taxonomy_examples(warnings: list[dict[str, Any]], labels: dict[str, str], *, limit_per_bucket: int = 3) -> dict[str, list[dict[str, Any]]]:
+    examples: dict[str, list[dict[str, Any]]] = {}
+    for warning in sorted(warnings, key=lambda row: (str(row.get("semantic_target_type") or ""), str(row.get("warning_uid") or ""))):
+        label = label_for_warning(labels, warning)
+        bucket = _false_positive_taxonomy(warning, label)
+        rows = examples.setdefault(bucket, [])
+        if len(rows) >= limit_per_bucket:
+            continue
+        rows.append(_example_row(warning, labels))
+    return examples
 
 
 def _example_row(warning: dict[str, Any], labels: dict[str, str]) -> dict[str, Any]:
