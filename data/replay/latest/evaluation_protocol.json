@@ -7,9 +7,30 @@
   "claim_boundary": "evidence-backed warning prioritization",
   "manual_review_policy": {
     "adjudication_required": true,
+    "agreement_rate_minimum": 0.8,
     "cohen_kappa_required": true,
+    "cohen_kappa_minimum": 0.7,
     "double_review": true,
+    "label_source_for_metrics": "adjudicated_label",
+    "llm_assisted_boundary": {
+      "llm_participates_in_primary_score": false,
+      "not_human_expert_manual_review": true,
+      "reviewer_roles_receive_adjudicated_labels": false
+    },
+    "oracle_evidence_visibility": "build and wrapper evidence may be visible for labels, but remains auxiliary validation only",
+    "review_roles": [
+      "evidence_collector",
+      "reviewer1",
+      "reviewer2",
+      "adjudicator"
+    ],
     "review_method": "LLM-assisted independent double review with adjudication",
+    "reviewer_disagreement_examples_minimum": 10,
+    "reviewers_blind_to_each_other": true,
+    "reviewers_blind_to_oracles": false,
+    "reviewers_blind_to_rank_and_score": true,
+    "reviewers_blind_to_ranker": true,
+    "unclear_rate_maximum": 0.05,
     "unclear_is_not_true_positive": true
   },
   "oracle_usage": {

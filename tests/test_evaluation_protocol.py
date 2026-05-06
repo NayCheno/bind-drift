@@ -24,6 +24,18 @@ def test_default_evaluation_protocol_locks_claim_boundary(tmp_path: Path):
     assert protocol["primary_warning_set"] == "oracle_blind_ranked_warnings"
     assert protocol["oracle_usage"]["not_allowed_in_primary_score"] is True
     assert protocol["manual_review_policy"]["unclear_is_not_true_positive"] is True
+    assert protocol["manual_review_policy"]["review_roles"] == ["evidence_collector", "reviewer1", "reviewer2", "adjudicator"]
+    assert protocol["manual_review_policy"]["reviewers_blind_to_ranker"] is True
+    assert protocol["manual_review_policy"]["reviewers_blind_to_rank_and_score"] is True
+    assert protocol["manual_review_policy"]["reviewers_blind_to_each_other"] is True
+    assert protocol["manual_review_policy"]["reviewers_blind_to_oracles"] is False
+    assert protocol["manual_review_policy"]["label_source_for_metrics"] == "adjudicated_label"
+    assert protocol["manual_review_policy"]["cohen_kappa_minimum"] == 0.70
+    assert protocol["manual_review_policy"]["agreement_rate_minimum"] == 0.80
+    assert protocol["manual_review_policy"]["unclear_rate_maximum"] == 0.05
+    assert protocol["manual_review_policy"]["reviewer_disagreement_examples_minimum"] == 10
+    assert protocol["manual_review_policy"]["llm_assisted_boundary"]["llm_participates_in_primary_score"] is False
+    assert protocol["manual_review_policy"]["llm_assisted_boundary"]["reviewer_roles_receive_adjudicated_labels"] is False
     assert protocol["locked_split_policy"]["locked_test_pairs_final_run_only"] is True
 
 

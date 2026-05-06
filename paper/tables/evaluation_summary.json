@@ -53,7 +53,7 @@
   },
   "claim_boundary": "evidence-backed warning prioritization",
   "evaluation_protocol": "data/replay/latest/evaluation_protocol.json",
-  "evaluation_protocol_sha256": "7c3ad8140c7d11ddd748dd52100112f617b516cd35b1a1dfa41d41e515783e94",
+  "evaluation_protocol_sha256": "3b5b8ddaaf675db6acbe3e6af848d40e51b530ea8427fc4f6822271d24ad6dbd",
   "ground_truth_rows": {
     "build_breakage_events": 0,
     "wrapper_fix_candidates": 226,

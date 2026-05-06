@@ -80,6 +80,22 @@ def default_evaluation_protocol(run_id: str = "latest", pair_ids: list[str] | No
             "cohen_kappa_required": True,
             "unclear_is_not_true_positive": True,
             "review_method": "LLM-assisted independent double review with adjudication",
+            "review_roles": ["evidence_collector", "reviewer1", "reviewer2", "adjudicator"],
+            "reviewers_blind_to_ranker": True,
+            "reviewers_blind_to_rank_and_score": True,
+            "reviewers_blind_to_each_other": True,
+            "reviewers_blind_to_oracles": False,
+            "oracle_evidence_visibility": "build and wrapper evidence may be visible for labels, but remains auxiliary validation only",
+            "label_source_for_metrics": "adjudicated_label",
+            "cohen_kappa_minimum": 0.70,
+            "agreement_rate_minimum": 0.80,
+            "unclear_rate_maximum": 0.05,
+            "reviewer_disagreement_examples_minimum": 10,
+            "llm_assisted_boundary": {
+                "not_human_expert_manual_review": True,
+                "llm_participates_in_primary_score": False,
+                "reviewer_roles_receive_adjudicated_labels": False,
+            },
         },
         "locked_split_policy": {
             "locked_test_pairs_final_run_only": True,
@@ -154,6 +170,25 @@ def validate_evaluation_protocol(protocol: dict[str, Any]) -> None:
     for key in ("double_review", "adjudication_required", "cohen_kappa_required", "unclear_is_not_true_positive"):
         if policy.get(key) is not True:
             raise EvaluationProtocolError(f"manual_review_policy.{key} must be true")
+    if policy.get("label_source_for_metrics") not in (None, "adjudicated_label"):
+        raise EvaluationProtocolError("manual_review_policy.label_source_for_metrics must be adjudicated_label")
+    for key in ("reviewers_blind_to_ranker", "reviewers_blind_to_rank_and_score", "reviewers_blind_to_each_other"):
+        if key in policy and policy.get(key) is not True:
+            raise EvaluationProtocolError(f"manual_review_policy.{key} must be true")
+    if "reviewers_blind_to_oracles" in policy and policy.get("reviewers_blind_to_oracles") is not False:
+        raise EvaluationProtocolError("manual_review_policy.reviewers_blind_to_oracles must be false when oracle evidence is label evidence")
+    if policy.get("cohen_kappa_minimum", 0.70) < 0.70:
+        raise EvaluationProtocolError("manual_review_policy.cohen_kappa_minimum must be at least 0.70")
+    if policy.get("agreement_rate_minimum", 0.80) < 0.80:
+        raise EvaluationProtocolError("manual_review_policy.agreement_rate_minimum must be at least 0.80")
+    if policy.get("unclear_rate_maximum", 0.05) > 0.05:
+        raise EvaluationProtocolError("manual_review_policy.unclear_rate_maximum must be at most 0.05")
+    llm_boundary = policy.get("llm_assisted_boundary") or {}
+    if llm_boundary:
+        if llm_boundary.get("llm_participates_in_primary_score") is not False:
+            raise EvaluationProtocolError("manual_review_policy.llm_assisted_boundary.llm_participates_in_primary_score must be false")
+        if llm_boundary.get("reviewer_roles_receive_adjudicated_labels") is not False:
+            raise EvaluationProtocolError("manual_review_policy.llm_assisted_boundary.reviewer_roles_receive_adjudicated_labels must be false")
     locked = protocol.get("locked_split_policy") or {}
     for key in ("locked_test_pairs_final_run_only", "manifest_records_locked_split_hash"):
         if locked.get(key) is not True:

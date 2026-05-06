@@ -22,17 +22,17 @@
   "evaluation_protocol": {
     "available": true,
     "path": "data/replay/latest/evaluation_protocol.json",
-    "sha256": "7c3ad8140c7d11ddd748dd52100112f617b516cd35b1a1dfa41d41e515783e94"
+    "sha256": "3b5b8ddaaf675db6acbe3e6af848d40e51b530ea8427fc4f6822271d24ad6dbd"
   },
   "evaluation_summary": {
     "available": true,
     "path": "paper/tables/evaluation_summary.json",
-    "sha256": "0f57686c6151215511cf9d59e2296ba71f3605e42242df411e0dd8d792b45e96"
+    "sha256": "3ee7b022bf14b731182d28379bec3c7e4b4d9cf1e5d3aec470150130e4e71001"
   },
   "extractor_audit": {
     "available": true,
     "path": "paper/tables/extractor_audit.json",
-    "sha256": "b257783f274d47cb8e83575da80e9991240227c356a32f4db9a306ad00c10f8e"
+    "sha256": "bb7198c7c7dfcde328a7dd5a2621d8ca68564a5e1bfb68d5eb514581b1c2deba"
   },
   "fact_counts": {
     "available": true,
@@ -52,7 +52,7 @@
   "manual_review_quality": {
     "available": true,
     "path": "paper/tables/manual_review_quality.json",
-    "sha256": "3cf0fa87620bc9f32a9db77f5b36f17a87048cce5913e4777570a2591a014fcd"
+    "sha256": "35b7f4252e1af8e0d0f570ebd591edeabbc1e59caace5fd74e7a5eefa28a81c5"
   },
   "manual_review_summary": {
     "available": true,
@@ -62,7 +62,7 @@
   "ranking_pooled_evaluation": {
     "available": true,
     "path": "paper/tables/ranking_pooled_evaluation.json",
-    "sha256": "0b57d2770f666fd33a477d598bb8c81d0ef0d29c8e9508b8f5eb5279f5da8473"
+    "sha256": "c77b2893b469217be798a5a80922b07e42bced6e3aae074d77798a3398cb4f1d"
   },
   "ranking_score_audit": {
     "available": true,
@@ -82,12 +82,12 @@
   "reviewer_disagreement_examples": {
     "available": true,
     "path": "paper/analysis/reviewer_disagreement_examples.md",
-    "sha256": "b4a413f6cbbd85972491ce8859d4c7720466ea4709777ef04abc6c2509745c85"
+    "sha256": "a59c839322e1e9ea48f9c236b4cfd6a43ae20a23002d6eb359b9ba55109579fd"
   },
   "run_manifest": {
     "available": true,
     "path": "data/replay/latest/run_manifest.json",
-    "sha256": "24be0dc5b17c88b4b0580f1865b9cc1f9a4ecde86bcef71aeac7595aee4473ca"
+    "sha256": "9bd930053bb333db48d839fd5faf356c4befade9ac6d1a7bbfcf23c0a4ac262a"
   },
   "runtime_scalability": {
     "available": true,

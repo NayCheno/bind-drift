@@ -92,9 +92,9 @@
     "database_path": ".binddrift/binddrift.sqlite3",
     "manifest_artifact_sha256": {
       "drift_facts.jsonl": "45ec718e8bcf22e4b5d91bf1bfa4924d0c414958aba123c4e0f96bde7018d8ef",
-      "evaluation_protocol.json": "7c3ad8140c7d11ddd748dd52100112f617b516cd35b1a1dfa41d41e515783e94",
+      "evaluation_protocol.json": "3b5b8ddaaf675db6acbe3e6af848d40e51b530ea8427fc4f6822271d24ad6dbd",
       "manual_review.csv": "f999f73ccbc3615f44586a7d7c7fe93ba1899fcb35d885b646d2c9fc1eb27937",
-      "pooled_review_labels.csv": "928be7b3f78eefdc28d214661d8af57ac26fe2b8c9f98c10fe5949ce7823c298",
+      "pooled_review_labels.csv": "27d407431b7e8fbb70c9634f76208e5515301e132e8eecf1164d35e391c58a46",
       "pooled_review_manifest.json": "15c49eed8ecffa6d916c2a51199447141be0bec273da758969d80aaa8b83442e",
       "pooled_review_set.jsonl": "7ef58da3e1fbb4ab68fc4748856627882c55c215d0d2db9812c707ba57ec7293",
       "promoted_warnings.jsonl": "e2d2f8d6bc0eb21a584fa3ae6cacedcd890aedf1fab912c8353ce35e38ac21e3",

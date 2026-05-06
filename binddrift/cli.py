@@ -326,7 +326,7 @@ def cmd_paper_tables(args: argparse.Namespace, cfg: Config) -> int:
 
 
 def cmd_paper_build(args: argparse.Namespace, cfg: Config) -> int:
-    enforce_cases = VALIDATION_STAGES.index(args.stage) >= VALIDATION_STAGES.index("m5") if args.stage != "final" else True
+    enforce_cases = VALIDATION_STAGES.index(args.stage) >= VALIDATION_STAGES.index("m6") if args.stage != "final" else True
     result: dict[str, object] = {}
     generation_errors: list[dict[str, str]] = []
     try:

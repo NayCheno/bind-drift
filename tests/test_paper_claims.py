@@ -110,6 +110,12 @@ def test_paper_draft_preserves_claim_boundary() -> None:
     assert "overall precision as a primary metric" not in full_normalized
     assert "llm-assisted independent double review" in full_normalized
     assert "binddrift-review role artifacts" in full_normalized
+    assert "reviewer roles do not receive ranker names, ranks, scores" in full_normalized
+    assert "reviewer roles are not blind to oracle evidence used for labels" in full_normalized
+    assert "adjudicator role receives the evidence packet plus both completed reviewer outputs" in full_normalized
+    assert "not human expert manual labels" in full_normalized
+    assert "llm does not participate in primary scoring" in full_normalized
+    assert "reviewer roles do not receive adjudicated ground-truth labels" in full_normalized
     assert "manual semantic evaluation" not in full_normalized
     assert "manual adjudication" not in full_normalized
     assert "independent manual labels" not in full_normalized

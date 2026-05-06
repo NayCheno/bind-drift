@@ -22,7 +22,16 @@ from binddrift.evaluation.protocol import (
 )
 from binddrift.paper.audit import STRICT_AUDIT_TARGETS, STRICT_TARGET_PRECISION, generate_strict_extractor_audit
 from binddrift.paper.cases import generate_case_studies
-from binddrift.paper.tables import M4_FALSE_POSITIVE_TAXONOMY, M4_PRIMARY_METRICS, generate_paper_tables
+from binddrift.paper.tables import (
+    M4_FALSE_POSITIVE_TAXONOMY,
+    M4_PRIMARY_METRICS,
+    M5_MAX_UNCLEAR_RATE,
+    M5_MIN_AGREEMENT_RATE,
+    M5_MIN_COHEN_KAPPA,
+    M5_MIN_DISAGREEMENT_EXAMPLES,
+    M5_REVIEW_FORBIDDEN_STRINGS,
+    generate_paper_tables,
+)
 from binddrift.ranking.oracle_blind_scorer import (
     PRIMARY_RANKER_DISPLAY_NAME,
     generated_binding_only,
@@ -53,8 +62,8 @@ STAGE_REQUIRED_CHECKS: dict[str, set[str]] = {
         "strict_extractor_audit_gate",
     },
     "m4": {"semantic", "m4_false_positive_gate"},
-    "m5": {"case_study_gate"},
-    "m6": {"ranking"},
+    "m5": {"manual_review_quality_gate", "binddrift_review_role_artifacts"},
+    "m6": {"case_study_gate"},
     "m7": {"strict_extractor_audit_gate"},
     "m8": {
         "ranking",
@@ -676,19 +685,30 @@ def _manual_review_quality_gate(cfg: Config) -> dict[str, Any]:
     ranker_coverage = pooled_manifest.get("ranker_top100_coverage") or {}
     ranker_coverage_passes = bool(ranker_coverage) and all((row.get("coverage") or 0.0) >= 0.95 for row in ranker_coverage.values())
     disagreement_examples = data.get("reviewer_disagreement_examples") or {}
+    review_protocol = data.get("review_protocol") or {}
+    llm_boundary = review_protocol.get("llm_assisted_boundary") or {}
     strict_checks = {
         "pooled_review_size": 450 <= reviewed_warnings <= 600,
         "label_coverage": (data.get("label_coverage") or 0.0) >= 1.0,
         "double_review_complete": bool(acceptance.get("double_review_complete")),
         "adjudication_complete": bool(acceptance.get("adjudication_complete") or acceptance.get("all_main_labels_adjudicated")),
         "blind_to_ranker": pooled_manifest.get("blind_to_ranker") is True,
-        "cohen_kappa": (data.get("cohen_kappa") or 0.0) >= 0.60,
-        "agreement_rate": (data.get("agreement_rate") or 0.0) >= 0.75,
+        "blind_to_rank_and_score": review_protocol.get("reviewers_blind_to_rank_and_score") is True,
+        "reviewer_independence": review_protocol.get("reviewer_independence") is True,
+        "reviewers_blind_to_each_other": review_protocol.get("reviewers_blind_to_each_other") is True,
+        "cohen_kappa": (data.get("cohen_kappa") or 0.0) >= M5_MIN_COHEN_KAPPA,
+        "agreement_rate": (data.get("agreement_rate") or 0.0) >= M5_MIN_AGREEMENT_RATE,
         "adjudication_notes_missing": data.get("adjudication_notes_missing_rate") == 0.0,
-        "unclear_rate": unclear_rate <= 0.05,
+        "unclear_rate": unclear_rate <= M5_MAX_UNCLEAR_RATE,
         "label_leakage_check": data.get("label_leakage_check") == "passed",
+        "review_process_notes": data.get("review_process_note_check") == "passed",
         "ranker_top100_coverage": ranker_coverage_passes,
-        "reviewer_disagreement_examples": (disagreement_examples.get("examples") or 0) >= 10,
+        "reviewer_disagreement_examples": (disagreement_examples.get("examples") or 0) >= M5_MIN_DISAGREEMENT_EXAMPLES,
+        "oracle_visibility_declared": review_protocol.get("reviewers_blind_to_oracles") is False
+        and "auxiliary validation" in str(review_protocol.get("oracle_evidence_visibility") or ""),
+        "llm_boundary_declared": llm_boundary.get("not_human_expert_manual_review") is True,
+        "llm_not_in_primary_score": llm_boundary.get("llm_participates_in_primary_score") is False,
+        "llm_not_given_adjudicated_labels": llm_boundary.get("reviewer_roles_receive_adjudicated_labels") is False,
     }
     return {
         "passes": all(strict_checks.values()),
@@ -730,7 +750,7 @@ def _binddrift_review_role_artifacts(cfg: Config) -> dict[str, Any]:
     }
     count_matches = {role: count == reviewed_warnings for role, count in counts.items()}
     role_leakage = {
-        role: _blind_review_leakage(path)
+        role: _blind_review_leakage(path, role=role)
         for role, path in expected_files.items()
         if path.suffix == ".jsonl"
     }
@@ -738,7 +758,10 @@ def _binddrift_review_role_artifacts(cfg: Config) -> dict[str, Any]:
     merge_report = _json(cfg, repo_relative(cfg, expected_files["merge_report"]))
     required_roles = {"evidence_collector", "reviewer1", "reviewer2", "adjudicator"}
     reported_roles = set(role_summary.get("binddrift_review_roles") or [])
+    role_summary_findings = _role_summary_process_findings(role_summary)
     roles_are_blind = role_summary.get("blind_to_ranker") is True and all(not findings for findings in role_leakage.values())
+    roles_are_blind = roles_are_blind and role_summary.get("blind_to_rank_and_score") is True
+    roles_are_blind = roles_are_blind and not role_summary_findings
     merge_complete = (
         merge_report.get("complete_rows") == reviewed_warnings
         and merge_report.get("double_labeled_rows") == reviewed_warnings
@@ -759,6 +782,7 @@ def _binddrift_review_role_artifacts(cfg: Config) -> dict[str, Any]:
         "blind_evidence_packets": not role_leakage.get("evidence_collector"),
         "blind_role_artifacts": roles_are_blind,
         "blind_review_leakage": {role: findings[:20] for role, findings in role_leakage.items() if findings},
+        "role_summary_process_findings": role_summary_findings[:20],
         "reported_roles": sorted(reported_roles),
         "merge_complete": merge_complete,
         "merge_report": repo_relative(cfg, expected_files["merge_report"]),
@@ -1519,8 +1543,7 @@ def _semantic_has_wrapper_oracle(warning: dict[str, Any]) -> bool:
     return any(isinstance(item, dict) and item.get("oracle_type") == "wrapper_fix" for item in evidence)
 
 
-def _blind_review_leakage(path: Path) -> list[str]:
-    forbidden_strings = ("score_breakdown", "wrapper_fix_hit=", "build_oracle_hit=")
+def _blind_review_leakage(path: Path, *, role: str | None = None) -> list[str]:
     findings: list[str] = []
     with path.open(encoding="utf-8") as fh:
         for line_number, line in enumerate(fh, start=1):
@@ -1528,11 +1551,45 @@ def _blind_review_leakage(path: Path) -> list[str]:
                 continue
             row = json.loads(line)
             leaked = sorted(_blind_review_keys(row))
-            leaked.extend(_blind_review_strings(row, forbidden_strings))
+            leaked.extend(_blind_review_strings(row))
+            if role:
+                leaked.extend(_role_specific_review_leakage(role, row))
             if leaked:
                 warning_id = row.get("warning_id") or row.get("warning_uid") or f"line:{line_number}"
                 findings.append(f"{warning_id}: {','.join(leaked)}")
     return findings
+
+
+def _role_summary_process_findings(role_summary: dict[str, Any]) -> list[str]:
+    text = json.dumps(role_summary, sort_keys=True).lower()
+    leaked = [token for token in M5_REVIEW_FORBIDDEN_STRINGS if token in text]
+    return [f"role_summary:{token}" for token in leaked]
+
+
+def _role_specific_review_leakage(role: str, value: Any) -> list[str]:
+    if role == "evidence_collector":
+        forbidden_prefixes = ("reviewer1_", "reviewer2_", "adjudicated_", "adjudication_")
+    elif role == "reviewer1":
+        forbidden_prefixes = ("reviewer2_", "adjudicated_", "adjudication_")
+    elif role == "reviewer2":
+        forbidden_prefixes = ("reviewer1_", "adjudicated_", "adjudication_")
+    else:
+        return []
+    return sorted(_keys_with_prefixes(value, forbidden_prefixes))
+
+
+def _keys_with_prefixes(value: Any, prefixes: tuple[str, ...]) -> set[str]:
+    if isinstance(value, dict):
+        found = {key for key in value if key.lower().startswith(prefixes)}
+        for item in value.values():
+            found.update(_keys_with_prefixes(item, prefixes))
+        return found
+    if isinstance(value, list):
+        found: set[str] = set()
+        for item in value:
+            found.update(_keys_with_prefixes(item, prefixes))
+        return found
+    return set()
 
 
 def _blind_review_keys(value: Any) -> set[str]:
@@ -1560,19 +1617,20 @@ def _blind_review_keys(value: Any) -> set[str]:
     return set()
 
 
-def _blind_review_strings(value: Any, forbidden: tuple[str, ...]) -> list[str]:
+def _blind_review_strings(value: Any) -> list[str]:
     if isinstance(value, dict):
         found: list[str] = []
         for item in value.values():
-            found.extend(_blind_review_strings(item, forbidden))
+            found.extend(_blind_review_strings(item))
         return found
     if isinstance(value, list):
         found: list[str] = []
         for item in value:
-            found.extend(_blind_review_strings(item, forbidden))
+            found.extend(_blind_review_strings(item))
         return found
     if isinstance(value, str):
-        return [token for token in forbidden if token in value]
+        lower = value.lower()
+        return [token for token in M5_REVIEW_FORBIDDEN_STRINGS if token in lower]
     return []
 
 

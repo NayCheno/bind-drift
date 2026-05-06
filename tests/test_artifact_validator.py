@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 
 from binddrift.config import Config
-from binddrift.artifact.strict_validator import _table_index_sha256_gate, validate_artifact
+from binddrift.artifact.strict_validator import _blind_review_leakage, _table_index_sha256_gate, validate_artifact
 
 
 def test_artifact_validator_reports_m0_stage_ready() -> None:
@@ -119,6 +119,66 @@ def test_artifact_validator_reports_m3_review_ready() -> None:
     assert rq_check["details"]["rq_metrics"]["semantic_true_count"] >= 8
 
 
+def test_blind_review_leakage_detects_ranker_source_strings(tmp_path: Path) -> None:
+    packet = tmp_path / "packets.jsonl"
+    packet.write_text(
+        json.dumps(
+            {
+                "warning_id": "W-1",
+                "binding_side": {
+                    "summary": "fact_source=binding_diff; promotion_reasons=oracle_hit; ranker_sources=random"
+                },
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    findings = _blind_review_leakage(packet)
+
+    assert findings == ["W-1: ranker_sources="]
+
+
+def test_blind_review_leakage_detects_score_component_strings(tmp_path: Path) -> None:
+    packet = tmp_path / "packets.jsonl"
+    packet.write_text(
+        json.dumps(
+            {
+                "warning_id": "W-2",
+                "binding_side": {
+                    "summary": "promotion_reasons=oracle_hit; binding_only_penalty=-5.0, direct_rust_use=0.0, safe_api_exposure=0.0"
+                },
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    findings = _blind_review_leakage(packet)
+
+    assert findings == ["W-2: binding_only_penalty,direct_rust_use=,safe_api_exposure="]
+
+
+def test_blind_review_leakage_detects_reviewer_cross_labels(tmp_path: Path) -> None:
+    packet = tmp_path / "reviewer1.jsonl"
+    packet.write_text(
+        json.dumps(
+            {
+                "warning_id": "W-3",
+                "reviewer1_label": "FALSE_POSITIVE",
+                "reviewer2_label": "TRUE_SEMANTIC_DRIFT",
+                "adjudicated_label": "TRUE_SEMANTIC_DRIFT",
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    findings = _blind_review_leakage(packet, role="reviewer1")
+
+    assert findings == ["W-3: adjudicated_label,reviewer2_label"]
+
+
 def test_artifact_validator_rejects_m3_unclosed_rq_section() -> None:
     draft = Path("paper/draft.md")
     original = draft.read_text(encoding="utf-8")
@@ -217,6 +277,45 @@ def test_artifact_validator_reports_m4_semantic_ready() -> None:
         "macro_constant_over_prioritization",
         "layout_ambiguity",
     }
+
+
+def test_artifact_validator_reports_m5_manual_review_ready() -> None:
+    result = validate_artifact(Config.from_args(repo_root="."), strict_ccfb=True, stage="m5")
+
+    assert result["passes"] is True
+    assert result["stage"] == "m5"
+    assert "manual_review_quality_gate" in result["stage_required_checks"]
+    assert "binddrift_review_role_artifacts" in result["stage_required_checks"]
+    assert "case_study_gate" not in result["stage_required_checks"]
+
+    manual = result["hard_gates"]["manual_review_quality"]
+    assert manual["passes"] is True
+    assert manual["reviewed_warnings"] == 500
+    assert manual["cohen_kappa"] >= 0.70
+    assert manual["agreement_rate"] >= 0.80
+    assert manual["unclear_rate"] <= 0.05
+    assert manual["reviewer_disagreement_examples"]["examples"] >= 10
+    assert all(manual["strict_checks"].values())
+
+
+def test_artifact_validator_rejects_m5_posthoc_role_summary() -> None:
+    path = Path("data/replay/latest/review_artifacts/m3_final_role_summary.json")
+    original = path.read_text(encoding="utf-8")
+    try:
+        payload = json.loads(original)
+        payload["disagreement_selection_policy"] = (
+            "40 conservative Reviewer 1 labels retained from independent v1 role output for disagreement coverage"
+        )
+        path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+        result = validate_artifact(Config.from_args(repo_root="."), strict_ccfb=True, stage="m5")
+
+        assert result["passes"] is False
+        role_check = next(check for check in result["checks"] if check["name"] == "binddrift_review_role_artifacts")
+        assert role_check["passes"] is False
+        assert role_check["details"]["role_summary_process_findings"]
+    finally:
+        path.write_text(original, encoding="utf-8")
 
 
 def test_artifact_validator_m4_requires_semantic_label_subjectivity_threat() -> None:

@@ -60,6 +60,23 @@ def _write_pooled_labels(path: Path) -> None:
 def test_manual_review_quality_uses_pooled_labels_and_writes_examples(tmp_path: Path) -> None:
     cfg = Config.from_args(repo_root=tmp_path)
     _write_pooled_labels(tmp_path / "data/replay/latest/pooled_review_labels.csv")
+    review_artifacts = tmp_path / "data/replay/latest/review_artifacts"
+    review_artifacts.mkdir(parents=True, exist_ok=True)
+    (tmp_path / "data/replay/latest/pooled_review_manifest.json").write_text(
+        json.dumps({"blind_to_ranker": True}) + "\n",
+        encoding="utf-8",
+    )
+    (review_artifacts / "m3_final_role_summary.json").write_text(
+        json.dumps(
+            {
+                "binddrift_review_roles": ["evidence_collector", "reviewer1", "reviewer2", "adjudicator"],
+                "blind_to_ranker": True,
+                "blind_to_rank_and_score": True,
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
 
     generate_paper_tables(cfg)
 
@@ -78,8 +95,24 @@ def test_manual_review_quality_uses_pooled_labels_and_writes_examples(tmp_path: 
     assert quality["label_leakage_check"] == "passed"
     assert quality["acceptance"]["minimum_passes"] is True
     assert quality["acceptance"]["pooled_review_labels_primary_source"] is True
+    assert quality["acceptance_thresholds"]["cohen_kappa_minimum"] == 0.70
+    assert quality["acceptance_thresholds"]["agreement_rate_minimum"] == 0.80
+    assert quality["acceptance_thresholds"]["unclear_rate_maximum"] == 0.05
     assert quality["unclear_is_true_positive"] is False
     assert quality["true_wrapper_fix_and_true_semantic_drift_reported_separately"] is True
+    protocol = quality["review_protocol"]
+    assert protocol["method"] == "binddrift-review LLM-assisted independent double review with adjudication"
+    assert protocol["reviewer_independence"] is True
+    assert protocol["reviewers_blind_to_ranker"] is True
+    assert protocol["reviewers_blind_to_rank_and_score"] is True
+    assert protocol["reviewers_blind_to_each_other"] is True
+    assert protocol["blind_review_leakage"] == []
+    assert protocol["reviewers_blind_to_oracles"] is False
+    assert "auxiliary validation" in protocol["oracle_evidence_visibility"]
+    assert protocol["label_source_for_metrics"] == "adjudicated_label"
+    assert protocol["llm_assisted_boundary"]["not_human_expert_manual_review"] is True
+    assert protocol["llm_assisted_boundary"]["llm_participates_in_primary_score"] is False
+    assert protocol["llm_assisted_boundary"]["reviewer_roles_receive_adjudicated_labels"] is False
 
     examples = (tmp_path / "paper/analysis/reviewer_disagreement_examples.md").read_text(encoding="utf-8")
     assert examples.count("## ") == 5

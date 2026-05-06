@@ -49,6 +49,28 @@ M4_FALSE_POSITIVE_TAXONOMY = {
     "layout_ambiguity",
 }
 M4_PRIMARY_METRICS = ("p_at_10", "p_at_20", "p_at_50", "p_at_100", "ndcg_at_20", "auprc_on_pooled_review_set")
+M5_MIN_COHEN_KAPPA = 0.70
+M5_MIN_AGREEMENT_RATE = 0.80
+M5_MAX_UNCLEAR_RATE = 0.05
+M5_MIN_DISAGREEMENT_EXAMPLES = 10
+M5_REVIEW_FORBIDDEN_STRINGS = (
+    "score_breakdown",
+    "wrapper_fix_hit=",
+    "build_oracle_hit=",
+    "ranker_sources=",
+    "ranker_source=",
+    "ranker_ranks=",
+    "oracle_blind_score",
+    "current_score",
+    "binding_only_penalty",
+    "direct_rust_use=",
+    "safe_api_exposure=",
+    "rust_use_density=",
+    "final merge preserves",
+    "adjudication-audit coverage",
+    "retained from independent",
+    "disagreement_selection_policy",
+)
 
 
 def generate_paper_tables(cfg: Config) -> dict[str, object]:
@@ -237,6 +259,8 @@ def _write_manual_review_quality(cfg: Config, path: Path, examples_path: Path, m
     examples = _write_disagreement_examples(cfg, examples_path, review_path, disagreements, limit=disagreement_example_minimum or 5)
     missing_columns = [column for column in MANUAL_REVIEW_QUALITY_COLUMNS if column not in columns]
     label_leakage_findings = _label_leakage_findings(rows)
+    process_note_findings = _review_process_note_findings(rows)
+    review_protocol = _manual_review_protocol(cfg)
     coverage = round(len(adjudicated) / total, 4) if total else 0.0
     notes_missing_rate = round(len(notes_missing) / len(adjudicated), 4) if adjudicated else 0.0
     summary = {
@@ -263,6 +287,13 @@ def _write_manual_review_quality(cfg: Config, path: Path, examples_path: Path, m
         "wrapper_fix_oracle_usage": "auxiliary_validation_only",
         "adjudication_notes_missing": len(notes_missing),
         "adjudication_notes_missing_rate": notes_missing_rate,
+        "acceptance_thresholds": {
+            "cohen_kappa_minimum": M5_MIN_COHEN_KAPPA,
+            "agreement_rate_minimum": M5_MIN_AGREEMENT_RATE,
+            "unclear_rate_maximum": M5_MAX_UNCLEAR_RATE,
+            "reviewer_disagreement_examples_minimum": M5_MIN_DISAGREEMENT_EXAMPLES if total >= 450 else disagreement_example_minimum,
+        },
+        "review_protocol": review_protocol,
         "reviewer_disagreement_examples": {
             "path": repo_relative(cfg, examples_path),
             "examples": examples,
@@ -272,6 +303,8 @@ def _write_manual_review_quality(cfg: Config, path: Path, examples_path: Path, m
         "missing_columns": missing_columns,
         "label_leakage_check": "passed" if not label_leakage_findings else "failed",
         "label_leakage_findings": label_leakage_findings,
+        "review_process_note_check": "passed" if not process_note_findings else "failed",
+        "review_process_note_findings": process_note_findings,
     }
     unclear_rate = round(label_distribution.get("UNCLEAR", 0) / total, 4) if total else 1.0
     strict_checks = {
@@ -279,15 +312,25 @@ def _write_manual_review_quality(cfg: Config, path: Path, examples_path: Path, m
         "label_coverage": coverage >= 1.0,
         "double_review_complete": bool(total and len(double_labeled) == total),
         "adjudication_complete": bool(total and len(adjudicated) == total),
-        "cohen_kappa": kappa is not None and kappa >= 0.60,
-        "agreement_rate": summary["agreement_rate"] is not None and summary["agreement_rate"] >= 0.75,
+        "cohen_kappa": kappa is not None and kappa >= M5_MIN_COHEN_KAPPA,
+        "agreement_rate": summary["agreement_rate"] is not None and summary["agreement_rate"] >= M5_MIN_AGREEMENT_RATE,
         "adjudication_notes_missing": notes_missing_rate == 0.0,
-        "unclear_rate": unclear_rate <= 0.05,
+        "unclear_rate": unclear_rate <= M5_MAX_UNCLEAR_RATE,
         "label_leakage_check": not label_leakage_findings,
+        "review_process_notes": not process_note_findings,
         "reviewer_disagreement_examples": examples >= disagreement_example_minimum,
         "pooled_review_labels_primary_source": source_is_pooled,
         "required_columns_present": not missing_columns,
         "unclear_is_not_counted_as_true_positive": summary["unclear_is_true_positive"] is False,
+        "reviewer_independence": review_protocol["reviewer_independence"] is True,
+        "reviewers_blind_to_ranker": review_protocol["reviewers_blind_to_ranker"] is True,
+        "reviewers_blind_to_rank_and_score": review_protocol["reviewers_blind_to_rank_and_score"] is True,
+        "reviewers_blind_to_each_other": review_protocol["reviewers_blind_to_each_other"] is True,
+        "oracle_visibility_declared": review_protocol["reviewers_blind_to_oracles"] is False
+        and "auxiliary validation" in review_protocol["oracle_evidence_visibility"],
+        "llm_boundary_declared": review_protocol["llm_assisted_boundary"]["not_human_expert_manual_review"] is True,
+        "llm_not_in_primary_score": review_protocol["llm_assisted_boundary"]["llm_participates_in_primary_score"] is False,
+        "llm_not_given_adjudicated_labels": review_protocol["llm_assisted_boundary"]["reviewer_roles_receive_adjudicated_labels"] is False,
     }
     legacy_checks = {
         "required_columns_present": not missing_columns,
@@ -379,6 +422,170 @@ def _label_leakage_findings(rows: list[dict[str, str]]) -> list[str]:
         if "oracle_score" in label_source or "ranker_score" in label_source:
             findings.append(row.get("warning_uid") or warning_label_key(row.get("warning_id"), row.get("pair_id")))
     return sorted(set(findings))
+
+
+def _review_process_note_findings(rows: list[dict[str, str]]) -> list[str]:
+    findings: list[str] = []
+    note_columns = ("reviewer1_notes", "reviewer2_notes", "adjudication_notes")
+    for row in rows:
+        key = row.get("warning_uid") or warning_label_key(row.get("warning_id"), row.get("pair_id"))
+        for column in note_columns:
+            lowered = str(row.get(column) or "").lower()
+            leaked = [token for token in M5_REVIEW_FORBIDDEN_STRINGS if token in lowered]
+            if leaked:
+                findings.append(f"{key}:{column}:{','.join(leaked)}")
+    return sorted(set(findings))
+
+
+def _manual_review_protocol(cfg: Config) -> dict[str, Any]:
+    run_dir = canonical_run_dir(cfg)
+    review_dir = run_dir / "review_artifacts"
+    pooled_manifest_path = run_dir / "pooled_review_manifest.json"
+    role_summary_path = review_dir / "m3_final_role_summary.json"
+    pooled_manifest = _load_json_file(pooled_manifest_path)
+    role_summary = _load_json_file(role_summary_path)
+    roles = list(role_summary.get("binddrift_review_roles") or [])
+    required_roles = {"evidence_collector", "reviewer1", "reviewer2", "adjudicator"}
+    reviewer_independence = required_roles.issubset(set(roles))
+    blind_artifact_paths = {
+        "evidence_collector": review_dir / "m3_final_evidence_packets.jsonl",
+        "reviewer1": review_dir / "m3_final_reviewer1.jsonl",
+        "reviewer2": review_dir / "m3_final_reviewer2.jsonl",
+        "adjudicator": review_dir / "m3_final_adjudicator.jsonl",
+    }
+    blind_review_leakage = _review_artifact_blindness_findings(blind_artifact_paths)
+    blind_review_leakage.extend(_role_summary_process_findings(role_summary))
+    blind_to_ranker = (
+        (pooled_manifest.get("blind_to_ranker") is True or role_summary.get("blind_to_ranker") is True)
+        and not blind_review_leakage
+    )
+    blind_to_rank_and_score = role_summary.get("blind_to_rank_and_score") is True and not blind_review_leakage
+    return {
+        "method": "binddrift-review LLM-assisted independent double review with adjudication",
+        "role_summary": repo_relative(cfg, role_summary_path),
+        "pooled_review_manifest": repo_relative(cfg, pooled_manifest_path),
+        "review_roles": roles,
+        "reviewer_independence": reviewer_independence,
+        "reviewers_blind_to_ranker": blind_to_ranker,
+        "reviewers_blind_to_rank_and_score": blind_to_rank_and_score,
+        "reviewers_blind_to_each_other": True,
+        "blind_review_leakage": blind_review_leakage[:20],
+        "reviewers_blind_to_oracles": False,
+        "oracle_evidence_visibility": (
+            "build-breakage and wrapper-fix evidence may be shown as label evidence; "
+            "both remain auxiliary validation and are forbidden primary-score inputs"
+        ),
+        "adjudication_policy": (
+            "the adjudicator runs after reviewer1 and reviewer2 complete and receives the evidence packet plus both reviewer outputs"
+        ),
+        "unclear_policy": "`UNCLEAR` is used for insufficient evidence and is not counted as a true positive",
+        "wrapper_fix_vs_semantic_policy": (
+            "`TRUE_WRAPPER_FIX` requires later same-symbol or same-contract Rust wrapper/helper/binding evidence; "
+            "`TRUE_SEMANTIC_DRIFT` requires a C drift, Rust exposure, and a plausible stale-contract dependence"
+        ),
+        "label_source_for_metrics": "adjudicated_label",
+        "llm_assisted_boundary": {
+            "not_human_expert_manual_review": True,
+            "llm_role": "evidence packet summarization, formatting, independent reviewer-role labeling, and adjudicator-role notes",
+            "llm_participates_in_primary_score": False,
+            "reviewer_roles_receive_adjudicated_labels": False,
+            "human_spot_checking_claim_requires_separate_record": True,
+        },
+    }
+
+
+def _review_artifact_blindness_findings(paths: dict[str, Path]) -> list[str]:
+    findings: list[str] = []
+    for role, path in paths.items():
+        if not path.exists():
+            continue
+        with path.open(encoding="utf-8") as fh:
+            for line_number, line in enumerate(fh, start=1):
+                if not line.strip():
+                    continue
+                row = json.loads(line)
+                leaked = sorted(_blind_review_keys(row))
+                leaked.extend(_blind_review_strings(row))
+                leaked.extend(_role_specific_review_leakage(role, row))
+                if leaked:
+                    warning_id = row.get("warning_id") or row.get("warning_uid") or f"line:{line_number}"
+                    findings.append(f"{role}:{path.name}:{warning_id}:{','.join(sorted(set(leaked)))}")
+    return findings
+
+
+def _role_summary_process_findings(role_summary: dict[str, Any]) -> list[str]:
+    text = json.dumps(role_summary, sort_keys=True).lower()
+    leaked = [token for token in M5_REVIEW_FORBIDDEN_STRINGS if token in text]
+    return [f"role_summary:{token}" for token in leaked]
+
+
+def _role_specific_review_leakage(role: str, value: Any) -> list[str]:
+    forbidden_prefixes: tuple[str, ...]
+    if role == "evidence_collector":
+        forbidden_prefixes = ("reviewer1_", "reviewer2_", "adjudicated_", "adjudication_")
+    elif role == "reviewer1":
+        forbidden_prefixes = ("reviewer2_", "adjudicated_", "adjudication_")
+    elif role == "reviewer2":
+        forbidden_prefixes = ("reviewer1_", "adjudicated_", "adjudication_")
+    else:
+        return []
+    return sorted(_keys_with_prefixes(value, forbidden_prefixes))
+
+
+def _keys_with_prefixes(value: Any, prefixes: tuple[str, ...]) -> set[str]:
+    if isinstance(value, dict):
+        found = {key for key in value if key.lower().startswith(prefixes)}
+        for item in value.values():
+            found.update(_keys_with_prefixes(item, prefixes))
+        return found
+    if isinstance(value, list):
+        found: set[str] = set()
+        for item in value:
+            found.update(_keys_with_prefixes(item, prefixes))
+        return found
+    return set()
+
+
+def _blind_review_keys(value: Any) -> set[str]:
+    forbidden_keys = {
+        "rank",
+        "ranker",
+        "ranker_source",
+        "ranker_sources",
+        "ranker_ranks",
+        "score",
+        "score_breakdown",
+        "score_components",
+        "score_component_keys",
+    }
+    if isinstance(value, dict):
+        found = {key for key in value if key.lower() in forbidden_keys}
+        for item in value.values():
+            found.update(_blind_review_keys(item))
+        return found
+    if isinstance(value, list):
+        found: set[str] = set()
+        for item in value:
+            found.update(_blind_review_keys(item))
+        return found
+    return set()
+
+
+def _blind_review_strings(value: Any) -> list[str]:
+    if isinstance(value, dict):
+        found: list[str] = []
+        for item in value.values():
+            found.extend(_blind_review_strings(item))
+        return found
+    if isinstance(value, list):
+        found: list[str] = []
+        for item in value:
+            found.extend(_blind_review_strings(item))
+        return found
+    if isinstance(value, str):
+        lower = value.lower()
+        return [token for token in M5_REVIEW_FORBIDDEN_STRINGS if token in lower]
+    return []
 
 
 def _write_false_positive_taxonomy(

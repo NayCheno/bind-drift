@@ -18,15 +18,21 @@ BindDrift warnings are review targets, not confirmed bugs. Reviewers assign labe
 
 ## Review Policy
 
-Each warning must receive independent `reviewer1_label` and `reviewer2_label` values before adjudication. Reviewers should not see each other's notes before submitting their own label.
+Each warning must receive independent `reviewer1_label` and `reviewer2_label` values before adjudication. Reviewer role inputs are blind to ranker name, rank, score, and the other reviewer's notes before the reviewer submits a label.
 
-The adjudicator fills `adjudicated_label` and `adjudication_notes`. Missing adjudication notes above 20% is a paper-build failure condition for strict artifact validation.
+The adjudicator runs only after both reviewer roles finish. The adjudicator receives the evidence packet plus both completed reviewer outputs, then fills `adjudicated_label` and `adjudication_notes`. Missing adjudication notes above 20% is a paper-build failure condition for strict artifact validation.
 
 `TRUE_WRAPPER_FIX` and `TRUE_SEMANTIC_DRIFT` are reported separately. `TRUE_WRAPPER_FIX` must never be counted as `TRUE_SEMANTIC_DRIFT`.
 
-Wrapper-fix and build oracles are labels and auxiliary validation only. They are not allowed as primary ranking-score inputs.
+Reviewer roles are not blind to build-breakage or wrapper-fix evidence when that evidence is part of the packet, because those evidence sources are required for `TRUE_BUILD_BREAKAGE` and `TRUE_WRAPPER_FIX`. Wrapper-fix and build oracles are labels and auxiliary validation only. They are not allowed as primary ranking-score inputs.
 
 Prefer `UNCLEAR` over speculation. Prefer `BENIGN_DRIFT` over `TRUE_SEMANTIC_DRIFT` when the C drift is real but Rust impact is not plausible.
+
+## LLM-Assisted Boundary
+
+Repository review artifacts produced by `binddrift-review` are LLM-assisted independent role artifacts. Do not describe them as human expert manual labels unless a separate human review or human spot-checking record exists.
+
+The LLM-assisted roles may summarize and format evidence packets, fill independent reviewer-role labels, and produce adjudicator-role notes. They do not participate in the primary ranking score and reviewer roles must not receive adjudicated labels as ground truth.
 
 ## Required CSV Columns
 
