@@ -44,7 +44,14 @@ STAGE_REQUIRED_CHECKS: dict[str, set[str]] = {
     },
     "m1": {"no_local_absolute_paths", "arm64_external_validity_gate"},
     "m2": {"ranking", "oracle_blind_narrative_gate"},
-    "m3": {"pooled_review_coverage", "manual_review_quality_gate", "binddrift_review_role_artifacts"},
+    "m3": {
+        "pooled_review_coverage",
+        "manual_review_quality_gate",
+        "binddrift_review_role_artifacts",
+        "m3_research_question_gate",
+        "semantic",
+        "strict_extractor_audit_gate",
+    },
     "m4": {"semantic"},
     "m5": {"case_study_gate"},
     "m6": {"ranking"},
@@ -135,6 +142,7 @@ def validate_artifact(
     _check("pooled_review_coverage", checks, lambda: _pooled_review_coverage(cfg))
     _check("manual_review_quality_gate", checks, lambda: _manual_review_quality_gate(cfg))
     _check("binddrift_review_role_artifacts", checks, lambda: _binddrift_review_role_artifacts(cfg))
+    _check("m3_research_question_gate", checks, lambda: _m3_research_question_gate(cfg))
     _check("case_study_gate", checks, lambda: _case_study_gate(cfg))
     _check("strict_extractor_audit_gate", checks, lambda: _strict_extractor_gate(cfg))
     _check("paper_claims_match_downgrades", checks, lambda: _paper_claims(cfg))
@@ -702,6 +710,224 @@ def _binddrift_review_role_artifacts(cfg: Config) -> dict[str, Any]:
         "merge_complete": merge_complete,
         "merge_report": repo_relative(cfg, expected_files["merge_report"]),
         "role_summary": repo_relative(cfg, expected_files["role_summary"]),
+    }
+
+
+def _m3_research_question_gate(cfg: Config) -> dict[str, Any]:
+    draft_path = cfg.repo_root / "paper/draft.md"
+    draft = draft_path.read_text(encoding="utf-8") if draft_path.exists() else ""
+    sections = _rq_sections(draft)
+    normalized_sections = {rq: _normal_text(section) for rq, section in sections.items()}
+    closure_markers = ("problem.", "method.", "data.", "result.", "interpretation.", "threat.")
+    closed_loop = {
+        rq: all(marker in normalized_sections.get(rq, "") for marker in closure_markers)
+        for rq in ("rq1", "rq2", "rq3", "rq4", "rq5")
+    }
+
+    manifest = validate_run_manifest(cfg)
+    strict_audit = _json(cfg, "paper/tables/strict_extractor_audit.json")
+    strict_gate = _strict_extractor_gate(cfg)
+    volume = _json(cfg, "paper/tables/warning_volume_reduction.json")
+    ranking = _json(cfg, "paper/tables/ranking_pooled_evaluation.json")
+    semantic = _json(cfg, "paper/tables/semantic_drift_review_summary.json")
+    semantic_gate = _semantic_gate(cfg)
+    primary = next((row for row in ranking.get("rankers", []) if row.get("ranker") == "binddrift_oracle_blind"), {})
+    best = ranking.get("best_simple_baseline") or {}
+    deltas = (ranking.get("comparison_against_best_simple_baseline") or {}).get("deltas") or {}
+    top_k_workload = volume.get("top_k_workload") or {}
+    expected_volume_reduction = _workload_reduction(manifest.get("drift_fact_count") or 0, manifest.get("promoted_warning_count") or 0)
+    expected_top_k_workload = _expected_top_k_workload(
+        manifest.get("drift_fact_count") or 0,
+        manifest.get("promoted_warning_count") or 0,
+    )
+    table_index = _table_index_sha256_gate(cfg)
+    readme = _normal_text((cfg.repo_root / "README.md").read_text(encoding="utf-8"))
+    artifact_guide = _normal_text((cfg.repo_root / "docs/artifact-guide.md").read_text(encoding="utf-8"))
+    one_command = "uv run python -m binddrift.artifact reproduce"
+    paper_build = "uv run binddrift paper build --stage final"
+
+    metric_keys = ("p_at_10", "p_at_20", "p_at_50", "p_at_100", "ndcg_at_20", "auprc_on_pooled_review_set")
+    metric_better_than_best = {
+        key: primary.get(key) is not None and best.get(key) is not None and primary.get(key) > best.get(key)
+        for key in metric_keys
+    }
+    strict_acceptance = strict_audit.get("acceptance") or {}
+    strict_overall = strict_acceptance.get("overall") or {}
+    strict_extractor_checks = {
+        name: (details or {}).get("minimum_passes") is True
+        for name, details in strict_acceptance.items()
+        if name != "overall"
+    }
+    rq2_topk_checks = {
+        key: _workload_entry_matches(top_k_workload.get(key) or {}, expected)
+        for key, expected in expected_top_k_workload.items()
+    }
+    rq2_text_checks = {
+        key: f"{_fmt_percent(expected['share_of_drift_facts'])} of drift facts" in normalized_sections.get("rq2", "")
+        and f"{_fmt_percent(expected['share_of_promoted_warnings'])} of promoted warnings" in normalized_sections.get("rq2", "")
+        for key, expected in expected_top_k_workload.items()
+    }
+    semantic_recomputed = {
+        "true_semantic_drift_count": semantic_gate.get("true_semantic_drift_count"),
+        "semantic_drift_type_count": semantic_gate.get("semantic_drift_type_count"),
+        "non_wrapper_semantic_true_positives": semantic_gate.get("non_wrapper_semantic_true_positives"),
+    }
+    semantic_summary_matches_gate = {
+        key: semantic.get(key) == value
+        for key, value in semantic_recomputed.items()
+    }
+    strict_gate_checks = strict_gate.get("checks") or {}
+    strict_summary_matches_gate = {
+        "total_samples": strict_audit.get("total_samples") == strict_gate.get("total_samples"),
+        "cohen_kappa": (strict_audit.get("agreement") or {}).get("cohen_kappa")
+        == (strict_gate.get("agreement") or {}).get("cohen_kappa"),
+        "all_gate_checks": all(strict_gate_checks.values()),
+    }
+    rq_text_checks = {
+        "rq1_reports_audit": f"{strict_audit.get('total_samples')} facts" in normalized_sections.get("rq1", "")
+        and "all_minimums_pass = true" in normalized_sections.get("rq1", ""),
+        "rq2_reports_volume": f"{_fmt_int(manifest.get('drift_fact_count'))} drift facts" in normalized_sections.get("rq2", "")
+        and f"{_fmt_int(manifest.get('promoted_warning_count'))} promoted" in normalized_sections.get("rq2", "")
+        and all(rq2_text_checks.values())
+        and f"{_fmt_percent(expected_volume_reduction)} reduction" in normalized_sections.get("rq2", "")
+        and "top-10" in normalized_sections.get("rq2", "")
+        and "top-20" in normalized_sections.get("rq2", "")
+        and "top-50" in normalized_sections.get("rq2", "")
+        and "top-100" in normalized_sections.get("rq2", ""),
+        "rq3_reports_metrics": all(
+            phrase in normalized_sections.get("rq3", "")
+            for phrase in (
+                f"p@10 = {_fmt_metric(primary.get('p_at_10'))}",
+                f"p@20 = {_fmt_metric(primary.get('p_at_20'))}",
+                f"p@50 = {_fmt_metric(primary.get('p_at_50'))}",
+                f"p@100 = {_fmt_metric(primary.get('p_at_100'))}",
+                f"ndcg@20 = {_fmt_metric(primary.get('ndcg_at_20'))}",
+                f"auprc = {_fmt_metric(primary.get('auprc_on_pooled_review_set'), digits=4)}",
+                f"{_fmt_metric(deltas.get('p_at_20'))} p@20",
+                f"{_fmt_metric(deltas.get('p_at_50'))} p@50",
+                f"{_fmt_metric(deltas.get('ndcg_at_20'), digits=4)} ndcg@20",
+            )
+        ),
+        "rq4_reports_semantic_gate": f"{semantic.get('true_semantic_drift_count')} `true_semantic_drift` rows"
+        in normalized_sections.get("rq4", "")
+        and f"{semantic.get('semantic_drift_type_count')} semantic drift types" in normalized_sections.get("rq4", "")
+        and "semantic gate passes" in normalized_sections.get("rq4", ""),
+        "rq5_reports_reproduction": one_command in normalized_sections.get("rq5", "")
+        and paper_build in normalized_sections.get("rq5", "")
+        and "sha256 provenance" in normalized_sections.get("rq5", ""),
+    }
+    checks = {
+        "all_rq_sections_present": all(normalized_sections.get(rq) for rq in ("rq1", "rq2", "rq3", "rq4", "rq5")),
+        "all_rq_sections_closed_loop": all(closed_loop.values()),
+        "rq1_strict_extractor_minimum": (strict_audit.get("total_samples") or 0) >= 800
+        and strict_audit.get("all_minimums_pass") is True
+        and strict_overall.get("passes") is True
+        and all(strict_extractor_checks.values())
+        and strict_gate.get("passes") is True
+        and all(strict_summary_matches_gate.values()),
+        "rq2_workload_reduction_reported": volume.get("drift_fact_count") == manifest.get("drift_fact_count")
+        and volume.get("promoted_warning_count") == manifest.get("promoted_warning_count")
+        and volume.get("primary_warning_volume") == manifest.get("promoted_warning_count")
+        and volume.get("drift_facts_to_promoted_warnings_reduction") == expected_volume_reduction
+        and all(rq2_topk_checks.values()),
+        "rq3_primary_beats_best_simple_baseline": ranking.get("primary_beats_best_simple_baseline") is True
+        and all(metric_better_than_best.values()),
+        "rq4_semantic_minimum": (semantic.get("true_semantic_drift_count") or 0) >= 8
+        and (semantic.get("semantic_drift_type_count") or 0) >= 3
+        and (semantic.get("acceptance") or {}).get("minimum_passes") is True
+        and semantic_gate.get("passes") is True
+        and all(semantic_summary_matches_gate.values())
+        and "binddrift-review" in str(semantic.get("review_method") or ""),
+        "rq5_reproducibility": one_command in readme
+        and one_command in artifact_guide
+        and paper_build in readme
+        and paper_build in artifact_guide
+        and table_index["passes"]
+        and bool(manifest.get("sha256")),
+        "rq_text_reports_acceptance_numbers": all(rq_text_checks.values()),
+    }
+    return {
+        "passes": all(checks.values()),
+        "checks": checks,
+        "closed_loop": closed_loop,
+        "rq_text_checks": rq_text_checks,
+        "rq2_topk_checks": rq2_topk_checks,
+        "rq2_text_checks": rq2_text_checks,
+        "expected_top_k_workload": expected_top_k_workload,
+        "metric_better_than_best": metric_better_than_best,
+        "strict_extractor_checks": strict_extractor_checks,
+        "strict_recomputed_gate": {
+            "passes": strict_gate.get("passes"),
+            "checks": strict_gate_checks,
+            "total_samples": strict_gate.get("total_samples"),
+            "agreement": strict_gate.get("agreement"),
+        },
+        "strict_summary_matches_gate": strict_summary_matches_gate,
+        "semantic_recomputed_gate": {
+            "passes": semantic_gate.get("passes"),
+            "checks": semantic_gate.get("checks"),
+            **semantic_recomputed,
+        },
+        "semantic_summary_matches_gate": semantic_summary_matches_gate,
+        "table_index": table_index,
+        "rq_metrics": {
+            "strict_audit_total_samples": strict_audit.get("total_samples"),
+            "drift_fact_count": volume.get("drift_fact_count"),
+            "promoted_warning_count": volume.get("promoted_warning_count"),
+            "primary_metrics": {key: primary.get(key) for key in metric_keys},
+            "best_simple_metrics": {key: best.get(key) for key in metric_keys},
+            "semantic_true_count": semantic.get("true_semantic_drift_count"),
+            "semantic_drift_type_count": semantic.get("semantic_drift_type_count"),
+        },
+    }
+
+
+def _expected_top_k_workload(drift_fact_count: Any, promoted_warning_count: Any) -> dict[str, dict[str, Any]]:
+    drift_facts = int(drift_fact_count or 0)
+    promoted = int(promoted_warning_count or 0)
+    return {
+        str(k): {
+            "review_budget": min(k, promoted) if promoted else k,
+            "share_of_drift_facts": _workload_share(drift_facts, k),
+            "share_of_promoted_warnings": _workload_share(promoted, k),
+            "reduction_from_drift_facts": _workload_reduction(drift_facts, k),
+            "reduction_from_promoted_warnings": _workload_reduction(promoted, k),
+        }
+        for k in (10, 20, 50, 100)
+    }
+
+
+def _workload_entry_matches(actual: dict[str, Any], expected: dict[str, Any]) -> bool:
+    return all(actual.get(key) == value for key, value in expected.items())
+
+
+def _workload_share(denominator: Any, numerator: Any) -> float | None:
+    denominator_int = int(denominator or 0)
+    numerator_int = int(numerator or 0)
+    if denominator_int <= 0:
+        return None
+    return round(min(numerator_int, denominator_int) / denominator_int, 4)
+
+
+def _workload_reduction(original: Any, remaining: Any) -> float | None:
+    original_int = int(original or 0)
+    remaining_int = int(remaining or 0)
+    if original_int <= 0:
+        return None
+    return round(1.0 - min(remaining_int, original_int) / original_int, 4)
+
+
+def _fmt_percent(value: Any) -> str:
+    return f"{float(value or 0.0) * 100:.2f}%"
+
+
+def _rq_sections(draft: str) -> dict[str, str]:
+    return {
+        "rq1": _markdown_section(draft, "### RQ1:", "### RQ2:"),
+        "rq2": _markdown_section(draft, "### RQ2:", "### RQ3:"),
+        "rq3": _markdown_section(draft, "### RQ3:", "### RQ4:"),
+        "rq4": _markdown_section(draft, "### RQ4:", "### RQ5:"),
+        "rq5": _markdown_section(draft, "### RQ5:", "## 6. Case Studies"),
     }
 
 

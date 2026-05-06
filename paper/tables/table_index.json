@@ -97,6 +97,6 @@
   "warning_volume_reduction": {
     "available": true,
     "path": "paper/tables/warning_volume_reduction.json",
-    "sha256": "9eb1a6559a98a3313beeccb6b55559611912b1692351a1e8aa8e49eb8e70f11a"
+    "sha256": "ffa5b3a2f61ce6ac2430a87a7006ac0fb7d6d32e619303db77376f2147f4e622"
   }
 }

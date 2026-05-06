@@ -111,6 +111,88 @@ def test_artifact_validator_reports_m3_review_ready() -> None:
     role_check = next(check for check in result["checks"] if check["name"] == "binddrift_review_role_artifacts")
     assert role_check["passes"] is True
     assert role_check["details"]["blind_evidence_packets"] is True
+    rq_check = next(check for check in result["checks"] if check["name"] == "m3_research_question_gate")
+    assert rq_check["passes"] is True
+    assert all(rq_check["details"]["checks"].values())
+    assert all(rq_check["details"]["closed_loop"].values())
+    assert rq_check["details"]["rq_metrics"]["strict_audit_total_samples"] >= 800
+    assert rq_check["details"]["rq_metrics"]["semantic_true_count"] >= 8
+
+
+def test_artifact_validator_rejects_m3_unclosed_rq_section() -> None:
+    draft = Path("paper/draft.md")
+    original = draft.read_text(encoding="utf-8")
+    try:
+        draft.write_text(original.replace("Problem. The raw drift stream", "Issue. The raw drift stream", 1), encoding="utf-8")
+
+        result = validate_artifact(Config.from_args(repo_root="."), strict_ccfb=True, stage="m3")
+
+        assert result["passes"] is False
+        rq_check = next(check for check in result["checks"] if check["name"] == "m3_research_question_gate")
+        assert rq_check["passes"] is False
+        assert rq_check["details"]["closed_loop"]["rq2"] is False
+    finally:
+        draft.write_text(original, encoding="utf-8")
+
+
+def test_artifact_validator_rejects_m3_stale_rq1_precision_summary() -> None:
+    path = Path("paper/tables/strict_extractor_audit.json")
+    original = path.read_text(encoding="utf-8")
+    try:
+        payload = json.loads(original)
+        payload["extractors"]["c_functions"]["precision"] = 0.0
+        payload["acceptance"]["c_functions"]["minimum_passes"] = True
+        payload["acceptance"]["overall"]["passes"] = True
+        payload["all_minimums_pass"] = True
+        path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+        result = validate_artifact(Config.from_args(repo_root="."), strict_ccfb=True, stage="m3")
+
+        assert result["passes"] is False
+        assert result["hard_gates"]["strict_extractor_audit"]["passes"] is False
+        rq_check = next(check for check in result["checks"] if check["name"] == "m3_research_question_gate")
+        assert rq_check["passes"] is False
+        assert rq_check["details"]["checks"]["rq1_strict_extractor_minimum"] is False
+    finally:
+        path.write_text(original, encoding="utf-8")
+
+
+def test_artifact_validator_rejects_m3_stale_rq2_workload_numbers() -> None:
+    path = Path("paper/tables/warning_volume_reduction.json")
+    original = path.read_text(encoding="utf-8")
+    try:
+        payload = json.loads(original)
+        payload["top_k_workload"]["20"]["share_of_drift_facts"] = 0.9999
+        path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+        result = validate_artifact(Config.from_args(repo_root="."), strict_ccfb=True, stage="m3")
+
+        assert result["passes"] is False
+        rq_check = next(check for check in result["checks"] if check["name"] == "m3_research_question_gate")
+        assert rq_check["passes"] is False
+        assert rq_check["details"]["rq2_topk_checks"]["20"] is False
+    finally:
+        path.write_text(original, encoding="utf-8")
+
+
+def test_artifact_validator_rejects_m3_stale_rq4_semantic_summary() -> None:
+    path = Path("paper/tables/semantic_drift_review_summary.json")
+    original = path.read_text(encoding="utf-8")
+    try:
+        payload = json.loads(original)
+        payload["true_semantic_drift_count"] = 999
+        payload["acceptance"]["minimum_passes"] = True
+        path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+        result = validate_artifact(Config.from_args(repo_root="."), strict_ccfb=True, stage="m3")
+
+        assert result["passes"] is False
+        assert result["hard_gates"]["semantic"]["passes"] is False
+        rq_check = next(check for check in result["checks"] if check["name"] == "m3_research_question_gate")
+        assert rq_check["passes"] is False
+        assert rq_check["details"]["checks"]["rq4_semantic_minimum"] is False
+    finally:
+        path.write_text(original, encoding="utf-8")
 
 
 def test_artifact_validator_reports_m4_semantic_ready() -> None:

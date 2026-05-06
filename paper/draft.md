@@ -162,7 +162,7 @@ artifact generation.
 
 The schema stores version metadata, commits, binding facts, Rust facts, C facts,
 graph nodes and edges, extraction diagnostics, drift events, build-breakage
-events, wrapper-fix candidates, manual labels, and generated table provenance.
+events, wrapper-fix candidates, review labels, and generated table provenance.
 
 ## 5. Evaluation
 
@@ -186,73 +186,164 @@ promoted Rust-impact warnings, the 500-row pooled review set, the 304 reviewed
 semantic targets, and the generated case-study suite. `paper/tables/table_index.json`
 records sha256 provenance for every generated main table.
 
-An arm64 external-validity slice replays 8 release tags from `v6.13` through
-`v7.0`, covering 7 adjacent pairs with Rust-enabled arm64 binding generation.
-All 7 pairs complete, so there are 0 failed pairs; failed pairs would be
-reported with pair status, build status, and error text rather than silently
-skipped. The slice records 7,086 drift facts and 248 promoted Rust-impact
-warnings. Warning overlap with the x86_64 replay is high: 236 warning
-type/symbol keys are shared, 4 are arm64-only, and 47 are x86_64-only. The
-architecture delta is concentrated in `SignatureDrift`, where arm64 reports
-209 warnings versus 269 on x86_64; `MacroConstDrift` is unchanged at 26 on both
-architectures, and `FieldDrift` drops from 25 on x86_64 to 13 on arm64. This
-slice supports external validity for the replay and prioritization pipeline,
-while the main pooled-label claims remain anchored to the canonical x86_64
-review set.
+### RQ1: Can BindDrift extract reliable cross-language drift facts?
 
-Manual semantic evaluation uses a blind pooled review set. Two reviewers label
-warnings independently, then an adjudicator records the final label; this manual
-adjudication is the only source of semantic precision claims. All 500 pooled
-warnings are double-labeled and adjudicated, with Cohen's kappa = 0.8118 and
-agreement rate 0.922. The final pooled labels are 1 `TRUE_BUILD_BREAKAGE`,
-17 `TRUE_WRAPPER_FIX`, 29 `TRUE_SEMANTIC_DRIFT`, 3 `BENIGN_DRIFT`,
-450 `FALSE_POSITIVE`, and 0 `UNCLEAR`. These labels support a claim that
-BindDrift surfaces useful review targets, not a claim that every warning is a
-confirmed defect.
+Problem. BindDrift's ranking claim depends on whether the C, generated binding,
+and Rust evidence facts are reliable enough to support downstream review
+targets.
 
-Baselines compare `BindDrift-oracle-blind` against binding-diff, C-signature,
-C-indicator, Rust-use, no-ranking, ablated variants, and random variants on the
-same pooled label set. The strict pooled ranking table reports
-`BindDrift-oracle-blind` P@10 = 1.00, P@20 = 1.00, P@50 = 0.86, P@100 = 0.43,
-NDCG@20 = 1.00, and AUPRC = 0.9444.
-RQ3 follows the same data-flow split as Figure 1: detection-time features feed
-`BindDrift-oracle-blind`, auxiliary validation oracles feed labels and
-validation checks, and the evaluation and validation node consumes both the
-Top-K output and auxiliary labels after ranking. Neither oracle has a data path
-into Top-K selection or the primary score.
-The strongest simple baseline is `rust_use`, with P@20 = 0.40, P@50 = 0.22,
-and NDCG@20 = 0.4606. The strict ranking gate passes:
-`BindDrift-oracle-blind` improves top-K review yield over the strongest simple
-baseline by 0.60 P@20, 0.64 P@50, and 0.5394 NDCG@20 in the shared
-pooled-label evaluation.
-The build-breakage oracle and wrapper-fix oracle are auxiliary validation only;
-they support labels and validation checks, not the primary score. The paper
-tables are generated from artifact outputs, not hand-entered numbers.
-
-The targeted semantic review pass samples 400 semantic target candidates and
-reviews 304 adjudicated rows
-across nullability, ownership/refcount, allocation/free, sleepability/context,
-and layout/field categories. It finds 29 `TRUE_SEMANTIC_DRIFT` rows, 17
-`TRUE_WRAPPER_FIX` rows, 1 build-breakage row, 3 benign rows, and 255
-false-positive rows, with no unclear rows. The semantic gate passes with 29
-non-wrapper semantic true positives and 4 semantic drift types, so semantic
-review targets may be reported as a secondary contribution while preserving the
-claim boundary that they remain review targets rather than confirmed runtime
-bugs.
-
-The strict extractor audit samples 830 facts across C functions, C behavior
+Method. We run a strict extractor audit over C functions, C behavior
 indicators, Rust binding uses, Rust safe API exposures, Rust error mappings,
-Rust lifetime facts, and 150 promoted warning evidence chains. The audit reports
-Cohen's kappa = 1.0 and `all_minimums_pass = true`, including promoted warning
-evidence precision above the 0.85 gate. Review labels are transferred only from
-rows with explicit reviewer/adjudication provenance; generated strict-only rows
-remain pending until that provenance is present. The generated failure taxonomy
-also reports limitation-focused negative controls for every extractor; these
-controls document parser boundaries and should not be read as completeness or
-bug confirmation evidence.
+Rust lifetime facts, and promoted warning evidence chains. The audit uses only
+rows with explicit reviewer/adjudication provenance and records parser
+limitations through negative controls.
 
-The artifact also includes 8 positive warning-backed case studies and 2
-negative/failure-analysis cases selected from adjudicated labels.
+Data. The strict extractor audit samples 830 facts across the canonical replay,
+including 150 promoted warning evidence chains.
+
+Result. The audit reports Cohen's kappa = 1.0 and `all_minimums_pass = true`,
+including promoted warning evidence precision above the 0.85 gate.
+
+Interpretation. These results support using extracted cross-language evidence
+for warning prioritization and paper tables, but not completeness claims.
+
+Threat. Regex parser incompleteness and missing generated binding outputs remain
+threats. The generated failure taxonomy reports limitation-focused negative
+controls for every extractor; these controls document parser boundaries and
+should not be read as completeness or bug confirmation evidence.
+
+### RQ2: Does evidence gating reduce review volume while preserving useful review targets?
+
+Problem. The raw drift stream is too large for maintainers to review directly,
+so the paper needs to show a concrete workload reduction path.
+
+Method. We report the pipeline volume from drift facts to promoted Rust-impact
+warnings and then to fixed top-K review budgets produced by the primary
+oracle-blind ranker.
+
+Data. The canonical `latest` manifest records 16,757 drift facts and 320
+promoted Rust-impact warnings.
+
+Result. Evidence gating reduces 16,757 drift facts to 320 promoted warnings, a
+98.09% reduction. Fixed review budgets reduce the workload further: top-10 is
+0.06% of drift facts and 3.12% of promoted warnings, top-20 is 0.12% of drift
+facts and 6.25% of promoted warnings, top-50 is 0.30% of drift facts and 15.62%
+of promoted warnings, and top-100 is 0.60% of drift facts and 31.25% of
+promoted warnings.
+
+Interpretation. RQ2 supports the stronger framing that BindDrift prioritizes
+review targets rather than trying to make every warning actionable.
+
+Threat. Workload reduction alone is not precision. RQ3 and RQ4 provide the
+pooled-label and semantic-label checks needed to interpret this reduction.
+
+### RQ3: Does `BindDrift-oracle-blind` improve top-K review yield over strong baselines?
+
+Problem. A useful prioritizer must beat simple rankers without leaking build or
+wrapper oracles into the primary score.
+
+Method. Baselines compare `BindDrift-oracle-blind` against binding-diff,
+C-signature, C-indicator, Rust-use, no-ranking, ablated variants, and random
+variants on the same pooled label set. RQ3 follows the same data-flow split as
+Figure 1: detection-time features feed `BindDrift-oracle-blind`, auxiliary
+validation oracles feed labels and validation checks, and the evaluation and
+validation node consumes both the Top-K output and auxiliary labels after
+ranking. Neither oracle has a data path into Top-K selection or the primary
+score.
+
+Data. LLM-assisted independent double review uses a blind pooled review set and
+the binddrift-review role artifacts: evidence collector, reviewer 1, reviewer
+2, adjudicator, and CSV merge report. The two reviewer role artifacts label
+warnings independently, then the adjudicator role artifact records the final
+label. This adjudicated binddrift-review label set is the only source of
+semantic precision claims. All 500 pooled warnings are double-labeled and
+adjudicated, with Cohen's kappa = 0.8118 and agreement rate 0.922. The final
+pooled labels are 1 `TRUE_BUILD_BREAKAGE`, 17 `TRUE_WRAPPER_FIX`, 29
+`TRUE_SEMANTIC_DRIFT`, 3 `BENIGN_DRIFT`, 450 `FALSE_POSITIVE`, and 0
+`UNCLEAR`.
+
+Result. The strict pooled ranking table reports `BindDrift-oracle-blind`
+P@10 = 1.00, P@20 = 1.00, P@50 = 0.86, P@100 = 0.43, NDCG@20 = 1.00, and
+AUPRC = 0.9444. The strongest simple baseline is `rust_use`, with P@20 = 0.40,
+P@50 = 0.22, and NDCG@20 = 0.4606. The strict ranking gate passes:
+`BindDrift-oracle-blind` improves top-K review yield over the strongest simple
+baseline by 0.60 P@20, 0.64 P@50, and 0.5394 NDCG@20 in the shared pooled-label
+evaluation.
+
+Interpretation. These labels support a claim that BindDrift surfaces useful
+review targets, not a claim that every warning is a confirmed defect. The
+build-breakage oracle and wrapper-fix oracle are auxiliary validation only; they
+support labels and validation checks, not the primary score.
+
+Threat. Oracle limitations and label ambiguity remain threats. The paper tables
+are generated from artifact outputs, not hand-entered numbers, and the
+oracle-blind gate rejects forbidden primary score components.
+
+### RQ4: What semantic drift patterns appear in adjudicated cases?
+
+Problem. The semantic tier is the most subjective part of the artifact, so the
+paper must separate semantic review targets from wrapper-fix validation and from
+false positives.
+
+Method. The targeted semantic review pass uses label-blind semantic detector
+quotas, then joins binddrift-review adjudicated double-review labels after
+target selection. `TRUE_WRAPPER_FIX` is reported separately and is not counted
+as `TRUE_SEMANTIC_DRIFT`.
+
+Data. The pass samples 400 semantic target candidates and reviews 304
+adjudicated rows across nullability, ownership/refcount, allocation/free,
+sleepability/context, and layout/field categories.
+
+Result. It finds 29 `TRUE_SEMANTIC_DRIFT` rows, 17 `TRUE_WRAPPER_FIX` rows, 1
+build-breakage row, 3 benign rows, and 255 false-positive rows, with no unclear
+rows. The semantic gate passes with 29 non-wrapper semantic true positives and
+4 semantic drift types. The artifact also includes 8 positive warning-backed
+case studies and 2 negative/failure-analysis cases selected from adjudicated
+labels, covering 4 semantic true cases, 4 non-wrapper semantic cases, and 4
+wrapper-fix-backed cases.
+
+Interpretation. Semantic review targets may be reported as a secondary
+contribution while preserving the claim boundary that they remain review
+targets rather than confirmed runtime bugs.
+
+Threat. Semantic labels have unavoidable subjectivity. The review guide
+separates `TRUE_SEMANTIC_DRIFT`, `TRUE_WRAPPER_FIX`, `BENIGN_DRIFT`,
+`FALSE_POSITIVE`, and `UNCLEAR`, and the evaluation uses the adjudicated label
+for paper metrics.
+
+### RQ5: How reproducible is the artifact across versioned toolchains?
+
+Problem. Replay claims are fragile unless the artifact records the exact
+versions, toolchain choices, generated outputs, and table provenance.
+
+Method. The artifact records a run manifest, evaluation protocol, toolchain
+matrix, strict gates, and sha256 provenance for generated paper tables. The
+one-command reproduction path is `uv run python -m binddrift.artifact
+reproduce`, with `uv run binddrift paper build --stage final` as the final paper
+gate.
+
+Data. The main replay uses the canonical x86_64 `latest` manifest. The arm64
+external-validity slice replays 8 release tags from `v6.13` through `v7.0`,
+covering 7 adjacent pairs with Rust-enabled arm64 binding generation.
+
+Result. All 7 arm64 pairs complete, so there are 0 failed pairs; failed pairs
+would be reported with pair status, build status, and error text rather than
+silently skipped. The slice records 7,086 drift facts and 248 promoted
+Rust-impact warnings. Warning overlap with the x86_64 replay is high: 236
+warning type/symbol keys are shared, 4 are arm64-only, and 47 are x86_64-only.
+The architecture delta is concentrated in `SignatureDrift`, where arm64 reports
+209 warnings versus 269 on x86_64; `MacroConstDrift` is unchanged at 26 on both
+architectures, and `FieldDrift` drops from 25 on x86_64 to 13 on arm64.
+
+Interpretation. RQ5 supports reproducibility for the paper tables and external
+validity for the replay and prioritization pipeline, while the main
+pooled-label claims remain anchored to the canonical x86_64 review set.
+
+Threat. The arm64 slice reduces external validity threats but does not remove
+them entirely: arm64 is still Linux mainline, uses the same Rust-for-Linux
+surfaces, and does not add independent review labels. Future work should
+evaluate rust-next branches, additional architectures, and complete release-tag
+histories once full binding generation is available.
 
 ## 6. Case Studies
 
@@ -297,7 +388,7 @@ ranking and auxiliary build/wrapper evidence.
 
 Construct validity threats include the ambiguity of semantic drift labels and
 the fact that warnings are review targets rather than confirmed defects. The
-manual review guide separates `TRUE_SEMANTIC_DRIFT`, `TRUE_WRAPPER_FIX`,
+review guide separates `TRUE_SEMANTIC_DRIFT`, `TRUE_WRAPPER_FIX`,
 `BENIGN_DRIFT`, `FALSE_POSITIVE`, and `UNCLEAR`, and the evaluation uses the
 adjudicated label for paper metrics. Not every warning is a confirmed bug.
 Wrapper-fix-backed labels and semantic labels are reported separately, and
@@ -311,7 +402,7 @@ slice reduces this threat by showing that the replay and warning-prioritization
 pipeline runs across 8 arm64 release tags with 7 completed pairs, explicit
 failed-pair reporting, and warning overlap/type-delta analysis. It does not
 remove the threat entirely: arm64 is still Linux mainline, uses the same
-Rust-for-Linux surfaces, and does not add independent manual labels. Future
+Rust-for-Linux surfaces, and does not add independent review labels. Future
 work should evaluate rust-next branches, additional architectures, and complete
 release-tag histories once full binding generation is available.
 

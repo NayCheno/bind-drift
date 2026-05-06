@@ -49,7 +49,7 @@ def test_paper_draft_preserves_claim_boundary() -> None:
         "evaluation and validation",
         "neither oracle has a data path",
         "cross-version replay",
-        "manual adjudication",
+        "adjudicated binddrift-review label set",
         "strict ranking gate passes",
         "semantic gate passes",
     ]
@@ -94,6 +94,11 @@ def test_paper_draft_preserves_claim_boundary() -> None:
     assert "tier 2 semantic findings are review targets" in full_normalized
     assert "`true_wrapper_fix` is not counted as `true_semantic_drift`" in full_normalized
     assert "not every warning is a confirmed bug" in full_normalized
+    assert "llm-assisted independent double review" in full_normalized
+    assert "binddrift-review role artifacts" in full_normalized
+    assert "manual semantic evaluation" not in full_normalized
+    assert "manual adjudication" not in full_normalized
+    assert "independent manual labels" not in full_normalized
     assert "wrapper-fix oracle is auxiliary validation" in full_normalized
     assert "build-breakage oracle and wrapper-fix oracle are auxiliary validation only" in full_normalized
     assert "oracleblindbinddrift" not in full_normalized

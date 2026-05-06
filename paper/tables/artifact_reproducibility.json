@@ -416,6 +416,182 @@
     },
     {
       "details": {
+        "checks": {
+          "all_rq_sections_closed_loop": true,
+          "all_rq_sections_present": true,
+          "rq1_strict_extractor_minimum": true,
+          "rq2_workload_reduction_reported": true,
+          "rq3_primary_beats_best_simple_baseline": true,
+          "rq4_semantic_minimum": true,
+          "rq5_reproducibility": true,
+          "rq_text_reports_acceptance_numbers": true
+        },
+        "closed_loop": {
+          "rq1": true,
+          "rq2": true,
+          "rq3": true,
+          "rq4": true,
+          "rq5": true
+        },
+        "expected_top_k_workload": {
+          "10": {
+            "reduction_from_drift_facts": 0.9994,
+            "reduction_from_promoted_warnings": 0.9688,
+            "review_budget": 10,
+            "share_of_drift_facts": 0.0006,
+            "share_of_promoted_warnings": 0.0312
+          },
+          "100": {
+            "reduction_from_drift_facts": 0.994,
+            "reduction_from_promoted_warnings": 0.6875,
+            "review_budget": 100,
+            "share_of_drift_facts": 0.006,
+            "share_of_promoted_warnings": 0.3125
+          },
+          "20": {
+            "reduction_from_drift_facts": 0.9988,
+            "reduction_from_promoted_warnings": 0.9375,
+            "review_budget": 20,
+            "share_of_drift_facts": 0.0012,
+            "share_of_promoted_warnings": 0.0625
+          },
+          "50": {
+            "reduction_from_drift_facts": 0.997,
+            "reduction_from_promoted_warnings": 0.8438,
+            "review_budget": 50,
+            "share_of_drift_facts": 0.003,
+            "share_of_promoted_warnings": 0.1562
+          }
+        },
+        "metric_better_than_best": {
+          "auprc_on_pooled_review_set": true,
+          "ndcg_at_20": true,
+          "p_at_10": true,
+          "p_at_100": true,
+          "p_at_20": true,
+          "p_at_50": true
+        },
+        "passes": true,
+        "rq2_text_checks": {
+          "10": true,
+          "100": true,
+          "20": true,
+          "50": true
+        },
+        "rq2_topk_checks": {
+          "10": true,
+          "100": true,
+          "20": true,
+          "50": true
+        },
+        "rq_metrics": {
+          "best_simple_metrics": {
+            "auprc_on_pooled_review_set": 0.351,
+            "ndcg_at_20": 0.4606,
+            "p_at_10": 0.8,
+            "p_at_100": 0.26,
+            "p_at_20": 0.4,
+            "p_at_50": 0.22
+          },
+          "drift_fact_count": 16757,
+          "primary_metrics": {
+            "auprc_on_pooled_review_set": 0.9444,
+            "ndcg_at_20": 1.0,
+            "p_at_10": 1.0,
+            "p_at_100": 0.43,
+            "p_at_20": 1.0,
+            "p_at_50": 0.86
+          },
+          "promoted_warning_count": 320,
+          "semantic_drift_type_count": 4,
+          "semantic_true_count": 29,
+          "strict_audit_total_samples": 830
+        },
+        "rq_text_checks": {
+          "rq1_reports_audit": true,
+          "rq2_reports_volume": true,
+          "rq3_reports_metrics": true,
+          "rq4_reports_semantic_gate": true,
+          "rq5_reports_reproduction": true
+        },
+        "semantic_recomputed_gate": {
+          "checks": {
+            "examples_per_semantic_type": true,
+            "false_positive_taxonomy_generated": true,
+            "non_wrapper_semantic_true_positives": true,
+            "reviewed_semantic_targets": true,
+            "semantic_drift_types": true,
+            "semantic_review_candidate_type_quota": true,
+            "semantic_review_candidates": true,
+            "summary_matches_recomputed_counts": true,
+            "target_review_exists": true,
+            "target_review_matches_target_set": true,
+            "target_set_exists": true,
+            "true_semantic_drift": true,
+            "unclear_rate": true,
+            "wrapper_fix_only_not_counted_as_semantic": true
+          },
+          "non_wrapper_semantic_true_positives": 29,
+          "passes": true,
+          "semantic_drift_type_count": 4,
+          "true_semantic_drift_count": 29
+        },
+        "semantic_summary_matches_gate": {
+          "non_wrapper_semantic_true_positives": true,
+          "semantic_drift_type_count": true,
+          "true_semantic_drift_count": true
+        },
+        "strict_extractor_checks": {
+          "c_behavior_indicators": true,
+          "c_functions": true,
+          "promoted_warning_evidence": true,
+          "rust_binding_uses": true,
+          "rust_error_mappings": true,
+          "rust_lifetime_facts": true,
+          "rust_safe_api_exposures": true
+        },
+        "strict_recomputed_gate": {
+          "agreement": {
+            "agreement_rate": 1.0,
+            "cohen_kappa": 1.0,
+            "reviewed_pairs": 830
+          },
+          "checks": {
+            "acceptance_target_passes": true,
+            "all_minimums_pass": true,
+            "cohen_kappa": true,
+            "cross_version_pair_coverage": true,
+            "cross_version_sampling": true,
+            "failure_taxonomy": true,
+            "negative_samples": true,
+            "parser_limitations": true,
+            "promoted_warning_evidence_samples": true,
+            "review_provenance": true,
+            "target_precision": true,
+            "target_sample_sizes": true,
+            "total_samples": true
+          },
+          "passes": true,
+          "total_samples": 830
+        },
+        "strict_summary_matches_gate": {
+          "all_gate_checks": true,
+          "cohen_kappa": true,
+          "total_samples": true
+        },
+        "table_index": {
+          "entries": 20,
+          "mismatched_sha256": [],
+          "missing_sha256": [],
+          "passes": true,
+          "unavailable": []
+        }
+      },
+      "name": "m3_research_question_gate",
+      "passes": true
+    },
+    {
+      "details": {
         "absolute_local_paths": 0,
         "acceptance": {
           "absolute_local_paths_clean": true,
@@ -2433,13 +2609,12 @@
   "passes": true,
   "protocol_version": "ccfb-strict-v2",
   "run_manifest": "data/replay/latest/run_manifest.json",
-  "stage": "final",
+  "stage": "m3",
   "stage_required_checks": [
     "arm64_external_validity_gate",
     "binddrift_review_role_artifacts",
-    "case_study_gate",
     "evaluation_protocol_valid",
-    "m8_paper_submission_gate",
+    "m3_research_question_gate",
     "manual_review_quality_gate",
     "no_local_absolute_paths",
     "oracle_blind_narrative_gate",

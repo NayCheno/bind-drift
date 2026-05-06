@@ -735,10 +735,29 @@ def _m6_acceptance(
 
 def _write_split_tables(cfg: Config, table: dict[str, Any]) -> None:
     tables = cfg.repo_root / "paper/tables"
+    manifest = validate_run_manifest(cfg)
+    drift_fact_count = int(manifest.get("drift_fact_count") or 0)
+    promoted_warning_count = int(manifest.get("promoted_warning_count") or 0)
+    paper_topk = int(manifest.get("paper_topk") or TOP_K)
     baseline_rows = [row for row in table["rankers"] if row["kind"] in {"primary", "simple_baseline"}]
     ablation_rows = [row for row in table["rankers"] if row["kind"] in {"primary", "ablation"}]
+    primary_warning_volume = next((row["warning_volume"] for row in table["rankers"] if row["ranker"] == "binddrift_oracle_blind"), None)
     warning_volume = {
-        "primary_warning_volume": next((row["warning_volume"] for row in table["rankers"] if row["ranker"] == "binddrift_oracle_blind"), None),
+        "drift_fact_count": drift_fact_count,
+        "promoted_warning_count": promoted_warning_count,
+        "primary_warning_volume": primary_warning_volume,
+        "drift_facts_to_promoted_warnings_reduction": _reduction(drift_fact_count, promoted_warning_count),
+        "paper_topk": paper_topk,
+        "top_k_workload": {
+            str(k): {
+                "review_budget": min(k, promoted_warning_count) if promoted_warning_count else k,
+                "share_of_drift_facts": _share(drift_fact_count, k),
+                "share_of_promoted_warnings": _share(promoted_warning_count, k),
+                "reduction_from_drift_facts": _reduction(drift_fact_count, k),
+                "reduction_from_promoted_warnings": _reduction(promoted_warning_count, k),
+            }
+            for k in KS
+        },
         "ranker_warning_volumes": {row["ranker"]: row["warning_volume"] for row in table["rankers"]},
     }
     (tables / "baseline_strict_comparison.json").write_text(
@@ -770,6 +789,18 @@ def _write_split_tables(cfg: Config, table: dict[str, Any]) -> None:
         json.dumps(warning_volume, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
+
+
+def _share(denominator: int, numerator: int) -> float | None:
+    if denominator <= 0:
+        return None
+    return round(min(numerator, denominator) / denominator, 4)
+
+
+def _reduction(original: int, remaining: int) -> float | None:
+    if original <= 0:
+        return None
+    return round(1.0 - min(remaining, original) / original, 4)
 
 
 def main(argv: list[str] | None = None) -> int:

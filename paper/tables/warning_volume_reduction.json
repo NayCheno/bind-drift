@@ -1,5 +1,9 @@
 {
+  "drift_fact_count": 16757,
+  "drift_facts_to_promoted_warnings_reduction": 0.9809,
+  "paper_topk": 100,
   "primary_warning_volume": 320,
+  "promoted_warning_count": 320,
   "ranker_warning_volumes": {
     "binddrift_current": 320,
     "binddrift_oracle_blind": 320,
@@ -11,5 +15,35 @@
     "no_ranking": 320,
     "random": 320,
     "rust_use": 320
+  },
+  "top_k_workload": {
+    "10": {
+      "reduction_from_drift_facts": 0.9994,
+      "reduction_from_promoted_warnings": 0.9688,
+      "review_budget": 10,
+      "share_of_drift_facts": 0.0006,
+      "share_of_promoted_warnings": 0.0312
+    },
+    "100": {
+      "reduction_from_drift_facts": 0.994,
+      "reduction_from_promoted_warnings": 0.6875,
+      "review_budget": 100,
+      "share_of_drift_facts": 0.006,
+      "share_of_promoted_warnings": 0.3125
+    },
+    "20": {
+      "reduction_from_drift_facts": 0.9988,
+      "reduction_from_promoted_warnings": 0.9375,
+      "review_budget": 20,
+      "share_of_drift_facts": 0.0012,
+      "share_of_promoted_warnings": 0.0625
+    },
+    "50": {
+      "reduction_from_drift_facts": 0.997,
+      "reduction_from_promoted_warnings": 0.8438,
+      "review_budget": 50,
+      "share_of_drift_facts": 0.003,
+      "share_of_promoted_warnings": 0.1562
+    }
   }
 }
