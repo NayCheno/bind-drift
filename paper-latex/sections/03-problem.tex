@@ -1,0 +1,26 @@
+\section{Problem Statement}
+
+The relevant dependency is an evidence chain rather than a single source file:
+
+\begin{center}
+\begin{tabular}{c}
+Linux C function, type, macro, or helper \\
+$\downarrow$ \\
+Generated Rust binding or Rust helper \\
+$\downarrow$ \\
+Unsafe Rust call site \\
+$\downarrow$ \\
+Public safe abstraction or documented contract
+\end{tabular}
+\end{center}
+
+The maintenance question is whether cross-version C drift should trigger review
+of the Rust side. A signature change may be caught by the compiler, but a
+semantic change such as \texttt{NULL} versus \texttt{ERR\_PTR}, owned versus
+borrowed references, new allocation/free obligations, or a new may-sleep
+constraint can remain review-relevant even when Rust code still builds.
+
+The resulting design objective is not exhaustive bug finding. It is to reduce a
+large stream of drift facts to a smaller, ranked set of evidence-backed review
+targets whose ordering is computed without build-breakage or wrapper-fix oracle
+features.

@@ -1,0 +1,26 @@
+\section{Design}
+
+\tool{} has five stages. First, replay records kernel version metadata, config
+hashes, and per-version Rust-for-Linux toolchain choices. Second, extractors
+collect C declarations and behavior indicators, generated binding facts, Rust
+binding uses, unsafe scopes, public APIs, safety comments, lifetime facts, and
+error mappings. Third, the artifact builds a cross-language dependency graph.
+Fourth, detectors emit low-level drift facts and promote only warnings with
+Rust-impact evidence. Fifth, the primary ranker orders promoted warnings for
+review.
+
+The primary ranker name used throughout the paper is \primary{}. It uses
+detection-time features: C-side drift strength, Rust exposure, unsafe
+proximity, safe API relevance, contract evidence, fanout penalties, repeated
+occurrence, and evidence-chain richness. Build-breakage evidence and
+wrapper-fix evidence are auxiliary validation oracles. They are used for labels
+and validation checks, not for primary scoring or Top-K selection. The current
+diagnostic scorer may contain build/wrapper oracle components; that scorer is
+not the paper's primary ranking result.
+
+\input{figures/ranking-dataflow}
+
+The artifact keeps the separation machine-checkable. The primary score
+component keys are emitted with the ranking table, forbidden oracle feature
+keys must be empty, and validation fails if forbidden components appear in the
+primary score.

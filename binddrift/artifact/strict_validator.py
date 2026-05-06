@@ -65,7 +65,7 @@ STAGE_REQUIRED_CHECKS: dict[str, set[str]] = {
     "m4": {"semantic", "m4_false_positive_gate"},
     "m5": {"manual_review_quality_gate", "binddrift_review_role_artifacts"},
     "m6": {"case_study_gate"},
-    "m7": {"strict_extractor_audit_gate"},
+    "m7": {"m7_latex_paper_gate"},
     "m8": {
         "ranking",
         "semantic",
@@ -156,6 +156,7 @@ def validate_artifact(
     _check("m4_false_positive_gate", checks, lambda: _m4_false_positive_gate(cfg))
     _check("case_study_gate", checks, lambda: _case_study_gate(cfg))
     _check("strict_extractor_audit_gate", checks, lambda: _strict_extractor_gate(cfg))
+    _check("m7_latex_paper_gate", checks, lambda: _m7_latex_paper_gate(cfg))
     _check("paper_claims_match_downgrades", checks, lambda: _paper_claims(cfg))
     _check("m8_paper_submission_gate", checks, lambda: _m8_paper_submission_gate(cfg))
     _check("arm64_external_validity_gate", checks, lambda: _arm64_external_validity_gate(cfg))
@@ -184,7 +185,8 @@ def validate_artifact(
     }
     required_hard_passes = all(hard_gate_passes[name] for name in required_names if name in hard_gate_passes)
     stage_passes = consistency_passes and required_hard_passes
-    submission_ready = (
+    final_submission_stage = stage in {"m8", "final"}
+    submission_ready = final_submission_stage and (
         all(check["passes"] for check in checks)
         and ranking["passes"]
         and semantic["passes"]
@@ -198,6 +200,7 @@ def validate_artifact(
         "stage": stage,
         "stage_required_checks": sorted(required_names),
         "ccfb_submission_ready": submission_ready,
+        "final_submission_stage": final_submission_stage,
         "checks": checks,
         "hard_gates": hard_gates,
         "run_manifest": repo_relative(cfg, canonical_run_dir(cfg) / "run_manifest.json"),
@@ -1124,6 +1127,160 @@ def _strict_extractor_gate(cfg: Config) -> dict[str, Any]:
         "cross_version_sampling": cross_version_sampling,
         "parser_limitations": data.get("parser_limitations"),
         "review_provenance": data.get("review_provenance"),
+    }
+
+
+def _m7_latex_paper_gate(cfg: Config) -> dict[str, Any]:
+    root = cfg.repo_root / "paper-latex"
+    sections = [
+        "00-abstract.tex",
+        "01-introduction.tex",
+        "02-background.tex",
+        "03-problem.tex",
+        "04-design.tex",
+        "05-implementation.tex",
+        "06-evaluation.tex",
+        "07-case-studies.tex",
+        "08-discussion.tex",
+        "09-related-work.tex",
+        "10-conclusion.tex",
+    ]
+    figures = [
+        "architecture.tex",
+        "evidence-chain.tex",
+        "ranking-dataflow.tex",
+        "warning-volume.tex",
+    ]
+    tables = [
+        "rq1-extractor-audit.tex",
+        "rq2-warning-volume.tex",
+        "rq3-ranking.tex",
+        "rq4-semantic-review.tex",
+        "rq5-reproducibility.tex",
+    ]
+    required = [
+        root / "main.tex",
+        root / "refs.bib",
+        root / "README.md",
+        *(root / "sections" / name for name in sections),
+        *(root / "figures" / name for name in figures),
+        *(root / "tables" / name for name in tables),
+    ]
+    missing = [repo_relative(cfg, path) for path in required if not path.exists()]
+    texts = {
+        repo_relative(cfg, path): path.read_text(encoding="utf-8")
+        for path in required
+        if path.exists() and path.is_file()
+    }
+    main = texts.get("paper-latex/main.tex", "")
+    readme = texts.get("paper-latex/README.md", "")
+    abstract = texts.get("paper-latex/sections/00-abstract.tex", "")
+    design = texts.get("paper-latex/sections/04-design.tex", "")
+    evaluation = texts.get("paper-latex/sections/06-evaluation.tex", "")
+    discussion = texts.get("paper-latex/sections/08-discussion.tex", "")
+    all_text = "\n".join(texts.values())
+    normalized = _normal_text(all_text)
+    main_text = _normal_text(main)
+    readme_text = _normal_text(readme)
+    abstract_text = _normal_text(abstract)
+    design_text = _normal_text(design)
+    evaluation_text = _normal_text(evaluation)
+    discussion_text = _normal_text(discussion)
+
+    manifest = validate_run_manifest(cfg)
+    ranking = _json(cfg, "paper/tables/ranking_pooled_evaluation.json")
+    manual = _json(cfg, "paper/tables/manual_review_quality.json")
+    semantic = _json(cfg, "paper/tables/semantic_drift_review_summary.json")
+    extractor = _json(cfg, "paper/tables/strict_extractor_audit.json")
+    arm64 = _json(cfg, "paper/tables/arm64_external_validity.json")
+    primary = next((row for row in ranking.get("rankers", []) if row.get("ranker") == "binddrift_oracle_blind"), {})
+    deltas = (ranking.get("comparison_against_best_simple_baseline") or {}).get("deltas") or {}
+    expected_numbers = [
+        f"{manifest['version_count']} linux snapshots",
+        f"{manifest['pair_count']} adjacent version pairs",
+        f"{_fmt_int(manifest['drift_fact_count'])} drift facts",
+        f"{_fmt_int(manifest['promoted_warning_count'])} promoted rust-impact warnings",
+        f"{manual.get('reviewed_warnings')}-item pooled review set",
+        f"p@10 = {_fmt_metric(primary.get('p_at_10'))}",
+        f"p@20 = {_fmt_metric(primary.get('p_at_20'))}",
+        f"p@50 = {_fmt_metric(primary.get('p_at_50'))}",
+        f"p@100 = {_fmt_metric(primary.get('p_at_100'))}",
+        f"ndcg@20 = {_fmt_metric(primary.get('ndcg_at_20'))}",
+        f"p@20 by {_fmt_metric(deltas.get('p_at_20'))}",
+        f"p@50 by {_fmt_metric(deltas.get('p_at_50'))}",
+        f"ndcg@20 by {_fmt_metric(deltas.get('ndcg_at_20'), digits=4)}",
+        f"{manual.get('true_semantic_drift_count')} \\truesemantic",
+        f"{manual.get('true_wrapper_fix_count')} \\truewrapper",
+        f"{semantic.get('semantic_review_candidates')} semantic target candidates",
+        f"{semantic.get('reviewed_semantic_targets')} adjudicated semantic rows",
+        f"{extractor.get('total_samples')} facts",
+        f"{(extractor.get('extractors') or {}).get('promoted_warning_evidence', {}).get('sampled')} promoted warning evidence chains",
+        f"{arm64.get('version_count')} release tags",
+        f"{arm64.get('completed_pairs')} adjacent pairs",
+        f"{_fmt_int(arm64.get('drift_fact_count'))} drift facts",
+        f"{_fmt_int(arm64.get('promoted_warning_count'))} warnings",
+    ]
+    missing_numbers = [phrase for phrase in expected_numbers if phrase.lower() not in normalized]
+    forbidden = [
+        "confirmed bug detector",
+        "automatic bug detector",
+        "detects real bugs automatically",
+        "proves rust abstraction unsoundness",
+        "proves safety",
+        "complete detection",
+        "outperforms all baselines",
+        "many semantic bugs",
+    ]
+    forbidden_found = [phrase for phrase in forbidden if phrase in normalized]
+    local_path_hits = [
+        path
+        for path, text in texts.items()
+        if any(marker in text for marker in LOCAL_PATH_MARKERS)
+    ]
+    rq_phrases = [
+        "rq1] can \\tool{} extract reliable cross-language drift facts?",
+        "rq2] does evidence gating reduce review volume while preserving useful review targets?",
+        "rq3] does \\primary{} improve top-k review yield over strong baselines?",
+        "rq4] what semantic drift patterns appear in adjudicated cases?",
+        "rq5] how reproducible is the artifact across versioned toolchains?",
+    ]
+    checks = {
+        "required_tree_present": not missing,
+        "ieee_conference_strategy": "\\documentclass[conference]{ieeetran}" in main_text
+        and "falls back to the standard `article` class" in readme_text,
+        "title_matches_plan": "\\title{binddrift: prioritizing cross-language api and contract drift in rust-for-linux}" in main_text,
+        "abstract_claim_boundary": "binddrift prioritizes review targets for rust-for-linux cross-language api and contract drift" in abstract_text
+        and "does not prove rust abstraction soundness or automatically confirm runtime bugs" in abstract_text,
+        "m7_not_final_submission": "not a final submission package" in readme_text
+        and "m7 intentionally stops at skeleton, method, and evaluation protocol" in readme_text,
+        "method_section_present": "detection-time features" in design_text
+        and "auxiliary validation oracles" in design_text
+        and "not for primary scoring or top-k selection" in design_text,
+        "current_scorer_difference_explained": "current diagnostic scorer may contain build/wrapper oracle components" in design_text,
+        "primary_ranker_display_name": "binddrift-oracle-blind" in normalized,
+        "evaluation_protocol_five_rqs": all(phrase in evaluation_text for phrase in rq_phrases)
+        and "question, method, data, result, interpretation, and threat" in evaluation_text,
+        "arm64_external_validity_written": "arm64 external-validity slice" in normalized
+        and "failed pairs would be recorded" in evaluation_text
+        and "warning overlap and warning-type deltas" in evaluation_text,
+        "manual_review_boundary_written": "llm-assisted role-separated outputs rather than human expert manual labels" in discussion_text
+        and "\\truewrapper{} is not counted as \\truesemantic{}" in normalized,
+        "numbers_from_tables_present": not missing_numbers,
+        "forbidden_claims_absent": not forbidden_found,
+        "no_local_absolute_paths": not local_path_hits,
+    }
+    return {
+        "passes": all(checks.values()),
+        "checks": checks,
+        "root": repo_relative(cfg, root),
+        "missing": missing,
+        "missing_numbers": missing_numbers,
+        "forbidden_found": forbidden_found,
+        "local_path_hits": local_path_hits,
+        "sections": [repo_relative(cfg, root / "sections" / name) for name in sections],
+        "figures": [repo_relative(cfg, root / "figures" / name) for name in figures],
+        "tables": [repo_relative(cfg, root / "tables" / name) for name in tables],
+        "claim": "M7 LaTeX skeleton plus method and evaluation protocol, not final submission",
     }
 
 

@@ -466,18 +466,38 @@ def test_artifact_validate_module_command_accepts_stage() -> None:
     assert payload["stage"] == "m0"
 
 
-def test_artifact_validator_reports_m7_extractor_audit_ready() -> None:
+def test_artifact_validator_reports_m7_latex_paper_ready() -> None:
     result = validate_artifact(Config.from_args(repo_root="."), strict_ccfb=True, stage="m7")
 
     assert result["passes"] is True
+    assert result["ccfb_submission_ready"] is False
+    assert result["status"] == "stage_ready"
     assert result["stage"] == "m7"
-    audit = result["hard_gates"]["strict_extractor_audit"]
-    assert audit["passes"] is True
-    assert all(audit["checks"].values())
-    assert audit["negative_samples"]["passes"] is True
-    assert audit["cross_version_sampling"]["passes"] is True
-    assert audit["review_provenance"]["pending_rows"] == 0
-    assert audit["review_provenance"]["generated_default_labels"] == 0
+    assert "m7_latex_paper_gate" in result["stage_required_checks"]
+    latex = next(check for check in result["checks"] if check["name"] == "m7_latex_paper_gate")
+    assert latex["passes"] is True
+    assert all(latex["details"]["checks"].values())
+    assert latex["details"]["missing"] == []
+    assert latex["details"]["missing_numbers"] == []
+    assert latex["details"]["forbidden_found"] == []
+    assert len(latex["details"]["sections"]) == 11
+    assert len(latex["details"]["tables"]) == 5
+
+
+def test_artifact_validator_rejects_m7_missing_latex_claim_boundary() -> None:
+    abstract = Path("paper-latex/sections/00-abstract.tex")
+    original = abstract.read_text(encoding="utf-8")
+    try:
+        abstract.write_text(original.replace("does not prove Rust abstraction soundness", "claims Rust abstraction soundness"), encoding="utf-8")
+
+        result = validate_artifact(Config.from_args(repo_root="."), strict_ccfb=True, stage="m7")
+
+        assert result["passes"] is False
+        latex = next(check for check in result["checks"] if check["name"] == "m7_latex_paper_gate")
+        assert latex["passes"] is False
+        assert latex["details"]["checks"]["abstract_claim_boundary"] is False
+    finally:
+        abstract.write_text(original, encoding="utf-8")
 
 
 def test_artifact_validator_reports_m8_paper_submission_ready() -> None:

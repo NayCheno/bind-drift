@@ -1,0 +1,19 @@
+\section{Background and Scope}
+
+Rust-for-Linux exposes selected C declarations through bindgen-generated
+bindings and hand-written helpers. Safe abstractions then encapsulate unsafe
+operations and document invariants such as allocation ownership, error mapping,
+lifetime constraints, and allowed execution context. These invariants are often
+not visible in a Rust type signature.
+
+The artifact scope is Linux mainline, Rust-enabled builds, and the
+Rust-for-Linux surfaces that connect generated bindings, helpers, and
+\texttt{rust/kernel} abstractions. The main labeled evaluation is x86\_64. An
+arm64 replay slice is used for external-validity evidence, but it does not add
+independent labels. The paper therefore avoids claims about all architectures,
+all Rust kernel branches, or complete API evolution coverage.
+
+Labels follow the repository review guide. \truewrapper{} is not counted as
+\truesemantic{}. \truesemantic{} means that C-side drift, Rust exposure, and a
+plausible stale-contract dependency are supported by evidence; it does not mean
+a concrete runtime bug has been demonstrated.

@@ -1,0 +1,21 @@
+\begin{figure}[t]
+\centering
+\fbox{\begin{minipage}{0.94\linewidth}
+\textbf{Detection-time features}\\
+C-side drift facts; generated binding diffs; Rust exposure evidence;
+evidence-chain features\\[0.4em]
+$\downarrow$\\[0.4em]
+\textbf{Primary oracle-blind ranking}\\
+\primary{} score $\rightarrow$ Top-K review targets\\[0.4em]
+$\downarrow$\\[0.4em]
+\textbf{Evaluation and validation}\\
+metrics, labels, audit gates\\[0.4em]
+\hrule
+\vspace{0.4em}
+\textbf{Auxiliary validation oracles}\\
+Build-breakage oracle and wrapper-fix oracle feed labels and validation only;
+they do not feed the primary score or Top-K selection.
+\end{minipage}}
+\caption{Oracle-blind ranking data flow.}
+\label{fig:ranking-dataflow}
+\end{figure}

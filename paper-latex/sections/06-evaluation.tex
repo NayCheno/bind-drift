@@ -1,0 +1,55 @@
+\section{Evaluation Protocol and Results}
+
+The evaluation is organized around five research questions. Each RQ is written
+as a closed loop: question, method, data, result, interpretation, and threat.
+
+\begin{description}
+\item[RQ1] Can \tool{} extract reliable cross-language drift facts?
+\item[RQ2] Does evidence gating reduce review volume while preserving useful
+review targets?
+\item[RQ3] Does \primary{} improve Top-K review yield over strong baselines?
+\item[RQ4] What semantic drift patterns appear in adjudicated cases?
+\item[RQ5] How reproducible is the artifact across versioned toolchains?
+\end{description}
+
+The main experiment replays 20 adjacent Linux mainline pairs across 21
+snapshots. The canonical replay records 16,757 drift facts and 320 promoted
+Rust-impact warnings. Paper numbers are generated from artifact outputs and
+indexed with sha256 provenance.
+
+\input{tables/rq1-extractor-audit}
+
+For RQ1, the strict extractor audit covers 830 facts, including 150 promoted
+warning evidence chains, and reports Cohen's kappa = 1.0. This supports use of
+the extracted evidence for ranking and tables, but not completeness claims.
+
+\input{tables/rq2-warning-volume}
+
+For RQ2, evidence gating reduces 16,757 drift facts to 320 promoted warnings, a
+98.09\% reduction. Fixed review budgets then inspect 10, 20, 50, or 100 ranked
+warnings rather than the full drift stream.
+
+\input{tables/rq3-ranking}
+
+For RQ3, \primary{} is compared with simple baselines and ablations on the same
+500-row pooled review set. Build-breakage and wrapper-fix oracles define labels
+and validation checks only. Reviewer roles do not receive ranker names, ranks,
+scores, adjudicated labels, or the other reviewer's notes before producing
+independent labels.
+
+\input{tables/rq4-semantic-review}
+
+For RQ4, the semantic review pass separates \truesemantic{} from
+\truewrapper{}. The semantic result is reported as review-target evidence, not
+as confirmed runtime defects. False-positive risk is reported as a taxonomy
+rather than overall warning-set precision. The pass samples 400 semantic target
+candidates and reviews 304 adjudicated semantic rows.
+
+\input{tables/rq5-reproducibility}
+
+For RQ5, the reproduction gate records run manifests, toolchain matrices,
+strict gates, and table sha256 provenance. The arm64 external-validity slice
+replays 8 release tags, completes 7 adjacent pairs, records 7,086 drift facts,
+promotes 248 warnings, and reports warning overlap and warning-type deltas
+against the x86\_64 run. Failed pairs would be recorded with pair status, build
+status, and error text.

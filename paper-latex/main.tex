@@ -1,0 +1,45 @@
+\IfFileExists{IEEEtran.cls}{%
+  \documentclass[conference]{IEEEtran}
+}{%
+  \documentclass[10pt]{article}
+}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
+
+\newcommand{\tool}{BindDrift}
+\newcommand{\primary}{\textsc{BindDrift-oracle-blind}}
+\newcommand{\truewrapper}{\texttt{TRUE\_WRAPPER\_FIX}}
+\newcommand{\truesemantic}{\texttt{TRUE\_SEMANTIC\_DRIFT}}
+\newcommand{\falsepositive}{\texttt{FALSE\_POSITIVE}}
+
+\title{BindDrift: Prioritizing Cross-Language API and Contract Drift in Rust-for-Linux}
+\author{BindDrift Authors}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\input{sections/00-abstract}
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-background}
+\input{sections/03-problem}
+\input{sections/04-design}
+\input{sections/05-implementation}
+\input{sections/06-evaluation}
+\input{sections/07-case-studies}
+\input{sections/08-discussion}
+\input{sections/09-related-work}
+\input{sections/10-conclusion}
+
+\IfFileExists{IEEEtran.bst}{\bibliographystyle{IEEEtran}}{\bibliographystyle{plain}}
+\bibliography{refs}
+
+\end{document}

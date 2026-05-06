@@ -1,0 +1,14 @@
+\section{Implementation}
+
+\tool{} is implemented as a Python command-line artifact backed by SQLite,
+JSONL reports, CSV review files, and generated paper tables. Replay uses
+managed kernel worktrees and writes per-pair outputs for drift facts, promoted
+warnings, warning reports, review skeletons, and evaluation summaries. The
+artifact records generated binding failures and failed replay pairs as data
+rather than silently dropping them.
+
+The schema stores version metadata, binding facts, Rust facts, C facts,
+dependency graph nodes and edges, extraction diagnostics, drift events,
+build-breakage events, wrapper-fix candidates, review labels, and table
+provenance. The paper build regenerates case-study summaries, evaluation
+tables, sha256 table provenance, and staged validation reports.

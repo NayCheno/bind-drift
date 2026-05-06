@@ -1,0 +1,22 @@
+\section{Case Studies}
+
+The main paper keeps three representative case studies in the body and leaves
+the full appendix suite in the artifact.
+
+\textbf{Nullability/error drift.} The \texttt{errname} case is backed by a
+later wrapper/helper change and is therefore labeled \truewrapper{}. It shows
+how later Rust-side maintenance can validate a review target without converting
+the warning into an automatic semantic-drift claim.
+
+\textbf{Sleepability/context drift.} The \texttt{init\_wait} case is an
+adjudicated \truesemantic{} review target. Its value is that the contract
+change is not fully represented by a Rust type signature.
+
+\textbf{Allocation/free and lifetime drift.} The \texttt{dma\_free\_attrs}
+case reaches a Rust drop path through unsafe binding use. The review question is
+whether the Rust ownership abstraction remains synchronized with the changed C
+free-side contract.
+
+The artifact appendix contains 8 positive warning-backed case studies and 2
+negative/failure-analysis cases, all selected from adjudicated labels. Each
+case is described as a review target rather than as a confirmed defect.

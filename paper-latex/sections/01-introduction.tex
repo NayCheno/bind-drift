@@ -1,0 +1,21 @@
+\section{Introduction}
+
+Rust-for-Linux routes driver-facing code through generated bindings, unsafe
+helpers, and safe Rust abstractions. This architecture narrows direct exposure
+to kernel C APIs, but it also creates a cross-language maintenance problem:
+the Rust abstraction can remain source-compatible while the underlying C
+signature, layout, error convention, ownership rule, or sleepability contract
+changes.
+
+\tool{} frames this problem as warning prioritization. It records cross-version
+C and binding drift, connects that drift to Rust exposure evidence, and ranks
+warnings as review targets. The paper claim is deliberately narrow: \tool{}
+does not certify Rust abstraction correctness, and Tier-2 semantic findings are
+review targets rather than confirmed defects.
+
+This draft makes three contributions. First, it defines a C/Rust evidence chain
+for Rust-for-Linux API and contract drift. Second, it implements multi-version
+replay and oracle-blind warning prioritization. Third, it evaluates the
+prioritizer on historical Linux releases with role-separated review labels,
+top-K ranking metrics, false-positive taxonomy, case studies, and table
+provenance generated from the artifact.

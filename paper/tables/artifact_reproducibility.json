@@ -727,23 +727,20 @@
           "draft_main_case_families": true,
           "draft_main_case_studies_exactly_three": true,
           "draft_reports_appendix_counts": true,
-          "draft_uses_review_target_boundary": false,
+          "draft_uses_review_target_boundary": true,
           "summary_minimum_passes": true
         },
         "draft_main_case_count": 3,
         "drift_type_count": 5,
         "false_positive_cases": 0,
         "false_positive_negative_cases": 2,
-        "forbidden_case_claims_found": [
-          "confirmed defect",
-          "confirmed defects"
-        ],
+        "forbidden_case_claims_found": [],
         "negative_case_studies": 2,
         "negative_label_distribution": {
           "FALSE_POSITIVE": 2
         },
         "non_wrapper_semantic_cases": 4,
-        "passes": false,
+        "passes": true,
         "positive_case_drift_types": [
           "AllocationFreeDrift",
           "NullabilityDrift",
@@ -766,7 +763,7 @@
         "wrapper_fix_backed_cases": 4
       },
       "name": "case_study_gate",
-      "passes": false
+      "passes": true
     },
     {
       "details": {
@@ -1382,6 +1379,61 @@
     },
     {
       "details": {
+        "checks": {
+          "abstract_claim_boundary": true,
+          "arm64_external_validity_written": true,
+          "current_scorer_difference_explained": true,
+          "evaluation_protocol_five_rqs": true,
+          "forbidden_claims_absent": true,
+          "ieee_conference_strategy": true,
+          "m7_not_final_submission": true,
+          "manual_review_boundary_written": true,
+          "method_section_present": true,
+          "no_local_absolute_paths": true,
+          "numbers_from_tables_present": true,
+          "primary_ranker_display_name": true,
+          "required_tree_present": true,
+          "title_matches_plan": true
+        },
+        "claim": "M7 LaTeX skeleton plus method and evaluation protocol, not final submission",
+        "figures": [
+          "paper-latex/figures/architecture.tex",
+          "paper-latex/figures/evidence-chain.tex",
+          "paper-latex/figures/ranking-dataflow.tex",
+          "paper-latex/figures/warning-volume.tex"
+        ],
+        "forbidden_found": [],
+        "local_path_hits": [],
+        "missing": [],
+        "missing_numbers": [],
+        "passes": true,
+        "root": "paper-latex",
+        "sections": [
+          "paper-latex/sections/00-abstract.tex",
+          "paper-latex/sections/01-introduction.tex",
+          "paper-latex/sections/02-background.tex",
+          "paper-latex/sections/03-problem.tex",
+          "paper-latex/sections/04-design.tex",
+          "paper-latex/sections/05-implementation.tex",
+          "paper-latex/sections/06-evaluation.tex",
+          "paper-latex/sections/07-case-studies.tex",
+          "paper-latex/sections/08-discussion.tex",
+          "paper-latex/sections/09-related-work.tex",
+          "paper-latex/sections/10-conclusion.tex"
+        ],
+        "tables": [
+          "paper-latex/tables/rq1-extractor-audit.tex",
+          "paper-latex/tables/rq2-warning-volume.tex",
+          "paper-latex/tables/rq3-ranking.tex",
+          "paper-latex/tables/rq4-semantic-review.tex",
+          "paper-latex/tables/rq5-reproducibility.tex"
+        ]
+      },
+      "name": "m7_latex_paper_gate",
+      "passes": true
+    },
+    {
+      "details": {
         "forbidden_claim_phrases": [
           "bug detector",
           "soundness proof",
@@ -1562,6 +1614,7 @@
     }
   ],
   "claim_policy": "ranking and semantic claims are downgraded when strict gates fail",
+  "final_submission_stage": false,
   "hard_gates": {
     "case_studies": {
       "absolute_local_paths": 0,
@@ -1603,23 +1656,20 @@
         "draft_main_case_families": true,
         "draft_main_case_studies_exactly_three": true,
         "draft_reports_appendix_counts": true,
-        "draft_uses_review_target_boundary": false,
+        "draft_uses_review_target_boundary": true,
         "summary_minimum_passes": true
       },
       "draft_main_case_count": 3,
       "drift_type_count": 5,
       "false_positive_cases": 0,
       "false_positive_negative_cases": 2,
-      "forbidden_case_claims_found": [
-        "confirmed defect",
-        "confirmed defects"
-      ],
+      "forbidden_case_claims_found": [],
       "negative_case_studies": 2,
       "negative_label_distribution": {
         "FALSE_POSITIVE": 2
       },
       "non_wrapper_semantic_cases": 4,
-      "passes": false,
+      "passes": true,
       "positive_case_drift_types": [
         "AllocationFreeDrift",
         "NullabilityDrift",
@@ -2764,10 +2814,10 @@
       "total_samples": 830
     }
   },
-  "passes": false,
+  "passes": true,
   "protocol_version": "ccfb-strict-v2",
   "run_manifest": "data/replay/latest/run_manifest.json",
-  "stage": "m6",
+  "stage": "m7",
   "stage_required_checks": [
     "arm64_external_validity_gate",
     "binddrift_review_role_artifacts",
@@ -2775,6 +2825,7 @@
     "evaluation_protocol_valid",
     "m3_research_question_gate",
     "m4_false_positive_gate",
+    "m7_latex_paper_gate",
     "manual_review_quality_gate",
     "no_local_absolute_paths",
     "oracle_blind_narrative_gate",
@@ -2787,6 +2838,6 @@
     "semantic",
     "strict_extractor_audit_gate"
   ],
-  "status": "failed",
+  "status": "stage_ready",
   "strict_ccfb": true
 }
