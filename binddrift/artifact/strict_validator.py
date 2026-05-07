@@ -1320,7 +1320,17 @@ def _m7_latex_paper_gate(cfg: Config) -> dict[str, Any]:
     extractor = _json(cfg, "paper/tables/strict_extractor_audit.json")
     arm64 = _json(cfg, "paper/tables/arm64_external_validity.json")
     primary = next((row for row in ranking.get("rankers", []) if row.get("ranker") == "binddrift_oracle_blind"), {})
+    best_simple = next(
+        (
+            row
+            for row in ranking.get("rankers", [])
+            if row.get("ranker") == (ranking.get("comparison_against_best_simple_baseline") or {}).get("best_simple_baseline")
+        ),
+        {},
+    )
     deltas = (ranking.get("comparison_against_best_simple_baseline") or {}).get("deltas") or {}
+    rq3_table = texts.get("paper-latex/tables/rq3-ranking.tex", "")
+    rq3_table_text = _normal_text(rq3_table)
     expected_numbers = [
         f"{manifest['version_count']} linux snapshots",
         f"{manifest['pair_count']} adjacent version pairs",
@@ -1391,6 +1401,14 @@ def _m7_latex_paper_gate(cfg: Config) -> dict[str, Any]:
         and "warning overlap and warning-type deltas" in evaluation_text,
         "manual_review_boundary_written": "trusted binddrift-review expert protocol" in discussion_text
         and "\\truewrapper{} is not counted as \\truesemantic{}" in normalized,
+        "rq3_table_matches_generated_ranking": (
+            f"p@10 & {_fmt_metric(primary.get('p_at_10'))} & {_fmt_metric(best_simple.get('p_at_10'))}" in rq3_table_text
+            and f"p@20 & {_fmt_metric(primary.get('p_at_20'))} & {_fmt_metric(best_simple.get('p_at_20'))}" in rq3_table_text
+            and f"p@50 & {_fmt_metric(primary.get('p_at_50'))} & {_fmt_metric(best_simple.get('p_at_50'))}" in rq3_table_text
+            and f"p@100 & {_fmt_metric(primary.get('p_at_100'))} & {_fmt_metric(best_simple.get('p_at_100'))}" in rq3_table_text
+            and f"ndcg@20 & {_fmt_metric(primary.get('ndcg_at_20'))} & {_fmt_metric(best_simple.get('ndcg_at_20'), digits=4)}" in rq3_table_text
+            and f"auprc & {_fmt_metric(primary.get('auprc_on_pooled_review_set'), digits=4)} & {_fmt_metric(best_simple.get('auprc_on_pooled_review_set'), digits=4)}" in rq3_table_text
+        ),
         "numbers_from_tables_present": not missing_numbers,
         "forbidden_claims_absent": not forbidden_found,
         "no_local_absolute_paths": not local_path_hits,

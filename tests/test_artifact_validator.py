@@ -6,6 +6,7 @@ from pathlib import Path
 from binddrift.config import Config
 from binddrift.artifact.strict_validator import (
     _blind_review_leakage,
+    _m7_latex_paper_gate,
     _m0_claim_boundary_gate,
     _oracle_blind_narrative_gate,
     _table_index_sha256_gate,
@@ -545,6 +546,20 @@ def test_artifact_validator_reports_m7_latex_paper_ready() -> None:
     assert latex["details"]["forbidden_found"] == []
     assert len(latex["details"]["sections"]) == 11
     assert len(latex["details"]["tables"]) == 5
+
+
+def test_artifact_validator_rejects_stale_latex_rq3_ranking_table() -> None:
+    table = Path("paper-latex/tables/rq3-ranking.tex")
+    original = table.read_text(encoding="utf-8")
+    try:
+        table.write_text(original.replace("AUPRC & 0.9013 & 0.3477", "AUPRC & 0.9444 & 0.3510"), encoding="utf-8")
+
+        latex = _m7_latex_paper_gate(Config.from_args(repo_root="."))
+
+        assert latex["passes"] is False
+        assert latex["checks"]["rq3_table_matches_generated_ranking"] is False
+    finally:
+        table.write_text(original, encoding="utf-8")
 
 
 def test_artifact_validator_rejects_m7_missing_latex_claim_boundary() -> None:
