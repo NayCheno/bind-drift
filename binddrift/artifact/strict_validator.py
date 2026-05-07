@@ -21,7 +21,16 @@ from binddrift.evaluation.protocol import (
     assert_oracle_blind_components,
     load_evaluation_protocol,
 )
-from binddrift.paper.audit import STRICT_AUDIT_TARGETS, STRICT_TARGET_PRECISION, generate_strict_extractor_audit
+from binddrift.paper.audit import (
+    M2_GOLD_TARGETS,
+    M2_MIN_KAPPA,
+    M2_MIN_NEGATIVE_CONTROLS_PER_EXTRACTOR,
+    M2_MIN_OVERALL_PRECISION,
+    M2_MIN_OVERALL_RECALL,
+    STRICT_AUDIT_TARGETS,
+    STRICT_TARGET_PRECISION,
+    generate_strict_extractor_audit,
+)
 from binddrift.paper.cases import generate_case_studies
 from binddrift.paper.tables import (
     M4_FALSE_POSITIVE_TAXONOMY,
@@ -54,7 +63,7 @@ STAGE_REQUIRED_CHECKS: dict[str, set[str]] = {
         "paper_claims_match_downgrades",
     },
     "m1": {"no_local_absolute_paths", "arm64_external_validity_gate"},
-    "m2": {"ranking", "oracle_blind_narrative_gate"},
+    "m2": {"ranking", "oracle_blind_narrative_gate", "extractor_precision_recall_gate"},
     "m3": {
         "pooled_review_coverage",
         "manual_review_quality_gate",
@@ -154,6 +163,7 @@ def validate_artifact(
     _check("manual_review_quality_gate", checks, lambda: _manual_review_quality_gate(cfg))
     _check("binddrift_review_role_artifacts", checks, lambda: _binddrift_review_role_artifacts(cfg))
     _check("m3_research_question_gate", checks, lambda: _m3_research_question_gate(cfg))
+    _check("extractor_precision_recall_gate", checks, lambda: _extractor_precision_recall_gate(cfg))
     _check("m4_false_positive_gate", checks, lambda: _m4_false_positive_gate(cfg))
     _check("case_study_gate", checks, lambda: _case_study_gate(cfg))
     _check("strict_extractor_audit_gate", checks, lambda: _strict_extractor_gate(cfg))
@@ -246,9 +256,16 @@ def _required_tables(cfg: Config) -> dict[str, Any]:
         "paper/tables/manual_review_quality.json",
         "paper/tables/false_positive_taxonomy.json",
         "paper/tables/case_study_summary.json",
+        "paper/tables/extractor_precision_recall.json",
+        "paper/tables/extractor_confusion_matrix.json",
         "paper/tables/strict_extractor_audit.json",
         "paper/tables/arm64_external_validity.json",
         "paper/tables/table_index.json",
+        "paper/analysis/extractor_limitations.md",
+        "paper/analysis/extractor_false_negatives.md",
+        "data/audit/extractor_gold_labels.csv",
+        "data/audit/extractor_precision_review.csv",
+        "data/audit/extractor_audit_manifest.json",
     ]
     missing = [path for path in paths if not (cfg.repo_root / path).exists()]
     return {"passes": not missing, "missing": missing, "paths": paths}
@@ -1145,6 +1162,99 @@ def _strict_extractor_gate(cfg: Config) -> dict[str, Any]:
     }
 
 
+def _extractor_precision_recall_gate(cfg: Config) -> dict[str, Any]:
+    precision_recall_path = cfg.repo_root / "paper/tables/extractor_precision_recall.json"
+    confusion_path = cfg.repo_root / "paper/tables/extractor_confusion_matrix.json"
+    limitations_path = cfg.repo_root / "paper/analysis/extractor_limitations.md"
+    false_negatives_path = cfg.repo_root / "paper/analysis/extractor_false_negatives.md"
+    gold_path = cfg.data_dir / "audit/extractor_gold_labels.csv"
+    precision_review_path = cfg.data_dir / "audit/extractor_precision_review.csv"
+    manifest_path = cfg.data_dir / "audit/extractor_audit_manifest.json"
+    required_files = [
+        precision_recall_path,
+        confusion_path,
+        limitations_path,
+        false_negatives_path,
+        gold_path,
+        precision_review_path,
+        manifest_path,
+    ]
+    missing = [repo_relative(cfg, path) for path in required_files if not path.exists()]
+    if missing:
+        return {"passes": False, "missing": missing}
+    data = json.loads(precision_recall_path.read_text(encoding="utf-8"))
+    confusion = json.loads(confusion_path.read_text(encoding="utf-8"))
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    limitations = limitations_path.read_text(encoding="utf-8")
+    false_negatives = false_negatives_path.read_text(encoding="utf-8")
+    overall = data.get("overall") or {}
+    extractors = data.get("extractors") or {}
+    acceptance = data.get("acceptance") or {}
+    target_positive = sum(int(item["target_positive"]) for item in M2_GOLD_TARGETS.values())
+    per_extractor_checks = {
+        name: {
+            "positive_gold_samples": (extractors.get(name, {}).get("positive_gold_samples") or 0) >= int(target["target_positive"]),
+            "negative_controls": (extractors.get(name, {}).get("negative_controls") or 0) >= M2_MIN_NEGATIVE_CONTROLS_PER_EXTRACTOR,
+            "precision": (extractors.get(name, {}).get("precision") or 0.0) >= float(target["minimum_precision"]),
+            "recall": (extractors.get(name, {}).get("recall") or 0.0) >= float(target["minimum_recall"]),
+            "passes": (extractors.get(name, {}).get("passes") is True),
+            "independent_precision_source": "extractor_gold_labels.csv" not in str(extractors.get(name, {}).get("precision_source") or "")
+            and (extractors.get(name, {}).get("precision_reviewed") or 0) > 0,
+        }
+        for name, target in M2_GOLD_TARGETS.items()
+    }
+    confusion_overall = confusion.get("overall") or {}
+    confusion_matches = all(
+        int(overall.get(key) or 0) == int(confusion_overall.get(key) or 0)
+        for key in ("tp", "fp", "fn", "tn")
+    )
+    manifest_counts = manifest.get("counts") or {}
+    manifest_hash = manifest.get("sample_hash")
+    stratification = manifest.get("stratification") or {}
+    file_types = stratification.get("file_type_distribution") or {}
+    warning_types = stratification.get("warning_type_distribution") or {}
+    difficulty = stratification.get("difficulty_distribution") or {}
+    required_file_types = set(stratification.get("required_file_types") or [])
+    required_warning_types = set(stratification.get("required_warning_types") or [])
+    required_difficulties = set(stratification.get("required_difficulties") or [])
+    checks = {
+        "required_files": not missing,
+        "gold_sample_size": (overall.get("positive_gold_samples") or 0) >= target_positive,
+        "negative_controls": (overall.get("negative_controls") or 0)
+        >= M2_MIN_NEGATIVE_CONTROLS_PER_EXTRACTOR * len(M2_GOLD_TARGETS),
+        "overall_precision": (overall.get("precision") or 0.0) >= M2_MIN_OVERALL_PRECISION,
+        "overall_recall": (overall.get("recall") or 0.0) >= M2_MIN_OVERALL_RECALL,
+        "cohen_kappa": ((overall.get("agreement") or {}).get("cohen_kappa") or 0.0) >= M2_MIN_KAPPA,
+        "per_extractor_thresholds": all(all(item.values()) for item in per_extractor_checks.values()),
+        "acceptance_passes": acceptance.get("passes") is True,
+        "confusion_matches_summary": confusion_matches,
+        "manifest_counts_match": manifest_counts.get("positive_gold_samples") == overall.get("positive_gold_samples")
+        and manifest_counts.get("negative_controls") == overall.get("negative_controls"),
+        "manifest_hash_matches": bool(manifest_hash) and manifest_hash == overall.get("sample_hash"),
+        "file_type_strata": required_file_types.issubset({key for key, count in file_types.items() if int(count or 0) > 0}),
+        "warning_type_strata": required_warning_types.issubset({key for key, count in warning_types.items() if int(count or 0) > 0}),
+        "difficulty_strata": required_difficulties.issubset({key for key, count in difficulty.items() if int(count or 0) > 0}),
+        "limitations_documented": all(f"## {name}" in limitations for name in M2_GOLD_TARGETS)
+        and limitations.count("- ") >= len(M2_GOLD_TARGETS) * 5,
+        "false_negative_taxonomy_documented": "## Taxonomy" in false_negatives
+        and "False negatives" in false_negatives
+        and "## Per Extractor" in false_negatives,
+    }
+    return {
+        "passes": all(checks.values()),
+        "checks": checks,
+        "overall": overall,
+        "per_extractor_checks": per_extractor_checks,
+        "confusion_overall": confusion_overall,
+        "manifest": {
+            "sample_hash": manifest_hash,
+            "counts": manifest_counts,
+            "stratification": stratification,
+        },
+        "precision_review": repo_relative(cfg, precision_review_path),
+    }
+
+
 def _m7_latex_paper_gate(cfg: Config) -> dict[str, Any]:
     root = cfg.repo_root / "paper-latex"
     sections = [
@@ -1908,6 +2018,9 @@ def _no_local_paths(cfg: Config) -> dict[str, Any]:
     files = [
         cfg.data_dir / "audit/strict_extractor_sample.csv",
         cfg.data_dir / "audit/strict_extractor_review.csv",
+        cfg.data_dir / "audit/extractor_gold_labels.csv",
+        cfg.data_dir / "audit/extractor_precision_review.csv",
+        cfg.data_dir / "audit/extractor_audit_manifest.json",
         replay / "warnings.jsonl",
         replay / "promoted_warnings.jsonl",
         replay / "drift_facts.jsonl",

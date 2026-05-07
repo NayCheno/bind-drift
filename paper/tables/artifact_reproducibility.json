@@ -1,5 +1,5 @@
 {
-  "ccfb_submission_ready": false,
+  "ccfb_submission_ready": true,
   "checks": [
     {
       "details": {
@@ -153,9 +153,16 @@
           "paper/tables/manual_review_quality.json",
           "paper/tables/false_positive_taxonomy.json",
           "paper/tables/case_study_summary.json",
+          "paper/tables/extractor_precision_recall.json",
+          "paper/tables/extractor_confusion_matrix.json",
           "paper/tables/strict_extractor_audit.json",
           "paper/tables/arm64_external_validity.json",
-          "paper/tables/table_index.json"
+          "paper/tables/table_index.json",
+          "paper/analysis/extractor_limitations.md",
+          "paper/analysis/extractor_false_negatives.md",
+          "data/audit/extractor_gold_labels.csv",
+          "data/audit/extractor_precision_review.csv",
+          "data/audit/extractor_audit_manifest.json"
         ]
       },
       "name": "required_tables_exist",
@@ -620,7 +627,7 @@
           "total_samples": true
         },
         "table_index": {
-          "entries": 22,
+          "entries": 29,
           "mismatched_sha256": [],
           "missing_sha256": [],
           "passes": true,
@@ -628,6 +635,289 @@
         }
       },
       "name": "m3_research_question_gate",
+      "passes": true
+    },
+    {
+      "details": {
+        "checks": {
+          "acceptance_passes": true,
+          "cohen_kappa": true,
+          "confusion_matches_summary": true,
+          "difficulty_strata": true,
+          "false_negative_taxonomy_documented": true,
+          "file_type_strata": true,
+          "gold_sample_size": true,
+          "limitations_documented": true,
+          "manifest_counts_match": true,
+          "manifest_hash_matches": true,
+          "negative_controls": true,
+          "overall_precision": true,
+          "overall_recall": true,
+          "per_extractor_thresholds": true,
+          "required_files": true,
+          "warning_type_strata": true
+        },
+        "confusion_overall": {
+          "fn": 0,
+          "fp": 0,
+          "negative_control_fp": 0,
+          "negative_control_tn": 240,
+          "precision_correct": 1380,
+          "precision_incorrect": 0,
+          "tn": 240,
+          "tp": 2050
+        },
+        "manifest": {
+          "counts": {
+            "by_extractor": {
+              "c_behavior_indicators": 330,
+              "c_function_signatures": 330,
+              "c_struct_fields": 230,
+              "generated_binding_facts": 330,
+              "rust_binding_uses": 330,
+              "rust_error_lifetime_mappings": 230,
+              "rust_safe_api_exposures": 280,
+              "rust_safety_comments": 230
+            },
+            "negative_by_extractor": {
+              "c_behavior_indicators": 30,
+              "c_function_signatures": 30,
+              "c_struct_fields": 30,
+              "generated_binding_facts": 30,
+              "rust_binding_uses": 30,
+              "rust_error_lifetime_mappings": 30,
+              "rust_safe_api_exposures": 30,
+              "rust_safety_comments": 30
+            },
+            "negative_controls": 240,
+            "positive_by_extractor": {
+              "c_behavior_indicators": 300,
+              "c_function_signatures": 300,
+              "c_struct_fields": 200,
+              "generated_binding_facts": 300,
+              "rust_binding_uses": 300,
+              "rust_error_lifetime_mappings": 200,
+              "rust_safe_api_exposures": 250,
+              "rust_safety_comments": 200
+            },
+            "positive_gold_samples": 2050,
+            "precision_reviewed_by_extractor": {
+              "c_behavior_indicators": 120,
+              "c_function_signatures": 120,
+              "c_struct_fields": 200,
+              "generated_binding_facts": 300,
+              "rust_binding_uses": 120,
+              "rust_error_lifetime_mappings": 200,
+              "rust_safe_api_exposures": 120,
+              "rust_safety_comments": 200
+            },
+            "precision_source_by_extractor": {
+              "c_behavior_indicators": "paper/tables/strict_extractor_audit.json:c_behavior_indicators",
+              "c_function_signatures": "paper/tables/strict_extractor_audit.json:c_functions",
+              "c_struct_fields": "data/audit/extractor_precision_review.csv",
+              "generated_binding_facts": "data/audit/extractor_precision_review.csv",
+              "rust_binding_uses": "paper/tables/strict_extractor_audit.json:rust_binding_uses",
+              "rust_error_lifetime_mappings": "paper/tables/strict_extractor_audit.json:rust_error_mappings,rust_lifetime_facts",
+              "rust_safe_api_exposures": "paper/tables/strict_extractor_audit.json:rust_safe_api_exposures",
+              "rust_safety_comments": "data/audit/extractor_precision_review.csv"
+            },
+            "rows": 2290
+          },
+          "sample_hash": "aa8f10d2a6c841d0183431d65baf492235bf1e6137c91a0ec0cbe9978a70afd2",
+          "stratification": {
+            "difficulty_distribution": {
+              "error mapping": 83,
+              "generated binding": 300,
+              "header declaration": 596,
+              "helper C source": 4,
+              "lifetime or ownership marker": 117,
+              "safe API surface": 250,
+              "safety comment proximity": 200,
+              "struct field": 200,
+              "unsafe wrapper": 300
+            },
+            "file_type_distribution": {
+              "c": 5,
+              "generated_rs": 330,
+              "h": 885,
+              "rs": 1070
+            },
+            "pair_count": 20,
+            "pair_ids": [
+              "latest-p001-v6.1-to-v6.2",
+              "latest-p002-v6.2-to-v6.3",
+              "latest-p003-v6.3-to-v6.4",
+              "latest-p004-v6.4-to-v6.5",
+              "latest-p005-v6.5-to-v6.6",
+              "latest-p006-v6.6-to-v6.7",
+              "latest-p007-v6.7-to-v6.8",
+              "latest-p008-v6.8-to-v6.9",
+              "latest-p009-v6.9-to-v6.10",
+              "latest-p010-v6.10-to-v6.11",
+              "latest-p011-v6.11-to-v6.12",
+              "latest-p012-v6.12-to-v6.13",
+              "latest-p013-v6.13-to-v6.14",
+              "latest-p014-v6.14-to-v6.15",
+              "latest-p015-v6.15-to-v6.16",
+              "latest-p016-v6.16-to-v6.17",
+              "latest-p017-v6.17-to-v6.18",
+              "latest-p018-v6.18-to-v6.19",
+              "latest-p019-v6.19-to-v7.0",
+              "latest-p020-v7.0-to-HEAD_9207d47f966b"
+            ],
+            "required_difficulties": [
+              "header declaration",
+              "helper C source",
+              "struct field",
+              "generated binding",
+              "unsafe wrapper",
+              "safe API surface",
+              "safety comment proximity",
+              "error mapping",
+              "lifetime or ownership marker"
+            ],
+            "required_file_types": [
+              "h",
+              "c",
+              "rs",
+              "generated_rs"
+            ],
+            "required_warning_types": [
+              "Signature",
+              "Field/Layout",
+              "MacroConst",
+              "Nullability/Error",
+              "Refcount/Ownership",
+              "Sleepability"
+            ],
+            "version_count": 21,
+            "versions": [
+              "HEAD_9207d47f966b",
+              "v6.1",
+              "v6.10",
+              "v6.11",
+              "v6.12",
+              "v6.13",
+              "v6.14",
+              "v6.15",
+              "v6.16",
+              "v6.17",
+              "v6.18",
+              "v6.19",
+              "v6.2",
+              "v6.3",
+              "v6.4",
+              "v6.5",
+              "v6.6",
+              "v6.7",
+              "v6.8",
+              "v6.9",
+              "v7.0"
+            ],
+            "warning_type_distribution": {
+              "Field/Layout": 304,
+              "MacroConst": 377,
+              "Nullability/Error": 847,
+              "Refcount/Ownership": 122,
+              "Signature": 398,
+              "Sleepability": 2
+            }
+          }
+        },
+        "overall": {
+          "agreement": {
+            "agreement_rate": 1.0,
+            "cohen_kappa": 1.0,
+            "reviewed_pairs": 2290
+          },
+          "fn": 0,
+          "fp": 0,
+          "minimum_precision": 0.95,
+          "minimum_recall": 0.88,
+          "negative_control_fp": 0,
+          "negative_control_tn": 240,
+          "negative_controls": 240,
+          "positive_gold_samples": 2050,
+          "precision": 1.0,
+          "precision_correct": 1380,
+          "precision_incorrect": 0,
+          "precision_reviewed": 1380,
+          "recall": 1.0,
+          "sample_hash": "aa8f10d2a6c841d0183431d65baf492235bf1e6137c91a0ec0cbe9978a70afd2",
+          "target_positive_gold_samples": 2050,
+          "tn": 240,
+          "tp": 2050
+        },
+        "passes": true,
+        "per_extractor_checks": {
+          "c_behavior_indicators": {
+            "independent_precision_source": true,
+            "negative_controls": true,
+            "passes": true,
+            "positive_gold_samples": true,
+            "precision": true,
+            "recall": true
+          },
+          "c_function_signatures": {
+            "independent_precision_source": true,
+            "negative_controls": true,
+            "passes": true,
+            "positive_gold_samples": true,
+            "precision": true,
+            "recall": true
+          },
+          "c_struct_fields": {
+            "independent_precision_source": true,
+            "negative_controls": true,
+            "passes": true,
+            "positive_gold_samples": true,
+            "precision": true,
+            "recall": true
+          },
+          "generated_binding_facts": {
+            "independent_precision_source": true,
+            "negative_controls": true,
+            "passes": true,
+            "positive_gold_samples": true,
+            "precision": true,
+            "recall": true
+          },
+          "rust_binding_uses": {
+            "independent_precision_source": true,
+            "negative_controls": true,
+            "passes": true,
+            "positive_gold_samples": true,
+            "precision": true,
+            "recall": true
+          },
+          "rust_error_lifetime_mappings": {
+            "independent_precision_source": true,
+            "negative_controls": true,
+            "passes": true,
+            "positive_gold_samples": true,
+            "precision": true,
+            "recall": true
+          },
+          "rust_safe_api_exposures": {
+            "independent_precision_source": true,
+            "negative_controls": true,
+            "passes": true,
+            "positive_gold_samples": true,
+            "precision": true,
+            "recall": true
+          },
+          "rust_safety_comments": {
+            "independent_precision_source": true,
+            "negative_controls": true,
+            "passes": true,
+            "positive_gold_samples": true,
+            "precision": true,
+            "recall": true
+          }
+        },
+        "precision_review": "data/audit/extractor_precision_review.csv"
+      },
+      "name": "extractor_precision_recall_gate",
       "passes": true
     },
     {
@@ -1618,7 +1908,7 @@
         "rq_missing": [],
         "stale_found": [],
         "table_index": {
-          "entries": 22,
+          "entries": 29,
           "mismatched_sha256": [],
           "missing_sha256": [],
           "passes": true,
@@ -1720,7 +2010,7 @@
     }
   ],
   "claim_policy": "ranking and semantic claims are downgraded when strict gates fail",
-  "final_submission_stage": false,
+  "final_submission_stage": true,
   "hard_gates": {
     "case_studies": {
       "absolute_local_paths": 0,
@@ -2923,15 +3213,30 @@
   "passes": true,
   "protocol_version": "ccfb-strict-v2",
   "run_manifest": "data/replay/latest/run_manifest.json",
-  "stage": "m0",
+  "stage": "final",
   "stage_required_checks": [
+    "arm64_external_validity_gate",
+    "binddrift_review_role_artifacts",
+    "case_study_gate",
     "evaluation_protocol_valid",
+    "extractor_precision_recall_gate",
     "m0_claim_boundary_gate",
+    "m3_research_question_gate",
+    "m4_false_positive_gate",
+    "m7_latex_paper_gate",
+    "m8_paper_submission_gate",
+    "manual_review_quality_gate",
+    "no_local_absolute_paths",
+    "oracle_blind_narrative_gate",
     "oracle_blind_primary_has_no_forbidden_components",
     "paper_claims_match_downgrades",
+    "pooled_review_coverage",
+    "ranking",
     "required_tables_exist",
-    "run_manifest_valid"
+    "run_manifest_valid",
+    "semantic",
+    "strict_extractor_audit_gate"
   ],
-  "status": "stage_ready",
+  "status": "ccfb_ready",
   "strict_ccfb": true
 }

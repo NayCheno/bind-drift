@@ -1,0 +1,196 @@
+{
+  "extractors": {
+    "c_behavior_indicators": {
+      "by_gold_kind": {
+        "behavior_indicator": {
+          "tp": 300
+        },
+        "behavior_indicator_negative_control": {
+          "tn": 30
+        }
+      },
+      "fn": 0,
+      "fp": 0,
+      "negative_control_fp": 0,
+      "negative_control_tn": 30,
+      "precision_correct": 120,
+      "precision_incorrect": 0,
+      "recall_fn": 0,
+      "recall_tp": 300,
+      "tn": 30,
+      "tp": 300
+    },
+    "c_function_signatures": {
+      "by_gold_kind": {
+        "function_signature": {
+          "tp": 300
+        },
+        "function_signature_negative_control": {
+          "tn": 30
+        }
+      },
+      "fn": 0,
+      "fp": 0,
+      "negative_control_fp": 0,
+      "negative_control_tn": 30,
+      "precision_correct": 120,
+      "precision_incorrect": 0,
+      "recall_fn": 0,
+      "recall_tp": 300,
+      "tn": 30,
+      "tp": 300
+    },
+    "c_struct_fields": {
+      "by_gold_kind": {
+        "struct_field": {
+          "tp": 200
+        },
+        "struct_field_negative_control": {
+          "tn": 30
+        }
+      },
+      "fn": 0,
+      "fp": 0,
+      "negative_control_fp": 0,
+      "negative_control_tn": 30,
+      "precision_correct": 200,
+      "precision_incorrect": 0,
+      "recall_fn": 0,
+      "recall_tp": 200,
+      "tn": 30,
+      "tp": 200
+    },
+    "generated_binding_facts": {
+      "by_gold_kind": {
+        "const": {
+          "tp": 98
+        },
+        "const_negative_control": {
+          "tn": 13
+        },
+        "extern_function": {
+          "tp": 98
+        },
+        "extern_function_negative_control": {
+          "tn": 10
+        },
+        "repr_c_struct": {
+          "tp": 104
+        },
+        "repr_c_struct_negative_control": {
+          "tn": 7
+        }
+      },
+      "fn": 0,
+      "fp": 0,
+      "negative_control_fp": 0,
+      "negative_control_tn": 30,
+      "precision_correct": 300,
+      "precision_incorrect": 0,
+      "recall_fn": 0,
+      "recall_tp": 300,
+      "tn": 30,
+      "tp": 300
+    },
+    "rust_binding_uses": {
+      "by_gold_kind": {
+        "binding_use": {
+          "tp": 300
+        },
+        "binding_use_negative_control": {
+          "tn": 30
+        }
+      },
+      "fn": 0,
+      "fp": 0,
+      "negative_control_fp": 0,
+      "negative_control_tn": 30,
+      "precision_correct": 120,
+      "precision_incorrect": 0,
+      "recall_fn": 0,
+      "recall_tp": 300,
+      "tn": 30,
+      "tp": 300
+    },
+    "rust_error_lifetime_mappings": {
+      "by_gold_kind": {
+        "error_mapping": {
+          "tp": 83
+        },
+        "error_mapping_negative_control": {
+          "tn": 15
+        },
+        "lifetime_fact": {
+          "tp": 117
+        },
+        "lifetime_fact_negative_control": {
+          "tn": 15
+        }
+      },
+      "fn": 0,
+      "fp": 0,
+      "negative_control_fp": 0,
+      "negative_control_tn": 30,
+      "precision_correct": 200,
+      "precision_incorrect": 0,
+      "recall_fn": 0,
+      "recall_tp": 200,
+      "tn": 30,
+      "tp": 200
+    },
+    "rust_safe_api_exposures": {
+      "by_gold_kind": {
+        "safe_api_exposure": {
+          "tp": 250
+        },
+        "safe_api_exposure_negative_control": {
+          "tn": 30
+        }
+      },
+      "fn": 0,
+      "fp": 0,
+      "negative_control_fp": 0,
+      "negative_control_tn": 30,
+      "precision_correct": 120,
+      "precision_incorrect": 0,
+      "recall_fn": 0,
+      "recall_tp": 250,
+      "tn": 30,
+      "tp": 250
+    },
+    "rust_safety_comments": {
+      "by_gold_kind": {
+        "safety_comment": {
+          "tp": 200
+        },
+        "safety_comment_negative_control": {
+          "tn": 30
+        }
+      },
+      "fn": 0,
+      "fp": 0,
+      "negative_control_fp": 0,
+      "negative_control_tn": 30,
+      "precision_correct": 200,
+      "precision_incorrect": 0,
+      "recall_fn": 0,
+      "recall_tp": 200,
+      "tn": 30,
+      "tp": 200
+    }
+  },
+  "false_negative_examples": [],
+  "gold_labels_csv": "data/audit/extractor_gold_labels.csv",
+  "negative_control_hit_examples": [],
+  "overall": {
+    "fn": 0,
+    "fp": 0,
+    "negative_control_fp": 0,
+    "negative_control_tn": 240,
+    "precision_correct": 1380,
+    "precision_incorrect": 0,
+    "tn": 240,
+    "tp": 2050
+  },
+  "schema_version": "extractor-confusion-matrix-v1"
+}

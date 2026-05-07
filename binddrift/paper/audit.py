@@ -179,6 +179,946 @@ STRICT_PARSER_LIMITATIONS = [
     },
 ]
 
+M2_GOLD_SCHEMA_VERSION = "extractor-precision-recall-gold-v1"
+M2_PRECISION_RECALL_SCHEMA_VERSION = "extractor-precision-recall-v1"
+M2_MIN_OVERALL_PRECISION = 0.95
+M2_MIN_OVERALL_RECALL = 0.88
+M2_MIN_KAPPA = 0.80
+M2_MIN_NEGATIVE_CONTROLS_PER_EXTRACTOR = 30
+M2_GOLD_TARGETS = {
+    "c_function_signatures": {
+        "target_positive": 300,
+        "minimum_precision": 0.98,
+        "minimum_recall": 0.92,
+    },
+    "c_struct_fields": {
+        "target_positive": 200,
+        "minimum_precision": 0.95,
+        "minimum_recall": 0.90,
+    },
+    "c_behavior_indicators": {
+        "target_positive": 300,
+        "minimum_precision": 0.90,
+        "minimum_recall": 0.78,
+    },
+    "rust_binding_uses": {
+        "target_positive": 300,
+        "minimum_precision": 0.95,
+        "minimum_recall": 0.93,
+    },
+    "rust_safe_api_exposures": {
+        "target_positive": 250,
+        "minimum_precision": 0.90,
+        "minimum_recall": 0.88,
+    },
+    "rust_safety_comments": {
+        "target_positive": 200,
+        "minimum_precision": 0.90,
+        "minimum_recall": 0.85,
+    },
+    "rust_error_lifetime_mappings": {
+        "target_positive": 200,
+        "minimum_precision": 0.90,
+        "minimum_recall": 0.88,
+    },
+    "generated_binding_facts": {
+        "target_positive": 300,
+        "minimum_precision": 0.98,
+        "minimum_recall": 0.95,
+    },
+}
+
+M2_GOLD_FIELDS = [
+    "gold_id",
+    "extractor_name",
+    "gold_kind",
+    "source_table",
+    "version",
+    "audit_pair_id",
+    "file",
+    "line",
+    "symbol",
+    "expected_present",
+    "expected_fact",
+    "match_key",
+    "reviewer1_label",
+    "reviewer1_notes",
+    "reviewer2_label",
+    "reviewer2_notes",
+    "adjudicated_label",
+    "adjudication_notes",
+]
+
+M2_PRECISION_REVIEW_FIELDS = [
+    "precision_id",
+    "extractor_name",
+    "source_table",
+    "version",
+    "file",
+    "line",
+    "symbol",
+    "extracted_fact",
+    "reviewer1_label",
+    "reviewer1_notes",
+    "reviewer2_label",
+    "reviewer2_notes",
+    "adjudicated_label",
+    "adjudication_notes",
+    "error_category",
+]
+
+M2_POSITIVE_LABEL = "SHOULD_EXTRACT"
+M2_NEGATIVE_LABEL = "SHOULD_NOT_EXTRACT"
+M2_LABELS = {"", M2_POSITIVE_LABEL, M2_NEGATIVE_LABEL}
+M2_PRECISION_LABELS = {"", "CORRECT", "INCORRECT"}
+
+M2_LIMITATION_EXAMPLES = {
+    "c_function_signatures": [
+        "Macro-expanded static inline wrappers can hide the declaration shape that reviewers expect to audit.",
+        "Architecture-specific preprocessor branches may expose different signatures under non-main replay configs.",
+        "Function-pointer typedefs are intentionally separated from ordinary function declarations.",
+        "Out-of-tree helper prototypes are outside the Linux mainline Rust-facing surface unless replay roots include them.",
+        "A header declaration does not prove that all body-level error or sleepability contracts were extracted.",
+    ],
+    "c_struct_fields": [
+        "Anonymous unions can preserve layout while obscuring the reviewer-facing field name.",
+        "Nested structs are represented as field facts, not as a full semantic layout proof.",
+        "Bitfields are audit facts, but C compiler packing rules remain toolchain-dependent.",
+        "Conditional fields under preprocessor guards are only covered for the replayed config.",
+        "Flexible arrays are retained as fields but require manual review before layout-impact claims.",
+    ],
+    "c_behavior_indicators": [
+        "Keyword indicators such as GFP_KERNEL are local evidence and do not prove the full call-chain context.",
+        "Error-return macros inside helper macros can be missed when the expanded source is unavailable.",
+        "Refcount naming conventions are hints and can over- or under-approximate custom ownership APIs.",
+        "Allocation/free pairs may span functions, so local extraction can miss cross-function obligations.",
+        "Atomic-context indicators document potential context constraints, not confirmed unsafe Rust impact.",
+    ],
+    "rust_binding_uses": [
+        "A binding path proves reachability evidence but not that a safe abstraction depends on the changed C contract.",
+        "Macro-generated Rust binding uses are only audited when the generated token stream is checked in or expanded.",
+        "Re-exported bindings can require graph reachability rather than direct textual matching.",
+        "Line mapping can drift when rustfmt or generated comments change between versions.",
+        "Unsafe block membership is lexical evidence and does not prove the safety invariant itself.",
+    ],
+    "rust_safe_api_exposures": [
+        "Public trait methods are treated as exposure facts even when the concrete implementation is elsewhere.",
+        "Module visibility such as pub(crate) is preserved, but downstream reachability still needs review.",
+        "Generic impl blocks can obscure the receiver type that maintainers use in prose.",
+        "Contracts expressed only in docs are not equivalent to extracted type signatures.",
+        "A public function without a direct binding edge can still be relevant through helper layers.",
+    ],
+    "rust_safety_comments": [
+        "SAFETY comments are proximity evidence, not proof that the comment justifies the nearest binding call.",
+        "Multi-line comments can split one rationale across several audited rows.",
+        "Doc comments with a Safety section describe caller obligations rather than a specific unsafe block.",
+        "Nearby binding association is line-window based and can be ambiguous in dense wrappers.",
+        "Safety rationale can become stale without any syntactic change in the comment text.",
+    ],
+    "rust_error_lifetime_mappings": [
+        "Result and Option return types document Rust-side handling but not the complete C error convention.",
+        "from_raw and into_raw are ownership markers, not proof of a changed C lifetime contract.",
+        "Nearby binding symbols can be absent when an error helper is factored through a wrapper function.",
+        "Refcount-like names can identify patterns without proving which C-side counter is affected.",
+        "Drop and Clone evidence must be reviewed with the corresponding allocation or get/put path.",
+    ],
+    "generated_binding_facts": [
+        "Generated bindings are build artifacts and require a matching kernel object tree for full coverage.",
+        "Bindgen output can omit unsupported macros while still emitting related constants.",
+        "repr(C) structs preserve field facts but do not by themselves explain semantic contracts.",
+        "Layout assertions can be absent when bindgen or kernel config suppresses a type.",
+        "Missing generated files are artifact warnings and must not be treated as successful extraction.",
+    ],
+}
+
+
+def generate_extractor_precision_recall_audit(cfg: Config, manifest: dict[str, Any] | None = None) -> dict[str, Any]:
+    gold_path = cfg.data_dir / "audit/extractor_gold_labels.csv"
+    precision_review_path = cfg.data_dir / "audit/extractor_precision_review.csv"
+    audit_manifest_path = cfg.data_dir / "audit/extractor_audit_manifest.json"
+    precision_recall_path = cfg.repo_root / "paper/tables/extractor_precision_recall.json"
+    confusion_path = cfg.repo_root / "paper/tables/extractor_confusion_matrix.json"
+    limitations_path = cfg.repo_root / "paper/analysis/extractor_limitations.md"
+    false_negatives_path = cfg.repo_root / "paper/analysis/extractor_false_negatives.md"
+
+    if gold_path.exists():
+        rows = _read_m2_gold_csv(gold_path)
+    else:
+        rows = []
+        gold_path.parent.mkdir(parents=True, exist_ok=True)
+        _write_m2_gold_csv(gold_path, rows)
+
+    rows = [sanitize_local_paths(row, cfg) for row in rows]
+    _write_m2_gold_csv(gold_path, rows)
+
+    summary, confusion = _m2_precision_recall_summary(cfg, rows)
+    audit_manifest = _m2_audit_manifest(cfg, manifest, rows, summary)
+    summary.update(
+        {
+            "schema_version": M2_PRECISION_RECALL_SCHEMA_VERSION,
+            "gold_labels_csv": repo_relative(cfg, gold_path),
+            "precision_review_csv": repo_relative(cfg, precision_review_path),
+            "audit_manifest": repo_relative(cfg, audit_manifest_path),
+            "confusion_matrix": repo_relative(cfg, confusion_path),
+            "limitations": repo_relative(cfg, limitations_path),
+            "false_negative_analysis": repo_relative(cfg, false_negatives_path),
+            "gold_schema_version": M2_GOLD_SCHEMA_VERSION,
+            "review_method": (
+                "Extractor recall gold rows use two reviewer fields plus adjudication fields. "
+                "Rows are rank/score/ranker blind and are evaluated only against extracted fact identity."
+            ),
+        }
+    )
+    confusion.update(
+        {
+            "schema_version": "extractor-confusion-matrix-v1",
+            "gold_labels_csv": repo_relative(cfg, gold_path),
+        }
+    )
+
+    for path, payload in (
+        (precision_recall_path, summary),
+        (confusion_path, confusion),
+        (audit_manifest_path, audit_manifest),
+    ):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            json.dumps(sanitize_local_paths(payload, cfg), indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+    limitations_path.parent.mkdir(parents=True, exist_ok=True)
+    limitations_path.write_text(_m2_limitations_markdown(summary), encoding="utf-8")
+    false_negatives_path.write_text(_m2_false_negatives_markdown(summary, confusion), encoding="utf-8")
+    return {
+        "extractor_precision_recall": repo_relative(cfg, precision_recall_path),
+        "extractor_confusion_matrix": repo_relative(cfg, confusion_path),
+        "extractor_limitations": repo_relative(cfg, limitations_path),
+        "extractor_false_negatives": repo_relative(cfg, false_negatives_path),
+        "extractor_gold_labels": repo_relative(cfg, gold_path),
+        "extractor_precision_review": repo_relative(cfg, precision_review_path),
+        "extractor_audit_manifest": repo_relative(cfg, audit_manifest_path),
+    }
+
+
+def _read_m2_gold_csv(path: Path) -> list[dict[str, str]]:
+    with path.open(newline="", encoding="utf-8") as fh:
+        reader = csv.DictReader(fh)
+        if reader.fieldnames is None:
+            return []
+        missing = [field for field in M2_GOLD_FIELDS if field not in reader.fieldnames]
+        if missing:
+            raise RuntimeError(f"extractor gold labels CSV is missing required fields: {', '.join(missing)}")
+        rows = [{field: str(row.get(field, "") or "") for field in M2_GOLD_FIELDS} for row in reader]
+    _validate_m2_gold_rows(rows)
+    return rows
+
+
+def _write_m2_gold_csv(path: Path, rows: list[dict[str, str]]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", newline="", encoding="utf-8") as fh:
+        writer = csv.DictWriter(fh, fieldnames=M2_GOLD_FIELDS, lineterminator="\n")
+        writer.writeheader()
+        writer.writerows({field: row.get(field, "") for field in M2_GOLD_FIELDS} for row in rows)
+
+
+def _validate_m2_gold_rows(rows: list[dict[str, str]]) -> None:
+    seen: set[str] = set()
+    for row in rows:
+        gold_id = row.get("gold_id", "")
+        if not gold_id:
+            raise RuntimeError("extractor gold row is missing gold_id")
+        if gold_id in seen:
+            raise RuntimeError(f"duplicate extractor gold_id: {gold_id}")
+        seen.add(gold_id)
+        expected = row.get("expected_present", "").strip().lower()
+        if expected not in {"true", "false"}:
+            raise RuntimeError(f"invalid expected_present value for {gold_id}: {row.get('expected_present')}")
+        for field in ("reviewer1_label", "reviewer2_label", "adjudicated_label"):
+            if row.get(field, "") not in M2_LABELS:
+                raise RuntimeError(f"invalid {field} for {gold_id}: {row.get(field)}")
+        if not row.get("match_key"):
+            raise RuntimeError(f"extractor gold row is missing match_key: {gold_id}")
+
+
+def _read_m2_precision_review_csv(path: Path) -> list[dict[str, str]]:
+    if not path.exists():
+        return []
+    with path.open(newline="", encoding="utf-8") as fh:
+        reader = csv.DictReader(fh)
+        if reader.fieldnames is None:
+            return []
+        missing = [field for field in M2_PRECISION_REVIEW_FIELDS if field not in reader.fieldnames]
+        if missing:
+            raise RuntimeError(f"extractor precision review CSV is missing required fields: {', '.join(missing)}")
+        rows = [{field: str(row.get(field, "") or "") for field in M2_PRECISION_REVIEW_FIELDS} for row in reader]
+    seen: set[str] = set()
+    for row in rows:
+        precision_id = row.get("precision_id", "")
+        if not precision_id:
+            raise RuntimeError("extractor precision review row is missing precision_id")
+        if precision_id in seen:
+            raise RuntimeError(f"duplicate extractor precision_id: {precision_id}")
+        seen.add(precision_id)
+        for field in ("reviewer1_label", "reviewer2_label", "adjudicated_label"):
+            if row.get(field, "") not in M2_PRECISION_LABELS:
+                raise RuntimeError(f"invalid {field} for {precision_id}: {row.get(field)}")
+    return rows
+
+
+def _m2_candidates_from_rows(
+    cfg: Config,
+    rows: list[dict[str, Any]],
+    extractor_name: str,
+    gold_kind: str,
+    source_table: str,
+    symbol_col: str,
+    file_col: str,
+    line_col: str,
+    pair_strata: list[dict[str, str]],
+) -> list[dict[str, str]]:
+    out: list[dict[str, str]] = []
+    for row in rows:
+        symbol = str(row.get(symbol_col) or "")
+        file = str(row.get(file_col) or row.get("header_file") or "")
+        line = str(row.get(line_col) or "")
+        fact = dict(row)
+        out.append(_m2_candidate(cfg, extractor_name, gold_kind, source_table, row, symbol, file, line, fact, pair_strata))
+    return out
+
+
+def _m2_candidate(
+    cfg: Config,
+    extractor_name: str,
+    gold_kind: str,
+    source_table: str,
+    db_row: dict[str, Any],
+    symbol: str,
+    file: str,
+    line: str,
+    fact: dict[str, Any],
+    pair_strata: list[dict[str, str]],
+) -> dict[str, str]:
+    version = str(db_row.get("version_id") or "")
+    sanitized_fact = sanitize_local_paths(fact, cfg)
+    sanitized_file = str(sanitize_local_paths(file, cfg))
+    payload = _m2_match_payload(extractor_name, gold_kind, source_table, version, symbol, sanitized_file, str(line))
+    return {
+        "extractor_name": extractor_name,
+        "gold_kind": gold_kind,
+        "source_table": source_table,
+        "version": version,
+        "audit_pair_id": _pair_for_version(pair_strata, version) if pair_strata else "",
+        "file": sanitized_file,
+        "line": str(line),
+        "symbol": symbol,
+        "expected_fact": json.dumps(sanitized_fact, sort_keys=True),
+        "match_key": _m2_match_key(payload),
+    }
+
+
+def _m2_match_payload(
+    extractor_name: str,
+    gold_kind: str,
+    source_table: str,
+    version: str,
+    symbol: str,
+    file: str,
+    line: str,
+) -> dict[str, str]:
+    return {
+        "extractor_name": extractor_name,
+        "gold_kind": gold_kind.removesuffix("_negative_control"),
+        "source_table": source_table,
+        "version": version,
+        "symbol": symbol,
+        "file": file,
+        "line": line,
+    }
+
+
+def _m2_match_key(payload: dict[str, Any]) -> str:
+    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str)
+    return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
+
+
+def _load_json(value: str | None, default: Any) -> Any:
+    if value is None or value == "":
+        return default
+    try:
+        return json.loads(value)
+    except json.JSONDecodeError:
+        return default
+
+
+def _m2_precision_recall_summary(cfg: Config, rows: list[dict[str, str]]) -> tuple[dict[str, Any], dict[str, Any]]:
+    conn = connect(cfg.database)
+    initialize(conn)
+    precision_sources = _m2_precision_sources(cfg, rows)
+    by_extractor: dict[str, list[dict[str, str]]] = {}
+    for row in rows:
+        by_extractor.setdefault(row["extractor_name"], []).append(row)
+
+    extractors: dict[str, Any] = {}
+    confusion_extractors: dict[str, Any] = {}
+    reviewer_pairs: list[tuple[str, str]] = []
+    false_negative_examples: list[dict[str, str]] = []
+    negative_control_hit_examples: list[dict[str, str]] = []
+    totals = Counter()
+    for extractor_name in M2_GOLD_TARGETS:
+        sample = by_extractor.get(extractor_name, [])
+        positives = [row for row in sample if row["expected_present"].lower() == "true"]
+        negatives = [row for row in sample if row["expected_present"].lower() == "false"]
+        reviewer_pairs.extend((row.get("reviewer1_label", ""), row.get("reviewer2_label", "")) for row in sample)
+        recall_tp = control_fp = control_tn = recall_fn = 0
+        fn_examples: list[dict[str, str]] = []
+        control_hit_examples: list[dict[str, str]] = []
+        by_kind: dict[str, Counter[str]] = {}
+        for row in sample:
+            present = _m2_gold_row_present(conn, cfg, row)
+            expected_present = row["expected_present"].lower() == "true"
+            if expected_present and present:
+                outcome = "tp"
+                recall_tp += 1
+            elif expected_present:
+                outcome = "fn"
+                recall_fn += 1
+                example = _m2_example(row)
+                fn_examples.append(example)
+                false_negative_examples.append(example)
+            elif present:
+                outcome = "fp"
+                control_fp += 1
+                example = _m2_example(row)
+                control_hit_examples.append(example)
+                negative_control_hit_examples.append(example)
+            else:
+                outcome = "tn"
+                control_tn += 1
+            by_kind.setdefault(row.get("gold_kind", ""), Counter())[outcome] += 1
+        precision_source = precision_sources.get(extractor_name, {})
+        precision_correct = int(precision_source.get("correct") or 0)
+        precision_incorrect = int(precision_source.get("incorrect") or 0)
+        precision_reviewed = int(precision_source.get("reviewed") or 0)
+        precision = round(precision_correct / precision_reviewed, 4) if precision_reviewed else None
+        recall = round(recall_tp / (recall_tp + recall_fn), 4) if recall_tp + recall_fn else None
+        f1 = round((2 * precision * recall) / (precision + recall), 4) if precision and recall else None
+        target = M2_GOLD_TARGETS[extractor_name]
+        versions = sorted({row["version"] for row in sample if row.get("version")})
+        pair_ids = sorted({row["audit_pair_id"] for row in sample if row.get("audit_pair_id")})
+        file_types = Counter(_m2_file_type(row.get("file", "")) for row in sample)
+        passes = bool(
+            len(positives) >= int(target["target_positive"])
+            and len(negatives) >= M2_MIN_NEGATIVE_CONTROLS_PER_EXTRACTOR
+            and (precision or 0.0) >= float(target["minimum_precision"])
+            and (recall or 0.0) >= float(target["minimum_recall"])
+        )
+        extractors[extractor_name] = {
+            "positive_gold_samples": len(positives),
+            "negative_controls": len(negatives),
+            "target_positive": target["target_positive"],
+            "minimum_negative_controls": M2_MIN_NEGATIVE_CONTROLS_PER_EXTRACTOR,
+            "tp": recall_tp,
+            "fp": precision_incorrect + control_fp,
+            "fn": recall_fn,
+            "tn": control_tn,
+            "recall_tp": recall_tp,
+            "recall_fn": recall_fn,
+            "precision_reviewed": precision_reviewed,
+            "precision_correct": precision_correct,
+            "precision_incorrect": precision_incorrect,
+            "precision_source": precision_source.get("source"),
+            "negative_control_fp": control_fp,
+            "negative_control_tn": control_tn,
+            "precision": precision,
+            "recall": recall,
+            "f1": f1,
+            "minimum_precision": target["minimum_precision"],
+            "minimum_recall": target["minimum_recall"],
+            "passes": passes,
+            "version_count": len(versions),
+            "pair_count": len(pair_ids),
+            "file_type_distribution": dict(sorted(file_types.items())),
+            "false_negative_examples": fn_examples[:5],
+            "negative_control_hit_examples": control_hit_examples[:5],
+        }
+        confusion_extractors[extractor_name] = {
+            "tp": recall_tp,
+            "fp": precision_incorrect + control_fp,
+            "fn": recall_fn,
+            "tn": control_tn,
+            "recall_tp": recall_tp,
+            "recall_fn": recall_fn,
+            "precision_correct": precision_correct,
+            "precision_incorrect": precision_incorrect,
+            "negative_control_fp": control_fp,
+            "negative_control_tn": control_tn,
+            "by_gold_kind": {kind: dict(counts) for kind, counts in sorted(by_kind.items())},
+        }
+        totals.update(
+            {
+                "tp": recall_tp,
+                "fp": precision_incorrect + control_fp,
+                "fn": recall_fn,
+                "tn": control_tn,
+                "precision_correct": precision_correct,
+                "precision_incorrect": precision_incorrect,
+                "precision_reviewed": precision_reviewed,
+                "negative_control_fp": control_fp,
+                "negative_control_tn": control_tn,
+                "positives": len(positives),
+                "negatives": len(negatives),
+            }
+        )
+
+    overall_precision = (
+        round(totals["precision_correct"] / totals["precision_reviewed"], 4)
+        if totals["precision_reviewed"]
+        else None
+    )
+    overall_recall = round(totals["tp"] / (totals["tp"] + totals["fn"]), 4) if totals["tp"] + totals["fn"] else None
+    agreement = _agreement(reviewer_pairs)
+    sample_hash = _m2_gold_sample_hash(rows)
+    overall = {
+        "positive_gold_samples": totals["positives"],
+        "negative_controls": totals["negatives"],
+        "target_positive_gold_samples": sum(int(item["target_positive"]) for item in M2_GOLD_TARGETS.values()),
+        "tp": totals["tp"],
+        "fp": totals["fp"],
+        "fn": totals["fn"],
+        "tn": totals["tn"],
+        "precision_reviewed": totals["precision_reviewed"],
+        "precision_correct": totals["precision_correct"],
+        "precision_incorrect": totals["precision_incorrect"],
+        "negative_control_fp": totals["negative_control_fp"],
+        "negative_control_tn": totals["negative_control_tn"],
+        "precision": overall_precision,
+        "recall": overall_recall,
+        "minimum_precision": M2_MIN_OVERALL_PRECISION,
+        "minimum_recall": M2_MIN_OVERALL_RECALL,
+        "agreement": agreement,
+        "sample_hash": sample_hash,
+    }
+    acceptance = {
+        "overall_precision": (overall_precision or 0.0) >= M2_MIN_OVERALL_PRECISION,
+        "overall_recall": (overall_recall or 0.0) >= M2_MIN_OVERALL_RECALL,
+        "gold_sample_size": totals["positives"] >= overall["target_positive_gold_samples"],
+        "negative_controls": all(item["negative_controls"] >= M2_MIN_NEGATIVE_CONTROLS_PER_EXTRACTOR for item in extractors.values()),
+        "double_review_complete": all(row.get("reviewer1_label") and row.get("reviewer2_label") and row.get("adjudicated_label") for row in rows),
+        "cohen_kappa": (agreement.get("cohen_kappa") or 0.0) >= M2_MIN_KAPPA,
+        "per_extractor_thresholds": all(item["passes"] for item in extractors.values()),
+    }
+    summary = {
+        "overall": overall,
+        "extractors": extractors,
+        "acceptance": {**acceptance, "passes": all(acceptance.values())},
+        "false_negative_count": len(false_negative_examples),
+        "negative_control_hit_count": len(negative_control_hit_examples),
+        "false_negative_examples": false_negative_examples[:20],
+    }
+    confusion = {
+        "overall": {key: totals[key] for key in ("tp", "fp", "fn", "tn", "precision_correct", "precision_incorrect", "negative_control_fp", "negative_control_tn")},
+        "extractors": confusion_extractors,
+        "false_negative_examples": false_negative_examples[:20],
+        "negative_control_hit_examples": negative_control_hit_examples[:20],
+    }
+    return summary, confusion
+
+
+def _m2_precision_sources(cfg: Config, rows: list[dict[str, str]]) -> dict[str, dict[str, Any]]:
+    strict_path = cfg.repo_root / "paper/tables/strict_extractor_audit.json"
+    strict = _load_json(strict_path.read_text(encoding="utf-8") if strict_path.exists() else None, {})
+    strict_extractors = strict.get("extractors") or {}
+    precision_review_path = cfg.data_dir / "audit/extractor_precision_review.csv"
+    precision_review_rows = _read_m2_precision_review_csv(precision_review_path)
+    mapped = {
+        "c_function_signatures": ["c_functions"],
+        "c_behavior_indicators": ["c_behavior_indicators"],
+        "rust_binding_uses": ["rust_binding_uses"],
+        "rust_safe_api_exposures": ["rust_safe_api_exposures"],
+        "rust_error_lifetime_mappings": ["rust_error_mappings", "rust_lifetime_facts"],
+    }
+    out: dict[str, dict[str, Any]] = {}
+    for extractor_name, strict_names in mapped.items():
+        reviewed = sum(int((strict_extractors.get(name) or {}).get("reviewed") or 0) for name in strict_names)
+        correct = sum(int((strict_extractors.get(name) or {}).get("correct") or 0) for name in strict_names)
+        out[extractor_name] = {
+            "source": f"paper/tables/strict_extractor_audit.json:{','.join(strict_names)}",
+            "reviewed": reviewed,
+            "correct": correct,
+            "incorrect": max(0, reviewed - correct),
+        }
+    for extractor_name in M2_GOLD_TARGETS:
+        if extractor_name in out and out[extractor_name]["reviewed"]:
+            continue
+        reviewed_rows = [
+            row
+            for row in precision_review_rows
+            if row.get("extractor_name") == extractor_name
+            and row.get("adjudicated_label") in {"CORRECT", "INCORRECT"}
+        ]
+        out[extractor_name] = {
+            "source": "data/audit/extractor_precision_review.csv",
+            "reviewed": len(reviewed_rows),
+            "correct": sum(1 for row in reviewed_rows if row.get("adjudicated_label") == "CORRECT"),
+            "incorrect": sum(1 for row in reviewed_rows if row.get("adjudicated_label") == "INCORRECT"),
+        }
+    return out
+
+
+def _m2_gold_row_present(conn, cfg: Config, row: dict[str, str]) -> bool:
+    if row.get("adjudicated_label") not in {M2_POSITIVE_LABEL, M2_NEGATIVE_LABEL}:
+        return False
+    for candidate in _m2_candidate_rows_for_gold(conn, cfg, row):
+        if candidate.get("match_key") == row.get("match_key"):
+            return True
+    return False
+
+
+def _m2_candidate_rows_for_gold(conn, cfg: Config, gold: dict[str, str]) -> list[dict[str, str]]:
+    table = gold.get("source_table", "")
+    if table not in {
+        "binding_consts",
+        "binding_functions",
+        "binding_structs",
+        "c_behavior_indicators",
+        "c_functions",
+        "c_structs",
+        "rust_binding_uses",
+        "rust_error_mappings",
+        "rust_lifetime_facts",
+        "rust_safe_apis",
+        "rust_safety_comments",
+    }:
+        return []
+    expected = _load_json(gold.get("expected_fact"), {})
+    version = gold.get("version", "")
+    line = str(gold.get("line", ""))
+    pair = [{"pair_id": gold.get("audit_pair_id", ""), "old_version": version, "new_version": version}]
+    rows: list[dict[str, Any]] = []
+    if table == "c_structs":
+        source_fields = expected.get("source_fields") if isinstance(expected.get("source_fields"), dict) else {}
+        c_type = expected.get("c_type") or source_fields.get("c_type") or gold.get("symbol", "").split(".", 1)[0]
+        rows = [
+            dict(row)
+            for row in conn.execute(
+                "SELECT * FROM c_structs WHERE version_id=? AND c_type=? AND line=?",
+                (version, c_type, line or 0),
+            )
+        ]
+        return [
+            candidate
+            for candidate in _m2_c_struct_rows_to_candidates(cfg, rows, pair)
+            if candidate["symbol"] == gold.get("symbol")
+        ]
+    symbol_col = {
+        "binding_consts": "c_name",
+        "binding_functions": "c_symbol",
+        "binding_structs": "c_type",
+        "c_behavior_indicators": "c_symbol",
+        "c_functions": "c_symbol",
+        "rust_binding_uses": "binding_symbol",
+        "rust_error_mappings": "mapping_type",
+        "rust_lifetime_facts": "fact_type",
+        "rust_safe_apis": "api_name",
+        "rust_safety_comments": "nearby_binding_symbol",
+    }[table]
+    file_col = {
+        "binding_consts": "source_file",
+        "binding_functions": "source_file",
+        "binding_structs": "source_file",
+        "c_behavior_indicators": "evidence_file",
+        "c_functions": "definition_file",
+        "rust_binding_uses": "rust_file",
+        "rust_error_mappings": "rust_file",
+        "rust_lifetime_facts": "rust_file",
+        "rust_safe_apis": "rust_file",
+        "rust_safety_comments": "rust_file",
+    }[table]
+    line_col = "evidence_line" if table == "c_behavior_indicators" else "line"
+    symbol = gold.get("symbol", "")
+    if symbol:
+        query = f"SELECT * FROM {table} WHERE version_id=? AND {symbol_col}=? AND {line_col}=?"
+        params = (version, symbol, line or 0)
+    else:
+        query = f"SELECT * FROM {table} WHERE version_id=? AND ({symbol_col} IS NULL OR {symbol_col}='') AND {line_col}=?"
+        params = (version, line or 0)
+    rows = [dict(row) for row in conn.execute(query, params)]
+    extractor_name = gold.get("extractor_name", "")
+    gold_kind = gold.get("gold_kind", "").removesuffix("_negative_control")
+    return _m2_candidates_from_rows(cfg, rows, extractor_name, gold_kind, table, symbol_col, file_col, line_col, pair)
+
+
+def _m2_c_struct_rows_to_candidates(cfg: Config, rows: list[dict[str, Any]], pair_strata: list[dict[str, str]]) -> list[dict[str, str]]:
+    out: list[dict[str, str]] = []
+    for row in rows:
+        try:
+            fields = json.loads(row.get("fields") or "[]")
+        except json.JSONDecodeError:
+            fields = []
+        for field in fields:
+            if not isinstance(field, dict) or not field.get("name"):
+                continue
+            fact = {**row, "field_name": field.get("name"), "field_type": field.get("type", "")}
+            out.append(
+                _m2_candidate(
+                    cfg,
+                    "c_struct_fields",
+                    "struct_field",
+                    "c_structs",
+                    row,
+                    f"{row.get('c_type')}.{field.get('name')}",
+                    str(row.get("header_file") or ""),
+                    str(row.get("line") or ""),
+                    fact,
+                    pair_strata,
+                )
+            )
+    return out
+
+
+def _m2_example(row: dict[str, str]) -> dict[str, str]:
+    return {
+        "gold_id": row.get("gold_id", ""),
+        "extractor_name": row.get("extractor_name", ""),
+        "gold_kind": row.get("gold_kind", ""),
+        "version": row.get("version", ""),
+        "file": row.get("file", ""),
+        "line": row.get("line", ""),
+        "symbol": row.get("symbol", ""),
+    }
+
+
+def _m2_file_type(path: str) -> str:
+    suffix = Path(path).suffix
+    if path.endswith("bindings_generated.rs"):
+        return "generated_rs"
+    if suffix in {".h", ".c", ".rs"}:
+        return suffix.lstrip(".")
+    return "unknown"
+
+
+def _m2_gold_sample_hash(rows: list[dict[str, str]]) -> str:
+    payload = [
+        {
+            "gold_id": row.get("gold_id", ""),
+            "extractor_name": row.get("extractor_name", ""),
+            "expected_present": row.get("expected_present", ""),
+            "match_key": row.get("match_key", ""),
+            "adjudicated_label": row.get("adjudicated_label", ""),
+        }
+        for row in rows
+    ]
+    return hashlib.sha256(json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
+
+
+def _m2_audit_manifest(
+    cfg: Config,
+    manifest: dict[str, Any] | None,
+    rows: list[dict[str, str]],
+    summary: dict[str, Any],
+) -> dict[str, Any]:
+    versions = sorted({row["version"] for row in rows if row.get("version")})
+    pair_ids = sorted({row["audit_pair_id"] for row in rows if row.get("audit_pair_id")})
+    file_types = Counter(_m2_file_type(row.get("file", "")) for row in rows)
+    warning_types = Counter(_m2_warning_type(row) for row in rows if row.get("expected_present") == "true")
+    difficulty = Counter(_m2_difficulty(row) for row in rows if row.get("expected_present") == "true")
+    by_extractor = Counter(row["extractor_name"] for row in rows)
+    positive_by_extractor = Counter(row["extractor_name"] for row in rows if row.get("expected_present") == "true")
+    negative_by_extractor = Counter(row["extractor_name"] for row in rows if row.get("expected_present") == "false")
+    return {
+        "schema_version": "extractor-audit-manifest-v1",
+        "gold_schema_version": M2_GOLD_SCHEMA_VERSION,
+        "sampler": "deterministic stratified DB fact sampler with checked-in adjudicated gold expectations",
+        "sample_hash": _m2_gold_sample_hash(rows),
+        "database_path": repo_relative(cfg, cfg.database),
+        "manifest_run_id": str(manifest.get("run_id")) if manifest else None,
+        "manifest_sha256": (manifest or {}).get("sha256", {}),
+        "reviewer_protocol": {
+            "role_separation": True,
+            "rank_score_ranker_blind": True,
+            "generator_creates_review_labels": False,
+            "missing_gold_csv_behavior": "write an empty skeleton; acceptance fails until reviewed gold labels are supplied",
+            "precision_review_source": "strict extractor audit or data/audit/extractor_precision_review.csv; recall gold labels are never used as precision labels",
+            "reviewer1_field": "reviewer1_label",
+            "reviewer2_field": "reviewer2_label",
+            "adjudication_field": "adjudicated_label",
+            "cohen_kappa": (summary.get("overall") or {}).get("agreement", {}).get("cohen_kappa"),
+        },
+        "targets": M2_GOLD_TARGETS,
+        "counts": {
+            "rows": len(rows),
+            "positive_gold_samples": sum(positive_by_extractor.values()),
+            "negative_controls": sum(negative_by_extractor.values()),
+            "by_extractor": dict(sorted(by_extractor.items())),
+            "positive_by_extractor": dict(sorted(positive_by_extractor.items())),
+            "negative_by_extractor": dict(sorted(negative_by_extractor.items())),
+            "precision_reviewed_by_extractor": {
+                name: item.get("precision_reviewed", 0)
+                for name, item in sorted((summary.get("extractors") or {}).items())
+            },
+            "precision_source_by_extractor": {
+                name: item.get("precision_source", "")
+                for name, item in sorted((summary.get("extractors") or {}).items())
+            },
+        },
+        "stratification": {
+            "version_count": len(versions),
+            "versions": versions,
+            "pair_count": len(pair_ids),
+            "pair_ids": pair_ids,
+            "file_type_distribution": dict(sorted(file_types.items())),
+            "warning_type_distribution": dict(sorted(warning_types.items())),
+            "difficulty_distribution": dict(sorted(difficulty.items())),
+            "required_file_types": ["h", "c", "rs", "generated_rs"],
+            "required_warning_types": [
+                "Signature",
+                "Field/Layout",
+                "MacroConst",
+                "Nullability/Error",
+                "Refcount/Ownership",
+                "Sleepability",
+            ],
+            "required_difficulties": [
+                "header declaration",
+                "helper C source",
+                "struct field",
+                "generated binding",
+                "unsafe wrapper",
+                "safe API surface",
+                "safety comment proximity",
+                "error mapping",
+                "lifetime or ownership marker",
+            ],
+        },
+        "acceptance": summary.get("acceptance", {}),
+    }
+
+
+def _m2_warning_type(row: dict[str, str]) -> str:
+    extractor_name = row.get("extractor_name", "")
+    gold_kind = row.get("gold_kind", "")
+    symbol = row.get("symbol", "").lower()
+    expected = _load_json(row.get("expected_fact"), {})
+    indicator = str(expected.get("indicator_type") or "").upper()
+    if extractor_name == "c_function_signatures":
+        return "Signature"
+    if extractor_name == "c_struct_fields":
+        return "Field/Layout"
+    if extractor_name == "c_behavior_indicators":
+        if indicator in {"MAY_SLEEP", "ATOMIC_CONTEXT"} or "sleep" in symbol or "wait" in symbol or "mutex" in symbol:
+            return "Sleepability"
+        if indicator in {"REFCOUNT_GET", "REFCOUNT_PUT"} or "ref" in symbol or "kref" in symbol:
+            return "Refcount/Ownership"
+        if indicator in {"NULL_RETURN", "ERR_PTR_RETURN", "IS_ERR_CHECK", "ERROR_CODE"} or "err" in symbol or "null" in symbol:
+            return "Nullability/Error"
+        return "MacroConst"
+    if extractor_name == "rust_error_lifetime_mappings":
+        return "Refcount/Ownership" if "lifetime" in gold_kind else "Nullability/Error"
+    if extractor_name == "generated_binding_facts" and gold_kind == "const":
+        return "MacroConst"
+    if extractor_name == "generated_binding_facts":
+        return "Field/Layout" if "struct" in gold_kind else "Signature"
+    if extractor_name in {"rust_binding_uses", "rust_safe_api_exposures", "rust_safety_comments"}:
+        return "Nullability/Error"
+    return "Other"
+
+
+def _m2_difficulty(row: dict[str, str]) -> str:
+    extractor_name = row.get("extractor_name", "")
+    gold_kind = row.get("gold_kind", "")
+    file_type = _m2_file_type(row.get("file", ""))
+    if extractor_name == "c_function_signatures":
+        return "helper C source" if file_type == "c" else "header declaration"
+    if extractor_name == "c_struct_fields":
+        return "struct field"
+    if extractor_name == "generated_binding_facts":
+        return "generated binding"
+    if extractor_name == "rust_binding_uses":
+        return "unsafe wrapper"
+    if extractor_name == "rust_safe_api_exposures":
+        return "safe API surface"
+    if extractor_name == "rust_safety_comments":
+        return "safety comment proximity"
+    if extractor_name == "rust_error_lifetime_mappings":
+        return "lifetime or ownership marker" if "lifetime" in gold_kind else "error mapping"
+    if extractor_name == "c_behavior_indicators":
+        return "helper C source" if file_type == "c" else "header declaration"
+    return "other"
+
+
+def _m2_limitations_markdown(summary: dict[str, Any]) -> str:
+    lines = [
+        "# Extractor Limitations",
+        "",
+        "The precision/recall audit treats extracted facts as review-target evidence, not as proof of complete semantic analysis.",
+        "",
+        "## Summary",
+        "",
+        f"- Positive gold facts: `{(summary.get('overall') or {}).get('positive_gold_samples')}`",
+        f"- Negative controls: `{(summary.get('overall') or {}).get('negative_controls')}`",
+        f"- Overall precision: `{(summary.get('overall') or {}).get('precision')}`",
+        f"- Overall recall: `{(summary.get('overall') or {}).get('recall')}`",
+        "",
+    ]
+    for extractor_name in M2_GOLD_TARGETS:
+        extractor = (summary.get("extractors") or {}).get(extractor_name) or {}
+        lines.extend(
+            [
+                f"## {extractor_name}",
+                "",
+                f"- Positive gold facts: `{extractor.get('positive_gold_samples')}`",
+                f"- Negative controls: `{extractor.get('negative_controls')}`",
+                f"- Precision: `{extractor.get('precision')}`",
+                f"- Recall: `{extractor.get('recall')}`",
+                "",
+            ]
+        )
+        for example in M2_LIMITATION_EXAMPLES.get(extractor_name, []):
+            lines.append(f"- {example}")
+        lines.append("")
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def _m2_false_negatives_markdown(summary: dict[str, Any], confusion: dict[str, Any]) -> str:
+    lines = [
+        "# Extractor False Negatives",
+        "",
+        "False negatives are gold facts with `expected_present=true` whose exact extracted-fact identity is missing from the current database.",
+        "",
+        "## Overall",
+        "",
+        f"- False negatives: `{summary.get('false_negative_count')}`",
+        f"- Negative-control lookup hits: `{summary.get('negative_control_hit_count')}`",
+        f"- Overall recall: `{(summary.get('overall') or {}).get('recall')}`",
+        "",
+        "## Taxonomy",
+        "",
+        "- Parser coverage gap: the source fact is present in the gold set but absent from the extractor table.",
+        "- Line or symbol drift: the source fact exists but no longer matches the adjudicated identity.",
+        "- Generated artifact gap: expected bindgen output is missing from the object-tree snapshot.",
+        "- Proximity association gap: Rust comments, unsafe calls, or binding uses moved outside the extractor window.",
+        "- Configuration gap: the replay config no longer exposes the expected C or generated Rust fact.",
+        "",
+        "## Observed Examples",
+        "",
+    ]
+    examples = confusion.get("false_negative_examples") or []
+    if not examples:
+        lines.append("- No false negatives were observed in the checked-in gold set.")
+    else:
+        for example in examples:
+            lines.append(
+                f"- `{example.get('gold_id')}` `{example.get('extractor_name')}` `{example.get('symbol')}` "
+                f"at `{example.get('file')}:{example.get('line')}`"
+            )
+    lines.append("")
+    lines.append("## Per Extractor")
+    lines.append("")
+    for extractor_name in M2_GOLD_TARGETS:
+        matrix = ((confusion.get("extractors") or {}).get(extractor_name) or {})
+        lines.append(f"- `{extractor_name}`: FN `{matrix.get('fn', 0)}`, TP `{matrix.get('tp', 0)}`")
+    return "\n".join(lines).rstrip() + "\n"
+
 
 def generate_extractor_audit(cfg: Config, manifest: dict[str, Any] | None = None) -> dict[str, Any]:
     sample_path = cfg.data_dir / "audit/extractor_sample.csv"

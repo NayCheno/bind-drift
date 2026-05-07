@@ -7,6 +7,7 @@ import pytest
 from binddrift.config import Config
 from binddrift.db import connect, initialize, upsert_many
 from binddrift.evaluation.protocol import write_default_evaluation_protocol
+from binddrift.paper.audit import M2_GOLD_FIELDS, generate_extractor_precision_recall_audit
 from binddrift.paper.tables import generate_paper_tables
 from binddrift.run_manifest import ArtifactConsistencyError, write_run_manifest
 from binddrift.warnings import make_warning_uid
@@ -23,6 +24,47 @@ def _write_csv(path: Path, rows: list[dict[str, str]]) -> None:
         writer = csv.DictWriter(fh, fieldnames=list(rows[0]))
         writer.writeheader()
         writer.writerows(rows)
+
+
+def _m2_match_key(row: dict[str, str]) -> str:
+    import hashlib
+
+    payload = {
+        "extractor_name": row["extractor_name"],
+        "gold_kind": row["gold_kind"].removesuffix("_negative_control"),
+        "source_table": row["source_table"],
+        "version": row["version"],
+        "symbol": row["symbol"],
+        "file": row["file"],
+        "line": row["line"],
+    }
+    return hashlib.sha256(json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
+
+
+def _m2_gold_row(**overrides: str) -> dict[str, str]:
+    row = {
+        "gold_id": "c_function_signatures-0001",
+        "extractor_name": "c_function_signatures",
+        "gold_kind": "function_signature",
+        "source_table": "c_functions",
+        "version": "v6.1",
+        "audit_pair_id": "p1",
+        "file": "foo.h",
+        "line": "1",
+        "symbol": "foo",
+        "expected_present": "true",
+        "expected_fact": "{}",
+        "match_key": "",
+        "reviewer1_label": "SHOULD_EXTRACT",
+        "reviewer1_notes": "independent source packet",
+        "reviewer2_label": "SHOULD_EXTRACT",
+        "reviewer2_notes": "independent source packet",
+        "adjudicated_label": "SHOULD_EXTRACT",
+        "adjudication_notes": "adjudicated independent gold row",
+    }
+    row.update(overrides)
+    row["match_key"] = row["match_key"] or _m2_match_key(row)
+    return row
 
 
 def test_paper_tables_exclude_stale_and_zero_binding_replays(tmp_path: Path):
@@ -524,6 +566,66 @@ def test_extractor_audit_rejects_invalid_error_type(tmp_path: Path):
 
     with pytest.raises(RuntimeError, match="invalid error_type"):
         generate_paper_tables(cfg)
+
+
+def test_m2_precision_recall_audit_matches_gold_true_positive(tmp_path: Path):
+    cfg = Config.from_args(repo_root=tmp_path)
+    conn = connect(cfg.database)
+    initialize(conn)
+    upsert_many(
+        conn,
+        "c_functions",
+        [
+            {
+                "version_id": "v6.1",
+                "c_symbol": "foo",
+                "return_type": "int",
+                "params": "[]",
+                "header_file": str(tmp_path / "foo.h"),
+                "definition_file": str(tmp_path / "foo.h"),
+                "line": 1,
+            }
+        ],
+    )
+    gold = cfg.data_dir / "audit/extractor_gold_labels.csv"
+    _write_csv(
+        gold,
+        [
+            _m2_gold_row(
+                file="./foo.h",
+                expected_fact=json.dumps({"source_basis": "independent source packet", "symbol": "foo"}, sort_keys=True),
+            )
+        ],
+    )
+
+    result = generate_extractor_precision_recall_audit(cfg)
+
+    summary = json.loads((tmp_path / result["extractor_precision_recall"]).read_text(encoding="utf-8"))
+    manifest = json.loads((tmp_path / result["extractor_audit_manifest"]).read_text(encoding="utf-8"))
+    c_functions = summary["extractors"]["c_function_signatures"]
+    assert c_functions["positive_gold_samples"] == 1
+    assert c_functions["tp"] == 1
+    assert c_functions["fn"] == 0
+    assert c_functions["recall"] == 1.0
+    assert summary["overall"]["sample_hash"] == manifest["sample_hash"]
+
+
+def test_m2_precision_recall_audit_reports_false_negative_from_checked_in_gold(tmp_path: Path):
+    cfg = Config.from_args(repo_root=tmp_path)
+    initialize(connect(cfg.database))
+    gold = cfg.data_dir / "audit/extractor_gold_labels.csv"
+    row = _m2_gold_row(file="include/linux/missing.h", line="7", symbol="missing_symbol")
+    _write_csv(gold, [{field: row[field] for field in M2_GOLD_FIELDS}])
+
+    result = generate_extractor_precision_recall_audit(cfg)
+
+    summary = json.loads((tmp_path / result["extractor_precision_recall"]).read_text(encoding="utf-8"))
+    confusion = json.loads((tmp_path / result["extractor_confusion_matrix"]).read_text(encoding="utf-8"))
+    c_functions = summary["extractors"]["c_function_signatures"]
+    assert c_functions["tp"] == 0
+    assert c_functions["fn"] == 1
+    assert c_functions["recall"] == 0.0
+    assert confusion["false_negative_examples"][0]["symbol"] == "missing_symbol"
 
 
 def test_manual_review_summary_prefers_latest_eligible_replay_csv(tmp_path: Path):

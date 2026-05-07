@@ -68,6 +68,7 @@ def test_artifact_validator_reports_m2_ranking_ready() -> None:
     assert result["passes"] is True
     assert result["stage"] == "m2"
     assert "oracle_blind_narrative_gate" in result["stage_required_checks"]
+    assert "extractor_precision_recall_gate" in result["stage_required_checks"]
     ranking = result["hard_gates"]["ranking"]
     assert ranking["passes"] is True
     assert all(ranking["checks"].values())
@@ -76,6 +77,11 @@ def test_artifact_validator_reports_m2_ranking_ready() -> None:
     assert narrative["details"]["primary_ranker_display_name"] == "BindDrift-oracle-blind"
     assert narrative["details"]["forbidden_oracle_feature_keys"] == []
     assert all(narrative["details"]["checks"].values())
+    recall_gate = next(check for check in result["checks"] if check["name"] == "extractor_precision_recall_gate")
+    assert recall_gate["passes"] is True
+    assert all(recall_gate["details"]["checks"].values())
+    assert recall_gate["details"]["overall"]["positive_gold_samples"] >= 2050
+    assert recall_gate["details"]["overall"]["recall"] >= 0.88
 
 
 def test_artifact_validator_rejects_m2_forbidden_oracle_feature_keys() -> None:

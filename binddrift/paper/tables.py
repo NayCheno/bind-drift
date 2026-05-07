@@ -12,7 +12,11 @@ from binddrift.db import connect, initialize
 from binddrift.evaluation.protocol import FORBIDDEN_PRIMARY_SCORE_COMPONENTS, PROTOCOL_VERSION, load_evaluation_protocol
 from binddrift.evaluation.evaluate_rankers import TAXONOMY_SCHEMA_VERSION
 from binddrift.evaluation.metrics import load_manual_labels, manual_review_agreement, warning_label_key
-from binddrift.paper.audit import generate_extractor_audit, generate_strict_extractor_audit
+from binddrift.paper.audit import (
+    generate_extractor_audit,
+    generate_extractor_precision_recall_audit,
+    generate_strict_extractor_audit,
+)
 from binddrift.ranking.oracle_blind_scorer import rank_primary_warnings_oracle_blind
 from binddrift.run_manifest import canonical_run_dir, count_jsonl, manifest_exists, repo_relative, resolve_manifest_path, sha256_file, validate_run_manifest
 from binddrift.warnings import read_warnings
@@ -102,11 +106,19 @@ def generate_paper_tables(cfg: Config) -> dict[str, object]:
     _write_arm64_external_validity(cfg, arm64_external)
     audit = generate_extractor_audit(cfg, manifest=manifest)
     strict_audit = generate_strict_extractor_audit(cfg, manifest=manifest)
+    precision_recall_audit = generate_extractor_precision_recall_audit(cfg, manifest=manifest)
     known = {
         "evaluation_summary": tables_dir / "evaluation_summary.json",
         "baselines_ablations": tables_dir / "baselines_ablations.json",
         "extractor_audit": Path(audit["extractor_audit"]),
         "strict_extractor_audit": Path(strict_audit["strict_extractor_audit"]),
+        "extractor_precision_recall": Path(precision_recall_audit["extractor_precision_recall"]),
+        "extractor_confusion_matrix": Path(precision_recall_audit["extractor_confusion_matrix"]),
+        "extractor_limitations": Path(precision_recall_audit["extractor_limitations"]),
+        "extractor_false_negatives": Path(precision_recall_audit["extractor_false_negatives"]),
+        "extractor_gold_labels": Path(precision_recall_audit["extractor_gold_labels"]),
+        "extractor_precision_review": Path(precision_recall_audit["extractor_precision_review"]),
+        "extractor_audit_manifest": Path(precision_recall_audit["extractor_audit_manifest"]),
         "replay_summary": replay_summary,
         "fact_counts": fact_counts,
         "manual_review_summary": manual_review,
