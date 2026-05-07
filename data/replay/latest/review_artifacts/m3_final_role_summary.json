@@ -1,12 +1,15 @@
 {
   "adjudicated_label_distribution": {
-    "BENIGN_DRIFT": 3,
-    "FALSE_POSITIVE": 450,
+    "BENIGN_DRIFT": 219,
+    "FALSE_POSITIVE": 530,
     "TRUE_BUILD_BREAKAGE": 1,
     "TRUE_SEMANTIC_DRIFT": 29,
-    "TRUE_WRAPPER_FIX": 17
+    "TRUE_WRAPPER_FIX": 20,
+    "UNCLEAR": 1
   },
-  "agreement_rate": 0.922,
+  "adjudication_policy": "Adjudicator runs only after both reviewers complete and receives evidence packets plus both reviewer outputs.",
+  "adjudicator_access": "Adjudicator uses evidence packets plus both reviewer outputs after independent review completes.",
+  "agreement_rate": 0.9062,
   "binddrift_review_roles": [
     "evidence_collector",
     "reviewer1",
@@ -15,25 +18,29 @@
   ],
   "blind_to_rank_and_score": true,
   "blind_to_ranker": true,
-  "cohen_kappa": 0.8118,
-  "disagreement_examples_policy": "Disagreement examples are sampled from naturally differing reviewer1/reviewer2 labels after adjudication, without editing labels to create disagreements.",
-  "disagreements": 39,
+  "cohen_kappa": 0.8161,
+  "disagreement_examples_policy": "Disagreement examples are sampled from naturally differing reviewer1 and reviewer2 labels after adjudication.",
+  "disagreements": 75,
+  "evidence_collector_access": "Evidence collector packets omit ranker name, rank, score, reviewer labels, and adjudication labels.",
+  "reviewer1_access": "Reviewer 1 uses evidence packets only and does not receive Reviewer 2 output or adjudication output.",
   "reviewer1_label_distribution": {
-    "BENIGN_DRIFT": 3,
-    "FALSE_POSITIVE": 376,
-    "TRUE_BUILD_BREAKAGE": 1,
-    "TRUE_SEMANTIC_DRIFT": 19,
-    "TRUE_WRAPPER_FIX": 42,
-    "UNCLEAR": 59
-  },
-  "reviewer2_label_distribution": {
-    "BENIGN_DRIFT": 3,
-    "FALSE_POSITIVE": 374,
+    "BENIGN_DRIFT": 219,
+    "FALSE_POSITIVE": 530,
     "TRUE_BUILD_BREAKAGE": 1,
     "TRUE_SEMANTIC_DRIFT": 29,
-    "TRUE_WRAPPER_FIX": 17,
+    "TRUE_WRAPPER_FIX": 20,
+    "UNCLEAR": 1
+  },
+  "reviewer2_access": "Reviewer 2 uses evidence packets only and does not receive Reviewer 1 output or adjudication output.",
+  "reviewer2_label_distribution": {
+    "BENIGN_DRIFT": 144,
+    "FALSE_POSITIVE": 530,
+    "TRUE_BUILD_BREAKAGE": 1,
+    "TRUE_SEMANTIC_DRIFT": 29,
+    "TRUE_WRAPPER_FIX": 20,
     "UNCLEAR": 76
   },
-  "reviewer_independence_policy": "Reviewer 1 and Reviewer 2 are separate binddrift-review role artifacts. Reviewer role inputs omit ranker name, rank, score, adjudicated labels, and the other reviewer output.",
-  "row_count": 500
+  "reviewer_independence_policy": "Reviewer 1 and Reviewer 2 are separate binddrift-review role artifacts; reviewer role inputs omit ranker name, rank, score, adjudicated labels, and the other reviewer output.",
+  "row_count": 800,
+  "unclear_rows": 1
 }

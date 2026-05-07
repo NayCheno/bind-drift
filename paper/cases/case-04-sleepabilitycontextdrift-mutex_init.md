@@ -35,9 +35,9 @@ The warning is connected to later Rust wrapper/helper evidence and is reported s
 ## Manual Review Label
 
 - Adjudicated label: `TRUE_WRAPPER_FIX`
-- Reviewer 1: `TRUE_WRAPPER_FIX` -- Direct same-symbol wrapper-fix calibration is present for __mutex_init. The packet links later Rust wrapper/helper changes to the warned SignatureDrift symbol or contract, satisfying the direct-wrapper standard despite any missing full diff.
-- Reviewer 2: `TRUE_WRAPPER_FIX` -- Direct same-symbol wrapper oracle is present for __mutex_init; later Rust wrapper/helper evidence addresses the same warned symbol or contract. Rust exposure level: unsafe_wrapper.
-- Adjudication: __mutex_init: direct same-symbol/same-contract wrapper oracle is present, so the later Rust wrapper/helper/binding change supports the warned drift.
+- Reviewer 1: `TRUE_WRAPPER_FIX` -- Packet reports a direct same-symbol Rust wrapper/helper/binding fix for __mutex_init.
+- Reviewer 2: `TRUE_WRAPPER_FIX` -- Same-symbol wrapper oracle matched before lower-priority rules.
+- Adjudication: Direct same-symbol wrapper oracle is present; adjudicated TRUE_WRAPPER_FIX per v3 policy.
 
 ## Why This Is Not Generated-Binding-Only
 

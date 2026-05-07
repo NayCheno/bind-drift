@@ -25,26 +25,26 @@
     "unclear_rate": true
   },
   "acceptance_thresholds": {
-    "agreement_rate_minimum": 0.8,
-    "cohen_kappa_minimum": 0.7,
-    "reviewer_disagreement_examples_minimum": 10,
-    "unclear_rate_maximum": 0.05
+    "agreement_rate_minimum": 0.88,
+    "cohen_kappa_minimum": 0.78,
+    "reviewer_disagreement_examples_minimum": 20,
+    "unclear_rate_maximum": 0.03
   },
   "adjudicated": true,
   "adjudication_notes_missing": 0,
   "adjudication_notes_missing_rate": 0.0,
-  "agreement_rate": 0.922,
-  "cohen_kappa": 0.8118,
-  "disagreements": 39,
-  "double_labeled_warnings": 500,
+  "agreement_rate": 0.9062,
+  "cohen_kappa": 0.8161,
+  "disagreements": 75,
+  "double_labeled_warnings": 800,
   "label_coverage": 1.0,
   "label_distribution": {
-    "BENIGN_DRIFT": 3,
-    "FALSE_POSITIVE": 450,
+    "BENIGN_DRIFT": 219,
+    "FALSE_POSITIVE": 530,
     "TRUE_BUILD_BREAKAGE": 1,
     "TRUE_SEMANTIC_DRIFT": 29,
-    "TRUE_WRAPPER_FIX": 17,
-    "UNCLEAR": 0
+    "TRUE_WRAPPER_FIX": 20,
+    "UNCLEAR": 1
   },
   "label_leakage_check": "passed",
   "label_leakage_findings": [],
@@ -92,10 +92,10 @@
     "unclear_policy": "`UNCLEAR` is used for insufficient evidence and is not counted as a true positive",
     "wrapper_fix_vs_semantic_policy": "`TRUE_WRAPPER_FIX` requires later same-symbol or same-contract Rust wrapper/helper/binding evidence; `TRUE_SEMANTIC_DRIFT` requires a C drift, Rust exposure, and a plausible stale-contract dependence"
   },
-  "reviewed_warnings": 500,
+  "reviewed_warnings": 800,
   "reviewer_disagreement_examples": {
-    "examples": 10,
-    "minimum_required": 10,
+    "examples": 20,
+    "minimum_required": 20,
     "path": "paper/analysis/reviewer_disagreement_examples.md"
   },
   "reviewers": 2,
@@ -130,9 +130,9 @@
   "true_build_breakage_count": 1,
   "true_semantic_drift_count": 29,
   "true_wrapper_fix_and_true_semantic_drift_reported_separately": true,
-  "true_wrapper_fix_count": 17,
-  "unclear_count": 0,
+  "true_wrapper_fix_count": 20,
+  "unclear_count": 1,
   "unclear_is_true_positive": false,
-  "unclear_rate": 0.0,
+  "unclear_rate": 0.0013,
   "wrapper_fix_oracle_usage": "auxiliary_validation_only"
 }

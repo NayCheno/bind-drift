@@ -2,7 +2,7 @@
   "ablation_strict_comparison": {
     "available": true,
     "path": "paper/tables/ablation_strict_comparison.json",
-    "sha256": "b80dfd3c62ece05aa830da74c8a07c1df917d9439c35de0872535de8b7e9192f"
+    "sha256": "099012eeed0be6be700661e62e0e4dbd17e965e63cfc71b409e5c585fbdd7e6a"
   },
   "arm64_external_validity": {
     "available": true,
@@ -12,7 +12,7 @@
   "baseline_strict_comparison": {
     "available": true,
     "path": "paper/tables/baseline_strict_comparison.json",
-    "sha256": "125b40fc159c72826e4a94bbd46ce61d7d9395b36ba68a52c8b6a4079b4196bb"
+    "sha256": "e8724b9712970f68dab8ef41c4f39bcec01b1088218e67554226d771cc40363a"
   },
   "baselines_ablations": {
     "available": true,
@@ -22,22 +22,22 @@
   "evaluation_protocol": {
     "available": true,
     "path": "data/replay/latest/evaluation_protocol.json",
-    "sha256": "80480e9170f85f4efdca2ccc293121760cd7eadccdaba2f262ce036c46ff5f4b"
+    "sha256": "e03d2d18fe4a8c8e9d44468de160f892dfee8896170b7ec0c9b000cfb761b1d6"
   },
   "evaluation_summary": {
     "available": true,
     "path": "paper/tables/evaluation_summary.json",
-    "sha256": "f922e31d82d9d3825b6bc267694b1b6965128af5705c031ca22b3093f4180866"
+    "sha256": "16d23b2625cba1f09c95febfd98f6e2e22a94e255e9537ecf7c38d5a7120c5ae"
   },
   "extractor_audit": {
     "available": true,
     "path": "paper/tables/extractor_audit.json",
-    "sha256": "803c05a2239a4278c469b5cb8dc61c573b418bb8aabeaf746a09c3f203af0a9b"
+    "sha256": "d2494a960d1e4de21254478de61dc9d0670dbe9fb7e8df56a49df20cb3bc2a87"
   },
   "extractor_audit_manifest": {
     "available": true,
     "path": "data/audit/extractor_audit_manifest.json",
-    "sha256": "f51dad5f2021d9f8b80a7f31cc3e914e2a3dfb2ab5e21978bb1e0adb6d5fd392"
+    "sha256": "35955b8c964ab8c212188891b61aa42d603db524f1f30033a102b5f73ed0823e"
   },
   "extractor_confusion_matrix": {
     "available": true,
@@ -77,17 +77,17 @@
   "false_positive_taxonomy": {
     "available": true,
     "path": "paper/tables/false_positive_taxonomy.json",
-    "sha256": "bb333add3401abc7319843dec9e7163d82d7970f43733dde55573d4d25fbddab"
+    "sha256": "63544d3ef9ede8eaaafc466c09ec55efa3335d1a84dead201a7885b0261d451b"
   },
   "false_positive_taxonomy_analysis": {
     "available": true,
     "path": "paper/analysis/false_positive_taxonomy.md",
-    "sha256": "50c244614854d5db4fd8f90671c5fafb878a989b40a8c3641d5f308c20888eb3"
+    "sha256": "0b9a6bf59fd609853f51122d9351025b4d6237c886ce41fa567c4751f72ac6fc"
   },
   "manual_review_quality": {
     "available": true,
     "path": "paper/tables/manual_review_quality.json",
-    "sha256": "c8dbd94ad6398d2d941700175c853beb25fa2307dfcefc50dbace816239a223e"
+    "sha256": "46108c60d7d3bde92d90b5a73bfdbe7e9e07b0d9448e8db8b6a1d9f8a2fd43b4"
   },
   "manual_review_summary": {
     "available": true,
@@ -97,7 +97,7 @@
   "ranking_pooled_evaluation": {
     "available": true,
     "path": "paper/tables/ranking_pooled_evaluation.json",
-    "sha256": "fc77b0432fef4b3811cfb09b95c4a3484cd18f84a20dfa47ae8bef75d151db82"
+    "sha256": "ab1578671b3f9b51072055822fb50cd04599d7bd6b3f096fce6b912c646a1fd1"
   },
   "ranking_score_audit": {
     "available": true,
@@ -117,12 +117,12 @@
   "reviewer_disagreement_examples": {
     "available": true,
     "path": "paper/analysis/reviewer_disagreement_examples.md",
-    "sha256": "a59c839322e1e9ea48f9c236b4cfd6a43ae20a23002d6eb359b9ba55109579fd"
+    "sha256": "89b3a53cb96a8b5c1269b3ca780b1f514c2ce2a67a1664b8288117ce4d382e3b"
   },
   "run_manifest": {
     "available": true,
     "path": "data/replay/latest/run_manifest.json",
-    "sha256": "8c769a19367905cf2ce95929ee65bb842e12490024fb7e627cf192e9a4e20cdf"
+    "sha256": "71e34a7eacd804ababda4f62216e03db7afebaf1f9c5985fbf7e425c358cddb4"
   },
   "runtime_scalability": {
     "available": true,

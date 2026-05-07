@@ -30,10 +30,10 @@ def test_default_evaluation_protocol_locks_claim_boundary(tmp_path: Path):
     assert protocol["manual_review_policy"]["reviewers_blind_to_each_other"] is True
     assert protocol["manual_review_policy"]["reviewers_blind_to_oracles"] is False
     assert protocol["manual_review_policy"]["label_source_for_metrics"] == "adjudicated_label"
-    assert protocol["manual_review_policy"]["cohen_kappa_minimum"] == 0.70
-    assert protocol["manual_review_policy"]["agreement_rate_minimum"] == 0.80
-    assert protocol["manual_review_policy"]["unclear_rate_maximum"] == 0.05
-    assert protocol["manual_review_policy"]["reviewer_disagreement_examples_minimum"] == 10
+    assert protocol["manual_review_policy"]["cohen_kappa_minimum"] == 0.78
+    assert protocol["manual_review_policy"]["agreement_rate_minimum"] == 0.88
+    assert protocol["manual_review_policy"]["unclear_rate_maximum"] == 0.03
+    assert protocol["manual_review_policy"]["reviewer_disagreement_examples_minimum"] == 20
     assert protocol["manual_review_policy"]["trusted_review_protocol"]["accepted_as_trusted_expert_review"] is True
     assert protocol["manual_review_policy"]["trusted_review_protocol"]["review_artifacts_participate_in_primary_score"] is False
     assert protocol["manual_review_policy"]["trusted_review_protocol"]["reviewer_roles_receive_adjudicated_labels"] is False

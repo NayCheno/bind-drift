@@ -53,10 +53,11 @@ M4_FALSE_POSITIVE_TAXONOMY = {
     "layout_ambiguity",
 }
 M4_PRIMARY_METRICS = ("p_at_10", "p_at_20", "p_at_50", "p_at_100", "ndcg_at_20", "auprc_on_pooled_review_set")
-M5_MIN_COHEN_KAPPA = 0.70
-M5_MIN_AGREEMENT_RATE = 0.80
-M5_MAX_UNCLEAR_RATE = 0.05
-M5_MIN_DISAGREEMENT_EXAMPLES = 10
+M5_MIN_POOLED_REVIEW_SIZE = 800
+M5_MIN_COHEN_KAPPA = 0.78
+M5_MIN_AGREEMENT_RATE = 0.88
+M5_MAX_UNCLEAR_RATE = 0.03
+M5_MIN_DISAGREEMENT_EXAMPLES = 20
 M5_REVIEW_FORBIDDEN_STRINGS = (
     "score_breakdown",
     "wrapper_fix_hit=",
@@ -267,7 +268,7 @@ def _write_manual_review_quality(cfg: Config, path: Path, examples_path: Path, m
     kappa = _cohen_kappa(
         [(row.get("reviewer1_label", "").strip(), row.get("reviewer2_label", "").strip()) for row in double_labeled]
     )
-    disagreement_example_minimum = 10 if total >= 450 else min(5, len(disagreements))
+    disagreement_example_minimum = M5_MIN_DISAGREEMENT_EXAMPLES if total >= M5_MIN_POOLED_REVIEW_SIZE else min(5, len(disagreements))
     examples = _write_disagreement_examples(cfg, examples_path, review_path, disagreements, limit=disagreement_example_minimum or 5)
     missing_columns = [column for column in MANUAL_REVIEW_QUALITY_COLUMNS if column not in columns]
     label_leakage_findings = _label_leakage_findings(rows)
@@ -303,7 +304,7 @@ def _write_manual_review_quality(cfg: Config, path: Path, examples_path: Path, m
             "cohen_kappa_minimum": M5_MIN_COHEN_KAPPA,
             "agreement_rate_minimum": M5_MIN_AGREEMENT_RATE,
             "unclear_rate_maximum": M5_MAX_UNCLEAR_RATE,
-            "reviewer_disagreement_examples_minimum": M5_MIN_DISAGREEMENT_EXAMPLES if total >= 450 else disagreement_example_minimum,
+            "reviewer_disagreement_examples_minimum": M5_MIN_DISAGREEMENT_EXAMPLES if total >= M5_MIN_POOLED_REVIEW_SIZE else disagreement_example_minimum,
         },
         "review_protocol": review_protocol,
         "reviewer_disagreement_examples": {
@@ -320,7 +321,7 @@ def _write_manual_review_quality(cfg: Config, path: Path, examples_path: Path, m
     }
     unclear_rate = round(label_distribution.get("UNCLEAR", 0) / total, 4) if total else 1.0
     strict_checks = {
-        "pooled_review_size": 450 <= total <= 600,
+        "pooled_review_size": total >= M5_MIN_POOLED_REVIEW_SIZE,
         "label_coverage": coverage >= 1.0,
         "double_review_complete": bool(total and len(double_labeled) == total),
         "adjudication_complete": bool(total and len(adjudicated) == total),
@@ -356,7 +357,7 @@ def _write_manual_review_quality(cfg: Config, path: Path, examples_path: Path, m
         "label_leakage_check_passed": not label_leakage_findings,
         "unclear_is_not_counted_as_true_positive": summary["unclear_is_true_positive"] is False,
     }
-    strict_gate_enforced = strict_gate_active and total >= 450
+    strict_gate_enforced = strict_gate_active and total >= M5_MIN_POOLED_REVIEW_SIZE
     summary["strict_checks"] = strict_checks
     summary["strict_gate_enforced"] = strict_gate_enforced
     summary["unclear_rate"] = unclear_rate
@@ -699,10 +700,12 @@ def _m4_false_positive_bucket(warning: dict[str, Any], label: str, review: dict[
         return "macro_constant_over_prioritization"
     if warning_type in {"FieldDrift", "LayoutDrift", "LayoutFieldDrift"} or fact_source == "layout_diff":
         return "layout_ambiguity"
+    if warning.get("c_evidence_level") == "binding_only" or fact_source == "binding_diff" or _mentions(review, "generated binding"):
+        if not _m4_has_rust_reachability(warning) and symbol.startswith("__"):
+            return "weak_rust_reachability"
+        return "binding_only_or_generated_surface"
     if not _m4_has_rust_reachability(warning):
         return "weak_rust_reachability"
-    if warning.get("c_evidence_level") == "binding_only" or fact_source == "binding_diff" or _mentions(review, "generated binding"):
-        return "binding_only_or_generated_surface"
     return "real_c_drift_no_rust_contract_impact"
 
 

@@ -1,0 +1,15 @@
+{
+  "role": "reviewer1",
+  "row_count": 800,
+  "label_distribution": {
+    "BENIGN_DRIFT": 219,
+    "FALSE_POSITIVE": 530,
+    "TRUE_BUILD_BREAKAGE": 1,
+    "TRUE_SEMANTIC_DRIFT": 29,
+    "TRUE_WRAPPER_FIX": 20,
+    "UNCLEAR": 1
+  },
+  "independence_source": "reviewer1_role_stable",
+  "review_round": "m3_stable_independent_reviewer1",
+  "access_statement": "Reviewer 1 used only data/replay/latest/review_artifacts/m3_stable_evidence_packets.jsonl and did not access reviewer2 or adjudicator artifacts."
+}

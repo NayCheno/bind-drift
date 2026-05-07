@@ -5,7 +5,7 @@
         "ablation": "no_graph",
         "design_choice": "Graph evidence keeps weak symbol-only matches below better-supported C/Rust contract evidence.",
         "primary_minus_ablation": {
-          "auprc_on_pooled_review_set": 0.5376,
+          "auprc_on_pooled_review_set": 0.5069,
           "ndcg_at_20": 0.5616,
           "p_at_20": 0.4,
           "p_at_50": 0.32
@@ -16,7 +16,7 @@
         "ablation": "no_impact_gate",
         "design_choice": "Impact gating helps keep C-only or weak-reachability drift below Rust-impact review targets.",
         "primary_minus_ablation": {
-          "auprc_on_pooled_review_set": 0.3857,
+          "auprc_on_pooled_review_set": 0.3587,
           "ndcg_at_20": 0.6407,
           "p_at_20": 0.5,
           "p_at_50": 0.12
@@ -30,7 +30,7 @@
   },
   "rankers": [
     {
-      "auprc_on_pooled_review_set": 0.9444,
+      "auprc_on_pooled_review_set": 0.9013,
       "bootstrap_ci": {
         "ndcg_at_20": [
           1.0,
@@ -46,16 +46,17 @@
         ]
       },
       "candidate_count": 320,
-      "evaluated_pool_rows": 500,
+      "evaluated_pool_rows": 800,
       "evaluation_denominator": "complete_pooled_review_set",
       "forbidden_oracle_feature_keys": [],
       "kind": "primary",
       "label_distribution": {
-        "BENIGN_DRIFT": 3,
-        "FALSE_POSITIVE": 450,
+        "BENIGN_DRIFT": 219,
+        "FALSE_POSITIVE": 530,
         "TRUE_BUILD_BREAKAGE": 1,
         "TRUE_SEMANTIC_DRIFT": 29,
-        "TRUE_WRAPPER_FIX": 17
+        "TRUE_WRAPPER_FIX": 20,
+        "UNCLEAR": 1
       },
       "labeled_at_100": 100,
       "ndcg_at_20": 1.0,
@@ -65,22 +66,24 @@
       "p_at_20": 1.0,
       "p_at_50": 0.86,
       "ranked_label_distribution": {
-        "FALSE_POSITIVE": 225,
+        "BENIGN_DRIFT": 210,
+        "FALSE_POSITIVE": 14,
         "TRUE_BUILD_BREAKAGE": 1,
         "TRUE_SEMANTIC_DRIFT": 29,
-        "TRUE_WRAPPER_FIX": 17
+        "TRUE_WRAPPER_FIX": 20,
+        "UNCLEAR": 1
       },
       "ranked_true_label_distribution": {
         "TRUE_BUILD_BREAKAGE": 1,
         "TRUE_SEMANTIC_DRIFT": 29,
-        "TRUE_WRAPPER_FIX": 17
+        "TRUE_WRAPPER_FIX": 20
       },
       "ranker": "binddrift_oracle_blind",
       "ranking_feature_keys": [
         "oracle_blind_score_components"
       ],
-      "review_pool_covered": 0.544,
-      "review_pool_ranked_count": 272,
+      "review_pool_covered": 0.3438,
+      "review_pool_ranked_count": 275,
       "score_component_keys": [
         "added_symbol_without_old_c_evidence_penalty",
         "ambiguous_binding_contract_surface_penalty",
@@ -113,12 +116,12 @@
       "true_label_distribution": {
         "TRUE_BUILD_BREAKAGE": 1,
         "TRUE_SEMANTIC_DRIFT": 29,
-        "TRUE_WRAPPER_FIX": 17
+        "TRUE_WRAPPER_FIX": 20
       },
       "warning_volume": 320
     },
     {
-      "auprc_on_pooled_review_set": 0.4068,
+      "auprc_on_pooled_review_set": 0.3944,
       "bootstrap_ci": {
         "ndcg_at_20": [
           0.3674,
@@ -134,16 +137,17 @@
         ]
       },
       "candidate_count": 320,
-      "evaluated_pool_rows": 500,
+      "evaluated_pool_rows": 800,
       "evaluation_denominator": "complete_pooled_review_set",
       "forbidden_oracle_feature_keys": [],
       "kind": "ablation",
       "label_distribution": {
-        "BENIGN_DRIFT": 3,
-        "FALSE_POSITIVE": 450,
+        "BENIGN_DRIFT": 219,
+        "FALSE_POSITIVE": 530,
         "TRUE_BUILD_BREAKAGE": 1,
         "TRUE_SEMANTIC_DRIFT": 29,
-        "TRUE_WRAPPER_FIX": 17
+        "TRUE_WRAPPER_FIX": 20,
+        "UNCLEAR": 1
       },
       "labeled_at_100": 100,
       "ndcg_at_20": 0.4384,
@@ -153,33 +157,35 @@
       "p_at_20": 0.6,
       "p_at_50": 0.54,
       "ranked_label_distribution": {
-        "FALSE_POSITIVE": 225,
+        "BENIGN_DRIFT": 210,
+        "FALSE_POSITIVE": 14,
         "TRUE_BUILD_BREAKAGE": 1,
         "TRUE_SEMANTIC_DRIFT": 29,
-        "TRUE_WRAPPER_FIX": 17
+        "TRUE_WRAPPER_FIX": 20,
+        "UNCLEAR": 1
       },
       "ranked_true_label_distribution": {
         "TRUE_BUILD_BREAKAGE": 1,
         "TRUE_SEMANTIC_DRIFT": 29,
-        "TRUE_WRAPPER_FIX": 17
+        "TRUE_WRAPPER_FIX": 20
       },
       "ranker": "no_graph",
       "ranking_feature_keys": [
         "symbol",
         "warning_id"
       ],
-      "review_pool_covered": 0.544,
-      "review_pool_ranked_count": 272,
+      "review_pool_covered": 0.3438,
+      "review_pool_ranked_count": 275,
       "score_component_keys": [],
       "true_label_distribution": {
         "TRUE_BUILD_BREAKAGE": 1,
         "TRUE_SEMANTIC_DRIFT": 29,
-        "TRUE_WRAPPER_FIX": 17
+        "TRUE_WRAPPER_FIX": 20
       },
       "warning_volume": 320
     },
     {
-      "auprc_on_pooled_review_set": 0.5587,
+      "auprc_on_pooled_review_set": 0.5426,
       "bootstrap_ci": {
         "ndcg_at_20": [
           0.2527,
@@ -195,16 +201,17 @@
         ]
       },
       "candidate_count": 320,
-      "evaluated_pool_rows": 500,
+      "evaluated_pool_rows": 800,
       "evaluation_denominator": "complete_pooled_review_set",
       "forbidden_oracle_feature_keys": [],
       "kind": "ablation",
       "label_distribution": {
-        "BENIGN_DRIFT": 3,
-        "FALSE_POSITIVE": 450,
+        "BENIGN_DRIFT": 219,
+        "FALSE_POSITIVE": 530,
         "TRUE_BUILD_BREAKAGE": 1,
         "TRUE_SEMANTIC_DRIFT": 29,
-        "TRUE_WRAPPER_FIX": 17
+        "TRUE_WRAPPER_FIX": 20,
+        "UNCLEAR": 1
       },
       "labeled_at_100": 100,
       "ndcg_at_20": 0.3593,
@@ -214,15 +221,17 @@
       "p_at_20": 0.5,
       "p_at_50": 0.74,
       "ranked_label_distribution": {
-        "FALSE_POSITIVE": 225,
+        "BENIGN_DRIFT": 210,
+        "FALSE_POSITIVE": 14,
         "TRUE_BUILD_BREAKAGE": 1,
         "TRUE_SEMANTIC_DRIFT": 29,
-        "TRUE_WRAPPER_FIX": 17
+        "TRUE_WRAPPER_FIX": 20,
+        "UNCLEAR": 1
       },
       "ranked_true_label_distribution": {
         "TRUE_BUILD_BREAKAGE": 1,
         "TRUE_SEMANTIC_DRIFT": 29,
-        "TRUE_WRAPPER_FIX": 17
+        "TRUE_WRAPPER_FIX": 20
       },
       "ranker": "no_impact_gate",
       "ranking_feature_keys": [
@@ -230,13 +239,13 @@
         "c_side_change_size",
         "confidence"
       ],
-      "review_pool_covered": 0.544,
-      "review_pool_ranked_count": 272,
+      "review_pool_covered": 0.3438,
+      "review_pool_ranked_count": 275,
       "score_component_keys": [],
       "true_label_distribution": {
         "TRUE_BUILD_BREAKAGE": 1,
         "TRUE_SEMANTIC_DRIFT": 29,
-        "TRUE_WRAPPER_FIX": 17
+        "TRUE_WRAPPER_FIX": 20
       },
       "warning_volume": 320
     }

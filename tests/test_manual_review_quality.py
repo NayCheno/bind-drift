@@ -95,9 +95,9 @@ def test_manual_review_quality_uses_pooled_labels_and_writes_examples(tmp_path: 
     assert quality["label_leakage_check"] == "passed"
     assert quality["acceptance"]["minimum_passes"] is True
     assert quality["acceptance"]["pooled_review_labels_primary_source"] is True
-    assert quality["acceptance_thresholds"]["cohen_kappa_minimum"] == 0.70
-    assert quality["acceptance_thresholds"]["agreement_rate_minimum"] == 0.80
-    assert quality["acceptance_thresholds"]["unclear_rate_maximum"] == 0.05
+    assert quality["acceptance_thresholds"]["cohen_kappa_minimum"] == 0.78
+    assert quality["acceptance_thresholds"]["agreement_rate_minimum"] == 0.88
+    assert quality["acceptance_thresholds"]["unclear_rate_maximum"] == 0.03
     assert quality["unclear_is_true_positive"] is False
     assert quality["true_wrapper_fix_and_true_semantic_drift_reported_separately"] is True
     protocol = quality["review_protocol"]

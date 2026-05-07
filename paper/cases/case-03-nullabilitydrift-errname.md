@@ -43,9 +43,9 @@ The warning reaches a public safe Rust API, so the maintainer review question is
 ## Manual Review Label
 
 - Adjudicated label: `TRUE_WRAPPER_FIX`
-- Reviewer 1: `TRUE_WRAPPER_FIX` -- Direct same-symbol wrapper-fix calibration is present for errname. The packet links later Rust wrapper/helper changes to the warned SignatureDrift symbol or contract, satisfying the direct-wrapper standard despite any missing full diff.
-- Reviewer 2: `TRUE_WRAPPER_FIX` -- Direct same-symbol wrapper oracle is present for errname; later Rust wrapper/helper evidence addresses the same warned symbol or contract. Rust exposure level: safe_api.
-- Adjudication: errname: direct same-symbol/same-contract wrapper oracle is present, so the later Rust wrapper/helper/binding change supports the warned drift.
+- Reviewer 1: `TRUE_WRAPPER_FIX` -- Packet reports a direct same-symbol Rust wrapper/helper/binding fix for errname.
+- Reviewer 2: `TRUE_WRAPPER_FIX` -- Same-symbol wrapper oracle matched before lower-priority rules.
+- Adjudication: Direct same-symbol wrapper oracle is present; adjudicated TRUE_WRAPPER_FIX per v3 policy.
 
 ## Why This Is Not Generated-Binding-Only
 

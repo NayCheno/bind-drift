@@ -3,11 +3,11 @@
   "label_file": "data/replay/latest/pooled_review_labels.csv",
   "labels": {
     "coverage": 1.0,
-    "label_rows": 500,
-    "labeled_rows": 500
+    "label_rows": 800,
+    "labeled_rows": 800
   },
   "pool": "data/replay/latest/pooled_review_set.jsonl",
-  "pool_rows": 500,
+  "pool_rows": 800,
   "ranker_top100_coverage": {
     "binddrift_current": {
       "coverage": 1.0,
@@ -60,7 +60,7 @@
       "top100": 100
     }
   },
-  "ranker_top100_union": 255,
+  "ranker_top100_union": 262,
   "rankers": [
     "binddrift_oracle_blind",
     "binddrift_current",

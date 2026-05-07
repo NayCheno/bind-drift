@@ -1,0 +1,17 @@
+{
+  "row_count": 800,
+  "label_distribution": {
+    "FALSE_POSITIVE": 530,
+    "BENIGN_DRIFT": 219,
+    "TRUE_SEMANTIC_DRIFT": 29,
+    "TRUE_WRAPPER_FIX": 20,
+    "TRUE_BUILD_BREAKAGE": 1,
+    "UNCLEAR": 1
+  },
+  "disagreements_seen": 75,
+  "agreement_rate": 0.90625,
+  "cohen_kappa": 0.8160896991840513,
+  "unclear_rows": 1,
+  "review_round": "m3_stable_adjudication_v3",
+  "access_statement": "Adjudication read only data/replay/latest/review_artifacts/m3_stable_evidence_packets.jsonl, data/replay/latest/review_artifacts/m3_stable_reviewer1.jsonl, and data/replay/latest/review_artifacts/m3_stable_reviewer2.jsonl as review inputs; no pooled labels, ranker outputs, ranking/evaluation tables, score artifacts, ranks, scores, or ranker names were used; wrote only m3_stable_adjudicator.jsonl and m3_stable_adjudicator_summary.json."
+}

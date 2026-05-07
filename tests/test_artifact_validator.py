@@ -353,11 +353,11 @@ def test_artifact_validator_reports_m5_manual_review_ready() -> None:
 
     manual = result["hard_gates"]["manual_review_quality"]
     assert manual["passes"] is True
-    assert manual["reviewed_warnings"] == 500
-    assert manual["cohen_kappa"] >= 0.70
-    assert manual["agreement_rate"] >= 0.80
-    assert manual["unclear_rate"] <= 0.05
-    assert manual["reviewer_disagreement_examples"]["examples"] >= 10
+    assert manual["reviewed_warnings"] >= 800
+    assert manual["cohen_kappa"] >= 0.78
+    assert manual["agreement_rate"] >= 0.88
+    assert manual["unclear_rate"] <= 0.03
+    assert manual["reviewer_disagreement_examples"]["examples"] >= 20
     assert all(manual["strict_checks"].values())
 
 

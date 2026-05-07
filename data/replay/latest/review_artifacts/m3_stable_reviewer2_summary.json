@@ -1,0 +1,15 @@
+{
+  "row_count": 800,
+  "label_distribution": {
+    "FALSE_POSITIVE": 530,
+    "BENIGN_DRIFT": 144,
+    "UNCLEAR": 76,
+    "TRUE_SEMANTIC_DRIFT": 29,
+    "TRUE_WRAPPER_FIX": 20,
+    "TRUE_BUILD_BREAKAGE": 1
+  },
+  "unclear_rule_matches": 76,
+  "review_round": "m3_stable_independent_reviewer2_v4",
+  "independence_source": "reviewer2_role_stable_v4",
+  "access_statement": "Reviewer 2 v4 derived labels only from m3_stable_evidence_packets.jsonl packet IDs, review_calibration, oracle, and missing_evidence plus the user-provided deterministic label rules. Reviewer1, adjudicator, pooled labels, ranker outputs, ranking/evaluation tables, and score artifacts were not read or used."
+}

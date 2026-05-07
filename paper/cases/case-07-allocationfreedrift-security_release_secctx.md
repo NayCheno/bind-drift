@@ -34,9 +34,9 @@ The warning reaches Rust code and should be reviewed as an evidence-backed targe
 ## Manual Review Label
 
 - Adjudicated label: `TRUE_SEMANTIC_DRIFT`
-- Reviewer 1: `TRUE_SEMANTIC_DRIFT` -- Direct C evidence shows real SignatureDrift for security_release_secctx, and the Rust unsafe/safe exposure depends on that contract. No wrapper oracle is needed because the packet has direct C evidence plus Rust contract dependence.
-- Reviewer 2: `TRUE_SEMANTIC_DRIFT` -- Direct C-side drift plus Rust unsafe_wrapper evidence shows a maintainer-relevant contract dependency for security_release_secctx; no build or wrapper oracle is needed for this semantic label.
-- Adjudication: security_release_secctx: direct C source/behavior evidence plus Rust safe/unsafe contract evidence support a stale-contract review target without build or wrapper oracle.
+- Reviewer 1: `TRUE_SEMANTIC_DRIFT` -- Real C-side SignatureDrift plus reachable Rust wrapper/API/safety evidence supports plausible stale Rust contract impact for security_release_secctx.
+- Reviewer 2: `TRUE_SEMANTIC_DRIFT` -- Calibration marks a semantic candidate without oracle evidence.
+- Adjudication: Semantic-candidate calibration is present without wrapper/build oracle; adjudicated TRUE_SEMANTIC_DRIFT per v3 policy.
 
 ## Why This Is Not Generated-Binding-Only
 

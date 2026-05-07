@@ -1,5 +1,5 @@
 {
-  "ccfb_submission_ready": true,
+  "ccfb_submission_ready": false,
   "checks": [
     {
       "details": {
@@ -17,8 +17,8 @@
         "locked_split_hash": "348bb27b4824ad39b8283bbfe8865e552a4bde0e2eac488bc2ec04adc71dc8b5",
         "pair_count": 20,
         "paper_topk": 100,
-        "pooled_review_label_count": 500,
-        "pooled_review_set_count": 500,
+        "pooled_review_label_count": 800,
+        "pooled_review_set_count": 800,
         "promoted_warning_count": 320,
         "resolved_paths": {
           "drift_facts": "data/replay/latest/drift_facts.jsonl",
@@ -36,11 +36,11 @@
         "run_id": "latest",
         "sha256": {
           "drift_facts.jsonl": "45ec718e8bcf22e4b5d91bf1bfa4924d0c414958aba123c4e0f96bde7018d8ef",
-          "evaluation_protocol.json": "80480e9170f85f4efdca2ccc293121760cd7eadccdaba2f262ce036c46ff5f4b",
+          "evaluation_protocol.json": "e03d2d18fe4a8c8e9d44468de160f892dfee8896170b7ec0c9b000cfb761b1d6",
           "manual_review.csv": "f999f73ccbc3615f44586a7d7c7fe93ba1899fcb35d885b646d2c9fc1eb27937",
-          "pooled_review_labels.csv": "27d407431b7e8fbb70c9634f76208e5515301e132e8eecf1164d35e391c58a46",
-          "pooled_review_manifest.json": "15c49eed8ecffa6d916c2a51199447141be0bec273da758969d80aaa8b83442e",
-          "pooled_review_set.jsonl": "7ef58da3e1fbb4ab68fc4748856627882c55c215d0d2db9812c707ba57ec7293",
+          "pooled_review_labels.csv": "19b7593a126c1d111a63f649b0d8681f39eb97c7494613f761218f7a712d7a2e",
+          "pooled_review_manifest.json": "e3bf6a44487545234f7f786430242f34a6eec212da64ab5f8d3a301c22d6cce4",
+          "pooled_review_set.jsonl": "be28c1ae95bca772b350b746718779e1382889cb64a03afbfa66123aa76ae5de",
           "promoted_warnings.jsonl": "e2d2f8d6bc0eb21a584fa3ae6cacedcd890aedf1fab912c8353ce35e38ac21e3",
           "single_version_review_targets.jsonl": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
           "warnings.jsonl": "c393edc237fee79cb4f56111e60de5ce4173e094f4ef96f953baafecd2cd658c"
@@ -66,8 +66,8 @@
         },
         "manual_review_policy": {
           "adjudication_required": true,
-          "agreement_rate_minimum": 0.8,
-          "cohen_kappa_minimum": 0.7,
+          "agreement_rate_minimum": 0.88,
+          "cohen_kappa_minimum": 0.78,
           "cohen_kappa_required": true,
           "double_review": true,
           "label_source_for_metrics": "adjudicated_label",
@@ -79,7 +79,7 @@
             "reviewer2",
             "adjudicator"
           ],
-          "reviewer_disagreement_examples_minimum": 10,
+          "reviewer_disagreement_examples_minimum": 20,
           "reviewers_blind_to_each_other": true,
           "reviewers_blind_to_oracles": false,
           "reviewers_blind_to_rank_and_score": true,
@@ -90,7 +90,7 @@
             "reviewer_roles_receive_adjudicated_labels": false
           },
           "unclear_is_not_true_positive": true,
-          "unclear_rate_maximum": 0.05
+          "unclear_rate_maximum": 0.03
         },
         "oracle_usage": {
           "build_oracle": "labels_and_auxiliary_validation_only",
@@ -109,7 +109,7 @@
         "primary_warning_set": "oracle_blind_ranked_warnings",
         "protocol_version": "ccfb-strict-v2",
         "repo_relative_path": "data/replay/latest/evaluation_protocol.json",
-        "sha256": "80480e9170f85f4efdca2ccc293121760cd7eadccdaba2f262ce036c46ff5f4b",
+        "sha256": "e03d2d18fe4a8c8e9d44468de160f892dfee8896170b7ec0c9b000cfb761b1d6",
         "splits": {
           "dev_pairs": [
             "latest-p002-v6.2-to-v6.3",
@@ -337,8 +337,8 @@
           "unclear_rate": true
         },
         "adjudication_notes_missing_rate": 0.0,
-        "agreement_rate": 0.922,
-        "cohen_kappa": 0.8118,
+        "agreement_rate": 0.9062,
+        "cohen_kappa": 0.8161,
         "label_coverage": 1.0,
         "label_leakage_check": "passed",
         "passes": true,
@@ -394,10 +394,10 @@
             "top100": 100
           }
         },
-        "reviewed_warnings": 500,
+        "reviewed_warnings": 800,
         "reviewer_disagreement_examples": {
-          "examples": 10,
-          "minimum_required": 10,
+          "examples": 20,
+          "minimum_required": 20,
           "path": "paper/analysis/reviewer_disagreement_examples.md"
         },
         "source_csv": "data/replay/latest/pooled_review_labels.csv",
@@ -423,7 +423,7 @@
           "reviewers_blind_to_each_other": true,
           "unclear_rate": true
         },
-        "unclear_rate": 0.0
+        "unclear_rate": 0.0013
       },
       "name": "manual_review_quality_gate",
       "passes": true
@@ -440,10 +440,10 @@
           "reviewer2": true
         },
         "counts": {
-          "adjudicator": 500,
-          "evidence_collector": 500,
-          "reviewer1": 500,
-          "reviewer2": 500
+          "adjudicator": 800,
+          "evidence_collector": 800,
+          "reviewer1": 800,
+          "reviewer2": 800
         },
         "merge_complete": true,
         "merge_report": "data/replay/latest/review_artifacts/m3_final_merge_report.json",
@@ -454,7 +454,7 @@
           "reviewer1",
           "reviewer2"
         ],
-        "reviewed_warnings": 500,
+        "reviewed_warnings": 800,
         "role_summary": "data/replay/latest/review_artifacts/m3_final_role_summary.json",
         "role_summary_process_findings": []
       },
@@ -533,7 +533,7 @@
         },
         "rq_metrics": {
           "best_simple_metrics": {
-            "auprc_on_pooled_review_set": 0.351,
+            "auprc_on_pooled_review_set": 0.3477,
             "ndcg_at_20": 0.4606,
             "p_at_10": 0.8,
             "p_at_100": 0.26,
@@ -542,7 +542,7 @@
           },
           "drift_fact_count": 16757,
           "primary_metrics": {
-            "auprc_on_pooled_review_set": 0.9444,
+            "auprc_on_pooled_review_set": 0.9013,
             "ndcg_at_20": 1.0,
             "p_at_10": 1.0,
             "p_at_100": 0.43,
@@ -950,7 +950,7 @@
         },
         "claim": "top-k review prioritization, not overall warning-set precision",
         "metrics": {
-          "auprc_on_pooled_review_set": 0.9444,
+          "auprc_on_pooled_review_set": 0.9013,
           "ndcg_at_20": 1.0,
           "p_at_10": 1.0,
           "p_at_100": 0.43,
@@ -966,11 +966,11 @@
         ],
         "passes": true,
         "taxonomy": {
-          "binding_only_or_generated_surface": 54,
-          "layout_ambiguity": 61,
-          "macro_constant_over_prioritization": 60,
-          "real_c_drift_no_rust_contract_impact": 3,
-          "weak_rust_reachability": 275
+          "binding_only_or_generated_surface": 309,
+          "layout_ambiguity": 94,
+          "macro_constant_over_prioritization": 107,
+          "real_c_drift_no_rust_contract_impact": 219,
+          "weak_rust_reachability": 20
         }
       },
       "name": "m4_false_positive_gate",
@@ -984,9 +984,9 @@
           "case_studies_minimum": true,
           "drift_type_count_minimum": true,
           "evidence_chain_complete": true,
-          "minimum_passes": true,
+          "minimum_passes": false,
           "negative_case_studies_minimum": true,
-          "negative_false_positive_case": true,
+          "negative_false_positive_case": false,
           "non_wrapper_semantic_cases_minimum": true,
           "positive_labels_all_true": true,
           "positive_labels_clean": true,
@@ -1008,7 +1008,7 @@
         "case_studies": 8,
         "checks": {
           "artifact_evidence_chain_complete": true,
-          "artifact_false_positive_negative_case": true,
+          "artifact_false_positive_negative_case": false,
           "artifact_negative_cases_minimum": true,
           "artifact_positive_cases_minimum": true,
           "artifact_positive_labels_all_true": true,
@@ -1018,19 +1018,19 @@
           "draft_main_case_studies_exactly_three": true,
           "draft_reports_appendix_counts": true,
           "draft_uses_review_target_boundary": true,
-          "summary_minimum_passes": true
+          "summary_minimum_passes": false
         },
         "draft_main_case_count": 3,
         "drift_type_count": 5,
         "false_positive_cases": 0,
-        "false_positive_negative_cases": 2,
+        "false_positive_negative_cases": 0,
         "forbidden_case_claims_found": [],
         "negative_case_studies": 2,
         "negative_label_distribution": {
-          "FALSE_POSITIVE": 2
+          "BENIGN_DRIFT": 2
         },
         "non_wrapper_semantic_cases": 4,
-        "passes": true,
+        "passes": false,
         "positive_case_drift_types": [
           "AllocationFreeDrift",
           "NullabilityDrift",
@@ -1053,7 +1053,7 @@
         "wrapper_fix_backed_cases": 4
       },
       "name": "case_study_gate",
-      "passes": true
+      "passes": false
     },
     {
       "details": {
@@ -2010,7 +2010,7 @@
     }
   ],
   "claim_policy": "ranking and semantic claims are downgraded when strict gates fail",
-  "final_submission_stage": true,
+  "final_submission_stage": false,
   "hard_gates": {
     "case_studies": {
       "absolute_local_paths": 0,
@@ -2019,9 +2019,9 @@
         "case_studies_minimum": true,
         "drift_type_count_minimum": true,
         "evidence_chain_complete": true,
-        "minimum_passes": true,
+        "minimum_passes": false,
         "negative_case_studies_minimum": true,
-        "negative_false_positive_case": true,
+        "negative_false_positive_case": false,
         "non_wrapper_semantic_cases_minimum": true,
         "positive_labels_all_true": true,
         "positive_labels_clean": true,
@@ -2043,7 +2043,7 @@
       "case_studies": 8,
       "checks": {
         "artifact_evidence_chain_complete": true,
-        "artifact_false_positive_negative_case": true,
+        "artifact_false_positive_negative_case": false,
         "artifact_negative_cases_minimum": true,
         "artifact_positive_cases_minimum": true,
         "artifact_positive_labels_all_true": true,
@@ -2053,19 +2053,19 @@
         "draft_main_case_studies_exactly_three": true,
         "draft_reports_appendix_counts": true,
         "draft_uses_review_target_boundary": true,
-        "summary_minimum_passes": true
+        "summary_minimum_passes": false
       },
       "draft_main_case_count": 3,
       "drift_type_count": 5,
       "false_positive_cases": 0,
-      "false_positive_negative_cases": 2,
+      "false_positive_negative_cases": 0,
       "forbidden_case_claims_found": [],
       "negative_case_studies": 2,
       "negative_label_distribution": {
-        "FALSE_POSITIVE": 2
+        "BENIGN_DRIFT": 2
       },
       "non_wrapper_semantic_cases": 4,
-      "passes": true,
+      "passes": false,
       "positive_case_drift_types": [
         "AllocationFreeDrift",
         "NullabilityDrift",
@@ -2114,8 +2114,8 @@
         "unclear_rate": true
       },
       "adjudication_notes_missing_rate": 0.0,
-      "agreement_rate": 0.922,
-      "cohen_kappa": 0.8118,
+      "agreement_rate": 0.9062,
+      "cohen_kappa": 0.8161,
       "label_coverage": 1.0,
       "label_leakage_check": "passed",
       "passes": true,
@@ -2171,10 +2171,10 @@
           "top100": 100
         }
       },
-      "reviewed_warnings": 500,
+      "reviewed_warnings": 800,
       "reviewer_disagreement_examples": {
-        "examples": 10,
-        "minimum_required": 10,
+        "examples": 20,
+        "minimum_required": 20,
         "path": "paper/analysis/reviewer_disagreement_examples.md"
       },
       "source_csv": "data/replay/latest/pooled_review_labels.csv",
@@ -2200,7 +2200,7 @@
         "reviewers_blind_to_each_other": true,
         "unclear_rate": true
       },
-      "unclear_rate": 0.0
+      "unclear_rate": 0.0013
     },
     "ranking": {
       "ablation_story": {
@@ -2209,7 +2209,7 @@
             "ablation": "no_graph",
             "design_choice": "Graph evidence keeps weak symbol-only matches below better-supported C/Rust contract evidence.",
             "primary_minus_ablation": {
-              "auprc_on_pooled_review_set": 0.5376,
+              "auprc_on_pooled_review_set": 0.5069,
               "ndcg_at_20": 0.5616,
               "p_at_20": 0.4,
               "p_at_50": 0.32
@@ -2220,7 +2220,7 @@
             "ablation": "no_impact_gate",
             "design_choice": "Impact gating helps keep C-only or weak-reachability drift below Rust-impact review targets.",
             "primary_minus_ablation": {
-              "auprc_on_pooled_review_set": 0.3857,
+              "auprc_on_pooled_review_set": 0.3587,
               "ndcg_at_20": 0.6407,
               "p_at_20": 0.5,
               "p_at_50": 0.12
@@ -2341,14 +2341,14 @@
         }
       },
       "metrics": {
-        "auprc_on_pooled_review_set": 0.9444,
+        "auprc_on_pooled_review_set": 0.9013,
         "candidate_count": 320,
         "ndcg_at_20": 1.0,
         "p_at_10": 1.0,
         "p_at_100": 0.43,
         "p_at_20": 1.0,
         "p_at_50": 0.86,
-        "review_pool_ranked_count": 272
+        "review_pool_ranked_count": 275
       },
       "passes": true,
       "ranking_table_recompute_mismatches": [],
@@ -2362,7 +2362,7 @@
           "not_ranked_by_primary_candidate_filter",
           "true_label_ranked_below_top100"
         ],
-        "count": 4,
+        "count": 7,
         "examples": [
           {
             "label": "TRUE_WRAPPER_FIX",
@@ -2403,12 +2403,42 @@
             "type": "FieldDrift",
             "warning_id": "W-000007",
             "warning_uid": "008d4bc1dd6309371bfe398912473c623667c2161a158acd2ca12ffac9fa5b24"
+          },
+          {
+            "label": "TRUE_WRAPPER_FIX",
+            "pair_id": "latest-p013-v6.13-to-v6.14",
+            "rank": 214,
+            "symbol": "platform_device_put",
+            "taxonomy": "binding_or_layout_tail_candidate",
+            "type": "SignatureDrift",
+            "warning_id": "W-000012",
+            "warning_uid": "a1f551d2d8ba933d0ed9056fb16039fdf0f3a972f4caad3be49f1256a4dc8995"
+          },
+          {
+            "label": "TRUE_WRAPPER_FIX",
+            "pair_id": "latest-p007-v6.7-to-v6.8",
+            "rank": 215,
+            "symbol": "put_device",
+            "taxonomy": "binding_or_layout_tail_candidate",
+            "type": "SignatureDrift",
+            "warning_id": "W-000006",
+            "warning_uid": "9ea6043660a08b1aa129cc1323febd4556876c662d27cdd28ebb320a55789c38"
+          },
+          {
+            "label": "TRUE_WRAPPER_FIX",
+            "pair_id": "latest-p013-v6.13-to-v6.14",
+            "rank": 220,
+            "symbol": "pci_dev_get",
+            "taxonomy": "binding_or_layout_tail_candidate",
+            "type": "SignatureDrift",
+            "warning_id": "W-000006",
+            "warning_uid": "87e19d68cfcb07c2103357f9c8d46c49d46b09d6841f6d62413a88263d845f56"
           }
         ],
         "schema_valid": true,
         "schema_version": "m4-ranking-taxonomy-v2",
         "taxonomy": {
-          "binding_or_layout_tail_candidate": 4
+          "binding_or_layout_tail_candidate": 7
         },
         "unknown_taxonomy": [],
         "window": "pooled_true_labels_outside_primary_top_100"
@@ -2424,7 +2454,7 @@
         "count": 57,
         "examples": [
           {
-            "label": "FALSE_POSITIVE",
+            "label": "BENIGN_DRIFT",
             "pair_id": "latest-p012-v6.12-to-v6.13",
             "rank": 44,
             "symbol": "errno_to_blk_status",
@@ -2434,7 +2464,7 @@
             "warning_uid": "0217c5aca3beed930cd6cd613e9717d4a78ab28013cffd3881c7d5c7ab7db42a"
           },
           {
-            "label": "FALSE_POSITIVE",
+            "label": "BENIGN_DRIFT",
             "pair_id": "latest-p012-v6.12-to-v6.13",
             "rank": 45,
             "symbol": "firmware_request_nowarn",
@@ -2444,7 +2474,7 @@
             "warning_uid": "a7b50f9e01fa519b3ca5429567469093b01a1a6e6aac05980f9c6eb72628692a"
           },
           {
-            "label": "FALSE_POSITIVE",
+            "label": "BENIGN_DRIFT",
             "pair_id": "latest-p012-v6.12-to-v6.13",
             "rank": 46,
             "symbol": "PTR_ERR",
@@ -2454,7 +2484,7 @@
             "warning_uid": "39859c860002f454586acf39f3d0df45a3189f1edc7868bad4cb189a795d4b8e"
           },
           {
-            "label": "FALSE_POSITIVE",
+            "label": "BENIGN_DRIFT",
             "pair_id": "latest-p020-v7.0-to-HEAD_9207d47f966b",
             "rank": 47,
             "symbol": "gpu_buddy_alloc_blocks",
@@ -2464,7 +2494,7 @@
             "warning_uid": "58bf7f2f2d74c5ec6be9fcd8a9b33e90df0d6227323e4b82048987d533465397"
           },
           {
-            "label": "FALSE_POSITIVE",
+            "label": "BENIGN_DRIFT",
             "pair_id": "latest-p012-v6.12-to-v6.13",
             "rank": 48,
             "symbol": "IS_ERR",
@@ -2474,7 +2504,7 @@
             "warning_uid": "4b538a23e5b7e22f2cc86f95ffea064b2634aa0ab97449ad304889083dc27efd"
           },
           {
-            "label": "FALSE_POSITIVE",
+            "label": "BENIGN_DRIFT",
             "pair_id": "latest-p017-v6.17-to-v6.18",
             "rank": 49,
             "symbol": "refcount_set",
@@ -2484,7 +2514,7 @@
             "warning_uid": "f6741da33cd41c225aef023b1b2a71f2e315f0610d131c539603cbe7aedb8ec6"
           },
           {
-            "label": "FALSE_POSITIVE",
+            "label": "BENIGN_DRIFT",
             "pair_id": "latest-p017-v6.17-to-v6.18",
             "rank": 50,
             "symbol": "refcount_dec",
@@ -2494,7 +2524,7 @@
             "warning_uid": "dee765bcd2302ae60a2b8879f2ad930b8bdb343af3df1fd16c994112640d77c5"
           },
           {
-            "label": "FALSE_POSITIVE",
+            "label": "BENIGN_DRIFT",
             "pair_id": "latest-p012-v6.12-to-v6.13",
             "rank": 51,
             "symbol": "rb_node",
@@ -2504,7 +2534,7 @@
             "warning_uid": "c4db15ef412f4f82fb1709ab6fc668ce3ecdeb046df1d7f3cde9429b65f60b7c"
           },
           {
-            "label": "FALSE_POSITIVE",
+            "label": "BENIGN_DRIFT",
             "pair_id": "latest-p012-v6.12-to-v6.13",
             "rank": 52,
             "symbol": "REFCOUNT_INIT",
@@ -2514,7 +2544,7 @@
             "warning_uid": "399880825c439eb15d3e73aa711d383a87e7dbba9e9a3173f6a97bdef4e841b7"
           },
           {
-            "label": "FALSE_POSITIVE",
+            "label": "BENIGN_DRIFT",
             "pair_id": "latest-p010-v6.10-to-v6.11",
             "rank": 53,
             "symbol": "errno_to_blk_status",
@@ -3213,18 +3243,15 @@
   "passes": true,
   "protocol_version": "ccfb-strict-v2",
   "run_manifest": "data/replay/latest/run_manifest.json",
-  "stage": "final",
+  "stage": "m5",
   "stage_required_checks": [
     "arm64_external_validity_gate",
     "binddrift_review_role_artifacts",
-    "case_study_gate",
     "evaluation_protocol_valid",
     "extractor_precision_recall_gate",
     "m0_claim_boundary_gate",
     "m3_research_question_gate",
     "m4_false_positive_gate",
-    "m7_latex_paper_gate",
-    "m8_paper_submission_gate",
     "manual_review_quality_gate",
     "no_local_absolute_paths",
     "oracle_blind_narrative_gate",
@@ -3237,6 +3264,6 @@
     "semantic",
     "strict_extractor_audit_gate"
   ],
-  "status": "ccfb_ready",
+  "status": "stage_ready",
   "strict_ccfb": true
 }

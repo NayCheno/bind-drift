@@ -2,7 +2,7 @@
 
 ## Summary
 
-`refcount_set` produced `W-000176` and is included as a negative/failure-analysis case with adjudicated label `FALSE_POSITIVE`.
+`refcount_set` produced `W-000176` and is included as a negative/failure-analysis case with adjudicated label `BENIGN_DRIFT`.
 
 ## Old Version Evidence
 
@@ -42,10 +42,10 @@ The warning reaches a public safe Rust API, so the maintainer review question is
 
 ## Manual Review Label
 
-- Adjudicated label: `FALSE_POSITIVE`
-- Reviewer 1: `UNCLEAR` -- refcount_set reaches Rust safe or unsafe code, but the wrapper oracle is broad-family only and the packet lacks exact same-symbol/direct contract proof. This is plausible but not enough for TRUE_WRAPPER_FIX or semantic drift.
-- Reviewer 2: `UNCLEAR` -- refcount_set has Rust safe_api exposure and broad/plausible context, but lacks direct same-symbol wrapper evidence or complete old/new C/binding proof.
-- Adjudication: refcount_set: broad-family wrapper evidence is auxiliary only. Without direct same-symbol/same-contract proof or a semantic C-to-Rust contract chain, the warning is unsupported as a Rust-impact target.
+- Adjudicated label: `BENIGN_DRIFT`
+- Reviewer 1: `BENIGN_DRIFT` -- C-side drift and Rust exposure exist for refcount_set, but wrapper evidence is broad/not exact and semantic impact is not established.
+- Reviewer 2: `UNCLEAR` -- Broad-family wrapper evidence plus Rust contract evidence triggers UNCLEAR; direct C evidence is not required to be absent.
+- Adjudication: Reviewer 1 BENIGN_DRIFT vs Reviewer 2 UNCLEAR falls in the broad-family wrapper/Rust-exposure calibration class; real context exists, but no direct same-contract wrapper oracle or semantic-drift rule is satisfied, so BENIGN_DRIFT per v3 policy.
 
 ## Why This Is Not Generated-Binding-Only
 

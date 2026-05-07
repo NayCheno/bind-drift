@@ -31,6 +31,7 @@ DEFAULT_RANKERS = [
     "no_ranking",
     "random",
 ]
+DEFAULT_POOLED_REVIEW_TARGET_SIZE = 800
 
 RANKER_TO_BASELINE = {
     "binding_diff": "BindingDiffOnly",
@@ -80,7 +81,7 @@ def generate_pooled_review_set(
     rankers: list[str] | None = None,
     output: Path | None = None,
     labels_output: Path | None = None,
-    target_size: int = 500,
+    target_size: int = DEFAULT_POOLED_REVIEW_TARGET_SIZE,
 ) -> dict[str, Any]:
     manifest = validate_run_manifest(cfg)
     run_dir = canonical_run_dir(cfg, run_id)
@@ -112,7 +113,7 @@ def generate_pooled_review_set(
             uid = ensure_warning_uid(warning)
             by_uid.setdefault(uid, dict(warning))
 
-    rows = _compress_pool(by_uid, source_ranks)
+    rows = _compress_pool(by_uid, source_ranks, target_size=target_size)
     for row in rows:
         uid = ensure_warning_uid(row)
         row["ranker_sources"] = sorted(source_ranks.get(uid, {}))
@@ -358,9 +359,14 @@ def _ranker_top100_coverage(pool_rows: list[dict[str, Any]], ranked_by_source: d
     return coverage
 
 
-def _compress_pool(by_uid: dict[str, dict[str, Any]], source_ranks: dict[str, dict[str, int]]) -> list[dict[str, Any]]:
+def _compress_pool(
+    by_uid: dict[str, dict[str, Any]],
+    source_ranks: dict[str, dict[str, int]],
+    *,
+    target_size: int = DEFAULT_POOLED_REVIEW_TARGET_SIZE,
+) -> list[dict[str, Any]]:
     rows = list(by_uid.values())
-    if len(rows) <= 500:
+    if len(rows) <= target_size:
         return sorted(rows, key=lambda warning: str(warning.get("warning_uid")))
     keep: dict[str, dict[str, Any]] = {}
     for uid, ranks in source_ranks.items():
@@ -380,7 +386,7 @@ def _compress_pool(by_uid: dict[str, dict[str, Any]], source_ranks: dict[str, di
             keep[uid] = warning
             counts[drift_type] += 1
     for warning in sorted(rows, key=lambda item: str(item.get("warning_uid"))):
-        if len(keep) >= 500:
+        if len(keep) >= target_size:
             break
         keep.setdefault(ensure_warning_uid(warning), warning)
     return sorted(keep.values(), key=lambda warning: str(warning.get("warning_uid")))
@@ -392,7 +398,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--run", default="latest")
     parser.add_argument("--rankers", default=",".join(DEFAULT_RANKERS))
     parser.add_argument("--output")
-    parser.add_argument("--target-size", type=int, default=500)
+    parser.add_argument("--target-size", type=int, default=DEFAULT_POOLED_REVIEW_TARGET_SIZE)
     args = parser.parse_args(argv)
     cfg = Config.from_args(repo_root=args.repo_root)
     output = Path(args.output).resolve() if args.output else None

@@ -87,10 +87,10 @@ def default_evaluation_protocol(run_id: str = "latest", pair_ids: list[str] | No
             "reviewers_blind_to_oracles": False,
             "oracle_evidence_visibility": "build and wrapper evidence may be visible for labels, but remains auxiliary validation only",
             "label_source_for_metrics": "adjudicated_label",
-            "cohen_kappa_minimum": 0.70,
-            "agreement_rate_minimum": 0.80,
-            "unclear_rate_maximum": 0.05,
-            "reviewer_disagreement_examples_minimum": 10,
+            "cohen_kappa_minimum": 0.78,
+            "agreement_rate_minimum": 0.88,
+            "unclear_rate_maximum": 0.03,
+            "reviewer_disagreement_examples_minimum": 20,
             "trusted_review_protocol": {
                 "accepted_as_trusted_expert_review": True,
                 "review_artifacts_participate_in_primary_score": False,
@@ -177,12 +177,14 @@ def validate_evaluation_protocol(protocol: dict[str, Any]) -> None:
             raise EvaluationProtocolError(f"manual_review_policy.{key} must be true")
     if "reviewers_blind_to_oracles" in policy and policy.get("reviewers_blind_to_oracles") is not False:
         raise EvaluationProtocolError("manual_review_policy.reviewers_blind_to_oracles must be false when oracle evidence is label evidence")
-    if policy.get("cohen_kappa_minimum", 0.70) < 0.70:
-        raise EvaluationProtocolError("manual_review_policy.cohen_kappa_minimum must be at least 0.70")
-    if policy.get("agreement_rate_minimum", 0.80) < 0.80:
-        raise EvaluationProtocolError("manual_review_policy.agreement_rate_minimum must be at least 0.80")
-    if policy.get("unclear_rate_maximum", 0.05) > 0.05:
-        raise EvaluationProtocolError("manual_review_policy.unclear_rate_maximum must be at most 0.05")
+    if policy.get("cohen_kappa_minimum", 0.78) < 0.78:
+        raise EvaluationProtocolError("manual_review_policy.cohen_kappa_minimum must be at least 0.78")
+    if policy.get("agreement_rate_minimum", 0.88) < 0.88:
+        raise EvaluationProtocolError("manual_review_policy.agreement_rate_minimum must be at least 0.88")
+    if policy.get("unclear_rate_maximum", 0.03) > 0.03:
+        raise EvaluationProtocolError("manual_review_policy.unclear_rate_maximum must be at most 0.03")
+    if policy.get("reviewer_disagreement_examples_minimum", 20) < 20:
+        raise EvaluationProtocolError("manual_review_policy.reviewer_disagreement_examples_minimum must be at least 20")
     trusted_review = policy.get("trusted_review_protocol") or {}
     if trusted_review:
         if trusted_review.get("accepted_as_trusted_expert_review") is not True:

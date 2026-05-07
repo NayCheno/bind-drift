@@ -15,13 +15,13 @@ call sites, wrapper code, safety comments, or public safe abstractions. Each
 emitted warning is a review target for maintainers. The current canonical
 replay spans 21 Linux snapshots from `v6.1` through `v7.0` plus `HEAD`, covers
 20 adjacent version pairs, records 16,757 drift facts, and promotes 320
-Rust-impact warnings. A 500-item pooled review set is double-reviewed and
+Rust-impact warnings. An 800-item pooled review set is double-reviewed and
 adjudicated. The strict `BindDrift-oracle-blind` ranking gate reports
 P@10 = 1.00, P@20 = 1.00, P@50 = 0.86, P@100 = 0.43, and NDCG@20 = 1.00,
 improving P@20 by 0.60, P@50 by 0.64, and NDCG@20 by 0.5394 over the
 strongest simple baseline in the shared pooled-label evaluation. The final
-pooled labels contain 47 adjudicated true-positive review targets, including
-29 `TRUE_SEMANTIC_DRIFT` rows and 17 `TRUE_WRAPPER_FIX` rows.
+pooled labels contain 50 adjudicated true-positive review targets, including
+29 `TRUE_SEMANTIC_DRIFT` rows and 20 `TRUE_WRAPPER_FIX` rows.
 
 ## 1. Introduction
 
@@ -182,7 +182,7 @@ included version is configured with a Rust-enabled kernel config, built with
 versioned Rust and bindgen tools from the matrix, and required to produce
 generated binding snapshots before drift detection. The canonical `latest`
 manifest fixes the files used by all paper tables: 16,757 drift facts, 320
-promoted Rust-impact warnings, the 500-row pooled review set, the 304 reviewed
+promoted Rust-impact warnings, the 800-row pooled review set, the 304 reviewed
 semantic targets, and the generated case-study suite. `paper/tables/table_index.json`
 records sha256 provenance for every generated main table.
 
@@ -273,27 +273,28 @@ The review artifacts are accepted as a trusted expert double review because the
 protocol records role separation, rank/score blindness, reviewer independence,
 adjudication coverage, and label-leakage checks. The review artifacts do not
 participate in primary scoring and reviewer roles do not receive adjudicated
-ground-truth labels. All 500 pooled warnings are double-labeled and
-adjudicated, with Cohen's kappa = 0.8118 and agreement rate 0.922. The final
-pooled labels are 1 `TRUE_BUILD_BREAKAGE`, 17
-`TRUE_WRAPPER_FIX`, 29 `TRUE_SEMANTIC_DRIFT`, 3 `BENIGN_DRIFT`, 450
-`FALSE_POSITIVE`, and 0 `UNCLEAR`.
+ground-truth labels. All 800 pooled warnings are double-labeled and
+adjudicated, with Cohen's kappa = 0.8161 and agreement rate 0.9062. The final
+pooled labels are 1 `TRUE_BUILD_BREAKAGE`, 20
+`TRUE_WRAPPER_FIX`, 29 `TRUE_SEMANTIC_DRIFT`, 219 `BENIGN_DRIFT`, 530
+`FALSE_POSITIVE`, and 1 `UNCLEAR`.
 
 Result. The strict pooled ranking table reports `BindDrift-oracle-blind`
 P@10 = 1.00, P@20 = 1.00, P@50 = 0.86, P@100 = 0.43, NDCG@20 = 1.00, and
-AUPRC = 0.9444. The strongest simple baseline is `rust_use`, with P@20 = 0.40,
+AUPRC = 0.9013. The strongest simple baseline is `rust_use`, with P@20 = 0.40,
 P@50 = 0.22, and NDCG@20 = 0.4606. The strict ranking gate passes:
 `BindDrift-oracle-blind` improves top-K review yield over the strongest simple
 baseline by 0.60 P@20, 0.64 P@50, and 0.5394 NDCG@20 in the shared pooled-label
 evaluation.
 
 False-positive risk is therefore reported as a taxonomy rather than as the
-paper's main metric for the top-K review prioritization claim. In the 500-row
-pooled review set, 450 rows are `FALSE_POSITIVE` and 3 are `BENIGN_DRIFT`; the
+paper's main metric for the top-K review prioritization claim. In the 800-row
+pooled review set, 530 rows are `FALSE_POSITIVE` and 219 are `BENIGN_DRIFT`; the
 M4 taxonomy uses these non-true review outcomes to explain why ranking matters.
-The categories are weak Rust reachability (275 rows), layout ambiguity (61),
-macro/constant over-prioritization (60), binding-only/generated surface evidence
-(54), and real C drift without Rust contract impact (3). The generated taxonomy
+The categories are binding-only/generated surface evidence (309), weak
+Rust reachability (20 rows), layout ambiguity (94), macro/constant
+over-prioritization (107), and real C drift without Rust contract impact (219).
+The generated taxonomy
 table includes examples for every observed category.
 
 Interpretation. These labels support a claim that BindDrift surfaces useful

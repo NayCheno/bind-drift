@@ -1,0 +1,2167 @@
+{
+  "binding_support_distribution": {
+    "partial": 142,
+    "yes": 658
+  },
+  "blind_to_rank_and_score": true,
+  "blind_to_ranker": true,
+  "build_breakage_distribution": {
+    "absent": 799,
+    "present": 1
+  },
+  "c_drift_supported_distribution": {
+    "partial": 765,
+    "yes": 35
+  },
+  "calibration_counts": {
+    "binding_only_or_no_rust_exposure": 681,
+    "binding_or_generated_only_evidence": 762,
+    "broad_family_wrapper_oracle_without_exact_symbol": 226,
+    "direct_same_symbol_wrapper_oracle": 20,
+    "has_direct_c_source_or_behavior_evidence": 265,
+    "has_rust_use_safe_api_comment_or_contract_evidence": 119,
+    "semantic_candidate_without_oracle": 29,
+    "unsupported_generated_binding_target": 505,
+    "weak_or_broad_wrapper_oracle": 15
+  },
+  "expected_packet_count": 800,
+  "generated_at": "2026-05-07T05:47:09.728398+00:00",
+  "match_methods": {
+    "pooled_row_json_only": 300,
+    "warning_uid": 500
+  },
+  "missing_matches": [
+    {
+      "jsonl_line": 53,
+      "pair_id": "latest-p012-v6.12-to-v6.13",
+      "symbol": "security_shm_shmctl",
+      "warning_id": "F-002817",
+      "warning_uid": "00a18b22fc30046f73303045a3e02ed9974212b6db02677c024dfc07f03ba4a1"
+    },
+    {
+      "jsonl_line": 61,
+      "pair_id": "latest-p008-v6.8-to-v6.9",
+      "symbol": "kasprintf_strarray",
+      "warning_id": "F-000412",
+      "warning_uid": "00c17919ac0cb6a38a7f56ab703d9794e8f8ecbfb8c3a0db36b55e835f9730f2"
+    },
+    {
+      "jsonl_line": 76,
+      "pair_id": "latest-p008-v6.8-to-v6.9",
+      "symbol": "cgroupstats_build",
+      "warning_id": "F-000235",
+      "warning_uid": "01052c27d5b95c3b4edd5eea276e588ee41bfcd53fa0a337924e20210dc22bcc"
+    },
+    {
+      "jsonl_line": 77,
+      "pair_id": "latest-p012-v6.12-to-v6.13",
+      "symbol": "security_quotactl",
+      "warning_id": "F-002787",
+      "warning_uid": "01068188ae4b70112e154642d6d75cbdb343c49877bd539edb3b0d07ce28d445"
+    },
+    {
+      "jsonl_line": 81,
+      "pair_id": "latest-p012-v6.12-to-v6.13",
+      "symbol": "security_inode_listxattr",
+      "warning_id": "F-002725",
+      "warning_uid": "01147cbb6ddc04e87a9efe54990bc118fa2f5eaa03bc72198d8ae225bc6946b3"
+    },
+    {
+      "jsonl_line": 83,
+      "pair_id": "latest-p012-v6.12-to-v6.13",
+      "symbol": "irq_set_nr_irqs",
+      "warning_id": "F-001626",
+      "warning_uid": "0118713fb3de98f99e831d255ef2ac82a2280a4ee38dcd378dd0b224b8f1172e"
+    },
+    {
+      "jsonl_line": 88,
+      "pair_id": "latest-p007-v6.7-to-v6.8",
+      "symbol": "security_inode_killpriv",
+      "warning_id": "F-001363",
+      "warning_uid": "013e196569ed946e7bd7901687fdb780dbd212fe71f0102bcb6255fdb0b84a5f"
+    },
+    {
+      "jsonl_line": 89,
+      "pair_id": "latest-p008-v6.8-to-v6.9",
+      "symbol": "fprop_global_destroy",
+      "warning_id": "F-000346",
+      "warning_uid": "0141b3ef11e003691f3976acedd50238eac763469aa2512e1fd6854c4f57113f"
+    },
+    {
+      "jsonl_line": 92,
+      "pair_id": "latest-p012-v6.12-to-v6.13",
+      "symbol": "vfs_fsync",
+      "warning_id": "F-003393",
+      "warning_uid": "014d31563f9b85e330d7a0b0b35b9dd8cc193713144ee21217f492d61d6d7d78"
+    },
+    {
+      "jsonl_line": 96,
+      "pair_id": "latest-p007-v6.7-to-v6.8",
+      "symbol": "__ioread32_copy",
+      "warning_id": "F-000047",
+      "warning_uid": "015a405f1c5432902fe7041eb93aee1c7c3805b30552e7ba37ecf8e5c99ac6d5"
+    },
+    {
+      "jsonl_line": 104,
+      "pair_id": "latest-p012-v6.12-to-v6.13",
+      "symbol": "kunit_kmalloc_array",
+      "warning_id": "F-001840",
+      "warning_uid": "017bab55128b00683c02b7d872a640976780a840033bf06797c7b85f2d373e21"
+    },
+    {
+      "jsonl_line": 107,
+      "pair_id": "latest-p012-v6.12-to-v6.13",
+      "symbol": "bpf_dynptr_check_size",
+      "warning_id": "F-000637",
+      "warning_uid": "0181bd7cc98f59a20efe94734a0be4598c639495bc6a1e7ff3f6c0c1ddcb9a31"
+    },
+    {
+      "jsonl_line": 109,
+      "pair_id": "latest-p008-v6.8-to-v6.9",
+      "symbol": "bpf_offload_dev_netdev_unregister",
+      "warning_id": "F-000121",
+      "warning_uid": "0184423a0b53c3bc8b054454db1a34d6b01fc6d60e32cac588859f4cbdfe5952"
+    },
+    {
+      "jsonl_line": 112,
+      "pair_id": "latest-p012-v6.12-to-v6.13",
+      "symbol": "single_hugepage_flag_store",
+      "warning_id": "F-003026",
+      "warning_uid": "018a632ec5c98b0641ca1cc86192a11dfe8e9e02b7a529b493021bfd827db1a9"
+    },
+    {
+      "jsonl_line": 116,
+      "pair_id": "latest-p012-v6.12-to-v6.13",
+      "symbol": "fprop_local_init_percpu",
+      "warning_id": "F-001272",
+      "warning_uid": "0192163bef81a4d3e1297ce3aac02f99d4d79ad1ac96541b3718ee91b7e30dda"
+    },
+    {
+      "jsonl_line": 117,
+      "pair_id": "latest-p007-v6.7-to-v6.8",
+      "symbol": "irq_suspended",
+      "warning_id": "F-000778",
+      "warning_uid": "01995865b979f7eb6ce2a32b1e1f002e474fa4819ff27f59fb1b353b2dd806ad"
+    },
+    {
+      "jsonl_line": 118,
+      "pair_id": "latest-p007-v6.7-to-v6.8",
+      "symbol": "security_sb_umount",
+      "warning_id": "F-001440",
+      "warning_uid": "0199e661c07a30e866fdf27ac087d313c909c180e079a8e544e6b76eb6e9619e"
+    },
+    {
+      "jsonl_line": 141,
+      "pair_id": "latest-p007-v6.7-to-v6.8",
+      "symbol": "alloc_sched_domains",
+      "warning_id": "F-000174",
+      "warning_uid": "01eb9c54537f295c950209476f4a75911dd2aa45f86114a8f031ab9233f798d2"
+    },
+    {
+      "jsonl_line": 142,
+      "pair_id": "latest-p007-v6.7-to-v6.8",
+      "symbol": "plist_requeue",
+      "warning_id": "F-001195",
+      "warning_uid": "01f3c4a63ef2956e6196735db08b85600ac86026a43232d4901da0a939008ddf"
+    },
+    {
+      "jsonl_line": 146,
+      "pair_id": "latest-p007-v6.7-to-v6.8",
+      "symbol": "vmemmap_alloc_block_buf",
+      "warning_id": "F-001837",
+      "warning_uid": "0202020d87b93f9cae28b7f44e6a3a3286000359ee0019c1a1bbff57ec15b3e5"
+    },
+    {
+      "jsonl_line": 147,
+      "pair_id": "latest-p006-v6.6-to-v6.7",
+      "symbol": "copy_thread",
+      "warning_id": "F-000188",
+      "warning_uid": "02079ca5814970a7c13870deaa42a4aa78c24967813ceef4c9f5967928c2c4ab"
+    },
+    {
+      "jsonl_line": 158,
+      "pair_id": "latest-p006-v6.6-to-v6.7",
+      "symbol": "d_mark_dontcache",
+      "warning_id": "F-000225",
+      "warning_uid": "02599d15335960aa6cf5e731c1cc487195b763fd6ec40a8f800b998c162a4bfe"
+    },
+    {
+      "jsonl_line": 159,
+      "pair_id": "latest-p006-v6.6-to-v6.7",
+      "symbol": "sigqueue_free",
+      "warning_id": "F-000869",
+      "warning_uid": "025fb79e0bad5c42c85e2e58e3d64ff05e6179394ab77ecd4bd327baf24fd1db"
+    },
+    {
+      "jsonl_line": 161,
+      "pair_id": "latest-p007-v6.7-to-v6.8",
+      "symbol": "pm_vt_switch_unregister",
+      "warning_id": "F-001219",
+      "warning_uid": "026aa2807fffe8ef2e48f32b9fd2ecd633450cf04c23adf529ed941f5c755c02"
+    },
+    {
+      "jsonl_line": 168,
+      "pair_id": "latest-p018-v6.18-to-v6.19",
+      "symbol": "link_active_reporting",
+      "warning_id": "F-000492",
+      "warning_uid": "02970e4d7fad7857b5263e00a08bf029b80a928896a48fb786460c16a3545c9d"
+    },
+    {
+      "jsonl_line": 169,
+      "pair_id": "latest-p007-v6.7-to-v6.8",
+      "symbol": "cap_inode_need_killpriv",
+      "warning_id": "F-000237",
+      "warning_uid": "0298d6a1ee0662050596f01f59b3a48a840066a712c2d47e4e72f2dac97ed4c3"
+    },
+    {
+      "jsonl_line": 170,
+      "pair_id": "latest-p018-v6.18-to-v6.19",
+      "symbol": "irq_set_parent",
+      "warning_id": "F-000466",
+      "warning_uid": "0298d886810481a83809c70930a32c9df226dad9d5928aa51e733b534e95fce5"
+    },
+    {
+      "jsonl_line": 172,
+      "pair_id": "latest-p007-v6.7-to-v6.8",
+      "symbol": "cap_ptrace_traceme",
+      "warning_id": "F-000244",
+      "warning_uid": "02997b369f0841f573c060867c0c9b132d52bd5b6bc9fcacb9ae9e53e6f5036c"
+    },
+    {
+      "jsonl_line": 178,
+      "pair_id": "latest-p018-v6.18-to-v6.19",
+      "symbol": "gpiochip_generic_request",
+      "warning_id": "F-000247",
+      "warning_uid": "02a38a46d36a80be02dc4d52cc0071e08989e02fe87893afaad043a53bd56fc7"
+    },
+    {
+      "jsonl_line": 183,
+      "pair_id": "latest-p007-v6.7-to-v6.8",
+      "symbol": "sock_unregister",
+      "warning_id": "F-001689",
+      "warning_uid": "02b5245cc25cc5138ee1e02aeb24d426894d82180022b39bcce1e59825db3844"
+    },
+    {
+      "jsonl_line": 186,
+      "pair_id": "latest-p016-v6.16-to-v6.17",
+      "symbol": "acpi_enter_sleep_state_prep",
+      "warning_id": "F-000140",
+      "warning_uid": "02c18274e9c5bbee1b7fb50102fa391e29d607eed8016e0ba20d8a3b465787a3"
+    },
+    {
+      "jsonl_line": 188,
+      "pair_id": "latest-p007-v6.7-to-v6.8",
+      "symbol": "move_page_tables",
+      "warning_id": "F-000961",
+      "warning_uid": "02c29b637831a5b09905407f2225d6620630ad8b7a3e6379f867c6855501e00c"
+    },
+    {
+      "jsonl_line": 190,
+      "pair_id": "latest-p007-v6.7-to-v6.8",
+      "symbol": "vma_is_shmem",
+      "warning_id": "F-001814",
+      "warning_uid": "02c4fc4170e3dd4e0b6908e2b5b256a68022276a8a857cb39624dc7466efde4e"
+    },
+    {
+      "jsonl_line": 192,
+      "pair_id": "latest-p016-v6.16-to-v6.17",
+      "symbol": "resource_size",
+      "warning_id": "F-000781",
+      "warning_uid": "02cf18dca554fa0eb6d38ab8b7024cf701b54f30107a51f7b8346a17a0cd1621"
+    },
+    {
+      "jsonl_line": 199,
+      "pair_id": "latest-p020-v7.0-to-HEAD_9207d47f966b",
+      "symbol": "atomic_ptr_xchg_relaxed",
+      "warning_id": "F-000033",
+      "warning_uid": "02e08809c4f831ba14533ceca1df287efd43d86e5513dd70f023b66bec011c2f"
+    },
+    {
+      "jsonl_line": 202,
+      "pair_id": "latest-p016-v6.16-to-v6.17",
+      "symbol": "acpi_os_notify_command_complete",
+      "warning_id": "F-000297",
+      "warning_uid": "02e757f7992a39c3476a24868d20e516a07a3ef453a4c64f020ee553fc593400"
+    },
+    {
+      "jsonl_line": 203,
+      "pair_id": "latest-p007-v6.7-to-v6.8",
+      "symbol": "parse_args",
+      "warning_id": "F-001052",
+      "warning_uid": "02ebeaef1401f5b8adcabc7f44a1fcea3330e1d9787a72e92fab2e713d9e770c"
+    },
+    {
+      "jsonl_line": 206,
+      "pair_id": "latest-p018-v6.18-to-v6.19",
+      "symbol": "simple_done_creating",
+      "warning_id": "F-000658",
+      "warning_uid": "02ff45605eea6d639d079092131e07da82c583673b50056d255aea08809f1c76"
+    },
+    {
+      "jsonl_line": 207,
+      "pair_id": "latest-p007-v6.7-to-v6.8",
+      "symbol": "sg_init_table",
+      "warning_id": "F-001549",
+      "warning_uid": "0307c9ed41a30bb13635ef022005ce08261dd6ce42c753fbbe382d70e3404f55"
+    },
+    {
+      "jsonl_line": 208,
+      "pair_id": "latest-p013-v6.13-to-v6.14",
+      "symbol": "dentry_open_nonotify",
+      "warning_id": "F-000041",
+      "warning_uid": "030a40d4705ee74e899e3c9ea465d326952077fd3252779cd91ecfdb1a5765c7"
+    },
+    {
+      "jsonl_line": 209,
+      "pair_id": "latest-p006-v6.6-to-v6.7",
+      "symbol": "file_ns_capable",
+      "warning_id": "F-000320",
+      "warning_uid": "031231c518a7473c0b023548289fefb88b359881bfd01487ec944c1c5a89cc9b"
+    },
+    {
+      "jsonl_line": 212,
+      "pair_id": "latest-p015-v6.15-to-v6.16",
+      "symbol": "cgroup_rstat_flush",
+      "warning_id": "F-000054",
+      "warning_uid": "031e50c593d5876861c86f0fc7bb19187e79fae3a2fbfd39f4424e8e8b4ba98d"
+    },
+    {
+      "jsonl_line": 214,
+      "pair_id": "latest-p016-v6.16-to-v6.17",
+      "symbol": "is_probed",
+      "warning_id": "F-000650",
+      "warning_uid": "0329ee65d3fd7998f83055ee5ecca6dc94ab21ee2c6680044907927fb6325e56"
+    },
+    {
+      "jsonl_line": 215,
+      "pair_id": "latest-p018-v6.18-to-v6.19",
+      "symbol": "irq_matrix_assign_system",
+      "warning_id": "F-000438",
+      "warning_uid": "032cc608345dabb7763f51c5b0bf5c8fc67dec88a47b37a188a33a47f272fad4"
+    },
+    {
+      "jsonl_line": 216,
+      "pair_id": "latest-p020-v7.0-to-HEAD_9207d47f966b",
+      "symbol": "bio_alloc_bioset",
+      "warning_id": "F-000038",
+      "warning_uid": "033a434357b0bfd9073f87bb16a1f3327a497764c88c91ca401e7d12aa757326"
+    },
+    {
+      "jsonl_line": 223,
+      "pair_id": "latest-p015-v6.15-to-v6.16",
+      "symbol": "drm_prime_get_contiguous_size",
+      "warning_id": "F-000353",
+      "warning_uid": "036df55153d07d67ec68481b9c0d191152a568df3b8f4703d60feb6122b0b9b1"
+    },
+    {
+      "jsonl_line": 225,
+      "pair_id": "latest-p014-v6.14-to-v6.15",
+      "symbol": "entry_ibpb",
+      "warning_id": "F-000062",
+      "warning_uid": "037ce66899067cbc1a9f4199a1a7c7829f9fdb49306364456d5b3765a96a7f3c"
+    },
+    {
+      "jsonl_line": 226,
+      "pair_id": "latest-p016-v6.16-to-v6.17",
+      "symbol": "try_to_free_pages",
+      "warning_id": "F-000836",
+      "warning_uid": "03879bd66620818b99222316a1262ce204d447782cd9efcebfe0e77a92419214"
+    },
+    {
+      "jsonl_line": 227,
+      "pair_id": "latest-p013-v6.13-to-v6.14",
+      "symbol": "pci_status_get_and_clear_errors",
+      "warning_id": "F-000445",
+      "warning_uid": "039bee4b4979e30aad2b2ec257f555452d10cfc3b8569513081c99c136e7d6a2"
+    },
+    {
+      "jsonl_line": 228,
+      "pair_id": "latest-p018-v6.18-to-v6.19",
+      "symbol": "pci_bus_find_emul_domain_nr",
+      "warning_id": "F-000552",
+      "warning_uid": "039f710eb81906c03328677a4bb8f971f9483d659a7e6e3de3d7ebea6483db0e"
+    },
+    {
+      "jsonl_line": 233,
+      "pair_id": "latest-p013-v6.13-to-v6.14",
+      "symbol": "device_property_read_bool",
+      "warning_id": "F-000060",
+      "warning_uid": "03cb7a561d2d8fe887ab9f28bb8d3e254a6ff6fda5cabd2ff3d2b25332980e76"
+    },
+    {
+      "jsonl_line": 234,
+      "pair_id": "latest-p014-v6.14-to-v6.15",
+      "symbol": "cpuhp_state_CPUHP_AP_PERF_ARM_HISI_PA_ONLINE",
+      "warning_id": "F-000319",
+      "warning_uid": "03cd5d2ee79b622d8e5880d24193509f7d1f7c0df1d8b75eeef75bbc0ab32e51"
+    },
+    {
+      "jsonl_line": 237,
+      "pair_id": "latest-p018-v6.18-to-v6.19",
+      "symbol": "__irq_resolve_mapping",
+      "warning_id": "F-000033",
+      "warning_uid": "03df080bbee6d7e4e87fb1b9da2cfe5db283deb9a99d3f510975f3c8558f0148"
+    },
+    {
+      "jsonl_line": 239,
+      "pair_id": "latest-p018-v6.18-to-v6.19",
+      "symbol": "vma_interval_tree_subtree_search",
+      "warning_id": "F-000814",
+      "warning_uid": "03ec6f485c6955cade135f79426aa944e44a5b3c1863a54c6674b3006835fa75"
+    },
+    {
+      "jsonl_line": 241,
+      "pair_id": "latest-p018-v6.18-to-v6.19",
+      "symbol": "usb_find_common_endpoints_reverse",
+      "warning_id": "F-000737",
+      "warning_uid": "03f0e0eaebe1c1e390aed7a6b6c4fa2a8c87863a4cdb571cfb8d210316fede3c"
+    },
+    {
+      "jsonl_line": 243,
+      "pair_id": "latest-p006-v6.6-to-v6.7",
+      "symbol": "groups_free",
+      "warning_id": "F-000450",
+      "warning_uid": "03f4f5a54e24e5016b8459bd4a0cb2063a79b9b09de6225a0bb0fa0d58f8925a"
+    },
+    {
+      "jsonl_line": 244,
+      "pair_id": "latest-p018-v6.18-to-v6.19",
+      "symbol": "cdev_device_del",
+      "warning_id": "F-000102",
+      "warning_uid": "040059650ab7220f4d8d5af05e2d0272699d29cb1ac25da86cc9b1cde5f71e79"
+    },
+    {
+      "jsonl_line": 245,
+      "pair_id": "latest-p013-v6.13-to-v6.14",
+      "symbol": "pci_request_irq",
+      "warning_id": "F-000406",
+      "warning_uid": "040a0078de648cac46992199748b95754e39bb34d446f21cf353ae5a77a8a717"
+    },
+    {
+      "jsonl_line": 246,
+      "pair_id": "latest-p016-v6.16-to-v6.17",
+      "symbol": "acpi_node_backed_by_real_pxm",
+      "warning_id": "F-000268",
+      "warning_uid": "04249bfa14771e04af2618ac04d9c9b4ae6e11876c4fc3dbe2392bb9a1e15187"
+    },
+    {
+      "jsonl_line": 248,
+      "pair_id": "latest-p006-v6.6-to-v6.7",
+      "symbol": "iov_iter_advance",
+      "warning_id": "F-000527",
+      "warning_uid": "0438cb7597d45f035ac0df1451cd6909897e0874cb8841aa6b6ad255cb7889e2"
+    },
+    {
+      "jsonl_line": 251,
+      "pair_id": "latest-p006-v6.6-to-v6.7",
+      "symbol": "simple_unlink",
+      "warning_id": "F-000903",
+      "warning_uid": "046381643d1bf3085406f6d958f3134355229c50816bd9f57b7dd8f8bb816f32"
+    },
+    {
+      "jsonl_line": 252,
+      "pair_id": "latest-p020-v7.0-to-HEAD_9207d47f966b",
+      "symbol": "skb_drop_reason_SKB_DROP_REASON_SKB_UCOPY_FAULT",
+      "warning_id": "F-000494",
+      "warning_uid": "046d5f2ddfe56473e190c41c8dd892d40521c03b0ed89f543704e9100a9ae5f3"
+    },
+    {
+      "jsonl_line": 256,
+      "pair_id": "latest-p018-v6.18-to-v6.19",
+      "symbol": "deactivate_nsproxy",
+      "warning_id": "F-000128",
+      "warning_uid": "047c06a833d6e84fa405aab570a80a000cc2c1dcfb6e1a74bb5acf79d9a8ce28"
+    },
+    {
+      "jsonl_line": 257,
+      "pair_id": "latest-p014-v6.14-to-v6.15",
+      "symbol": "security_uring_allowed",
+      "warning_id": "F-000157",
+      "warning_uid": "048d5d7a74f532a78d72cd5f094a342e8fe99971eada215fcbf9f9c68f476794"
+    },
+    {
+      "jsonl_line": 258,
+      "pair_id": "latest-p016-v6.16-to-v6.17",
+      "symbol": "register_one_node",
+      "warning_id": "F-000763",
+      "warning_uid": "0497d86f1fc11a4ede1c38367988b306d3de1bad2538393449fd7fdb417b1f64"
+    },
+    {
+      "jsonl_line": 260,
+      "pair_id": "latest-p013-v6.13-to-v6.14",
+      "symbol": "to_software_node",
+      "warning_id": "F-000638",
+      "warning_uid": "04b2e96daaa3dc91ff142bc2237ac3686ff56edcabb7cf4f8cc10294a346a990"
+    },
+    {
+      "jsonl_line": 261,
+      "pair_id": "latest-p012-v6.12-to-v6.13",
+      "symbol": "_TIF_WORK_CTXSW_NEXT",
+      "warning_id": "F-004276",
+      "warning_uid": "04b9fa3e75be9f8b4ef3331a29cbdfc17647589283c553406af7d195c24f849c"
+    },
+    {
+      "jsonl_line": 262,
+      "pair_id": "latest-p015-v6.15-to-v6.16",
+      "symbol": "cpufreq_resume",
+      "warning_id": "F-000133",
+      "warning_uid": "04c34618c172eb1ec04c9dfe212a5167d6ad60aec498e1bbfd8375d54771821b"
+    },
+    {
+      "jsonl_line": 264,
+      "pair_id": "latest-p015-v6.15-to-v6.16",
+      "symbol": "smp_text_poke_single",
+      "warning_id": "F-000491",
+      "warning_uid": "04e064381f6b369c82e508f828066348e5299ec2085fab46c6ba52f985856c37"
+    },
+    {
+      "jsonl_line": 265,
+      "pair_id": "latest-p006-v6.6-to-v6.7",
+      "symbol": "groups_search",
+      "warning_id": "F-000451",
+      "warning_uid": "04e312f64cfde71f326b4b4c09b06dc7d6f650b38ded63a8d0565e57c74e0240"
+    },
+    {
+      "jsonl_line": 266,
+      "pair_id": "latest-p013-v6.13-to-v6.14",
+      "symbol": "pci_scan_child_bus",
+      "warning_id": "F-000427",
+      "warning_uid": "04e931ea47e584673ccc773facd7727994a5a2a3deb5a1fd346b8bfda7f250a4"
+    },
+    {
+      "jsonl_line": 268,
+      "pair_id": "latest-p014-v6.14-to-v6.15",
+      "symbol": "vm_event_item_COMPACTSTALL",
+      "warning_id": "F-000476",
+      "warning_uid": "04eca94353977a9cd1d8f3e37181a0dfc8ad42f076257dfcafd9a1f3394d1ad2"
+    },
+    {
+      "jsonl_line": 270,
+      "pair_id": "latest-p015-v6.15-to-v6.16",
+      "symbol": "rt_mutex_lock_killable",
+      "warning_id": "F-000471",
+      "warning_uid": "04f96ef40ddc456a895a0aef69e05ac09282e4d6a6676afec93bab950018f1ac"
+    },
+    {
+      "jsonl_line": 271,
+      "pair_id": "latest-p016-v6.16-to-v6.17",
+      "symbol": "__ETHTOOL_A_RSS_CNT",
+      "warning_id": "F-000939",
+      "warning_uid": "04fb3ed7eb21068337bc2f5cc99c899c1af98d53bb96a213edddebec0cca647f"
+    },
+    {
+      "jsonl_line": 273,
+      "pair_id": "latest-p006-v6.6-to-v6.7",
+      "symbol": "kill_pgrp",
+      "warning_id": "F-000602",
+      "warning_uid": "051268d6d92c6d2eea6835c46255e3448c109ce33fb39e54e3d5b93c117fe020"
+    },
+    {
+      "jsonl_line": 275,
+      "pair_id": "latest-p010-v6.10-to-v6.11",
+      "symbol": "queue_limits_commit_update",
+      "warning_id": "F-000344",
+      "warning_uid": "051c14bd4457caf08a8d4fac68381443ddbed804c43481cf6b714de776ac63c0"
+    },
+    {
+      "jsonl_line": 276,
+      "pair_id": "latest-p016-v6.16-to-v6.17",
+      "symbol": "vprintk_deferred",
+      "warning_id": "F-000852",
+      "warning_uid": "0534884ea89e06211cba532c2812c2f5f6effef91c656a288276f5af4167920a"
+    },
+    {
+      "jsonl_line": 277,
+      "pair_id": "latest-p014-v6.14-to-v6.15",
+      "symbol": "devm_phy_package_join",
+      "warning_id": "F-000057",
+      "warning_uid": "05360569d7a6643a1078d69eeb00fb9b6fd35a797ff90074704d938c2ad028f8"
+    },
+    {
+      "jsonl_line": 278,
+      "pair_id": "latest-p015-v6.15-to-v6.16",
+      "symbol": "dma_fence_init",
+      "warning_id": "F-000209",
+      "warning_uid": "054a09b774250db4bc85319adc1457ccc958a9a9b5d96ba3ee776a928c7a1332"
+    },
+    {
+      "jsonl_line": 280,
+      "pair_id": "latest-p006-v6.6-to-v6.7",
+      "symbol": "fpregs_assert_state_consistent",
+      "warning_id": "F-000366",
+      "warning_uid": "0554ad398230ecccbb7b625bbfe98fc6cf3b5eb2bf730e43b7676bd093ccd9ed"
+    },
+    {
+      "jsonl_line": 281,
+      "pair_id": "latest-p020-v7.0-to-HEAD_9207d47f966b",
+      "symbol": "vm_mmap_shadow_stack",
+      "warning_id": "F-000182",
+      "warning_uid": "05552b21cdc519d103b420aaf2a3836f5eef28c90fd51a4678b14877e16ae347"
+    },
+    {
+      "jsonl_line": 282,
+      "pair_id": "latest-p014-v6.14-to-v6.15",
+      "symbol": "rust_helper_writel",
+      "warning_id": "F-000561",
+      "warning_uid": "05610f96c60cf47d1867a1db5bedecc81f5bdc2e1d5e59b7f5e4b1e5f971c97c"
+    },
+    {
+      "jsonl_line": 283,
+      "pair_id": "latest-p012-v6.12-to-v6.13",
+      "symbol": "mthp_stat_item_MTHP_STAT_SPLIT_DEFERRED",
+      "warning_id": "F-004378",
+      "warning_uid": "0563f2b05b5a39012353f652caf7bff343eec8f0d7e52444ea080ae67f10fb31"
+    },
+    {
+      "jsonl_line": 284,
+      "pair_id": "latest-p015-v6.15-to-v6.16",
+      "symbol": "fwnode_mdio_find_device",
+      "warning_id": "F-000874",
+      "warning_uid": "0565139d93abfec4300d4cd9b2a25816c1af58a2cc94104bdc14152b7d9b035f"
+    },
+    {
+      "jsonl_line": 285,
+      "pair_id": "latest-p019-v6.19-to-v7.0",
+      "symbol": "rust_helper_put_cred",
+      "warning_id": "F-000565",
+      "warning_uid": "05717dd394290fb96c49d15f3f0548d3ba9926a951b84bd97bc47cddbf3d04bc"
+    },
+    {
+      "jsonl_line": 287,
+      "pair_id": "latest-p019-v6.19-to-v7.0",
+      "symbol": "is_physfn",
+      "warning_id": "F-000213",
+      "warning_uid": "057ea963d64a3a4e41dbea4f542d509307812a2dff2351007dd416bec8fcb46b"
+    },
+    {
+      "jsonl_line": 288,
+      "pair_id": "latest-p020-v7.0-to-HEAD_9207d47f966b",
+      "symbol": "cpuhp_state_CPUHP_AP_PERF_XTENSA_STARTING",
+      "warning_id": "F-000362",
+      "warning_uid": "057ffd0ae42d52887bf5d6115b0222dbeb6dd7a6e7a2bf0f2a68ae6cb6607d9c"
+    },
+    {
+      "jsonl_line": 289,
+      "pair_id": "latest-p018-v6.18-to-v6.19",
+      "symbol": "skb_drop_reason_SKB_DROP_REASON_IPV6_BAD_EXTHDR",
+      "warning_id": "F-000936",
+      "warning_uid": "0585481787a0266bd389ffc258998408928af8380aca2323b4aaf24460a46d46"
+    },
+    {
+      "jsonl_line": 290,
+      "pair_id": "latest-p012-v6.12-to-v6.13",
+      "symbol": "user32",
+      "warning_id": "F-004216",
+      "warning_uid": "058e64f359b32fcacf499e06ad33f689682d434e8b324602ef9b4e0fce4ca362"
+    },
+    {
+      "jsonl_line": 291,
+      "pair_id": "latest-p006-v6.6-to-v6.7",
+      "symbol": "flush_thread",
+      "warning_id": "F-000350",
+      "warning_uid": "059c56d4cf7fa4082869866c7b50f5807dd3fac52f31d517595e463160512e19"
+    },
+    {
+      "jsonl_line": 292,
+      "pair_id": "latest-p010-v6.10-to-v6.11",
+      "symbol": "cpuhp_state_CPUHP_AP_PERF_CSKY_ONLINE",
+      "warning_id": "F-000496",
+      "warning_uid": "05af97641fb928b0c16fd7fa5a90efece589c5976a02eabd32f3135c85f0d8ec"
+    },
+    {
+      "jsonl_line": 294,
+      "pair_id": "latest-p012-v6.12-to-v6.13",
+      "symbol": "vm_region",
+      "warning_id": "F-004238",
+      "warning_uid": "05b98836b1f2a82f8fba5415a5d1531a3dd07761a56f58f2f2e4b2e64cb5023b"
+    },
+    {
+      "jsonl_line": 295,
+      "pair_id": "latest-p019-v6.19-to-v7.0",
+      "symbol": "iommu_group_default_domain",
+      "warning_id": "F-000153",
+      "warning_uid": "05d008a755706af7a80fbc859e249485637662adc7017b21c4b5208383b49a54"
+    },
+    {
+      "jsonl_line": 296,
+      "pair_id": "latest-p019-v6.19-to-v7.0",
+      "symbol": "iommu_device_release_dma_owner",
+      "warning_id": "F-000133",
+      "warning_uid": "05d10ed547d2916ec5a7be7babfe71565b99c5469edf9051871b8ef5da2b3b1f"
+    },
+    {
+      "jsonl_line": 297,
+      "pair_id": "latest-p010-v6.10-to-v6.11",
+      "symbol": "firmware_request_builtin",
+      "warning_id": "F-000244",
+      "warning_uid": "05d68a1686fd5baa371c65167db24503c5b0ae472593403a61535967bcb2d810"
+    },
+    {
+      "jsonl_line": 299,
+      "pair_id": "latest-p013-v6.13-to-v6.14",
+      "symbol": "bridge_d3",
+      "warning_id": "F-000027",
+      "warning_uid": "05ec9a0b511192f60b52baec674d4a1d7258c96313e123415479692d8a26f5bc"
+    },
+    {
+      "jsonl_line": 300,
+      "pair_id": "latest-p020-v7.0-to-HEAD_9207d47f966b",
+      "symbol": "skb_drop_reason_SKB_DROP_REASON_VXLAN_INVALID_HDR",
+      "warning_id": "F-000505",
+      "warning_uid": "05f6ed746901b089e7aaa4a29f26e878c644196fc48c9a120e8f5b9154fa034f"
+    },
+    {
+      "jsonl_line": 301,
+      "pair_id": "latest-p015-v6.15-to-v6.16",
+      "symbol": "drm_modeset_acquire_fini",
+      "warning_id": "F-000337",
+      "warning_uid": "05f7865d93b6273f00aa1083e3e10b392596401d61914eaa720df344c16911e6"
+    },
+    {
+      "jsonl_line": 303,
+      "pair_id": "latest-p016-v6.16-to-v6.17",
+      "symbol": "acpi_check_region",
+      "warning_id": "F-000062",
+      "warning_uid": "05fca700dd555c62e732a1c0a82d2ffeb7fe9c29e190ceb3bf12817611375652"
+    },
+    {
+      "jsonl_line": 304,
+      "pair_id": "latest-p020-v7.0-to-HEAD_9207d47f966b",
+      "symbol": "skb_drop_reason_SKB_DROP_REASON_ICMP_CSUM",
+      "warning_id": "F-000465",
+      "warning_uid": "05fed7e3c4cdc451500c323a5a0eb9399a1847521872ee7c0e0f028a2e388dcd"
+    },
+    {
+      "jsonl_line": 306,
+      "pair_id": "latest-p016-v6.16-to-v6.17",
+      "symbol": "skb_drop_reason_SKB_DROP_REASON_TCP_MINTTL",
+      "warning_id": "F-001125",
+      "warning_uid": "060d0d7770e409ef0933744df7df1b1e0c9bbedb7cf2acca25050f3e8da9d856"
+    },
+    {
+      "jsonl_line": 308,
+      "pair_id": "latest-p013-v6.13-to-v6.14",
+      "symbol": "skb_drop_reason_SKB_DROP_REASON_SOCKET_RCVBUFF",
+      "warning_id": "F-000773",
+      "warning_uid": "062dd3ec67bbbd224cbf1d81524679a41a02d9c9d710eb9bb6e48f766fe0a1f0"
+    },
+    {
+      "jsonl_line": 309,
+      "pair_id": "latest-p012-v6.12-to-v6.13",
+      "symbol": "mpc_lintsrc",
+      "warning_id": "F-003977",
+      "warning_uid": "0632a6297c4b512b95c0c3b5dfc038a1702ff335198d288b76689e73711e781d"
+    },
+    {
+      "jsonl_line": 311,
+      "pair_id": "latest-p012-v6.12-to-v6.13",
+      "symbol": "bpf_dispatcher",
+      "warning_id": "F-003631",
+      "warning_uid": "063eb52aa011842dbb4ce5fdda2cae7d7c569cb2371feddbc76d6c3ba8e65ae6"
+    },
+    {
+      "jsonl_line": 312,
+      "pair_id": "latest-p005-v6.5-to-v6.6",
+      "symbol": "module_kallsyms_lookup_name",
+      "warning_id": "F-000228",
+      "warning_uid": "06422d4b332a8c134168cc673add666b6adb99ed8c95b84700c68bbdfdca3557"
+    },
+    {
+      "jsonl_line": 313,
+      "pair_id": "latest-p012-v6.12-to-v6.13",
+      "symbol": "maple_node__bindgen_ty_1__bindgen_ty_2",
+      "warning_id": "F-003940",
+      "warning_uid": "06437afcd8af24ad41f9ca267047db5ae69580a565def9842f25423a5a1fbcbb"
+    },
+    {
+      "jsonl_line": 314,
+      "pair_id": "latest-p019-v6.19-to-v7.0",
+      "symbol": "__trace_puts",
+      "warning_id": "F-000017",
+      "warning_uid": "0647110aac65cde9ba1cf94811110e69ae3703d42290bca802ab7d8496d92af0"
+    },
+    {
+      "jsonl_line": 315,
+      "pair_id": "latest-p020-v7.0-to-HEAD_9207d47f966b",
+      "symbol": "zap_huge_pmd",
+      "warning_id": "F-000188",
+      "warning_uid": "0647494b3bf47aa4a17e43dcdec1f4df8ac174bf8446011c09240b6698f19d83"
+    },
+    {
+      "jsonl_line": 316,
+      "pair_id": "latest-p006-v6.6-to-v6.7",
+      "symbol": "__mnt_is_readonly",
+      "warning_id": "F-000058",
+      "warning_uid": "0647a8119d21a7287a4e1645aab32f143d996a2ed195a3b92a28c4523b0e04da"
+    },
+    {
+      "jsonl_line": 317,
+      "pair_id": "latest-p012-v6.12-to-v6.13",
+      "symbol": "led_classdev",
+      "warning_id": "F-003918",
+      "warning_uid": "064d6d53c290ab57df8f80a620c1f1846c19939a26d571b38a67a1b80a23e00e"
+    },
+    {
+      "jsonl_line": 318,
+      "pair_id": "latest-p015-v6.15-to-v6.16",
+      "symbol": "text_poke_queue",
+      "warning_id": "F-000508",
+      "warning_uid": "065986ae54c11cb96d85e5a3e0d8d82124a51ff57c935cf6894fac22b60f00d1"
+    },
+    {
+      "jsonl_line": 319,
+      "pair_id": "latest-p013-v6.13-to-v6.14",
+      "symbol": "fwnode_property_read_u16_array",
+      "warning_id": "F-000133",
+      "warning_uid": "0663da190d92a7dad5fe32ba629e1793d704bb68e24ea4b01ffdecbb080dbf77"
+    },
+    {
+      "jsonl_line": 320,
+      "pair_id": "latest-p012-v6.12-to-v6.13",
+      "symbol": "em_perf_state",
+      "warning_id": "F-003761",
+      "warning_uid": "0679bb562ca2cc2e955dffa31b1c56cd80af0383a6332e7869fa4c9206d5efe1"
+    },
+    {
+      "jsonl_line": 321,
+      "pair_id": "latest-p016-v6.16-to-v6.17",
+      "symbol": "memcg_stat_item_MEMCG_SWAP",
+      "warning_id": "F-001028",
+      "warning_uid": "068cb4507ab8a2a64a070a666e9152ccd4bff4d7bcc6c9a18c69ed6f89465cf5"
+    },
+    {
+      "jsonl_line": 322,
+      "pair_id": "latest-p010-v6.10-to-v6.11",
+      "symbol": "del_gendisk",
+      "warning_id": "F-000218",
+      "warning_uid": "069072c5c572f4a986f30a63c0fb4f8ae9810d7c4e1b37d16da5dfbfc11b32bf"
+    },
+    {
+      "jsonl_line": 323,
+      "pair_id": "latest-p016-v6.16-to-v6.17",
+      "symbol": "acpi_warning",
+      "warning_id": "F-000439",
+      "warning_uid": "069e8bd4af0b28a12df2146bfa0ad1fd8c4a0b6fdd1b4ee93e0903941f1e07a9"
+    },
+    {
+      "jsonl_line": 324,
+      "pair_id": "latest-p006-v6.6-to-v6.7",
+      "symbol": "file_update_time",
+      "warning_id": "F-000326",
+      "warning_uid": "06a7203995a94d267fcf7945630e2202fd9cc32dc1143a9bd8506caf798ce1d9"
+    },
+    {
+      "jsonl_line": 326,
+      "pair_id": "latest-p006-v6.6-to-v6.7",
+      "symbol": "simple_offset_rename_exchange",
+      "warning_id": "F-000887",
+      "warning_uid": "06adb2f050a669cd48caa9eb847ac4f610fa955280dba9afa665b12643142cb1"
+    },
+    {
+      "jsonl_line": 327,
+      "pair_id": "latest-p015-v6.15-to-v6.16",
+      "symbol": "llist_add_batch",
+      "warning_id": "F-000426",
+      "warning_uid": "06af8bbf9037163496275b68b3e808d06cbff3f2fe34bf04e4e6863e06c6ce47"
+    },
+    {
+      "jsonl_line": 328,
+      "pair_id": "latest-p010-v6.10-to-v6.11",
+      "symbol": "encap_hdr_csum",
+      "warning_id": "F-000235",
+      "warning_uid": "06b2ef9a35431e3057b38bffbdf6d89e2e46a050d2be6e24a5760c0460d57ca1"
+    },
+    {
+      "jsonl_line": 329,
+      "pair_id": "latest-p012-v6.12-to-v6.13",
+      "symbol": "isapnp_device_id",
+      "warning_id": "F-003868",
+      "warning_uid": "06b66e38eb0e2d68cab99aa8992b748a7052634cc5d2e3fa20f226dc06eef3c6"
+    },
+    {
+      "jsonl_line": 330,
+      "pair_id": "latest-p016-v6.16-to-v6.17",
+      "symbol": "bpf_stream_stage_dump_stack",
+      "warning_id": "F-000482",
+      "warning_uid": "06c156a683f5a9d1fc7129086528dd82b91414044a4e511b00797eb1fdbf3efb"
+    },
+    {
+      "jsonl_line": 331,
+      "pair_id": "latest-p014-v6.14-to-v6.15",
+      "symbol": "resilient_tas_spin_lock",
+      "warning_id": "F-000150",
+      "warning_uid": "06d216e6eda5cb1d2499f2658ad8031dc5f2f2c77369cd18e24b1105000ab98d"
+    },
+    {
+      "jsonl_line": 332,
+      "pair_id": "latest-p015-v6.15-to-v6.16",
+      "symbol": "cpuhp_state_CPUHP_AP_IRQ_ARMADA_XP_STARTING",
+      "warning_id": "F-000633",
+      "warning_uid": "06ddaa933274d6d8e83bb2aabb93ec8565b2e79f128e6686d0ecbbd8f2a64949"
+    },
+    {
+      "jsonl_line": 333,
+      "pair_id": "latest-p020-v7.0-to-HEAD_9207d47f966b",
+      "symbol": "zap_details",
+      "warning_id": "F-000249",
+      "warning_uid": "06e17f0761a547ab2c9215292b685e7c61e3d7bc7dfef27328392f4220ef33ae"
+    },
+    {
+      "jsonl_line": 334,
+      "pair_id": "latest-p005-v6.5-to-v6.6",
+      "symbol": "thread_struct",
+      "warning_id": "F-000470",
+      "warning_uid": "06e23d1dba4976fc5cb3746f32c6c499df0bd6663cea9f2eb0ce72799ce807b4"
+    },
+    {
+      "jsonl_line": 335,
+      "pair_id": "latest-p013-v6.13-to-v6.14",
+      "symbol": "kernel_ethtool_ts_info",
+      "warning_id": "F-000668",
+      "warning_uid": "06e5bbb08449a0b8a55801821a48523ca51bbf86787ab9fc9707a95acd947cac"
+    },
+    {
+      "jsonl_line": 336,
+      "pair_id": "latest-p020-v7.0-to-HEAD_9207d47f966b",
+      "symbol": "reserve_bootmem_region",
+      "warning_id": "F-000161",
+      "warning_uid": "06e9a977dd61b3659ce1898a36666c394a0f35f3d2c9837855798eba67c1985a"
+    },
+    {
+      "jsonl_line": 337,
+      "pair_id": "latest-p010-v6.10-to-v6.11",
+      "symbol": "blk_status_to_str",
+      "warning_id": "F-000183",
+      "warning_uid": "06ee70c6d4a42f9e61a082752dedd2090b0dc38bccb0d8df86ac1942dfe2ad7a"
+    },
+    {
+      "jsonl_line": 338,
+      "pair_id": "latest-p008-v6.8-to-v6.9",
+      "symbol": "phy_driver",
+      "warning_id": "F-000725",
+      "warning_uid": "06f8ec2340f1a554eee038a62369471f190d3946d4700d1d33b31f86f91f1110"
+    },
+    {
+      "jsonl_line": 339,
+      "pair_id": "latest-p013-v6.13-to-v6.14",
+      "symbol": "filemap_fdatawrite_range_kick",
+      "warning_id": "F-000097",
+      "warning_uid": "06f9943462e5346f851ecf65c33d32b9c19885fe6fcdd0109a73ae34fbed02a1"
+    },
+    {
+      "jsonl_line": 340,
+      "pair_id": "latest-p013-v6.13-to-v6.14",
+      "symbol": "pci_generic_config_write",
+      "warning_id": "F-000339",
+      "warning_uid": "0700131ef1262d0223b9d279713d525c33c0a48987fe9a475eec191c8435977d"
+    },
+    {
+      "jsonl_line": 341,
+      "pair_id": "latest-p010-v6.10-to-v6.11",
+      "symbol": "alt_slen",
+      "warning_id": "F-000438",
+      "warning_uid": "071b4d12715535f2aa5f28503d8a6bee9d8c60bae5269ec79ac6190ff8063e26"
+    },
+    {
+      "jsonl_line": 343,
+      "pair_id": "latest-p018-v6.18-to-v6.19",
+      "symbol": "cdev",
+      "warning_id": "F-000826",
+      "warning_uid": "071e9d83efb6dc589ded13c9b2f16babca9992a76bf589f7959963d6fc16ffbe"
+    },
+    {
+      "jsonl_line": 344,
+      "pair_id": "latest-p016-v6.16-to-v6.17",
+      "symbol": "pm_system_wakeup",
+      "warning_id": "F-000740",
+      "warning_uid": "073ecd76bf6e580996eb4495bc2e0fd567447063c1da3c923b9ee868babcf294"
+    },
+    {
+      "jsonl_line": 346,
+      "pair_id": "latest-p012-v6.12-to-v6.13",
+      "symbol": "resource_constraint",
+      "warning_id": "F-004077",
+      "warning_uid": "075838d49c783b19cb25bc5fcb21313c3cf51ce4bf320bb3ec51c91763ac7828"
+    },
+    {
+      "jsonl_line": 347,
+      "pair_id": "latest-p019-v6.19-to-v7.0",
+      "symbol": "class_remove_file_ns",
+      "warning_id": "F-000072",
+      "warning_uid": "075bd0c5d02d03d504ef4a9868ce9095c6bb9bf211fef3712fd11ef886ecea18"
+    },
+    {
+      "jsonl_line": 348,
+      "pair_id": "latest-p015-v6.15-to-v6.16",
+      "symbol": "cpuhp_state_CPUHP_TRACE_RB_PREPARE",
+      "warning_id": "F-000767",
+      "warning_uid": "075be76395254b25d59068ea326bef0f360f557d073fc08c17bde338b0c7633a"
+    },
+    {
+      "jsonl_line": 349,
+      "pair_id": "latest-p012-v6.12-to-v6.13",
+      "symbol": "poll_table_struct",
+      "warning_id": "F-004036",
+      "warning_uid": "075f22a6c459ef3b9e6d2005becb10fb7241cba15396d3cabecd996ac7e0be2a"
+    },
+    {
+      "jsonl_line": 350,
+      "pair_id": "latest-p016-v6.16-to-v6.17",
+      "symbol": "cpuhp_state_CPUHP_AP_PERF_ARM_HW_BREAKPOINT_STARTING",
+      "warning_id": "F-000977",
+      "warning_uid": "0768d52ee8bec476fa4068330772d8fb11b1bd01211350bae4f046afaa2f8ae6"
+    },
+    {
+      "jsonl_line": 351,
+      "pair_id": "latest-p010-v6.10-to-v6.11",
+      "symbol": "console_try_replay_all",
+      "warning_id": "F-000207",
+      "warning_uid": "07773842fec5ff8a437b337d8afe73fd339615248b011daa700d08f885e274e0"
+    },
+    {
+      "jsonl_line": 352,
+      "pair_id": "latest-p014-v6.14-to-v6.15",
+      "symbol": "skb_drop_reason_SKB_DROP_REASON_PACKET_SOCK_ERROR",
+      "warning_id": "F-000436",
+      "warning_uid": "0778814478340b8100c1a75e6070dacf08ccb62ae1c405e1e909bfabb6fbd369"
+    },
+    {
+      "jsonl_line": 353,
+      "pair_id": "latest-p013-v6.13-to-v6.14",
+      "symbol": "revert_creds",
+      "warning_id": "F-000830",
+      "warning_uid": "0789e5efdc86b1781eb76f789d9e8786ea2e894c79579bd832848fd01f6491e0"
+    },
+    {
+      "jsonl_line": 354,
+      "pair_id": "latest-p013-v6.13-to-v6.14",
+      "symbol": "pci_assign_unassigned_resources",
+      "warning_id": "F-000240",
+      "warning_uid": "078fc304d759524252ad0c6ddfd7d101132835f70de515de2da8b12367d5025c"
+    },
+    {
+      "jsonl_line": 356,
+      "pair_id": "latest-p018-v6.18-to-v6.19",
+      "symbol": "skb_drop_reason_SKB_DROP_REASON_CAN_RX_INVALID_FRAME",
+      "warning_id": "F-000921",
+      "warning_uid": "07af532868b3f14d8d87f73e8bf1ed6779343e278cb85b5a818bf17b60ba5f1b"
+    },
+    {
+      "jsonl_line": 358,
+      "pair_id": "latest-p009-v6.9-to-v6.10",
+      "symbol": "stack_depot_put",
+      "warning_id": "F-000168",
+      "warning_uid": "07bd89d0f51d32b48b17821bd9fef88bd8d36f646699331e649a5e6a066d5dcb"
+    },
+    {
+      "jsonl_line": 359,
+      "pair_id": "latest-p019-v6.19-to-v7.0",
+      "symbol": "rust_helper_refcount_dec",
+      "warning_id": "F-000585",
+      "warning_uid": "07caad5e836fc80302f46c748ed7dba9543f0af3d8acb8a704a2778512bcc116"
+    },
+    {
+      "jsonl_line": 361,
+      "pair_id": "latest-p016-v6.16-to-v6.17",
+      "symbol": "skb_drop_reason_SKB_DROP_REASON_IP_LOCALNET",
+      "warning_id": "F-001093",
+      "warning_uid": "07eb73834ec97a3380071bb4cac2bf9742d58859629c2f6d1af1b957aaaae4bf"
+    },
+    {
+      "jsonl_line": 362,
+      "pair_id": "latest-p013-v6.13-to-v6.14",
+      "symbol": "cpuhp_state_CPUHP_AP_BASE_CACHEINFO_ONLINE",
+      "warning_id": "F-000699",
+      "warning_uid": "07ecc3bc1db5c6f3627393c82a5e064c76c3cae4e014998abdf3bab812996cab"
+    },
+    {
+      "jsonl_line": 364,
+      "pair_id": "latest-p012-v6.12-to-v6.13",
+      "symbol": "flow_dissector_key_arp",
+      "warning_id": "F-003793",
+      "warning_uid": "0815d0f795948f6cd29f73177ac884a74284757ed079fa80024693e7b30404a5"
+    },
+    {
+      "jsonl_line": 365,
+      "pair_id": "latest-p014-v6.14-to-v6.15",
+      "symbol": "__ioread64be_lo_hi",
+      "warning_id": "F-000006",
+      "warning_uid": "0820ae21878ffac4c77319d3d0788fcf138fc3c5acd92bef36e6a9997fbe54e2"
+    },
+    {
+      "jsonl_line": 366,
+      "pair_id": "latest-p014-v6.14-to-v6.15",
+      "symbol": "vm_event_item_PGINODESTEAL",
+      "warning_id": "F-000498",
+      "warning_uid": "08395310d052ec22ca7cc35aa3f807279cb48836ca9d49106ddd5d6348a82e43"
+    },
+    {
+      "jsonl_line": 367,
+      "pair_id": "latest-p010-v6.10-to-v6.11",
+      "symbol": "console_replay_all",
+      "warning_id": "F-000206",
+      "warning_uid": "083f385bfce7a30d4061eb39c9900fa6c1839ff9f4b48ceddb170546d2399eab"
+    },
+    {
+      "jsonl_line": 368,
+      "pair_id": "latest-p019-v6.19-to-v7.0",
+      "symbol": "atomic_i16_try_cmpxchg_relaxed",
+      "warning_id": "F-000039",
+      "warning_uid": "0865f396f371f3e3d715d710acdc2efee2ca7ac2359222980e6ef8ac6006aa71"
+    },
+    {
+      "jsonl_line": 369,
+      "pair_id": "latest-p015-v6.15-to-v6.16",
+      "symbol": "statx",
+      "warning_id": "F-000574",
+      "warning_uid": "08663b21fe35476146a51316ddfa5f75e57f3a4f50ae3820d4701e706ce72c3d"
+    },
+    {
+      "jsonl_line": 370,
+      "pair_id": "latest-p014-v6.14-to-v6.15",
+      "symbol": "skb_drop_reason_SKB_DROP_REASON_TCP_CLOSE",
+      "warning_id": "F-000449",
+      "warning_uid": "0867fb3bd987f7bcf07c3571dfdc6b508907fd8cfe864d76f81db2c4182cf052"
+    },
+    {
+      "jsonl_line": 371,
+      "pair_id": "latest-p017-v6.17-to-v6.18",
+      "symbol": "super_block",
+      "warning_id": "F-000443",
+      "warning_uid": "087a77107f3d06d9a4e34686dc7cf8b3cc5a6835236bc814a2abe118195563c6"
+    },
+    {
+      "jsonl_line": 374,
+      "pair_id": "latest-p015-v6.15-to-v6.16",
+      "symbol": "clk_put",
+      "warning_id": "F-000064",
+      "warning_uid": "08a2facf4955f449cb17713fce817c8dd7406446aae50a4931948058d3975b48"
+    },
+    {
+      "jsonl_line": 375,
+      "pair_id": "latest-p005-v6.5-to-v6.6",
+      "symbol": "radix_tree_delete_item",
+      "warning_id": "F-000299",
+      "warning_uid": "08b7b92979d258f91d55095b1107432e21f12441cd8b2c72db85c0fa104c029f"
+    },
+    {
+      "jsonl_line": 376,
+      "pair_id": "latest-p020-v7.0-to-HEAD_9207d47f966b",
+      "symbol": "gpu_buddy_block_print",
+      "warning_id": "F-000110",
+      "warning_uid": "08b9c21dfe8ba88c69cab09d679ffdefea2e6ae0832aff585d6a52c20474425a"
+    },
+    {
+      "jsonl_line": 377,
+      "pair_id": "latest-p010-v6.10-to-v6.11",
+      "symbol": "cc_attr_CC_ATTR_HOST_SEV_SNP",
+      "warning_id": "F-000440",
+      "warning_uid": "08babdf3127720a6e946e1185d58cd019cb63a7f03ab0b4fad048767993061ab"
+    },
+    {
+      "jsonl_line": 378,
+      "pair_id": "latest-p012-v6.12-to-v6.13",
+      "symbol": "x86_hyper_runtime",
+      "warning_id": "F-004254",
+      "warning_uid": "08c11145ff300dc26cc84991d25acfdfcbd477f9d0e0a6b317738afe11d25519"
+    },
+    {
+      "jsonl_line": 379,
+      "pair_id": "latest-p012-v6.12-to-v6.13",
+      "symbol": "tpacket_req",
+      "warning_id": "F-004197",
+      "warning_uid": "08d07ea51a88262411c7675c5edf33bb8840477d17a5b59ad88f62ea968415ca"
+    },
+    {
+      "jsonl_line": 380,
+      "pair_id": "latest-p010-v6.10-to-v6.11",
+      "symbol": "bio_add_folio_nofail",
+      "warning_id": "F-000055",
+      "warning_uid": "08dfdc84e2d35542910fc8498e06c17595a1cd1acd5a359ae3c2934c891c1b83"
+    },
+    {
+      "jsonl_line": 381,
+      "pair_id": "latest-p014-v6.14-to-v6.15",
+      "symbol": "pr_flush",
+      "warning_id": "F-000143",
+      "warning_uid": "08f2f4c9bb51be11d3a59f0f348aa9d09b0fa5ef21a3f897bca4597d60e624a8"
+    },
+    {
+      "jsonl_line": 382,
+      "pair_id": "latest-p014-v6.14-to-v6.15",
+      "symbol": "cpuhp_state_CPUHP_AP_WATCHDOG_ONLINE",
+      "warning_id": "F-000363",
+      "warning_uid": "08f62044793e19585da2270a36dbc05fb21c1c308adc5202d842d2f5e52bda53"
+    },
+    {
+      "jsonl_line": 384,
+      "pair_id": "latest-p017-v6.17-to-v6.18",
+      "symbol": "btf_record",
+      "warning_id": "F-000417",
+      "warning_uid": "08fed1c54bd037cf267b53912b2220ce3409942d47db902543a7e20e9a9ae332"
+    },
+    {
+      "jsonl_line": 385,
+      "pair_id": "latest-p015-v6.15-to-v6.16",
+      "symbol": "phy_driver",
+      "warning_id": "F-000568",
+      "warning_uid": "09099295d6d81140d5891ff026e31f7e29a536f39b24b25a1070d455cf1ecaae"
+    },
+    {
+      "jsonl_line": 387,
+      "pair_id": "latest-p014-v6.14-to-v6.15",
+      "symbol": "new_inode_pseudo",
+      "warning_id": "F-000110",
+      "warning_uid": "091e53bce00c057d5281e7c3b7ded9d028716fa96a56df645d28b01369d1e15d"
+    },
+    {
+      "jsonl_line": 388,
+      "pair_id": "latest-p010-v6.10-to-v6.11",
+      "symbol": "copy_from_user",
+      "warning_id": "F-000210",
+      "warning_uid": "09267faecfa05e0b163281dee9d0756e3bd4e8f8be17fe06b1c80f4a0e2c3b50"
+    },
+    {
+      "jsonl_line": 389,
+      "pair_id": "latest-p007-v6.7-to-v6.8",
+      "symbol": "ma_wr_state",
+      "warning_id": "F-001909",
+      "warning_uid": "09305ffa9fec155ee6124ed1497d54f6757110a39c411564a9256fd22c61baa8"
+    },
+    {
+      "jsonl_line": 390,
+      "pair_id": "latest-p015-v6.15-to-v6.16",
+      "symbol": "skb_drop_reason_SKB_DROP_REASON_TCP_INVALID_SEQUENCE",
+      "warning_id": "F-000839",
+      "warning_uid": "0930a9c64b140294da125683c12a8deb9ab4f513a4f0880c714604886eab1e84"
+    },
+    {
+      "jsonl_line": 391,
+      "pair_id": "latest-p006-v6.6-to-v6.7",
+      "symbol": "mmu_notifier_subscriptions",
+      "warning_id": "F-001024",
+      "warning_uid": "0937fb7678b1f68aaa70460610552221d626ec320e90561f693c2bcec756cfc5"
+    },
+    {
+      "jsonl_line": 392,
+      "pair_id": "latest-p014-v6.14-to-v6.15",
+      "symbol": "NETIF_F_FCOE_CRC_BIT",
+      "warning_id": "F-000243",
+      "warning_uid": "093debca86ed2fde224dc3994f06463ea91b9d3873d481b6f17a42516828f1ff"
+    },
+    {
+      "jsonl_line": 393,
+      "pair_id": "latest-p005-v6.5-to-v6.6",
+      "symbol": "kunit_remove_resource",
+      "warning_id": "F-000203",
+      "warning_uid": "0947b41288c952885c4cb281a970da5d2de76503ed86a2518c5b25d4f11b5540"
+    },
+    {
+      "jsonl_line": 394,
+      "pair_id": "latest-p015-v6.15-to-v6.16",
+      "symbol": "l1tf_mitigations_L1TF_MITIGATION_FULL_FORCE",
+      "warning_id": "F-000780",
+      "warning_uid": "094d0e4cfef58991e758638101394fb4f25ea90072dfd82f9f1eda582fe1cb6e"
+    },
+    {
+      "jsonl_line": 395,
+      "pair_id": "latest-p016-v6.16-to-v6.17",
+      "symbol": "cpuhp_state_CPUHP_AP_ARM_L2X0_STARTING",
+      "warning_id": "F-000954",
+      "warning_uid": "0959e4911cb654599a8ab16165aee69e9088bd5078da9acc1966ea854ad18a5b"
+    },
+    {
+      "jsonl_line": 396,
+      "pair_id": "latest-p020-v7.0-to-HEAD_9207d47f966b",
+      "symbol": "cpuhp_state_CPUHP_AP_PERF_ARM_HNS3_PMU_ONLINE",
+      "warning_id": "F-000336",
+      "warning_uid": "0963ce727e64618b10b1bb8601dd71ce8cd142199a712dc992f3ce1aaa8ffdad"
+    },
+    {
+      "jsonl_line": 397,
+      "pair_id": "latest-p020-v7.0-to-HEAD_9207d47f966b",
+      "symbol": "node_stat_item_PGDEMOTE_DIRECT",
+      "warning_id": "F-000436",
+      "warning_uid": "096a071943a0058c63baaca4c92b709a817f6bac1a56322eaf2440942720f24d"
+    },
+    {
+      "jsonl_line": 398,
+      "pair_id": "latest-p020-v7.0-to-HEAD_9207d47f966b",
+      "symbol": "platform_device_info",
+      "warning_id": "F-000230",
+      "warning_uid": "096d931d261c74dc9ff64e7dd740f30ab5229ea636493afb4aa0561ddf261e39"
+    },
+    {
+      "jsonl_line": 399,
+      "pair_id": "latest-p019-v6.19-to-v7.0",
+      "symbol": "__ksize",
+      "warning_id": "F-000011",
+      "warning_uid": "0971ebfb4051ef7e09c43d2da9b43796431dda35d1322f24162c3ddad923affe"
+    },
+    {
+      "jsonl_line": 400,
+      "pair_id": "latest-p006-v6.6-to-v6.7",
+      "symbol": "WQ_FLAG_DONE",
+      "warning_id": "F-001045",
+      "warning_uid": "097fdb3d8a1e1d72e337dd29a8c04df34ab0a37e15cd16ecf75d618d10c2484e"
+    },
+    {
+      "jsonl_line": 401,
+      "pair_id": "latest-p014-v6.14-to-v6.15",
+      "symbol": "skb_drop_reason_SKB_DROP_REASON_TC_RECLASSIFY_LOOP",
+      "warning_id": "F-000465",
+      "warning_uid": "098d94bd1dcd19a3bef6a4e70007ecc248be4bef797765bdbc6e5acda52dc9e0"
+    },
+    {
+      "jsonl_line": 402,
+      "pair_id": "latest-p020-v7.0-to-HEAD_9207d47f966b",
+      "symbol": "vm_event_item_KSWAPD_LOW_WMARK_HIT_QUICKLY",
+      "warning_id": "F-000532",
+      "warning_uid": "09948980369e06ab1464fa2192462fdacbbdf0151c85ab967bb862de1a2b0b02"
+    },
+    {
+      "jsonl_line": 405,
+      "pair_id": "latest-p012-v6.12-to-v6.13",
+      "symbol": "device_driver",
+      "warning_id": "F-003747",
+      "warning_uid": "09b06836cf4d737dccfa8ecf063c5bb6fa7bfa63c3db2191b3497bac3cb3ca41"
+    },
+    {
+      "jsonl_line": 406,
+      "pair_id": "latest-p019-v6.19-to-v7.0",
+      "symbol": "atomic_i8_xchg_acquire",
+      "warning_id": "F-000054",
+      "warning_uid": "09b49ee3e7a8f9efa518455581d9e6381a199d8b084afa9f803b1936826b1e9d"
+    },
+    {
+      "jsonl_line": 407,
+      "pair_id": "latest-p020-v7.0-to-HEAD_9207d47f966b",
+      "symbol": "kernel_ethtool_coalesce",
+      "warning_id": "F-000215",
+      "warning_uid": "09cc79748eabef8932444306ed25083a2fd0eb63ae421a6e3f05a666e8066872"
+    },
+    {
+      "jsonl_line": 409,
+      "pair_id": "latest-p019-v6.19-to-v7.0",
+      "symbol": "phy_sfp_disconnect_phy",
+      "warning_id": "F-000274",
+      "warning_uid": "09cf1ad6b83397338f0b0e1ad28dcd41b900348901287d21926d3fda49e06c63"
+    },
+    {
+      "jsonl_line": 411,
+      "pair_id": "latest-p019-v6.19-to-v7.0",
+      "symbol": "orgn",
+      "warning_id": "F-000258",
+      "warning_uid": "09db4efe4e00c39dcf7fa5f08c3a57ba203e918b765f5a97078e013dc3b7ad97"
+    },
+    {
+      "jsonl_line": 412,
+      "pair_id": "latest-p010-v6.10-to-v6.11",
+      "symbol": "blk_rq_unprep_clone",
+      "warning_id": "F-000175",
+      "warning_uid": "09e6dbff67765110a93ba007b1a41d15c0f93519e9c84738a7490eccbb3fe680"
+    },
+    {
+      "jsonl_line": 413,
+      "pair_id": "latest-p012-v6.12-to-v6.13",
+      "symbol": "super_operations",
+      "warning_id": "F-004161",
+      "warning_uid": "09f34609583674d283f06344c30e23d1eac36ee2ab3738164d8dc5c452a3f006"
+    },
+    {
+      "jsonl_line": 414,
+      "pair_id": "latest-p019-v6.19-to-v7.0",
+      "symbol": "tsz",
+      "warning_id": "F-000339",
+      "warning_uid": "09f3db928a12d9038136757404e81fc38ff7652dd3f1a6ed06fc9b9b7eb2d53f"
+    },
+    {
+      "jsonl_line": 416,
+      "pair_id": "latest-p014-v6.14-to-v6.15",
+      "symbol": "vm_event_item_KCOMPACTD_MIGRATE_SCANNED",
+      "warning_id": "F-000485",
+      "warning_uid": "0a107789dc26c77cb5c62a7a611d9756c6f2b1e6e3dba5b8263087a7e139d3dc"
+    },
+    {
+      "jsonl_line": 417,
+      "pair_id": "latest-p019-v6.19-to-v7.0",
+      "symbol": "usb_device",
+      "warning_id": "F-000401",
+      "warning_uid": "0a129821db278fc6604126e4944d0ca7ed7c95d708f94dd783c442345705549d"
+    },
+    {
+      "jsonl_line": 419,
+      "pair_id": "latest-p010-v6.10-to-v6.11",
+      "symbol": "copy_to_user",
+      "warning_id": "F-000211",
+      "warning_uid": "0a239a9fcafc8c4f7ad7f13c22fc6ccf78f85febed673384a37b07c3fc3a54e0"
+    },
+    {
+      "jsonl_line": 420,
+      "pair_id": "latest-p005-v6.5-to-v6.6",
+      "symbol": "register_sysctl_mount_point",
+      "warning_id": "F-000321",
+      "warning_uid": "0a384329c1abc4f17c6ca0f5fe68c95402799683f93a1d18d27a74f8a990f680"
+    },
+    {
+      "jsonl_line": 421,
+      "pair_id": "latest-p012-v6.12-to-v6.13",
+      "symbol": "load_weight",
+      "warning_id": "F-003930",
+      "warning_uid": "0a481a382c4bc0a22ab6a4393ee6660e87c2e8ccb6bf11ab104f0fe0913573bf"
+    },
+    {
+      "jsonl_line": 423,
+      "pair_id": "latest-p018-v6.18-to-v6.19",
+      "symbol": "auxiliary_device_id",
+      "warning_id": "F-000821",
+      "warning_uid": "0a5b6d4009dbc98069d169d22159387e90ce625a3b977217ac92669dbe53b731"
+    },
+    {
+      "jsonl_line": 424,
+      "pair_id": "latest-p005-v6.5-to-v6.6",
+      "symbol": "do_exit",
+      "warning_id": "F-000066",
+      "warning_uid": "0a64de6e6bc372837f8ec630e822d43e24e9988cd67370d2e7bc945ef766341c"
+    },
+    {
+      "jsonl_line": 426,
+      "pair_id": "latest-p012-v6.12-to-v6.13",
+      "symbol": "timespec64",
+      "warning_id": "F-004192",
+      "warning_uid": "0a766a87268992307285d9c76ae8d62d0c731f0f1fd678012f8012205e73e692"
+    },
+    {
+      "jsonl_line": 427,
+      "pair_id": "latest-p012-v6.12-to-v6.13",
+      "symbol": "tpacket_req3",
+      "warning_id": "F-004198",
+      "warning_uid": "0a88cffdd5b45d1f2e80aa66e8d96379788ba0d014d812be179ef70302003766"
+    },
+    {
+      "jsonl_line": 428,
+      "pair_id": "latest-p011-v6.11-to-v6.12",
+      "symbol": "do_vmi_align_munmap",
+      "warning_id": "F-000040",
+      "warning_uid": "0a8bb78f51945e86cce260cde33a9808e8020ebea71e217963976c6641fb9f62"
+    },
+    {
+      "jsonl_line": 429,
+      "pair_id": "latest-p012-v6.12-to-v6.13",
+      "symbol": "srcu_node",
+      "warning_id": "F-004152",
+      "warning_uid": "0a8c6dad38f7ac44c9c30bb1d665d0e1c4ef70a3b5cf6376688025c608581bca"
+    },
+    {
+      "jsonl_line": 430,
+      "pair_id": "latest-p012-v6.12-to-v6.13",
+      "symbol": "__sifields__bindgen_ty_5__bindgen_ty_1__bindgen_ty_1",
+      "warning_id": "F-003580",
+      "warning_uid": "0a92b9bb58949f013a30cd25020cc9aa593e0e42cb8eeb0871ec8bde09f59cc8"
+    },
+    {
+      "jsonl_line": 431,
+      "pair_id": "latest-p009-v6.9-to-v6.10",
+      "symbol": "dma_need_sync",
+      "warning_id": "F-000071",
+      "warning_uid": "0aa298d2cf705896605b88b6de7ddf3cf3f6a617f875d238f3f1b932c8cbc82c"
+    },
+    {
+      "jsonl_line": 432,
+      "pair_id": "latest-p013-v6.13-to-v6.14",
+      "symbol": "skb_drop_reason_SKB_DROP_REASON_IPV6_NDISC_HOP_LIMIT",
+      "warning_id": "F-000737",
+      "warning_uid": "0aacd7224f7af6ae6249c8862ecff96ac12352517e33d4e33f7fdc6bfdb24cd3"
+    },
+    {
+      "jsonl_line": 434,
+      "pair_id": "latest-p012-v6.12-to-v6.13",
+      "symbol": "_ddebug",
+      "warning_id": "F-003588",
+      "warning_uid": "0ac310f163964668274c2c5c72e60334e4026f09b0dd46a11242b689eecc4cf8"
+    },
+    {
+      "jsonl_line": 435,
+      "pair_id": "latest-p012-v6.12-to-v6.13",
+      "symbol": "semid_ds",
+      "warning_id": "F-004108",
+      "warning_uid": "0afaddc6de6599a06a8f9891566f47262df9cb5bd9bde796f37f4d020a7a820d"
+    },
+    {
+      "jsonl_line": 437,
+      "pair_id": "latest-p005-v6.5-to-v6.6",
+      "symbol": "sysfs_break_active_protection",
+      "warning_id": "F-000343",
+      "warning_uid": "0b416730ca59049911883fb8053756f6bbbb6b6fc67492d7eb57c1335b8571b2"
+    },
+    {
+      "jsonl_line": 438,
+      "pair_id": "latest-p005-v6.5-to-v6.6",
+      "symbol": "__kunit_test_suites_exit",
+      "warning_id": "F-000007",
+      "warning_uid": "0b6c7370034a4b367e8b2122210db338b223c41b9ddd7d9c26e371e622bdc1f1"
+    },
+    {
+      "jsonl_line": 441,
+      "pair_id": "latest-p009-v6.9-to-v6.10",
+      "symbol": "kernel_file_open",
+      "warning_id": "F-000103",
+      "warning_uid": "0b8363dc8b8ddf1da3c8ac312bb25f73ae525c1065a371207776020d382e347f"
+    },
+    {
+      "jsonl_line": 442,
+      "pair_id": "latest-p010-v6.10-to-v6.11",
+      "symbol": "partition_meta_info",
+      "warning_id": "F-000428",
+      "warning_uid": "0b892cdd1847690d1bef5ee0c7c91c170a6a59bdc81f812bdcd5797c0da1d66b"
+    },
+    {
+      "jsonl_line": 443,
+      "pair_id": "latest-p012-v6.12-to-v6.13",
+      "symbol": "sigset_t",
+      "warning_id": "F-004128",
+      "warning_uid": "0b89f451830512c559d87459221b0275038de99c552aa7b1c7506346bf9c1d1d"
+    },
+    {
+      "jsonl_line": 445,
+      "pair_id": "latest-p009-v6.9-to-v6.10",
+      "symbol": "codetag_register_type",
+      "warning_id": "F-000059",
+      "warning_uid": "0bc7aeadb7e123c7fa1a8b7cb6db3aa3fa616cd540d01f354ffa5bff16d0ec3a"
+    },
+    {
+      "jsonl_line": 446,
+      "pair_id": "latest-p011-v6.11-to-v6.12",
+      "symbol": "simple_write_begin",
+      "warning_id": "F-000104",
+      "warning_uid": "0bca6d98d3f2c137bc4b34b73b64ab0d7390b6bebdecf12de91adcb61d4e377e"
+    },
+    {
+      "jsonl_line": 448,
+      "pair_id": "latest-p009-v6.9-to-v6.10",
+      "symbol": "pageflags_PG_uncached",
+      "warning_id": "F-000381",
+      "warning_uid": "0c30e79dc77e66e3a8899b33c2df7166c26ab6eac92761dcab8cfdc771fed9ec"
+    },
+    {
+      "jsonl_line": 449,
+      "pair_id": "latest-p012-v6.12-to-v6.13",
+      "symbol": "freeptr_t",
+      "warning_id": "F-003817",
+      "warning_uid": "0c404cbdf2f7c572502c07a723fec923211c679e3231a4fcfef362c4b6fb6be4"
+    },
+    {
+      "jsonl_line": 450,
+      "pair_id": "latest-p009-v6.9-to-v6.10",
+      "symbol": "rhashtable_init",
+      "warning_id": "F-000150",
+      "warning_uid": "0c684426c0d1624ed7a4394b90a1557799c85283c15e45c0481367f8612c4563"
+    },
+    {
+      "jsonl_line": 451,
+      "pair_id": "latest-p009-v6.9-to-v6.10",
+      "symbol": "dma_sync_single_for_cpu",
+      "warning_id": "F-000075",
+      "warning_uid": "0c8ffdfc1fd9233286282d9ae0b0f56e8b5f5a6cbc02d20da48d604b313f3488"
+    },
+    {
+      "jsonl_line": 452,
+      "pair_id": "latest-p012-v6.12-to-v6.13",
+      "symbol": "lockref__bindgen_ty_1__bindgen_ty_1",
+      "warning_id": "F-003931",
+      "warning_uid": "0c94c86e0905e4e5707e0917cc1920af104b6239c9db26890e1ea7dee89c4857"
+    },
+    {
+      "jsonl_line": 453,
+      "pair_id": "latest-p005-v6.5-to-v6.6",
+      "symbol": "kernfs_rename_ns",
+      "warning_id": "F-000134",
+      "warning_uid": "0c9a5e75c3c5e7c55b427eb49faa6527a418d10f0d9e769311e28727d367bb7e"
+    },
+    {
+      "jsonl_line": 454,
+      "pair_id": "latest-p019-v6.19-to-v7.0",
+      "symbol": "iommu_mm_data",
+      "warning_id": "F-000368",
+      "warning_uid": "0ca967014c448b1165fc3403ee4de091cb86c2c03d232873ce3dc819e7a94444"
+    },
+    {
+      "jsonl_line": 455,
+      "pair_id": "latest-p012-v6.12-to-v6.13",
+      "symbol": "kunit_loc",
+      "warning_id": "F-003911",
+      "warning_uid": "0cbff01d848668893de8835a6a35df5c74d54d711fff50c5048bdc1d1f2f0e03"
+    },
+    {
+      "jsonl_line": 456,
+      "pair_id": "latest-p012-v6.12-to-v6.13",
+      "symbol": "compat_siginfo__bindgen_ty_1__bindgen_ty_5__bindgen_ty_1__bindgen_ty_1",
+      "warning_id": "F-003711",
+      "warning_uid": "0d028b38f970178de135af8fb33ceb90f81b024d6c129af8c57cec2192ab3206"
+    },
+    {
+      "jsonl_line": 457,
+      "pair_id": "latest-p019-v6.19-to-v7.0",
+      "symbol": "pid_namespace",
+      "warning_id": "F-000387",
+      "warning_uid": "0d2abea4a2898e292891e37a4c329288589bf7d7eb4945e4e0df24f1c67280e8"
+    },
+    {
+      "jsonl_line": 462,
+      "pair_id": "latest-p003-v6.3-to-v6.4",
+      "symbol": "idle_cpu",
+      "warning_id": "F-000093",
+      "warning_uid": "0ddbbb3bc857b4c1208216a9a83b1aa8a284f7a24d2d1f9e86ca11335f2d7841"
+    },
+    {
+      "jsonl_line": 463,
+      "pair_id": "latest-p011-v6.11-to-v6.12",
+      "symbol": "pcpu_alloc_size",
+      "warning_id": "F-000081",
+      "warning_uid": "0dfc504d12be1eb2316c884ff7f68a82a33afc71fed86dbc7701afd872a16609"
+    },
+    {
+      "jsonl_line": 464,
+      "pair_id": "latest-p009-v6.9-to-v6.10",
+      "symbol": "arch_sync_kernel_mappings",
+      "warning_id": "F-000051",
+      "warning_uid": "0e0c894a856eeca380be1a63a40b60283f2f80f7a7dde8dfa48517307c3dedc1"
+    },
+    {
+      "jsonl_line": 465,
+      "pair_id": "latest-p009-v6.9-to-v6.10",
+      "symbol": "module_address_lookup",
+      "warning_id": "F-000133",
+      "warning_uid": "0e3ce3a9d04fc966873e69d0382f69c94ce80add5e5c0b40d554881be24ef770"
+    },
+    {
+      "jsonl_line": 466,
+      "pair_id": "latest-p009-v6.9-to-v6.10",
+      "symbol": "alloc_pages_noprof",
+      "warning_id": "F-000046",
+      "warning_uid": "0e57de6ae0621ab5379fab138e1447a5a2f4f5ba1696e4d6ff6a80dc3bc4936a"
+    },
+    {
+      "jsonl_line": 467,
+      "pair_id": "latest-p005-v6.5-to-v6.6",
+      "symbol": "kobject_set_name",
+      "warning_id": "F-000166",
+      "warning_uid": "0e80d19a7f37c39cbab1a86ff1ed086f080361329da7e08a184c5583f9ca4f86"
+    },
+    {
+      "jsonl_line": 469,
+      "pair_id": "latest-p009-v6.9-to-v6.10",
+      "symbol": "offset",
+      "warning_id": "F-000138",
+      "warning_uid": "0edb146b8cc0046fb86200aeb6354c33f1e6e48064b2da570857f3699b8f54c2"
+    },
+    {
+      "jsonl_line": 471,
+      "pair_id": "latest-p009-v6.9-to-v6.10",
+      "symbol": "NR_EXTERNAL_VECTORS",
+      "warning_id": "F-000246",
+      "warning_uid": "0f38db243f58bf74367a3425ce7251feb4c831fb0f02da110213bcca65684863"
+    },
+    {
+      "jsonl_line": 474,
+      "pair_id": "latest-p005-v6.5-to-v6.6",
+      "symbol": "proc_dou8vec_minmax",
+      "warning_id": "F-000292",
+      "warning_uid": "0f72b9f73bedee2d4ef7a8fa525feefab2453fd70e0932148b0e0b60e9a57c14"
+    },
+    {
+      "jsonl_line": 475,
+      "pair_id": "latest-p009-v6.9-to-v6.10",
+      "symbol": "cpuhp_state_CPUHP_AP_HYPERV_TIMER_STARTING",
+      "warning_id": "F-000282",
+      "warning_uid": "0f785a2ecaeb9892c5e4f6154cd5d490d22b2b90b0b4e8a4fbef8eef7d6ab51a"
+    },
+    {
+      "jsonl_line": 478,
+      "pair_id": "latest-p011-v6.11-to-v6.12",
+      "symbol": "cpuhp_state_CPUHP_AP_PERF_ARM_HISI_PA_ONLINE",
+      "warning_id": "F-000225",
+      "warning_uid": "0fe461efc3471005aeb5e83ff83e43be7cfb512948e325016319f2ea203820e8"
+    },
+    {
+      "jsonl_line": 479,
+      "pair_id": "latest-p005-v6.5-to-v6.6",
+      "symbol": "pageflags_PG_slab",
+      "warning_id": "F-000510",
+      "warning_uid": "0fe96d81f61e949cf7f9f240710b150bf67e95648e27cd715d6a0f60a7915f88"
+    },
+    {
+      "jsonl_line": 480,
+      "pair_id": "latest-p009-v6.9-to-v6.10",
+      "symbol": "kmalloc_trace",
+      "warning_id": "F-000111",
+      "warning_uid": "100f2fe0186a19c7bf29a62f9ef8a07e65b3b7080f60bd3f2be9c0a62a3841cf"
+    },
+    {
+      "jsonl_line": 481,
+      "pair_id": "latest-p011-v6.11-to-v6.12",
+      "symbol": "I_FREEING",
+      "warning_id": "F-000171",
+      "warning_uid": "101c01413fe86607afa45e33a5007ef07301e0453b3cafa5ef8db1333c163bbf"
+    },
+    {
+      "jsonl_line": 482,
+      "pair_id": "latest-p005-v6.5-to-v6.6",
+      "symbol": "param_set_uint_minmax",
+      "warning_id": "F-000264",
+      "warning_uid": "10311d7a259c3cffe44107bc8aad098ebc1b156e19608b006db310af5c723bfa"
+    },
+    {
+      "jsonl_line": 483,
+      "pair_id": "latest-p009-v6.9-to-v6.10",
+      "symbol": "memcg_stat_item_MEMCG_ZSWAP_B",
+      "warning_id": "F-000358",
+      "warning_uid": "10617c0e28d0377b777ced3b0560376ff7ffd81c4ab0ea5cf08b8d94032cfa91"
+    },
+    {
+      "jsonl_line": 484,
+      "pair_id": "latest-p005-v6.5-to-v6.6",
+      "symbol": "hrtimer_cpu_base",
+      "warning_id": "F-000440",
+      "warning_uid": "108802624b8d99ccaaa77f3ab2bf0a6e8ee14fbd4c8d1321c78cb89b05329388"
+    },
+    {
+      "jsonl_line": 485,
+      "pair_id": "latest-p003-v6.3-to-v6.4",
+      "symbol": "posixtimer_rearm",
+      "warning_id": "F-000131",
+      "warning_uid": "10c66c01caa8284a6a702403b3c7af2958c8a0d23ca093cda6a0ef2a9e394972"
+    },
+    {
+      "jsonl_line": 486,
+      "pair_id": "latest-p005-v6.5-to-v6.6",
+      "symbol": "call_usermodehelper_exec",
+      "warning_id": "F-000050",
+      "warning_uid": "10c831eec3460e8f9c964d6c1cf29b9a7f65470b1b0ae46c79064de4ecec1f5f"
+    },
+    {
+      "jsonl_line": 491,
+      "pair_id": "latest-p003-v6.3-to-v6.4",
+      "symbol": "sched_dynamic_klp_enable",
+      "warning_id": "F-000150",
+      "warning_uid": "1234b50c06e85674f15d58921f90dff5e85b5afee1284f904a6174c8ec69f2cb"
+    },
+    {
+      "jsonl_line": 494,
+      "pair_id": "latest-p011-v6.11-to-v6.12",
+      "symbol": "uprobe_unregister_nosync",
+      "warning_id": "F-000115",
+      "warning_uid": "13359cad0a43882ac81f283bdc8446e8930ba22c21d421048fcb647b76474e9a"
+    },
+    {
+      "jsonl_line": 497,
+      "pair_id": "latest-p003-v6.3-to-v6.4",
+      "symbol": "set_task_cpu",
+      "warning_id": "F-000181",
+      "warning_uid": "14400bd4a99d4170a70942ee6068fd7fdfa3c34702f33b613e2bc74b74c2b0b2"
+    },
+    {
+      "jsonl_line": 501,
+      "pair_id": "latest-p003-v6.3-to-v6.4",
+      "symbol": "show_freezable_workqueues",
+      "warning_id": "F-000183",
+      "warning_uid": "14b95ac588efedd6ff7b1908567fa5b36a28af6c41c4499c691e4e71d26f6ae3"
+    },
+    {
+      "jsonl_line": 502,
+      "pair_id": "latest-p003-v6.3-to-v6.4",
+      "symbol": "schedule_timeout_interruptible",
+      "warning_id": "F-000172",
+      "warning_uid": "1501e4e5d637faad296f7850d5ccc050caa1bcc09cc9775b9262dd860b7830a4"
+    },
+    {
+      "jsonl_line": 503,
+      "pair_id": "latest-p011-v6.11-to-v6.12",
+      "symbol": "of_peak",
+      "warning_id": "F-000078",
+      "warning_uid": "151d6d73e430d30133796122f1074e4c13dee64b0a4590f592bc195dbc6ba4f6"
+    },
+    {
+      "jsonl_line": 505,
+      "pair_id": "latest-p011-v6.11-to-v6.12",
+      "symbol": "iov_iter_folio_queue",
+      "warning_id": "F-000065",
+      "warning_uid": "1567ccf496fc7fea0e7af7af043aee73afe3f5b79f50acbdc02bc95a38f4f7fb"
+    },
+    {
+      "jsonl_line": 506,
+      "pair_id": "latest-p003-v6.3-to-v6.4",
+      "symbol": "hrtimers_init",
+      "warning_id": "F-000090",
+      "warning_uid": "1588d22486cac52ed2865c8599eb673ab3090a4a8c8cef23777df295e8b3fde9"
+    },
+    {
+      "jsonl_line": 508,
+      "pair_id": "latest-p003-v6.3-to-v6.4",
+      "symbol": "frozen",
+      "warning_id": "F-000064",
+      "warning_uid": "15c85876a146295cd6c476bb6b855bffb54306fa4697f1c55feccf7013fe9174"
+    },
+    {
+      "jsonl_line": 511,
+      "pair_id": "latest-p003-v6.3-to-v6.4",
+      "symbol": "exit_shm",
+      "warning_id": "F-000053",
+      "warning_uid": "16ae1f27cede585b0a02dde9d26100e9d17f4a627efdf91cde00599587fd6478"
+    },
+    {
+      "jsonl_line": 512,
+      "pair_id": "latest-p011-v6.11-to-v6.12",
+      "symbol": "I_DIRTY_SYNC",
+      "warning_id": "F-000169",
+      "warning_uid": "16c929b55788dc0e6d3f7e5d36fa39cc9bd1cfd21ff5d85e6e9978e3ab9ae4af"
+    },
+    {
+      "jsonl_line": 514,
+      "pair_id": "latest-p011-v6.11-to-v6.12",
+      "symbol": "pageflags_PG_checked",
+      "warning_id": "F-000257",
+      "warning_uid": "16f60bd992667e0222a484d27ecc13f4cf67704963b2c8f6325c6331cf90ae1f"
+    },
+    {
+      "jsonl_line": 517,
+      "pair_id": "latest-p011-v6.11-to-v6.12",
+      "symbol": "security_bdev_setintegrity",
+      "warning_id": "F-000098",
+      "warning_uid": "191684053e3e0c30a57302a484ba52e598da19dac508be98b8db79973832b23d"
+    },
+    {
+      "jsonl_line": 520,
+      "pair_id": "latest-p011-v6.11-to-v6.12",
+      "symbol": "inode_dio_wait_interruptible",
+      "warning_id": "F-000061",
+      "warning_uid": "1ab7c9fbf3cbdb7da087b96d05915ea64f5bec88f6d695ed991ec50524390f82"
+    },
+    {
+      "jsonl_line": 522,
+      "pair_id": "latest-p003-v6.3-to-v6.4",
+      "symbol": "sched_set_fifo_low",
+      "warning_id": "F-000156",
+      "warning_uid": "1ad21233274e7a795344437d9f1e70c362d59da6f5c0d1de4bd93deddb936215"
+    },
+    {
+      "jsonl_line": 524,
+      "pair_id": "latest-p003-v6.3-to-v6.4",
+      "symbol": "pid_vnr",
+      "warning_id": "F-000118",
+      "warning_uid": "1bcfe65c9772a412119bd3847484ed2df3d997d48d4dc2cda136b2a62e3aecd5"
+    },
+    {
+      "jsonl_line": 526,
+      "pair_id": "latest-p001-v6.1-to-v6.2",
+      "symbol": "timer_delete",
+      "warning_id": "F-000034",
+      "warning_uid": "1c26f0fada697af6267a52025b8155d994da0d8f5e64fa9f81e612a31702b697"
+    },
+    {
+      "jsonl_line": 528,
+      "pair_id": "latest-p011-v6.11-to-v6.12",
+      "symbol": "set_nx",
+      "warning_id": "F-000103",
+      "warning_uid": "1d6d24f33df20ec403d196fa4827f0d510899537fa6e4665eb3f9c5f1aea9bba"
+    },
+    {
+      "jsonl_line": 531,
+      "pair_id": "latest-p011-v6.11-to-v6.12",
+      "symbol": "pageflags_PG_xen_remapped",
+      "warning_id": "F-000270",
+      "warning_uid": "1e21d86002c61388ae557f25f2376c9737c1fae19f845c598e5c29a427292087"
+    },
+    {
+      "jsonl_line": 532,
+      "pair_id": "latest-p011-v6.11-to-v6.12",
+      "symbol": "__I_SYNC",
+      "warning_id": "F-000187",
+      "warning_uid": "1ea6c8d151490dbe2af379492410aaaf8b570f7871df2cda3c8b3507c5bb6422"
+    },
+    {
+      "jsonl_line": 537,
+      "pair_id": "latest-p003-v6.3-to-v6.4",
+      "symbol": "preempt_model_voluntary",
+      "warning_id": "F-000136",
+      "warning_uid": "1fe00c6010ba21205b2782de22c8345844466e096b04e291d1239fdaa804dfca"
+    },
+    {
+      "jsonl_line": 538,
+      "pair_id": "latest-p003-v6.3-to-v6.4",
+      "symbol": "sched_contributes_to_load",
+      "warning_id": "F-000147",
+      "warning_uid": "20cc9e48e4b9f5c77280e3c4f95b7c7c26d12da1239dfd472621eaf81720ded4"
+    },
+    {
+      "jsonl_line": 539,
+      "pair_id": "latest-p003-v6.3-to-v6.4",
+      "symbol": "schedule_hrtimeout_range_clock",
+      "warning_id": "F-000168",
+      "warning_uid": "2101d2d9bab3d55cec2a0179ceebe3869165e71b7490e1ffd54a18b8431bf66e"
+    },
+    {
+      "jsonl_line": 540,
+      "pair_id": "latest-p003-v6.3-to-v6.4",
+      "symbol": "UNWIND_HINT_TYPE_SAVE",
+      "warning_id": "F-000228",
+      "warning_uid": "2105753f002f42022c7d900fd835053f13760abe279a54444960d75750fdbd99"
+    },
+    {
+      "jsonl_line": 541,
+      "pair_id": "latest-p001-v6.1-to-v6.2",
+      "symbol": "kmem_cache_alloc",
+      "warning_id": "F-000021",
+      "warning_uid": "2242c04ed2ed5d11e7d77a4697a1698fdd7522af841a2793cc643f5a59b29cc3"
+    },
+    {
+      "jsonl_line": 550,
+      "pair_id": "latest-p001-v6.1-to-v6.2",
+      "symbol": "SLAB_RECLAIM_ACCOUNT",
+      "warning_id": "F-000057",
+      "warning_uid": "28feb15d4bb204a94381d2c3f4f6301d9e0d850d0cf6d9a4d79964bd3ad62b04"
+    },
+    {
+      "jsonl_line": 565,
+      "pair_id": "latest-p001-v6.1-to-v6.2",
+      "symbol": "page__bindgen_ty_1__bindgen_ty_5",
+      "warning_id": "F-000044",
+      "warning_uid": "33b279db6bda78b8ef970d795ba62060086209495ea3f5e378fbdc48b5c8f471"
+    },
+    {
+      "jsonl_line": 566,
+      "pair_id": "latest-p001-v6.1-to-v6.2",
+      "symbol": "__percpu_counter_sum",
+      "warning_id": "F-000004",
+      "warning_uid": "33f1c698ff8230594d3f54da6763790e5a153e9136ea50e75581c1366438bca3"
+    },
+    {
+      "jsonl_line": 574,
+      "pair_id": "latest-p001-v6.1-to-v6.2",
+      "symbol": "callthunks_patch_module_calls",
+      "warning_id": "F-000012",
+      "warning_uid": "37e6affbcc4b92e8944b87b2789e570dde6547738ad6b918a6f459303a0367dc"
+    },
+    {
+      "jsonl_line": 580,
+      "pair_id": "latest-p001-v6.1-to-v6.2",
+      "symbol": "x86_call_depth_emit_accounting",
+      "warning_id": "F-000038",
+      "warning_uid": "3c9a6defbf3ddf08a7678707f832cab0e0861511cd36baf2ccce54757ebf26cc"
+    },
+    {
+      "jsonl_line": 581,
+      "pair_id": "latest-p001-v6.1-to-v6.2",
+      "symbol": "apply_fineibt",
+      "warning_id": "F-000010",
+      "warning_uid": "3cd93a8f680568e6308a7a3298016ce7eb7ba668583ada645e7d7cdf48c570e1"
+    },
+    {
+      "jsonl_line": 585,
+      "pair_id": "latest-p001-v6.1-to-v6.2",
+      "symbol": "__percpu_counter_compare",
+      "warning_id": "F-000002",
+      "warning_uid": "4134ff973b861932805425b55a04accb69e85c0a5a9fc1e1299ef3e908cda540"
+    },
+    {
+      "jsonl_line": 593,
+      "pair_id": "latest-p001-v6.1-to-v6.2",
+      "symbol": "PERCPU_DYNAMIC_EARLY_SIZE",
+      "warning_id": "F-000054",
+      "warning_uid": "4740eded9bbddcb8accd8b378ecfbe494d1fea7e9e6463521c436ffb22e2e83b"
+    },
+    {
+      "jsonl_line": 596,
+      "pair_id": "latest-p001-v6.1-to-v6.2",
+      "symbol": "rcu_is_idle_cpu",
+      "warning_id": "F-000028",
+      "warning_uid": "4a5996c33998b78668cac4a597de31c9cc03ff9466669f54ff12b9a04d832e5d"
+    },
+    {
+      "jsonl_line": 602,
+      "pair_id": "latest-p001-v6.1-to-v6.2",
+      "symbol": "pageflags___NR_PAGEFLAGS",
+      "warning_id": "F-000056",
+      "warning_uid": "4cfe93b164c4f1e00480d331e1133dbece56b01c17d7ff7934d68fc019f51360"
+    },
+    {
+      "jsonl_line": 604,
+      "pair_id": "latest-p002-v6.2-to-v6.3",
+      "symbol": "mas_dup_tree",
+      "warning_id": "F-000016",
+      "warning_uid": "4d918cf79b754dab6045edac733e52e9b5645b754115135ca3664ab3d6ad2611"
+    },
+    {
+      "jsonl_line": 605,
+      "pair_id": "latest-p002-v6.2-to-v6.3",
+      "symbol": "TDX_HYPERCALL_r11",
+      "warning_id": "F-000044",
+      "warning_uid": "4ef5c903ad5e9048ee4e074f0717df7316effc1fc3249c792bb12173630d37cd"
+    },
+    {
+      "jsonl_line": 610,
+      "pair_id": "latest-p002-v6.2-to-v6.3",
+      "symbol": "microcode_check",
+      "warning_id": "F-000018",
+      "warning_uid": "5308d8e910dbac88f4efb089bc78109f65bd583698bcfd91da1c516bddc4df38"
+    },
+    {
+      "jsonl_line": 613,
+      "pair_id": "latest-p001-v6.1-to-v6.2",
+      "symbol": "__wake_up",
+      "warning_id": "F-000005",
+      "warning_uid": "5645c5c3120887c2c658c8e6f720c4f88bcfdfc0ce75a94b9c8adcc212468ea9"
+    },
+    {
+      "jsonl_line": 620,
+      "pair_id": "latest-p002-v6.2-to-v6.3",
+      "symbol": "sysenter_setup",
+      "warning_id": "F-000028",
+      "warning_uid": "59fece02d2f763087f5f37d3d4d9ea6be4bae4ee8ae37d156a87cdc49dfcecd3"
+    },
+    {
+      "jsonl_line": 622,
+      "pair_id": "latest-p001-v6.1-to-v6.2",
+      "symbol": "load_percpu_segment",
+      "warning_id": "F-000022",
+      "warning_uid": "5aecad8cf5fec54e4f63993de72714af90179514960d5f65c9f3f581615a821a"
+    },
+    {
+      "jsonl_line": 624,
+      "pair_id": "latest-p002-v6.2-to-v6.3",
+      "symbol": "page__bindgen_ty_1__bindgen_ty_5",
+      "warning_id": "F-000034",
+      "warning_uid": "5ce32f33ffcf30ef62dd93427901e6ff11400dfa919651d529c35a891856600b"
+    },
+    {
+      "jsonl_line": 629,
+      "pair_id": "latest-p002-v6.2-to-v6.3",
+      "symbol": "__vdso_getcpu",
+      "warning_id": "F-000004",
+      "warning_uid": "62086f6eec6a7621c7310f3b8cd63a11091746646b6d554beaba1d44e09fcb01"
+    },
+    {
+      "jsonl_line": 631,
+      "pair_id": "latest-p002-v6.2-to-v6.3",
+      "symbol": "AT_VECTOR_SIZE",
+      "warning_id": "F-000037",
+      "warning_uid": "62ba0a0bd7098d1da7e4a1aa388a9ee878731fea544a88fa9d2109c3692637e8"
+    },
+    {
+      "jsonl_line": 632,
+      "pair_id": "latest-p002-v6.2-to-v6.3",
+      "symbol": "TDX_HYPERCALL_r13",
+      "warning_id": "F-000046",
+      "warning_uid": "62d163c60c0fba60b14be043ae53900138c9fa3e9e94239626ab9524dcae721a"
+    },
+    {
+      "jsonl_line": 636,
+      "pair_id": "latest-p001-v6.1-to-v6.2",
+      "symbol": "callthunks_patch_builtin_calls",
+      "warning_id": "F-000011",
+      "warning_uid": "6709bf0aaa2e5af2ea62ebcb7e70b9ef5492ee097ec2e562c3e8fa221c4d3c27"
+    },
+    {
+      "jsonl_line": 645,
+      "pair_id": "latest-p002-v6.2-to-v6.3",
+      "symbol": "preempt_count_sub",
+      "warning_id": "F-000021",
+      "warning_uid": "6eb43a76f6c7024f17fc89cbdb1e726c80154704a6f7169ede497abb7e468c11"
+    },
+    {
+      "jsonl_line": 656,
+      "pair_id": "latest-p002-v6.2-to-v6.3",
+      "symbol": "end",
+      "warning_id": "F-000009",
+      "warning_uid": "7828b4ca35d0a0db67e2b715bda942558c1f6f4a3c91ecc8be07df9955a52883"
+    },
+    {
+      "jsonl_line": 659,
+      "pair_id": "latest-p002-v6.2-to-v6.3",
+      "symbol": "mas_preallocate",
+      "warning_id": "F-000017",
+      "warning_uid": "7ae7d165a41bc85f9b8db863d24a48970f70c311f252e6b1bf32ee1defaad0c1"
+    },
+    {
+      "jsonl_line": 661,
+      "pair_id": "latest-p002-v6.2-to-v6.3",
+      "symbol": "_find_next_or_bit",
+      "warning_id": "F-000005",
+      "warning_uid": "7dc706bdf61e4e242003a55c806565e1c4c5d409ccc6c8de3f3ec852ea80ab35"
+    },
+    {
+      "jsonl_line": 667,
+      "pair_id": "latest-p002-v6.2-to-v6.3",
+      "symbol": "alt_instr",
+      "warning_id": "F-000029",
+      "warning_uid": "86e94312896b5804c20a468597dc947c344f2b58ebec942d9da2406623be5e64"
+    },
+    {
+      "jsonl_line": 668,
+      "pair_id": "latest-p013-v6.13-to-v6.14",
+      "symbol": "pci_dev_get",
+      "warning_id": "W-000006",
+      "warning_uid": "87e19d68cfcb07c2103357f9c8d46c49d46b09d6841f6d62413a88263d845f56"
+    },
+    {
+      "jsonl_line": 670,
+      "pair_id": "latest-p002-v6.2-to-v6.3",
+      "symbol": "AT_VECTOR_SIZE_BASE",
+      "warning_id": "F-000038",
+      "warning_uid": "8aa6ac817b2d8532de70739104a752f73ffe6263b008ac4398c7778e35abd822"
+    },
+    {
+      "jsonl_line": 671,
+      "pair_id": "latest-p002-v6.2-to-v6.3",
+      "symbol": "asm_load_gs_index",
+      "warning_id": "F-000006",
+      "warning_uid": "8af97a77394cb7603aca3de822e5bc84561dd791c7c8e61822393c2c123efe07"
+    },
+    {
+      "jsonl_line": 691,
+      "pair_id": "latest-p007-v6.7-to-v6.8",
+      "symbol": "put_device",
+      "warning_id": "W-000006",
+      "warning_uid": "9ea6043660a08b1aa129cc1323febd4556876c662d27cdd28ebb320a55789c38"
+    },
+    {
+      "jsonl_line": 695,
+      "pair_id": "latest-p013-v6.13-to-v6.14",
+      "symbol": "platform_device_put",
+      "warning_id": "W-000012",
+      "warning_uid": "a1f551d2d8ba933d0ed9056fb16039fdf0f3a972f4caad3be49f1256a4dc8995"
+    }
+  ],
+  "missing_warning_matches": 300,
+  "output_packets_jsonl": "data/replay/latest/review_artifacts/m3_stable_evidence_packets.jsonl",
+  "packet_count": 800,
+  "reused_evidence_packets_jsonl": "data/replay/latest/review_artifacts/m3_final_evidence_packets.jsonl",
+  "reused_matches": 500,
+  "risk_distribution": {
+    "Low": 544,
+    "null": 256
+  },
+  "role": "evidence_collector",
+  "rust_exposure_distribution": {
+    "binding_use_only": 641,
+    "none": 40,
+    "safe_api": 54,
+    "unsafe_wrapper": 65
+  },
+  "rust_impact_level_distribution": {
+    "contract_mapping": 19,
+    "none": 506,
+    "null": 256,
+    "oracle_confirmed": 19
+  },
+  "source_review_set_jsonl": "data/replay/latest/pooled_review_set.jsonl",
+  "type_distribution": {
+    "FieldDrift": 119,
+    "MacroConstDrift": 136,
+    "SignatureDrift": 545
+  },
+  "wrapper_fix_distribution": {
+    "absent": 554,
+    "present": 246
+  }
+}

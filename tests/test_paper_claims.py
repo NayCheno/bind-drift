@@ -19,6 +19,10 @@ def test_paper_draft_preserves_claim_boundary() -> None:
     false_positive_taxonomy = json.loads(Path("paper/tables/false_positive_taxonomy.json").read_text(encoding="utf-8"))
     primary = next(row for row in ranking["rankers"] if row["ranker"] == "binddrift_oracle_blind")
     deltas = ranking["comparison_against_best_simple_baseline"]["deltas"]
+    true_positive_count = sum(
+        manual["label_distribution"].get(label, 0)
+        for label in ("TRUE_BUILD_BREAKAGE", "TRUE_WRAPPER_FIX", "TRUE_SEMANTIC_DRIFT")
+    )
     abstract = _section(full_text, "## Abstract", "## 1. Introduction")
     introduction = _section(full_text, "## 1. Introduction", "## 2. Background And Scope")
     evaluation = _section(full_text, "## 5. Evaluation", "## 6. Case Studies")
@@ -65,7 +69,7 @@ def test_paper_draft_preserves_claim_boundary() -> None:
         f"{manifest['drift_fact_count']:,} drift facts",
         f"{manifest['promoted_warning_count']:,} rust-impact warnings",
         f"{manual['reviewed_warnings']}-item pooled review set",
-        "47 adjudicated true-positive",
+        f"{true_positive_count} adjudicated true-positive",
         f"{manual['true_wrapper_fix_count']} `true_wrapper_fix`",
         f"{manual['true_semantic_drift_count']} `true_semantic_drift`",
         f"{manual['label_distribution']['BENIGN_DRIFT']} `benign_drift`",

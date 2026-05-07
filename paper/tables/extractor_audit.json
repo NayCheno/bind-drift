@@ -92,11 +92,11 @@
     "database_path": ".binddrift/binddrift.sqlite3",
     "manifest_artifact_sha256": {
       "drift_facts.jsonl": "45ec718e8bcf22e4b5d91bf1bfa4924d0c414958aba123c4e0f96bde7018d8ef",
-      "evaluation_protocol.json": "80480e9170f85f4efdca2ccc293121760cd7eadccdaba2f262ce036c46ff5f4b",
+      "evaluation_protocol.json": "e03d2d18fe4a8c8e9d44468de160f892dfee8896170b7ec0c9b000cfb761b1d6",
       "manual_review.csv": "f999f73ccbc3615f44586a7d7c7fe93ba1899fcb35d885b646d2c9fc1eb27937",
-      "pooled_review_labels.csv": "27d407431b7e8fbb70c9634f76208e5515301e132e8eecf1164d35e391c58a46",
-      "pooled_review_manifest.json": "15c49eed8ecffa6d916c2a51199447141be0bec273da758969d80aaa8b83442e",
-      "pooled_review_set.jsonl": "7ef58da3e1fbb4ab68fc4748856627882c55c215d0d2db9812c707ba57ec7293",
+      "pooled_review_labels.csv": "19b7593a126c1d111a63f649b0d8681f39eb97c7494613f761218f7a712d7a2e",
+      "pooled_review_manifest.json": "e3bf6a44487545234f7f786430242f34a6eec212da64ab5f8d3a301c22d6cce4",
+      "pooled_review_set.jsonl": "be28c1ae95bca772b350b746718779e1382889cb64a03afbfa66123aa76ae5de",
       "promoted_warnings.jsonl": "e2d2f8d6bc0eb21a584fa3ae6cacedcd890aedf1fab912c8353ce35e38ac21e3",
       "single_version_review_targets.jsonl": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "warnings.jsonl": "c393edc237fee79cb4f56111e60de5ce4173e094f4ef96f953baafecd2cd658c"

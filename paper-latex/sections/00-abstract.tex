@@ -6,11 +6,11 @@ confirm runtime bugs. The current artifact separates low-level cross-version
 drift facts from promoted Rust-impact warnings, attaches a C-to-Rust evidence
 chain, and ranks warnings for maintainer review. The canonical replay spans 21
 Linux snapshots, 20 adjacent version pairs, 16,757 drift facts, and 320
-promoted Rust-impact warnings. A 500-item pooled review set follows a trusted
+promoted Rust-impact warnings. An 800-item pooled review set follows a trusted
 binddrift-review expert protocol with role separation, double review, and
 adjudication. The primary
 \primary{} ranker reports P@10 = 1.00, P@20 = 1.00, P@50 = 0.86, P@100 = 0.43,
 and NDCG@20 = 1.00 on the pooled review set, improving P@20 by 0.60, P@50 by
 0.64, and NDCG@20 by 0.5394 over the strongest simple baseline. The pooled
-labels contain 47 adjudicated true-positive review targets, including 29
-\truesemantic{} rows and 17 \truewrapper{} rows.
+labels contain 50 adjudicated true-positive review targets, including 29
+\truesemantic{} rows and 20 \truewrapper{} rows.

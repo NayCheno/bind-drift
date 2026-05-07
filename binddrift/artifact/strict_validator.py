@@ -39,6 +39,7 @@ from binddrift.paper.tables import (
     M5_MIN_AGREEMENT_RATE,
     M5_MIN_COHEN_KAPPA,
     M5_MIN_DISAGREEMENT_EXAMPLES,
+    M5_MIN_POOLED_REVIEW_SIZE,
     M5_REVIEW_FORBIDDEN_STRINGS,
     generate_paper_tables,
 )
@@ -724,7 +725,7 @@ def _manual_review_quality_gate(cfg: Config) -> dict[str, Any]:
     review_protocol = data.get("review_protocol") or {}
     trusted_review = review_protocol.get("trusted_review_protocol") or {}
     strict_checks = {
-        "pooled_review_size": 450 <= reviewed_warnings <= 600,
+        "pooled_review_size": reviewed_warnings >= M5_MIN_POOLED_REVIEW_SIZE,
         "label_coverage": (data.get("label_coverage") or 0.0) >= 1.0,
         "double_review_complete": bool(acceptance.get("double_review_complete")),
         "adjudication_complete": bool(acceptance.get("adjudication_complete") or acceptance.get("all_main_labels_adjudicated")),
