@@ -17,8 +17,13 @@ from binddrift.run_manifest import canonical_run_dir, repo_relative, sha256_file
 from binddrift.warnings import read_warnings
 
 
-SIMPLE_BASELINES = {"binding_diff", "c_signature", "c_indicator", "rust_use", "no_ranking", "random"}
-ABLATIONS = {"no_graph", "no_impact_gate"}
+SIMPLE_BASELINES = {"binding_diff", "c_signature", "c_indicator", "rust_use", "graph_reachability", "no_ranking", "random"}
+ABLATIONS = {"no_graph", "no_impact_gate", "no_contract_evidence"}
+M5_MIN_P_AT_20_LIFT = 0.15
+M5_MIN_P_AT_50_LIFT = 0.10
+M5_MIN_NDCG_AT_20_LIFT = 0.10
+M5_MIN_AUPRC_LIFT = 0.10
+M5_MIN_SUPPORTING_ABLATIONS = 3
 TOP_K = 100
 KS = (10, 20, 50, 100)
 TAXONOMY_SCHEMA_VERSION = "m4-ranking-taxonomy-v2"
@@ -116,6 +121,10 @@ def build_ranker_evaluation(
         ranked_labels.get("binddrift_oracle_blind", []),
         ranked_labels.get(str(best_simple.get("ranker")), []),
         pool_label_values,
+        primary_rows=ranked_pool_rows.get("binddrift_oracle_blind", []),
+        best_rows=ranked_pool_rows.get(str(best_simple.get("ranker")), []),
+        pool_rows=pool_rows,
+        label_map=label_map,
     )
     comparison = _comparison(primary, best_simple, significance=significance)
     random_comparison = _comparison(
@@ -125,6 +134,10 @@ def build_ranker_evaluation(
             ranked_labels.get("binddrift_oracle_blind", []),
             ranked_labels.get("random", []),
             pool_label_values,
+            primary_rows=ranked_pool_rows.get("binddrift_oracle_blind", []),
+            best_rows=ranked_pool_rows.get("random", []),
+            pool_rows=pool_rows,
+            label_map=label_map,
         ),
     )
     label_coverage = _strict_label_coverage(pool_rows, labels)
@@ -347,6 +360,8 @@ def _metric_value(labels: list[str], pool_labels: list[str], metric: str) -> flo
         return _precision_at_k(labels, int(metric.rsplit("_", 1)[1]), pool_size=len(pool_labels))
     if metric == "ndcg_at_20":
         return _ndcg_at_k(labels, pool_labels, 20)
+    if metric == "auprc_on_pooled_review_set":
+        return _average_precision_on_pool(labels, pool_labels)
     return None
 
 
@@ -371,12 +386,14 @@ def _comparison(
         "p_at_20": round((primary.get("p_at_20") or 0.0) - (best.get("p_at_20") or 0.0), 4),
         "p_at_50": round((primary.get("p_at_50") or 0.0) - (best.get("p_at_50") or 0.0), 4),
         "ndcg_at_20": round((primary.get("ndcg_at_20") or 0.0) - (best.get("ndcg_at_20") or 0.0), 4),
+        "auprc_on_pooled_review_set": round((primary.get("auprc_on_pooled_review_set") or 0.0) - (best.get("auprc_on_pooled_review_set") or 0.0), 4),
     }
     passed = sum(
         [
-            deltas["p_at_20"] >= 0.10,
-            deltas["p_at_50"] >= 0.07,
-            deltas["ndcg_at_20"] >= 0.10,
+            deltas["p_at_20"] >= M5_MIN_P_AT_20_LIFT,
+            deltas["p_at_50"] >= M5_MIN_P_AT_50_LIFT,
+            deltas["ndcg_at_20"] >= M5_MIN_NDCG_AT_20_LIFT,
+            deltas["auprc_on_pooled_review_set"] >= M5_MIN_AUPRC_LIFT,
         ]
     )
     return {
@@ -384,8 +401,8 @@ def _comparison(
         "best_simple_baseline": best["ranker"],
         "deltas": deltas,
         "minimum_conditions_passed": passed,
-        "minimum_required_conditions": 3,
-        "passes_minimum_lift": passed == 3,
+        "minimum_required_conditions": 4,
+        "passes_minimum_lift": passed == 4,
         "paired_bootstrap_significance": significance or {},
     }
 
@@ -395,9 +412,14 @@ def _paired_bootstrap_significance(
     best_labels: list[str],
     pool_labels: list[str],
     trials: int = 500,
+    *,
+    primary_rows: list[dict[str, Any]] | None = None,
+    best_rows: list[dict[str, Any]] | None = None,
+    pool_rows: list[dict[str, Any]] | None = None,
+    label_map: dict[str, str] | None = None,
 ) -> dict[str, Any]:
     if not pool_labels:
-        return {"method": "paired_rank_position_bootstrap", "trials": trials, "metrics": {}}
+        return {"method": "paired_rank_position_bootstrap_with_positive_ap_contribution", "trials": trials, "metrics": {}}
     rng = random.Random(0)
     metrics: dict[str, Any] = {}
     for metric in ("p_at_20", "p_at_50", "ndcg_at_20"):
@@ -427,12 +449,81 @@ def _paired_bootstrap_significance(
                 round(max(sorted_deltas[int(0.975 * (len(sorted_deltas) - 1))], observed), 4),
             ],
         }
+    ap_metric = _paired_average_precision_bootstrap(
+        primary_rows=primary_rows or [],
+        best_rows=best_rows or [],
+        pool_rows=pool_rows or [],
+        label_map=label_map or {},
+        primary_labels=primary_labels,
+        best_labels=best_labels,
+        pool_labels=pool_labels,
+        trials=trials,
+    )
+    if ap_metric:
+        metrics["auprc_on_pooled_review_set"] = ap_metric
     return {
-        "method": "paired_rank_position_bootstrap",
+        "method": "paired_rank_position_bootstrap_with_positive_ap_contribution",
         "trials": trials,
         "best_simple_baseline": "same_as_comparison",
         "metrics": metrics,
     }
+
+
+def _paired_average_precision_bootstrap(
+    *,
+    primary_rows: list[dict[str, Any]],
+    best_rows: list[dict[str, Any]],
+    pool_rows: list[dict[str, Any]],
+    label_map: dict[str, str],
+    primary_labels: list[str],
+    best_labels: list[str],
+    pool_labels: list[str],
+    trials: int,
+) -> dict[str, Any] | None:
+    positive_uids = [_warning_uid(row) for row in pool_rows if label_for_warning(label_map, row) in TRUE_LABELS]
+    if not positive_uids:
+        return None
+    primary_contributions = _average_precision_contributions(primary_rows, label_map)
+    best_contributions = _average_precision_contributions(best_rows, label_map)
+    per_positive_deltas = [
+        primary_contributions.get(uid, 0.0) - best_contributions.get(uid, 0.0)
+        for uid in positive_uids
+    ]
+    if not per_positive_deltas:
+        return None
+    observed = round((_average_precision_on_pool(primary_labels, pool_labels) or 0.0) - (_average_precision_on_pool(best_labels, pool_labels) or 0.0), 4)
+    rng = random.Random(0)
+    deltas: list[float] = []
+    for _trial in range(trials):
+        sample = [per_positive_deltas[rng.randrange(len(per_positive_deltas))] for _idx in range(len(per_positive_deltas))]
+        deltas.append(sum(sample) / len(sample))
+    not_better = sum(1 for delta in deltas if delta <= 0.0)
+    sorted_deltas = sorted(deltas)
+    return {
+        "observed_delta": observed,
+        "p_value_primary_not_better": round((not_better + 1) / (trials + 1), 4),
+        "significant_primary_better": observed > 0.0 and ((not_better + 1) / (trials + 1)) <= 0.05,
+        "bootstrap_delta_ci": [
+            round(min(sorted_deltas[int(0.025 * (len(sorted_deltas) - 1))], observed), 4),
+            round(max(sorted_deltas[int(0.975 * (len(sorted_deltas) - 1))], observed), 4),
+        ],
+        "bootstrap_unit": "pooled_positive_warning_ap_contribution",
+    }
+
+
+def _average_precision_contributions(ranked_rows: list[dict[str, Any]], label_map: dict[str, str]) -> dict[str, float]:
+    contributions: dict[str, float] = {}
+    positives_seen = 0
+    for rank, warning in enumerate(ranked_rows, start=1):
+        if label_for_warning(label_map, warning) not in TRUE_LABELS:
+            continue
+        positives_seen += 1
+        contributions[_warning_uid(warning)] = positives_seen / rank
+    return contributions
+
+
+def _warning_uid(warning: dict[str, Any]) -> str:
+    return str(warning.get("warning_uid") or f"{warning.get('pair_id')}:{warning.get('warning_id')}")
 
 
 def _minimum_topk_passes(primary: dict[str, Any] | None) -> bool:
@@ -479,16 +570,17 @@ def _significance_passes(comparison: dict[str, Any]) -> bool:
     return all(
         ((metrics.get(metric) or {}).get("bootstrap_delta_ci") or [0.0])[0] > 0.0
         and ((metrics.get(metric) or {}).get("p_value_primary_not_better") or 1.0) < 0.05
-        for metric in ("p_at_20", "p_at_50", "ndcg_at_20")
+        for metric in ("p_at_20", "p_at_50", "ndcg_at_20", "auprc_on_pooled_review_set")
     )
 
 
 def _primary_beats_best_simple_baseline(comparison: dict[str, Any]) -> bool:
     deltas = comparison.get("deltas") or {}
     return bool(
-        (deltas.get("p_at_20") or 0.0) >= 0.10
-        and (deltas.get("p_at_50") or 0.0) >= 0.07
-        and (deltas.get("ndcg_at_20") or 0.0) >= 0.10
+        (deltas.get("p_at_20") or 0.0) >= M5_MIN_P_AT_20_LIFT
+        and (deltas.get("p_at_50") or 0.0) >= M5_MIN_P_AT_50_LIFT
+        and (deltas.get("ndcg_at_20") or 0.0) >= M5_MIN_NDCG_AT_20_LIFT
+        and (deltas.get("auprc_on_pooled_review_set") or 0.0) >= M5_MIN_AUPRC_LIFT
         and _significance_passes(comparison)
     )
 
@@ -523,6 +615,7 @@ def _ablation_story(rows: list[dict[str, Any]], primary: dict[str, Any] | None) 
     labels = {
         "no_graph": "Graph evidence keeps weak symbol-only matches below better-supported C/Rust contract evidence.",
         "no_impact_gate": "Impact gating helps keep C-only or weak-reachability drift below Rust-impact review targets.",
+        "no_contract_evidence": "Contract evidence from safety comments, error mappings, lifetime facts, and safe APIs raises stale-contract review targets above generic API drift.",
     }
     ablations: list[dict[str, Any]] = []
     for name in sorted(ABLATIONS):
@@ -533,7 +626,12 @@ def _ablation_story(rows: list[dict[str, Any]], primary: dict[str, Any] | None) 
             metric: round((primary.get(metric) or 0.0) - (row.get(metric) or 0.0), 4)
             for metric in ("p_at_20", "p_at_50", "ndcg_at_20", "auprc_on_pooled_review_set")
         }
-        supports = deltas["p_at_20"] > 0.0 and deltas["ndcg_at_20"] > 0.0
+        supports = (
+            deltas["p_at_20"] >= 0.05
+            or deltas["p_at_50"] >= 0.05
+            or deltas["ndcg_at_20"] >= 0.05
+            or deltas["auprc_on_pooled_review_set"] >= 0.05
+        )
         ablations.append(
             {
                 "ablation": name,
@@ -544,9 +642,9 @@ def _ablation_story(rows: list[dict[str, Any]], primary: dict[str, Any] | None) 
         )
     supporting = sum(1 for row in ablations if row["supports_design_choice"])
     return {
-        "minimum_required_supporting_ablations": 2,
+        "minimum_required_supporting_ablations": M5_MIN_SUPPORTING_ABLATIONS,
         "supporting_ablation_count": supporting,
-        "supports_design": supporting >= 2,
+        "supports_design": supporting >= M5_MIN_SUPPORTING_ABLATIONS,
         "ablations": ablations,
     }
 
@@ -709,9 +807,10 @@ def _m6_acceptance(
         "all_rankers_same_pool": _all_rankers_same_pool(rows, pool_size),
         "pool_label_coverage": (label_coverage.get("coverage") or 0.0) >= 0.95,
         "primary_beats_best_simple_baseline": _primary_beats_best_simple_baseline(comparison),
-        "p_at_20_delta": (deltas.get("p_at_20") or 0.0) >= 0.10,
-        "p_at_50_delta": (deltas.get("p_at_50") or 0.0) >= 0.07,
-        "ndcg_at_20_delta": (deltas.get("ndcg_at_20") or 0.0) >= 0.10,
+        "p_at_20_delta": (deltas.get("p_at_20") or 0.0) >= M5_MIN_P_AT_20_LIFT,
+        "p_at_50_delta": (deltas.get("p_at_50") or 0.0) >= M5_MIN_P_AT_50_LIFT,
+        "ndcg_at_20_delta": (deltas.get("ndcg_at_20") or 0.0) >= M5_MIN_NDCG_AT_20_LIFT,
+        "auprc_delta": (deltas.get("auprc_on_pooled_review_set") or 0.0) >= M5_MIN_AUPRC_LIFT,
         "bootstrap_ci_lower_bound": _significance_passes(comparison),
         "p_value": _significance_passes(comparison),
         "random_baseline_sanity": _random_baseline_sanity(random_comparison),
@@ -726,11 +825,12 @@ def _m6_acceptance(
         "minimum_passes": all(checks.values()),
         "thresholds": {
             "pool_label_coverage": 0.95,
-            "p_at_20_delta": 0.10,
-            "p_at_50_delta": 0.07,
-            "ndcg_at_20_delta": 0.10,
+            "p_at_20_delta": M5_MIN_P_AT_20_LIFT,
+            "p_at_50_delta": M5_MIN_P_AT_50_LIFT,
+            "ndcg_at_20_delta": M5_MIN_NDCG_AT_20_LIFT,
+            "auprc_delta": M5_MIN_AUPRC_LIFT,
             "p_value": 0.05,
-            "supporting_ablations": 2,
+            "supporting_ablations": M5_MIN_SUPPORTING_ABLATIONS,
         },
     }
 

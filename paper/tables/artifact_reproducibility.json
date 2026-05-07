@@ -923,6 +923,7 @@
     {
       "details": {
         "best_baseline_deltas": {
+          "auprc_on_pooled_review_set": 0.5536,
           "ndcg_at_20": 0.5394,
           "p_at_20": 0.6,
           "p_at_50": 0.64
@@ -1679,9 +1680,10 @@
           "manual_review_boundary_written": true,
           "method_section_present": true,
           "no_local_absolute_paths": true,
-          "numbers_from_tables_present": true,
+          "numbers_from_tables_present": false,
           "primary_ranker_display_name": true,
           "required_tree_present": true,
+          "rq3_table_matches_generated_ranking": true,
           "submission_oriented_readme": true,
           "title_matches_plan": true
         },
@@ -1695,8 +1697,10 @@
         "forbidden_found": [],
         "local_path_hits": [],
         "missing": [],
-        "missing_numbers": [],
-        "passes": true,
+        "missing_numbers": [
+          "360 adjudicated semantic rows"
+        ],
+        "passes": false,
         "root": "paper-latex",
         "sections": [
           "paper-latex/sections/00-abstract.tex",
@@ -1720,7 +1724,7 @@
         ]
       },
       "name": "m7_latex_paper_gate",
-      "passes": true
+      "passes": false
     },
     {
       "details": {
@@ -1868,11 +1872,13 @@
     {
       "details": {
         "abstract_missing": [],
-        "body_missing": [],
+        "body_missing": [
+          "reviews 360 adjudicated rows"
+        ],
         "checks": {
           "abstract_numbers_from_tables": true,
           "artifact_guide_one_command": true,
-          "body_numbers_from_tables": true,
+          "body_numbers_from_tables": false,
           "forbidden_claims_absent": true,
           "no_stale_numbers": true,
           "red_team_two_rounds_closed": true,
@@ -1888,7 +1894,7 @@
           "readme_reproduce_command": true
         },
         "forbidden_found": [],
-        "passes": true,
+        "passes": false,
         "red_team": {
           "checks": {
             "all_issues_closed": true,
@@ -1917,7 +1923,7 @@
         "threat_missing": []
       },
       "name": "m8_paper_submission_gate",
-      "passes": true
+      "passes": false
     },
     {
       "details": {
@@ -2206,6 +2212,17 @@
       "ablation_story": {
         "ablations": [
           {
+            "ablation": "no_contract_evidence",
+            "design_choice": "Contract evidence from safety comments, error mappings, lifetime facts, and safe APIs raises stale-contract review targets above generic API drift.",
+            "primary_minus_ablation": {
+              "auprc_on_pooled_review_set": 0.0528,
+              "ndcg_at_20": 0.0,
+              "p_at_20": 0.0,
+              "p_at_50": 0.12
+            },
+            "supports_design_choice": true
+          },
+          {
             "ablation": "no_graph",
             "design_choice": "Graph evidence keeps weak symbol-only matches below better-supported C/Rust contract evidence.",
             "primary_minus_ablation": {
@@ -2228,8 +2245,8 @@
             "supports_design_choice": true
           }
         ],
-        "minimum_required_supporting_ablations": 2,
-        "supporting_ablation_count": 2,
+        "minimum_required_supporting_ablations": 3,
+        "supporting_ablation_count": 3,
         "supports_design": true
       },
       "candidate_oracle_only": 0,
@@ -2237,6 +2254,7 @@
         "ablation_story": true,
         "all_rankers_same_pool": true,
         "auprc_at_least_best_simple": true,
+        "auprc_lift": true,
         "bootstrap_ci_lower_bound_positive": true,
         "candidate_count": true,
         "candidate_count_matches_recomputed": true,
@@ -2270,16 +2288,27 @@
       "comparison": {
         "best_simple_baseline": "rust_use",
         "deltas": {
+          "auprc_on_pooled_review_set": 0.5536,
           "ndcg_at_20": 0.5394,
           "p_at_20": 0.6,
           "p_at_50": 0.64
         },
-        "minimum_conditions_passed": 3,
-        "minimum_required_conditions": 3,
+        "minimum_conditions_passed": 4,
+        "minimum_required_conditions": 4,
         "paired_bootstrap_significance": {
           "best_simple_baseline": "same_as_comparison",
-          "method": "paired_rank_position_bootstrap",
+          "method": "paired_rank_position_bootstrap_with_positive_ap_contribution",
           "metrics": {
+            "auprc_on_pooled_review_set": {
+              "bootstrap_delta_ci": [
+                0.4748,
+                0.6281
+              ],
+              "bootstrap_unit": "pooled_positive_warning_ap_contribution",
+              "observed_delta": 0.5536,
+              "p_value_primary_not_better": 0.002,
+              "significant_primary_better": true
+            },
             "ndcg_at_20": {
               "bootstrap_delta_ci": [
                 0.3485,
@@ -2317,6 +2346,7 @@
         "checks": {
           "ablation_story": true,
           "all_rankers_same_pool": true,
+          "auprc_delta": true,
           "bootstrap_ci_lower_bound": true,
           "ndcg_at_20_delta": true,
           "no_oracle_leakage": true,
@@ -2332,12 +2362,13 @@
         },
         "minimum_passes": true,
         "thresholds": {
+          "auprc_delta": 0.1,
           "ndcg_at_20_delta": 0.1,
-          "p_at_20_delta": 0.1,
-          "p_at_50_delta": 0.07,
+          "p_at_20_delta": 0.15,
+          "p_at_50_delta": 0.1,
           "p_value": 0.05,
           "pool_label_coverage": 0.95,
-          "supporting_ablations": 2
+          "supporting_ablations": 3
         }
       },
       "metrics": {
@@ -2566,7 +2597,7 @@
       }
     },
     "semantic": {
-      "candidates_reviewed": 304,
+      "candidates_reviewed": 360,
       "checks": {
         "examples_per_semantic_type": true,
         "false_positive_taxonomy_generated": true,
@@ -2599,7 +2630,7 @@
         "OwnershipRefcountDrift": true,
         "SleepabilityContextDrift": true
       },
-      "reviewed_semantic_targets": 304,
+      "reviewed_semantic_targets": 360,
       "semantic_drift_type_count": 4,
       "semantic_drift_types": [
         "AllocationFreeDrift",
@@ -2620,7 +2651,7 @@
         "unclear_rate": true
       },
       "true_semantic_drift_count": 29,
-      "true_wrapper_fix_count": 17,
+      "true_wrapper_fix_count": 20,
       "type_distribution": {
         "AllocationFreeDrift": 80,
         "LayoutFieldDrift": 80,

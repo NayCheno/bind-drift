@@ -456,23 +456,24 @@ def _ranking_gate(cfg: Config) -> dict[str, Any]:
         "p_at_100": (primary.get("p_at_100") or 0.0) >= 0.40,
         "ndcg_at_20": (primary.get("ndcg_at_20") or 0.0) >= 0.55,
         "auprc_at_least_best_simple": (primary.get("auprc_on_pooled_review_set") or 0.0) >= (best.get("auprc_on_pooled_review_set") or 0.0),
-        "p_at_20_lift": (deltas.get("p_at_20") or 0.0) >= 0.10,
-        "p_at_50_lift": (deltas.get("p_at_50") or 0.0) >= 0.07,
+        "p_at_20_lift": (deltas.get("p_at_20") or 0.0) >= 0.15,
+        "p_at_50_lift": (deltas.get("p_at_50") or 0.0) >= 0.10,
         "ndcg_at_20_lift": (deltas.get("ndcg_at_20") or 0.0) >= 0.10,
+        "auprc_lift": (deltas.get("auprc_on_pooled_review_set") or 0.0) >= 0.10,
         "bootstrap_ci_lower_bound_positive": all(
             ((significance.get(metric) or {}).get("bootstrap_delta_ci") or [0.0])[0] > 0.0
-            for metric in ("p_at_20", "p_at_50", "ndcg_at_20")
+            for metric in ("p_at_20", "p_at_50", "ndcg_at_20", "auprc_on_pooled_review_set")
         ),
         "significance_p_value": all(
             ((significance.get(metric) or {}).get("p_value_primary_not_better") or 1.0) < 0.05
-            for metric in ("p_at_20", "p_at_50", "ndcg_at_20")
+            for metric in ("p_at_20", "p_at_50", "ndcg_at_20", "auprc_on_pooled_review_set")
         ),
         "all_rankers_same_pool": data.get("all_rankers_same_pool") is True and acceptance.get("all_rankers_same_pool") is True,
         "primary_beats_best_simple_baseline": data.get("primary_beats_best_simple_baseline") is True
         and acceptance.get("primary_beats_best_simple_baseline") is True,
         "primary_beats_random": bool(random_comparison.get("passes_minimum_lift")),
         "random_baseline_sanity": acceptance.get("random_baseline_sanity") is True,
-        "ablation_story": acceptance.get("ablation_story") is True and (ablation_story.get("supporting_ablation_count") or 0) >= 2,
+        "ablation_story": acceptance.get("ablation_story") is True and (ablation_story.get("supporting_ablation_count") or 0) >= 3,
         "top_false_positive_taxonomy": _taxonomy_schema_passes(top_fp_taxonomy),
         "top_false_negative_taxonomy": _taxonomy_schema_passes(top_fn_taxonomy),
         "no_self_evaluation_top100_only": data.get("no_self_evaluation_top100_only") is True
@@ -603,6 +604,7 @@ def _m6_acceptance_passes(data: dict[str, Any]) -> bool:
         "p_at_20_delta",
         "p_at_50_delta",
         "ndcg_at_20_delta",
+        "auprc_delta",
         "bootstrap_ci_lower_bound",
         "p_value",
         "random_baseline_sanity",

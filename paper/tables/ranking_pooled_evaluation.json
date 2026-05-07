@@ -2,6 +2,17 @@
   "ablation_story": {
     "ablations": [
       {
+        "ablation": "no_contract_evidence",
+        "design_choice": "Contract evidence from safety comments, error mappings, lifetime facts, and safe APIs raises stale-contract review targets above generic API drift.",
+        "primary_minus_ablation": {
+          "auprc_on_pooled_review_set": 0.0528,
+          "ndcg_at_20": 0.0,
+          "p_at_20": 0.0,
+          "p_at_50": 0.12
+        },
+        "supports_design_choice": true
+      },
+      {
         "ablation": "no_graph",
         "design_choice": "Graph evidence keeps weak symbol-only matches below better-supported C/Rust contract evidence.",
         "primary_minus_ablation": {
@@ -24,8 +35,8 @@
         "supports_design_choice": true
       }
     ],
-    "minimum_required_supporting_ablations": 2,
-    "supporting_ablation_count": 2,
+    "minimum_required_supporting_ablations": 3,
+    "supporting_ablation_count": 3,
     "supports_design": true
   },
   "all_rankers_same_pool": true,
@@ -98,16 +109,27 @@
   "comparison_against_best_simple_baseline": {
     "best_simple_baseline": "rust_use",
     "deltas": {
+      "auprc_on_pooled_review_set": 0.5536,
       "ndcg_at_20": 0.5394,
       "p_at_20": 0.6,
       "p_at_50": 0.64
     },
-    "minimum_conditions_passed": 3,
-    "minimum_required_conditions": 3,
+    "minimum_conditions_passed": 4,
+    "minimum_required_conditions": 4,
     "paired_bootstrap_significance": {
       "best_simple_baseline": "same_as_comparison",
-      "method": "paired_rank_position_bootstrap",
+      "method": "paired_rank_position_bootstrap_with_positive_ap_contribution",
       "metrics": {
+        "auprc_on_pooled_review_set": {
+          "bootstrap_delta_ci": [
+            0.4748,
+            0.6281
+          ],
+          "bootstrap_unit": "pooled_positive_warning_ap_contribution",
+          "observed_delta": 0.5536,
+          "p_value_primary_not_better": 0.002,
+          "significant_primary_better": true
+        },
         "ndcg_at_20": {
           "bootstrap_delta_ci": [
             0.3485,
@@ -144,16 +166,27 @@
   "comparison_against_random": {
     "best_simple_baseline": "random",
     "deltas": {
+      "auprc_on_pooled_review_set": 0.7245,
       "ndcg_at_20": 0.8117,
       "p_at_20": 0.8,
       "p_at_50": 0.72
     },
-    "minimum_conditions_passed": 3,
-    "minimum_required_conditions": 3,
+    "minimum_conditions_passed": 4,
+    "minimum_required_conditions": 4,
     "paired_bootstrap_significance": {
       "best_simple_baseline": "same_as_comparison",
-      "method": "paired_rank_position_bootstrap",
+      "method": "paired_rank_position_bootstrap_with_positive_ap_contribution",
       "metrics": {
+        "auprc_on_pooled_review_set": {
+          "bootstrap_delta_ci": [
+            0.6562,
+            0.7903
+          ],
+          "bootstrap_unit": "pooled_positive_warning_ap_contribution",
+          "observed_delta": 0.7245,
+          "p_value_primary_not_better": 0.002,
+          "significant_primary_better": true
+        },
         "ndcg_at_20": {
           "bootstrap_delta_ci": [
             0.5679,
@@ -205,6 +238,7 @@
     "checks": {
       "ablation_story": true,
       "all_rankers_same_pool": true,
+      "auprc_delta": true,
       "bootstrap_ci_lower_bound": true,
       "ndcg_at_20_delta": true,
       "no_oracle_leakage": true,
@@ -220,12 +254,13 @@
     },
     "minimum_passes": true,
     "thresholds": {
+      "auprc_delta": 0.1,
       "ndcg_at_20_delta": 0.1,
-      "p_at_20_delta": 0.1,
-      "p_at_50_delta": 0.07,
+      "p_at_20_delta": 0.15,
+      "p_at_50_delta": 0.1,
       "p_value": 0.05,
       "pool_label_coverage": 0.95,
-      "supporting_ablations": 2
+      "supporting_ablations": 3
     }
   },
   "no_self_evaluation_top100_only": true,
@@ -718,6 +753,69 @@
       "warning_volume": 320
     },
     {
+      "auprc_on_pooled_review_set": 0.3453,
+      "bootstrap_ci": {
+        "ndcg_at_20": [
+          0.1809,
+          0.6216
+        ],
+        "p_at_20": [
+          0.2,
+          0.6
+        ],
+        "p_at_50": [
+          0.12,
+          0.34
+        ]
+      },
+      "candidate_count": 320,
+      "evaluated_pool_rows": 800,
+      "evaluation_denominator": "complete_pooled_review_set",
+      "forbidden_oracle_feature_keys": [],
+      "kind": "simple_baseline",
+      "label_distribution": {
+        "BENIGN_DRIFT": 219,
+        "FALSE_POSITIVE": 530,
+        "TRUE_BUILD_BREAKAGE": 1,
+        "TRUE_SEMANTIC_DRIFT": 29,
+        "TRUE_WRAPPER_FIX": 20,
+        "UNCLEAR": 1
+      },
+      "labeled_at_100": 100,
+      "ndcg_at_20": 0.4606,
+      "oracle_blind": true,
+      "p_at_10": 0.8,
+      "p_at_100": 0.26,
+      "p_at_20": 0.4,
+      "p_at_50": 0.22,
+      "ranked_label_distribution": {
+        "BENIGN_DRIFT": 210,
+        "FALSE_POSITIVE": 14,
+        "TRUE_BUILD_BREAKAGE": 1,
+        "TRUE_SEMANTIC_DRIFT": 29,
+        "TRUE_WRAPPER_FIX": 20,
+        "UNCLEAR": 1
+      },
+      "ranked_true_label_distribution": {
+        "TRUE_BUILD_BREAKAGE": 1,
+        "TRUE_SEMANTIC_DRIFT": 29,
+        "TRUE_WRAPPER_FIX": 20
+      },
+      "ranker": "graph_reachability",
+      "ranking_feature_keys": [
+        "rust_exposure_edge_count"
+      ],
+      "review_pool_covered": 0.3438,
+      "review_pool_ranked_count": 275,
+      "score_component_keys": [],
+      "true_label_distribution": {
+        "TRUE_BUILD_BREAKAGE": 1,
+        "TRUE_SEMANTIC_DRIFT": 29,
+        "TRUE_WRAPPER_FIX": 20
+      },
+      "warning_volume": 320
+    },
+    {
       "auprc_on_pooled_review_set": 0.3944,
       "bootstrap_ci": {
         "ndcg_at_20": [
@@ -835,6 +933,69 @@
         "c_evidence_level",
         "c_side_change_size",
         "confidence"
+      ],
+      "review_pool_covered": 0.3438,
+      "review_pool_ranked_count": 275,
+      "score_component_keys": [],
+      "true_label_distribution": {
+        "TRUE_BUILD_BREAKAGE": 1,
+        "TRUE_SEMANTIC_DRIFT": 29,
+        "TRUE_WRAPPER_FIX": 20
+      },
+      "warning_volume": 320
+    },
+    {
+      "auprc_on_pooled_review_set": 0.8485,
+      "bootstrap_ci": {
+        "ndcg_at_20": [
+          1.0,
+          1.0
+        ],
+        "p_at_20": [
+          1.0,
+          1.0
+        ],
+        "p_at_50": [
+          0.6,
+          0.86
+        ]
+      },
+      "candidate_count": 320,
+      "evaluated_pool_rows": 800,
+      "evaluation_denominator": "complete_pooled_review_set",
+      "forbidden_oracle_feature_keys": [],
+      "kind": "ablation",
+      "label_distribution": {
+        "BENIGN_DRIFT": 219,
+        "FALSE_POSITIVE": 530,
+        "TRUE_BUILD_BREAKAGE": 1,
+        "TRUE_SEMANTIC_DRIFT": 29,
+        "TRUE_WRAPPER_FIX": 20,
+        "UNCLEAR": 1
+      },
+      "labeled_at_100": 100,
+      "ndcg_at_20": 1.0,
+      "oracle_blind": true,
+      "p_at_10": 1.0,
+      "p_at_100": 0.42,
+      "p_at_20": 1.0,
+      "p_at_50": 0.74,
+      "ranked_label_distribution": {
+        "BENIGN_DRIFT": 210,
+        "FALSE_POSITIVE": 14,
+        "TRUE_BUILD_BREAKAGE": 1,
+        "TRUE_SEMANTIC_DRIFT": 29,
+        "TRUE_WRAPPER_FIX": 20,
+        "UNCLEAR": 1
+      },
+      "ranked_true_label_distribution": {
+        "TRUE_BUILD_BREAKAGE": 1,
+        "TRUE_SEMANTIC_DRIFT": 29,
+        "TRUE_WRAPPER_FIX": 20
+      },
+      "ranker": "no_contract_evidence",
+      "ranking_feature_keys": [
+        "oracle_blind_score_without_safe_api_safety_error_lifetime_contract_components"
       ],
       "review_pool_covered": 0.3438,
       "review_pool_ranked_count": 275,

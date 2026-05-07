@@ -10,6 +10,8 @@
     "binding_diff": 291,
     "c_indicator": 0,
     "c_signature": 269,
+    "graph_reachability": 320,
+    "no_contract_evidence": 320,
     "no_graph": 320,
     "no_impact_gate": 320,
     "no_ranking": 320,

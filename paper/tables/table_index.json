@@ -2,7 +2,7 @@
   "ablation_strict_comparison": {
     "available": true,
     "path": "paper/tables/ablation_strict_comparison.json",
-    "sha256": "099012eeed0be6be700661e62e0e4dbd17e965e63cfc71b409e5c585fbdd7e6a"
+    "sha256": "cc06a9bf900e2f3ccb490d21b6d01aa9150bd401ce9e26a733423fc7efa6798b"
   },
   "arm64_external_validity": {
     "available": true,
@@ -12,12 +12,12 @@
   "baseline_strict_comparison": {
     "available": true,
     "path": "paper/tables/baseline_strict_comparison.json",
-    "sha256": "e8724b9712970f68dab8ef41c4f39bcec01b1088218e67554226d771cc40363a"
+    "sha256": "4ebdc1966236d95e64fac749ab29fcf5f40a051d9890d7e07b78bd0d40199735"
   },
   "baselines_ablations": {
     "available": true,
     "path": "paper/tables/baselines_ablations.json",
-    "sha256": "9704ce1d967454dfdc9d65217bc637a15268db61ab4a163c0bed2c6fdeba1c4e"
+    "sha256": "73c2f5205044d241f12ed27a2ecc2b4682734254c1721b14b270caf0c2064068"
   },
   "evaluation_protocol": {
     "available": true,
@@ -77,7 +77,7 @@
   "false_positive_taxonomy": {
     "available": true,
     "path": "paper/tables/false_positive_taxonomy.json",
-    "sha256": "63544d3ef9ede8eaaafc466c09ec55efa3335d1a84dead201a7885b0261d451b"
+    "sha256": "7d7f44e48aa04dd6d62c18406b2d189951945361993311dac935055499f411e6"
   },
   "false_positive_taxonomy_analysis": {
     "available": true,
@@ -97,12 +97,12 @@
   "ranking_pooled_evaluation": {
     "available": true,
     "path": "paper/tables/ranking_pooled_evaluation.json",
-    "sha256": "ab1578671b3f9b51072055822fb50cd04599d7bd6b3f096fce6b912c646a1fd1"
+    "sha256": "561be7f37d6a4af4117dd335cd28fbdd66fb11ada88480edd02969fa4e6fb986"
   },
   "ranking_score_audit": {
     "available": true,
     "path": "paper/tables/ranking_score_audit.json",
-    "sha256": "98c2cf5378dfb55ab6a7adcb740bd267ecd0404c926c1bdeaa2a71e179228213"
+    "sha256": "482ed6e35ec7d90f2d7a32a8a6c1d999194674445f1db518a71b79937c0e914c"
   },
   "red_team_review": {
     "available": true,
@@ -142,6 +142,6 @@
   "warning_volume_reduction": {
     "available": true,
     "path": "paper/tables/warning_volume_reduction.json",
-    "sha256": "ffa5b3a2f61ce6ac2430a87a7006ac0fb7d6d32e619303db77376f2147f4e622"
+    "sha256": "d302eb38a0978cd3ac396e97d44b6a9dff89e0a7d5e0d66dd80f67712d41acb5"
   }
 }

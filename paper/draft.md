@@ -243,8 +243,9 @@ Problem. A useful prioritizer must beat simple rankers without leaking build or
 wrapper oracles into the primary score.
 
 Method. Baselines compare `BindDrift-oracle-blind` against binding-diff,
-C-signature, C-indicator, Rust-use, no-ranking, ablated variants, and random
-variants on the same pooled label set. RQ3 follows the same data-flow split as
+C-signature, C-indicator, Rust-use, graph-reachability, no-ranking, and random
+variants on the same pooled label set. Ablations remove graph evidence,
+Rust-impact gating, and contract evidence. RQ3 follows the same data-flow split as
 Figure 1: detection-time features feed `BindDrift-oracle-blind`, auxiliary
 validation oracles feed labels and validation checks, and the evaluation and
 validation node consumes both the Top-K output and auxiliary labels after
@@ -282,9 +283,9 @@ pooled labels are 1 `TRUE_BUILD_BREAKAGE`, 20
 Result. The strict pooled ranking table reports `BindDrift-oracle-blind`
 P@10 = 1.00, P@20 = 1.00, P@50 = 0.86, P@100 = 0.43, NDCG@20 = 1.00, and
 AUPRC = 0.9013. The strongest simple baseline is `rust_use`, with P@20 = 0.40,
-P@50 = 0.22, and NDCG@20 = 0.4606. The strict ranking gate passes:
+P@50 = 0.22, NDCG@20 = 0.4606, and AUPRC = 0.3477. The strict ranking gate passes:
 `BindDrift-oracle-blind` improves top-K review yield over the strongest simple
-baseline by 0.60 P@20, 0.64 P@50, and 0.5394 NDCG@20 in the shared pooled-label
+baseline by 0.60 P@20, 0.64 P@50, 0.5394 NDCG@20, and 0.5536 AUPRC in the shared pooled-label
 evaluation.
 
 False-positive risk is therefore reported as a taxonomy rather than as the

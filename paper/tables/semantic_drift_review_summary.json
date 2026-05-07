@@ -24,7 +24,7 @@
     "unclear_rate_passes": true,
     "wrapper_fix_not_counted_as_semantic": true
   },
-  "candidates_reviewed": 304,
+  "candidates_reviewed": 360,
   "claim_recommendation": "semantic review targets may be reported as a secondary contribution",
   "drift_facts_sha256": "45ec718e8bcf22e4b5d91bf1bfa4924d0c414958aba123c4e0f96bde7018d8ef",
   "drift_facts_source": "data/replay/latest/drift_facts.jsonl",
@@ -57,7 +57,7 @@
       "warning_uid": "2570299b655838a322feaa16b54e3321c64fdd5bef3c10262aa14254cfc9bf00"
     },
     {
-      "label": "FALSE_POSITIVE",
+      "label": "BENIGN_DRIFT",
       "pair_id": "latest-p012-v6.12-to-v6.13",
       "semantic_target_type": "NullabilityDrift",
       "symbol": "errno_to_blk_status",
@@ -66,7 +66,7 @@
       "warning_uid": "0217c5aca3beed930cd6cd613e9717d4a78ab28013cffd3881c7d5c7ab7db42a"
     },
     {
-      "label": "FALSE_POSITIVE",
+      "label": "BENIGN_DRIFT",
       "pair_id": "latest-p012-v6.12-to-v6.13",
       "semantic_target_type": "NullabilityDrift",
       "symbol": "PTR_ERR",
@@ -75,7 +75,7 @@
       "warning_uid": "39859c860002f454586acf39f3d0df45a3189f1edc7868bad4cb189a795d4b8e"
     },
     {
-      "label": "FALSE_POSITIVE",
+      "label": "BENIGN_DRIFT",
       "pair_id": "latest-p020-v7.0-to-HEAD_9207d47f966b",
       "semantic_target_type": "NullabilityDrift",
       "symbol": "gpu_buddy_alloc_blocks",
@@ -84,7 +84,7 @@
       "warning_uid": "58bf7f2f2d74c5ec6be9fcd8a9b33e90df0d6227323e4b82048987d533465397"
     },
     {
-      "label": "FALSE_POSITIVE",
+      "label": "BENIGN_DRIFT",
       "pair_id": "latest-p012-v6.12-to-v6.13",
       "semantic_target_type": "NullabilityDrift",
       "symbol": "IS_ERR",
@@ -93,7 +93,7 @@
       "warning_uid": "4b538a23e5b7e22f2cc86f95ffea064b2634aa0ab97449ad304889083dc27efd"
     },
     {
-      "label": "FALSE_POSITIVE",
+      "label": "BENIGN_DRIFT",
       "pair_id": "latest-p012-v6.12-to-v6.13",
       "semantic_target_type": "NullabilityDrift",
       "symbol": "REFCOUNT_INIT",
@@ -102,7 +102,7 @@
       "warning_uid": "399880825c439eb15d3e73aa711d383a87e7dbba9e9a3173f6a97bdef4e841b7"
     },
     {
-      "label": "FALSE_POSITIVE",
+      "label": "BENIGN_DRIFT",
       "pair_id": "latest-p010-v6.10-to-v6.11",
       "semantic_target_type": "NullabilityDrift",
       "symbol": "errno_to_blk_status",
@@ -111,7 +111,7 @@
       "warning_uid": "d668e025ab0727df4a19529d3eaa4e08a0e8e04c23fa27b5dd2701fb50ba80c6"
     },
     {
-      "label": "FALSE_POSITIVE",
+      "label": "BENIGN_DRIFT",
       "pair_id": "latest-p012-v6.12-to-v6.13",
       "semantic_target_type": "NullabilityDrift",
       "symbol": "ERR_PTR",
@@ -127,11 +127,10 @@
     "SleepabilityContextDrift": 7
   },
   "false_positive_taxonomy": {
-    "binding_only_or_generated_surface": 46,
-    "layout_ambiguity": 57,
-    "macro_constant_over_prioritization": 23,
-    "real_c_drift_no_rust_contract_impact": 2,
-    "weak_rust_reachability": 129
+    "layout_ambiguity": 39,
+    "macro_constant_over_prioritization": 31,
+    "real_c_drift_no_rust_contract_impact": 154,
+    "weak_rust_reachability": 86
   },
   "false_positive_taxonomy_allowed": [
     "binding_only_or_generated_surface",
@@ -142,82 +141,44 @@
     "weak_rust_reachability"
   ],
   "false_positive_taxonomy_examples": {
-    "binding_only_or_generated_surface": [
-      {
-        "label": "FALSE_POSITIVE",
-        "pair_id": "latest-p010-v6.10-to-v6.11",
-        "semantic_target_type": "AllocationFreeDrift",
-        "symbol": "firmware_request_nowarn",
-        "type": "SignatureDrift",
-        "warning_id": "W-000005",
-        "warning_uid": "25643bdc317201099f3996929534e461a5e3b66bab025ea361e57a28b7349365"
-      },
-      {
-        "label": "FALSE_POSITIVE",
-        "pair_id": "latest-p020-v7.0-to-HEAD_9207d47f966b",
-        "semantic_target_type": "AllocationFreeDrift",
-        "symbol": "gpu_buddy_free_list",
-        "type": "SignatureDrift",
-        "warning_id": "W-000007",
-        "warning_uid": "4429b9f68320443b4083f3e7613aac8d9bd743aa50e186cb92751c5237f575ae"
-      },
-      {
-        "label": "FALSE_POSITIVE",
-        "pair_id": "latest-p012-v6.12-to-v6.13",
-        "semantic_target_type": "AllocationFreeDrift",
-        "symbol": "request_firmware",
-        "type": "SignatureDrift",
-        "warning_id": "W-000027",
-        "warning_uid": "6803125ff872e3227a67019fc0446a5276e1b50887f3faeb4dc615d4a17e9104"
-      }
-    ],
     "layout_ambiguity": [
       {
         "label": "FALSE_POSITIVE",
         "pair_id": "latest-p012-v6.12-to-v6.13",
         "semantic_target_type": "LayoutFieldDrift",
-        "symbol": "xarray",
+        "symbol": "class_raw_spinlock_irqsave_t",
         "type": "FieldDrift",
-        "warning_id": "F-004265",
-        "warning_uid": "00c2ee27054a1e239eff388ccb21a599221d2da82e6be3d7f4f3040219eab161"
+        "warning_id": "F-003689",
+        "warning_uid": "027612c6725d158fd7a05982ebe98774432d0b389d6f33e132f398815b9444a2"
       },
       {
         "label": "FALSE_POSITIVE",
-        "pair_id": "latest-p016-v6.16-to-v6.17",
+        "pair_id": "latest-p012-v6.12-to-v6.13",
         "semantic_target_type": "LayoutFieldDrift",
-        "symbol": "phy_device",
+        "symbol": "class_spinlock_irqsave_t",
         "type": "FieldDrift",
-        "warning_id": "F-000911",
-        "warning_uid": "00ca2bcead55e95db31ca8673320664d49e074e7cab6ccf3c6a39def6c68a08f"
+        "warning_id": "F-003692",
+        "warning_uid": "02a8983d8d4ee2c9211edf176144b353e51a40e7c7169ef30cb510e2a114e624"
       },
       {
         "label": "FALSE_POSITIVE",
         "pair_id": "latest-p017-v6.17-to-v6.18",
         "semantic_target_type": "LayoutFieldDrift",
-        "symbol": "kmem_cache_args",
+        "symbol": "super_block",
         "type": "FieldDrift",
-        "warning_id": "F-000430",
-        "warning_uid": "00e978c837b6f191cd05db21e10670192065d3c1f88cbf2e3a61fcc60168ff48"
+        "warning_id": "F-000443",
+        "warning_uid": "087a77107f3d06d9a4e34686dc7cf8b3cc5a6835236bc814a2abe118195563c6"
       }
     ],
     "macro_constant_over_prioritization": [
       {
         "label": "FALSE_POSITIVE",
-        "pair_id": "latest-p005-v6.5-to-v6.6",
-        "semantic_target_type": "LayoutFieldDrift",
-        "symbol": "pageflags_PG_owner_priv_1",
+        "pair_id": "latest-p011-v6.11-to-v6.12",
+        "semantic_target_type": "AllocationFreeDrift",
+        "symbol": "I_FREEING",
         "type": "MacroConstDrift",
-        "warning_id": "F-000502",
-        "warning_uid": "01b2465a723c8b2f4b4ef56799f545e14512609fdfbf4d3f34b718d61001a89b"
-      },
-      {
-        "label": "FALSE_POSITIVE",
-        "pair_id": "latest-p009-v6.9-to-v6.10",
-        "semantic_target_type": "LayoutFieldDrift",
-        "symbol": "pageflags___NR_PAGEFLAGS",
-        "type": "MacroConstDrift",
-        "warning_id": "F-000384",
-        "warning_uid": "029d9a1d8f0ab3e6ba19b7c551e58379c7da7a5720aaca4333ce205fbdee09f7"
+        "warning_id": "F-000171",
+        "warning_uid": "101c01413fe86607afa45e33a5007ef07301e0453b3cafa5ef8db1333c163bbf"
       },
       {
         "label": "FALSE_POSITIVE",
@@ -227,26 +188,44 @@
         "type": "MacroConstDrift",
         "warning_id": "F-000912",
         "warning_uid": "02bbf8bb2ad38e9797f16e529b7cc2925093a651e505534f3a922f11760423b7"
+      },
+      {
+        "label": "FALSE_POSITIVE",
+        "pair_id": "latest-p009-v6.9-to-v6.10",
+        "semantic_target_type": "LayoutFieldDrift",
+        "symbol": "pageflags_PG_uncached",
+        "type": "MacroConstDrift",
+        "warning_id": "F-000381",
+        "warning_uid": "0c30e79dc77e66e3a8899b33c2df7166c26ab6eac92761dcab8cfdc771fed9ec"
       }
     ],
     "real_c_drift_no_rust_contract_impact": [
       {
         "label": "BENIGN_DRIFT",
-        "pair_id": "latest-p008-v6.8-to-v6.9",
-        "semantic_target_type": "LayoutFieldDrift",
-        "symbol": "SLAB_NO_MERGE",
-        "type": "MacroConstDrift",
-        "warning_id": "F-000825",
-        "warning_uid": "029c01475cb042eed76eafdbdfa4366ad84a7f33d06915a6a87b7f6abdcfa54f"
+        "pair_id": "latest-p012-v6.12-to-v6.13",
+        "semantic_target_type": "AllocationFreeDrift",
+        "symbol": "firmware_request_platform",
+        "type": "SignatureDrift",
+        "warning_id": "W-000020",
+        "warning_uid": "02c26309c1f80248feeb3e7cbc990a809a103a62661b24c1797a3e44bc1f8ad6"
       },
       {
         "label": "BENIGN_DRIFT",
-        "pair_id": "latest-p018-v6.18-to-v6.19",
-        "semantic_target_type": "SleepabilityContextDrift",
-        "symbol": "VM_STACK_EARLY",
-        "type": "MacroConstDrift",
-        "warning_id": "F-001020",
-        "warning_uid": "01c2b88e1acb2cca45514fa1b5a190b987b4f02c187740ccc45607b013f1d703"
+        "pair_id": "latest-p013-v6.13-to-v6.14",
+        "semantic_target_type": "AllocationFreeDrift",
+        "symbol": "pci_free_irq_vectors",
+        "type": "SignatureDrift",
+        "warning_id": "W-000009",
+        "warning_uid": "07ce7e5d2d825d3f1ef3ffda6148eb56b9c5fd282d2ae2e8046a5592be75a11b"
+      },
+      {
+        "label": "BENIGN_DRIFT",
+        "pair_id": "latest-p017-v6.17-to-v6.18",
+        "semantic_target_type": "AllocationFreeDrift",
+        "symbol": "atomic_fetch_dec_release",
+        "type": "SignatureDrift",
+        "warning_id": "W-000128",
+        "warning_uid": "0b79a533431401b13b8a18181133ccb5269b84566392fcf704f0a6d5498bc479"
       }
     ],
     "weak_rust_reachability": [
@@ -280,15 +259,15 @@
     ]
   },
   "label_distribution": {
-    "BENIGN_DRIFT": 2,
-    "FALSE_POSITIVE": 255,
+    "BENIGN_DRIFT": 154,
+    "FALSE_POSITIVE": 156,
     "TRUE_BUILD_BREAKAGE": 1,
     "TRUE_SEMANTIC_DRIFT": 29,
-    "TRUE_WRAPPER_FIX": 17
+    "TRUE_WRAPPER_FIX": 20
   },
   "non_wrapper_semantic_true_positives": 29,
   "note": "TRUE_WRAPPER_FIX is reported separately and is not counted as TRUE_SEMANTIC_DRIFT.",
-  "pooled_review_set_sha256": "7ef58da3e1fbb4ab68fc4748856627882c55c215d0d2db9812c707ba57ec7293",
+  "pooled_review_set_sha256": "be28c1ae95bca772b350b746718779e1382889cb64a03afbfa66123aa76ae5de",
   "pooled_review_set_source": "data/replay/latest/pooled_review_set.jsonl",
   "quota": {
     "AllocationFreeDrift": 80,
@@ -303,12 +282,12 @@
     "data/replay/latest/pooled_review_labels.csv",
     "data/replay/latest/manual_review.csv"
   ],
-  "reviewed_semantic_targets": 304,
+  "reviewed_semantic_targets": 360,
   "reviewed_type_distribution": {
-    "AllocationFreeDrift": 59,
+    "AllocationFreeDrift": 79,
     "LayoutFieldDrift": 80,
-    "NullabilityDrift": 37,
-    "OwnershipRefcountDrift": 48,
+    "NullabilityDrift": 48,
+    "OwnershipRefcountDrift": 73,
     "SleepabilityContextDrift": 80
   },
   "selection_policy": "label-blind semantic detector quotas over pre-adjudication pooled review candidates, promoted warnings, and drift facts; labels are joined only after target selection",
@@ -323,7 +302,7 @@
   "target_review": "data/replay/latest/semantic_target_review.csv",
   "target_set": "data/replay/latest/semantic_target_review_set.jsonl",
   "true_semantic_drift_count": 29,
-  "true_wrapper_fix_count": 17,
+  "true_wrapper_fix_count": 20,
   "type_distribution": {
     "AllocationFreeDrift": 80,
     "LayoutFieldDrift": 80,

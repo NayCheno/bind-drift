@@ -25,6 +25,7 @@
   "benign_drift_count": 219,
   "best_simple_baseline": "rust_use",
   "best_simple_baseline_deltas": {
+    "auprc_on_pooled_review_set": 0.5536,
     "ndcg_at_20": 0.5394,
     "p_at_20": 0.6,
     "p_at_50": 0.64

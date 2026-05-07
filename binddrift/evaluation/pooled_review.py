@@ -26,8 +26,10 @@ DEFAULT_RANKERS = [
     "c_signature",
     "c_indicator",
     "rust_use",
+    "graph_reachability",
     "no_graph",
     "no_impact_gate",
+    "no_contract_evidence",
     "no_ranking",
     "random",
 ]
@@ -38,8 +40,10 @@ RANKER_TO_BASELINE = {
     "c_signature": "CSignatureDiffOnly",
     "c_indicator": "CIndicatorOnly",
     "rust_use": "RustUseOnly",
+    "graph_reachability": "GraphReachabilityOnly",
     "no_graph": "NoGraph",
     "no_impact_gate": "NoImpactGate",
+    "no_contract_evidence": "NoContractEvidence",
     "no_ranking": "NoRanking",
     "random": "Random",
 }
@@ -51,8 +55,10 @@ RANKER_FEATURE_KEYS = {
     "c_signature": "type,c_side_change_size",
     "c_indicator": "indicator_based,c_evidence_level,confidence,c_side_change_size",
     "rust_use": "rust_binding_use_count,rust_exposure_edge_count",
+    "graph_reachability": "rust_exposure_edge_count",
     "no_graph": "symbol,warning_id",
     "no_impact_gate": "c_evidence_level,confidence,c_side_change_size",
+    "no_contract_evidence": "oracle_blind_score_without_safe_api_safety_error_lifetime_contract_components",
     "no_ranking": "pair_id,warning_id,warning_uid",
     "random": "deterministic_random_seed_0",
 }

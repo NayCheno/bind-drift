@@ -7,7 +7,16 @@ def test_strict_baseline_table_has_required_metric_fields() -> None:
     assert path.exists()
     table = json.loads(path.read_text(encoding="utf-8"))
     assert "rankers" in table
-    expected = {"binddrift_oracle_blind", "binding_diff", "c_signature", "c_indicator", "rust_use", "no_ranking", "random"}
+    expected = {
+        "binddrift_oracle_blind",
+        "binding_diff",
+        "c_signature",
+        "c_indicator",
+        "rust_use",
+        "graph_reachability",
+        "no_ranking",
+        "random",
+    }
     assert {row["ranker"] for row in table["rankers"]} == expected
     for row in table["rankers"]:
         for field in ("ranker", "candidate_count", "p_at_10", "p_at_20", "p_at_50", "p_at_100", "ndcg_at_20", "bootstrap_ci"):
@@ -17,8 +26,8 @@ def test_strict_baseline_table_has_required_metric_fields() -> None:
         assert not ({"wrapper_fix_hit", "build_oracle_hit"} & set(row.get("score_component_keys", [])))
         assert not row.get("forbidden_oracle_feature_keys")
     significance = table["comparison"]["paired_bootstrap_significance"]
-    assert significance["method"] == "paired_rank_position_bootstrap"
-    assert set(significance["metrics"]) == {"p_at_20", "p_at_50", "ndcg_at_20"}
+    assert significance["method"] == "paired_rank_position_bootstrap_with_positive_ap_contribution"
+    assert set(significance["metrics"]) == {"p_at_20", "p_at_50", "ndcg_at_20", "auprc_on_pooled_review_set"}
     assert table["all_rankers_same_pool"] is True
     assert table["primary_beats_best_simple_baseline"] is True
     assert table["no_self_evaluation_top100_only"] is True
@@ -27,6 +36,9 @@ def test_strict_baseline_table_has_required_metric_fields() -> None:
     assert table["top_false_negative_taxonomy"]["taxonomy"]
     assert table["top_false_positive_taxonomy"]["schema_valid"] is True
     assert table["top_false_negative_taxonomy"]["schema_valid"] is True
+    by_ranker = {row["ranker"]: row for row in table["rankers"]}
+    assert by_ranker["graph_reachability"]["ranking_feature_keys"] == ["rust_exposure_edge_count"]
+    assert table["comparison"]["best_simple_baseline"] == "rust_use"
 
 
 def test_pooled_ranking_table_uses_one_label_pool() -> None:
@@ -47,8 +59,17 @@ def test_pooled_ranking_table_uses_one_label_pool() -> None:
     assert table["no_self_evaluation_top100_only"] is True
     assert table["m6_acceptance"]["checks"]["random_baseline_sanity"] is True
     assert table["m6_acceptance"]["checks"]["ablation_story"] is True
+    assert table["m6_acceptance"]["checks"]["auprc_delta"] is True
     assert table["top_false_positive_taxonomy"]["window"] == "primary_top_100"
     assert table["top_false_negative_taxonomy"]["window"] == "pooled_true_labels_outside_primary_top_100"
+    by_ranker = {row["ranker"]: row for row in table["rankers"]}
+    assert by_ranker["graph_reachability"]["ranking_feature_keys"] == ["rust_exposure_edge_count"]
+    assert by_ranker["no_contract_evidence"]["candidate_count"] == by_ranker["binddrift_oracle_blind"]["candidate_count"]
     ablation_path = Path("paper/tables/ablation_strict_comparison.json")
     ablation = json.loads(ablation_path.read_text(encoding="utf-8"))
-    assert ablation["ablation_story"]["supporting_ablation_count"] >= 2
+    assert ablation["ablation_story"]["supporting_ablation_count"] >= 3
+    assert {row["ablation"] for row in ablation["ablation_story"]["ablations"]} >= {
+        "no_graph",
+        "no_impact_gate",
+        "no_contract_evidence",
+    }

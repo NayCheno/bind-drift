@@ -8,7 +8,7 @@ from typing import Any
 from binddrift.config import Config
 from binddrift.artifact_paths import repo_relative
 from binddrift.db import connect, initialize
-from binddrift.ranking.oracle_blind_scorer import PRIMARY_RANKER_DISPLAY_NAME, rank_primary_warnings_oracle_blind
+from binddrift.ranking.oracle_blind_scorer import PRIMARY_RANKER_DISPLAY_NAME, rank_primary_warnings_oracle_blind, score_components
 from binddrift.ranking.scorer import score_breakdown as ranking_score_breakdown
 from binddrift.warnings import read_warnings, split_main_and_single_version
 from .metrics import TRUE_LABELS, label_for_warning, labeled_summary, load_manual_labels, oracle_summary
@@ -16,8 +16,19 @@ from .wrapper_oracle import replay_head_date, typed_wrapper_oracle_summary, vers
 
 
 TOP_K = 100
-BASELINES = ["BindingDiffOnly", "CSignatureDiffOnly", "CIndicatorOnly", "RustUseOnly", "NoRanking", "Random"]
-ABLATIONS = ["NoGraph", "NoImpactGate"]
+BASELINES = ["BindingDiffOnly", "CSignatureDiffOnly", "CIndicatorOnly", "RustUseOnly", "GraphReachabilityOnly", "NoRanking", "Random"]
+ABLATIONS = ["NoGraph", "NoImpactGate", "NoContractEvidence"]
+CONTRACT_EVIDENCE_COMPONENT_KEYS = {
+    "safe_api_exposure",
+    "safety_comment_proximity",
+    "error_mapping_evidence",
+    "lifetime_ownership_evidence",
+    "direct_c_contract_chain",
+    "direct_c_error_chain",
+    "direct_c_lifetime_chain",
+    "contract_symbol_indicator",
+    "rust_wrapper_surface_indicator",
+}
 
 
 def generate_baselines(
@@ -225,6 +236,9 @@ def _variant_warnings(
     if name == "RustUseOnly":
         ranked = sorted(pool, key=lambda warning: (_rust_use_count(warning), str(warning.get("warning_uid"))), reverse=True)
         return window(ranked), len(pool)
+    if name == "GraphReachabilityOnly":
+        ranked = sorted(pool, key=lambda warning: (_graph_reachability_score(warning), str(warning.get("warning_uid"))), reverse=True)
+        return window(ranked), len(pool)
     if name in {"OracleBlindBindDrift", PRIMARY_RANKER_DISPLAY_NAME}:
         ranked = rank_primary_warnings_oracle_blind(pool)
         return window(ranked), len(ranked)
@@ -240,6 +254,9 @@ def _variant_warnings(
     if name == "NoImpactGate":
         ranked = sorted(pool, key=lambda warning: (_c_only_score(warning), str(warning.get("warning_uid"))), reverse=True)
         return window(ranked), len(pool)
+    if name == "NoContractEvidence":
+        ranked = _rank_without_contract_evidence(pool)
+        return window(ranked), len(ranked)
     return window(warnings), len(warnings)
 
 
@@ -306,6 +323,30 @@ def _rust_use_count(warning: dict[str, Any]) -> int:
     return len(rust_side.get("uses") or []) + int((rust_side.get("exposure") or {}).get("edge_count") or 0)
 
 
+def _graph_reachability_score(warning: dict[str, Any]) -> float:
+    exposure = (warning.get("rust_side") or {}).get("exposure") or {}
+    return float(exposure.get("edge_count") or 0)
+
+
+def _without_contract_evidence_score(warning: dict[str, Any]) -> float:
+    components = score_components(warning)
+    return round(sum(value for key, value in components.items() if key not in CONTRACT_EVIDENCE_COMPONENT_KEYS), 3)
+
+
+def _rank_without_contract_evidence(pool: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    ranked = rank_primary_warnings_oracle_blind(pool)
+    ranked.sort(
+        key=lambda warning: (
+            bool(warning.get("strict_top50_eligible")),
+            _without_contract_evidence_score(warning),
+            {"A": 3, "B": 2, "C": 1, "D": 0}.get(str(warning.get("eligibility_tier") or "D"), 0),
+            str(warning.get("warning_uid") or warning.get("warning_id") or ""),
+        ),
+        reverse=True,
+    )
+    return ranked
+
+
 def _random_average_rows(pool: list[dict[str, Any]], trials: int = 10, *, top_k: int | None = TOP_K) -> list[dict[str, Any]]:
     if top_k is None:
         ranked = list(pool)
@@ -338,7 +379,7 @@ def _conservative_precision_at_k(warnings: list[dict[str, Any]], labels: dict[st
 def _comparison_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
     by_name = {row["variant"]: row for row in rows}
     full = by_name.get("BindDrift", {})
-    simple_names = ["BindingDiffOnly", "CSignatureDiffOnly", "CIndicatorOnly", "RustUseOnly", "NoRanking", "Random"]
+    simple_names = ["BindingDiffOnly", "CSignatureDiffOnly", "CIndicatorOnly", "RustUseOnly", "GraphReachabilityOnly", "NoRanking", "Random"]
     simple = [by_name[name] for name in simple_names if name in by_name]
     full_manual = ((full.get("manual_review") or {}).get("precision_at_k") or {})
     full_typed = ((full.get("typed_wrapper_prediction") or {}).get("precision_at_k") or {})

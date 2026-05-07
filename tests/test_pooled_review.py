@@ -6,7 +6,9 @@ from binddrift.config import Config
 from binddrift.artifact.strict_validator import _m6_acceptance_passes, _ranking_table_mismatches
 from binddrift.evaluation.evaluate_rankers import (
     TAXONOMY_SCHEMA_VERSION,
+    _average_precision_contributions,
     _oracle_blind_eval_has_no_oracle_leakage,
+    _paired_bootstrap_significance,
     _taxonomy_accepts,
     evaluate_rankers,
 )
@@ -158,12 +160,38 @@ def test_evaluate_rankers_uses_same_pooled_labels(tmp_path: Path):
     assert table["top_false_positive_taxonomy"]["taxonomy"]
     assert table["top_false_negative_taxonomy"]["count"] == 0
     assert table["m6_acceptance"]["checks"]["pool_label_coverage"] is True
-    assert table["comparison_against_best_simple_baseline"]["paired_bootstrap_significance"]["method"] == "paired_rank_position_bootstrap"
+    assert table["comparison_against_best_simple_baseline"]["paired_bootstrap_significance"]["method"] == "paired_rank_position_bootstrap_with_positive_ap_contribution"
     for row in table["rankers"]:
         for metric in ("p_at_20", "p_at_50", "ndcg_at_20"):
             lo, hi = row["bootstrap_ci"][metric]
             observed = row[metric]
             assert lo <= observed <= hi
+
+
+def test_auprc_significance_uses_positive_warning_contributions() -> None:
+    positive_a = {"warning_uid": "a"}
+    negative = {"warning_uid": "b"}
+    positive_c = {"warning_uid": "c"}
+    label_map = {"a": "TRUE_SEMANTIC_DRIFT", "b": "FALSE_POSITIVE", "c": "TRUE_WRAPPER_FIX"}
+    primary_rows = [positive_a, negative, positive_c]
+    best_rows = [positive_c, negative]
+    pool_rows = [positive_a, negative, positive_c]
+
+    contributions = _average_precision_contributions(primary_rows, label_map)
+    significance = _paired_bootstrap_significance(
+        ["TRUE_SEMANTIC_DRIFT", "FALSE_POSITIVE", "TRUE_WRAPPER_FIX"],
+        ["TRUE_WRAPPER_FIX", "FALSE_POSITIVE"],
+        ["TRUE_SEMANTIC_DRIFT", "FALSE_POSITIVE", "TRUE_WRAPPER_FIX"],
+        primary_rows=primary_rows,
+        best_rows=best_rows,
+        pool_rows=pool_rows,
+        label_map=label_map,
+    )
+    auprc = significance["metrics"]["auprc_on_pooled_review_set"]
+
+    assert contributions == {"a": 1.0, "c": 2 / 3}
+    assert auprc["bootstrap_unit"] == "pooled_positive_warning_ap_contribution"
+    assert auprc["observed_delta"] == 0.3333
 
 
 def test_evaluate_rankers_counts_uncovered_pool_rows_as_misses(tmp_path: Path):
@@ -266,6 +294,7 @@ def test_strict_m6_acceptance_requires_no_oracle_leakage() -> None:
         "p_at_20_delta": True,
         "p_at_50_delta": True,
         "ndcg_at_20_delta": True,
+        "auprc_delta": True,
         "bootstrap_ci_lower_bound": True,
         "p_value": True,
         "random_baseline_sanity": True,
