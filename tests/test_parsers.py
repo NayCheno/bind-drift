@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 from binddrift.config import Config
@@ -528,3 +529,44 @@ foo_get(struct foo *foo,
     indicator_types = {item["indicator_type"] for item in indicators if item["c_symbol"] == "foo_get"}
     assert {"ERR_PTR_RETURN", "REFCOUNT_GET", "MAY_SLEEP"} <= indicator_types
     assert "ERROR_CODE" not in indicator_types
+
+
+def test_c_parser_normalizes_typedefs_and_handles_nested_struct_fields(tmp_path: Path):
+    source = tmp_path / "api.h"
+    source.write_text(
+        """
+typedef unsigned long gfp_t;
+typedef struct foo_device foo_device_t;
+
+struct foo_device {
+    gfp_t flags;
+    struct {
+        unsigned int can_sleep:1;
+        void (*release)(foo_device_t *dev);
+    } ops;
+    union {
+        int err;
+        void *ptr;
+    };
+};
+
+static inline foo_device_t *foo_device_get(foo_device_t *dev, gfp_t flags);
+int foo_with_callback(int (*cb)(void), void *data);
+""",
+        encoding="utf-8",
+    )
+
+    functions, structs, _macros, _indicators = _parse_c_file(source, "v-test")
+
+    function = next(item for item in functions if item["c_symbol"] == "foo_device_get")
+    assert function["return_type"] == "struct foo_device *"
+    assert "unsigned long flags" in function["params"]
+    callback = next(item for item in functions if item["c_symbol"] == "foo_with_callback")
+    assert "int (*)(void) cb" in callback["params"]
+    parsed_fields = {field["name"]: field for field in json.loads(structs[0]["fields"])}
+    assert parsed_fields["flags"]["type"] == "unsigned long"
+    assert parsed_fields["ops"]["kind"] == "nested_record"
+    assert any(field["kind"] == "bitfield" and field["name"] == "can_sleep" for field in parsed_fields["ops"]["fields"])
+    assert any(field["kind"] == "function_pointer" and field["name"] == "release" for field in parsed_fields["ops"]["fields"])
+    assert any(field["kind"] == "anonymous_record" for field in parsed_fields.values())
+    assert [item["c_type"] for item in structs] == ["foo_device"]
