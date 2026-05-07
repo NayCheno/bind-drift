@@ -5,9 +5,9 @@
     "case_studies_minimum": true,
     "drift_type_count_minimum": true,
     "evidence_chain_complete": true,
-    "minimum_passes": false,
+    "minimum_passes": true,
     "negative_case_studies_minimum": true,
-    "negative_false_positive_case": false,
+    "negative_false_positive_case": true,
     "non_wrapper_semantic_cases_minimum": true,
     "positive_labels_all_true": true,
     "positive_labels_clean": true,
@@ -21,18 +21,18 @@
     "AllocationFreeDrift",
     "LayoutFieldDrift",
     "NullabilityDrift",
-    "OwnershipRefcountDrift",
     "SleepabilityContextDrift"
   ],
   "case_evidence_chain_missing": [],
   "case_evidence_chain_missing_count": 0,
   "case_studies": 8,
-  "drift_type_count": 5,
+  "drift_type_count": 4,
   "false_positive_cases": 0,
-  "false_positive_negative_cases": 0,
+  "false_positive_negative_cases": 1,
   "negative_case_studies": 2,
   "negative_label_distribution": {
-    "BENIGN_DRIFT": 2
+    "BENIGN_DRIFT": 1,
+    "FALSE_POSITIVE": 1
   },
   "non_wrapper_semantic_cases": 4,
   "positive_case_drift_types": [

@@ -424,16 +424,17 @@ generated only from adjudicated true positives:
 
 The appendix suite also includes 2 negative/failure-analysis cases:
 
-- `refcount_set`: ownership/refcount evidence is rejected because broad-family
-  wrapper evidence is auxiliary only.
+- `atomic64_xchg_release`: allocation/free evidence is rejected because the
+  generated-binding target lacks a supported Rust-impact chain.
 - `kunit_case`: layout/field evidence is rejected because the case lacks a
   direct same-contract Rust-impact chain.
 
 Each case is classified as a review target rather than a defect claim. No
 positive case study is unlabeled, false positive, benign drift, or
-single-version-only. The full case suite covers five drift target categories,
-contains 4 semantic true cases, 4 non-wrapper semantic cases, 4 wrapper-fix-backed
-cases, and has no local absolute paths in the generated case artifacts.
+single-version-only. The full case suite covers four drift target categories and
+three raw warning types, contains 4 semantic true cases, 4 non-wrapper semantic
+cases, 4 wrapper-fix-backed cases, and has no local absolute paths in the
+generated case artifacts.
 
 ## 7. Threats To Validity
 

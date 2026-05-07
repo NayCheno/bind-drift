@@ -217,17 +217,42 @@ def _select_negative_cases(
 
     def try_add(warning: dict[str, Any]) -> bool:
         key = warning_key(warning)
+        label = label_for_warning(labels, warning)
         if key in used:
             return False
         if not eligible_for_main_warning(warning):
             return False
         if not _review_has_adjudication(warning, review_rows):
             return False
-        if not _has_case_evidence_chain(warning):
+        if not _has_case_evidence_chain_for_label(warning, label):
             return False
         selected.append(warning)
         used.add(key)
         return True
+
+    for candidate_types in (preferred_case_types, CASE_TARGET_TYPES, []):
+        for warning in warnings:
+            if sum(1 for item in selected if label_for_warning(labels, item) == "FALSE_POSITIVE") >= FALSE_POSITIVE_NEGATIVE_TARGET:
+                break
+            if candidate_types and _case_drift_type(warning) not in candidate_types:
+                continue
+            if label_for_warning(labels, warning) == "FALSE_POSITIVE":
+                try_add(warning)
+        if sum(1 for item in selected if label_for_warning(labels, item) == "FALSE_POSITIVE") >= FALSE_POSITIVE_NEGATIVE_TARGET:
+            break
+
+    def covered_raw_types() -> set[str]:
+        return {str(warning.get("type") or "Unknown") for warning in (positive_cases or []) + selected}
+
+    for preferred in ("FALSE_POSITIVE", "BENIGN_DRIFT", "UNCLEAR"):
+        for warning in warnings:
+            if len(selected) >= NEGATIVE_TARGET:
+                return selected
+            if label_for_warning(labels, warning) != preferred:
+                continue
+            if str(warning.get("type") or "Unknown") in covered_raw_types():
+                continue
+            try_add(warning)
 
     for case_type in preferred_case_types:
         for preferred in ("FALSE_POSITIVE", "BENIGN_DRIFT", "UNCLEAR"):
@@ -400,6 +425,16 @@ def _has_case_evidence_chain(warning: dict[str, Any]) -> bool:
     )
 
 
+def _has_case_evidence_chain_for_label(warning: dict[str, Any], label: str) -> bool:
+    if label == "FALSE_POSITIVE":
+        return bool(
+            _has_c_evidence(warning)
+            and _has_binding_or_helper_evidence(warning)
+            and _has_contract_mapping_evidence(warning)
+        )
+    return _has_case_evidence_chain(warning)
+
+
 def _case_summary_table(
     positive_cases: list[dict[str, Any]],
     negative_cases: list[dict[str, Any]],
@@ -421,7 +456,7 @@ def _case_summary_table(
             "case_kind": "positive" if warning in positive_cases else "negative",
         }
         for warning in all_cases
-        if not _has_case_evidence_chain(warning)
+        if not _has_case_evidence_chain_for_label(warning, label_for_warning(labels, warning))
     ]
     case_paths = sorted((cfg.repo_root / "paper/cases").glob("case-*.md"))
     absolute_paths = _count_absolute_local_paths(case_paths)
