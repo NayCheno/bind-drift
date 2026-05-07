@@ -1,5 +1,5 @@
 {
-  "ccfb_submission_ready": false,
+  "ccfb_submission_ready": true,
   "checks": [
     {
       "details": {
@@ -1680,7 +1680,7 @@
           "manual_review_boundary_written": true,
           "method_section_present": true,
           "no_local_absolute_paths": true,
-          "numbers_from_tables_present": false,
+          "numbers_from_tables_present": true,
           "primary_ranker_display_name": true,
           "required_tree_present": true,
           "rq3_table_matches_generated_ranking": true,
@@ -1697,10 +1697,8 @@
         "forbidden_found": [],
         "local_path_hits": [],
         "missing": [],
-        "missing_numbers": [
-          "360 adjudicated semantic rows"
-        ],
-        "passes": false,
+        "missing_numbers": [],
+        "passes": true,
         "root": "paper-latex",
         "sections": [
           "paper-latex/sections/00-abstract.tex",
@@ -1724,7 +1722,7 @@
         ]
       },
       "name": "m7_latex_paper_gate",
-      "passes": false
+      "passes": true
     },
     {
       "details": {
@@ -1872,13 +1870,11 @@
     {
       "details": {
         "abstract_missing": [],
-        "body_missing": [
-          "reviews 360 adjudicated rows"
-        ],
+        "body_missing": [],
         "checks": {
           "abstract_numbers_from_tables": true,
           "artifact_guide_one_command": true,
-          "body_numbers_from_tables": false,
+          "body_numbers_from_tables": true,
           "forbidden_claims_absent": true,
           "no_stale_numbers": true,
           "red_team_two_rounds_closed": true,
@@ -1894,7 +1890,7 @@
           "readme_reproduce_command": true
         },
         "forbidden_found": [],
-        "passes": false,
+        "passes": true,
         "red_team": {
           "checks": {
             "all_issues_closed": true,
@@ -1923,7 +1919,7 @@
         "threat_missing": []
       },
       "name": "m8_paper_submission_gate",
-      "passes": false
+      "passes": true
     },
     {
       "details": {
@@ -2016,7 +2012,7 @@
     }
   ],
   "claim_policy": "ranking and semantic claims are downgraded when strict gates fail",
-  "final_submission_stage": false,
+  "final_submission_stage": true,
   "hard_gates": {
     "case_studies": {
       "absolute_local_paths": 0,
@@ -3274,7 +3270,7 @@
   "passes": true,
   "protocol_version": "ccfb-strict-v2",
   "run_manifest": "data/replay/latest/run_manifest.json",
-  "stage": "m6",
+  "stage": "final",
   "stage_required_checks": [
     "arm64_external_validity_gate",
     "binddrift_review_role_artifacts",
@@ -3284,6 +3280,8 @@
     "m0_claim_boundary_gate",
     "m3_research_question_gate",
     "m4_false_positive_gate",
+    "m7_latex_paper_gate",
+    "m8_paper_submission_gate",
     "manual_review_quality_gate",
     "no_local_absolute_paths",
     "oracle_blind_narrative_gate",
@@ -3296,6 +3294,6 @@
     "semantic",
     "strict_extractor_audit_gate"
   ],
-  "status": "stage_ready",
+  "status": "ccfb_ready",
   "strict_ccfb": true
 }

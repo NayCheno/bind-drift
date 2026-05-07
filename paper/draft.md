@@ -182,7 +182,7 @@ included version is configured with a Rust-enabled kernel config, built with
 versioned Rust and bindgen tools from the matrix, and required to produce
 generated binding snapshots before drift detection. The canonical `latest`
 manifest fixes the files used by all paper tables: 16,757 drift facts, 320
-promoted Rust-impact warnings, the 800-row pooled review set, the 304 reviewed
+promoted Rust-impact warnings, the 800-row pooled review set, the 360 reviewed
 semantic targets, and the generated case-study suite. `paper/tables/table_index.json`
 records sha256 provenance for every generated main table.
 
@@ -318,12 +318,12 @@ quotas, then joins binddrift-review adjudicated double-review labels after
 target selection. `TRUE_WRAPPER_FIX` is reported separately and is not counted
 as `TRUE_SEMANTIC_DRIFT`.
 
-Data. The pass samples 400 semantic target candidates and reviews 304
+Data. The pass samples 400 semantic target candidates and reviews 360
 adjudicated rows across nullability, ownership/refcount, allocation/free,
 sleepability/context, and layout/field categories.
 
-Result. It finds 29 `TRUE_SEMANTIC_DRIFT` rows, 17 `TRUE_WRAPPER_FIX` rows, 1
-build-breakage row, 2 benign rows, and 255 false-positive rows, with no unclear
+Result. It finds 29 `TRUE_SEMANTIC_DRIFT` rows, 20 `TRUE_WRAPPER_FIX` rows, 1
+build-breakage row, 154 benign rows, and 156 false-positive rows, with no unclear
 rows. The semantic gate passes with 29 non-wrapper semantic true positives and
 4 semantic drift types. The artifact also includes 8 positive warning-backed
 case studies and 2 negative/failure-analysis cases selected from adjudicated

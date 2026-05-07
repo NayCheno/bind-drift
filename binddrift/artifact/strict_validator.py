@@ -1918,6 +1918,7 @@ def _m8_expected_paper_phrases(cfg: Config) -> dict[str, list[str]]:
             "p@50 = 0.08",
             "p@100 = 0.04",
             "ndcg@20 = 0.1966",
+            "304 reviewed semantic targets",
             "semantic drift result remains exploratory",
         ],
         "rqs": [
