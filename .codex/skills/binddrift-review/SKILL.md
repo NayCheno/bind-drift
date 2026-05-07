@@ -1,6 +1,12 @@
 ---
 name: binddrift-review
-description: Review BindDrift manual_review.csv warnings using the trusted binddrift-review expert protocol: evidence collector, two independent reviewer roles, adjudication, and CSV backfill. Use when Codex needs to label BindDrift warnings, prepare evidence packets for warnings.jsonl/warnings.md/manual_review.csv rows, run review of Rust-for-Linux API or contract drift warnings, or enforce the repository review-guide labels and claim boundary.
+description: >-
+  Review BindDrift manual_review.csv warnings using the trusted binddrift-review
+  expert protocol: evidence collector, two independent reviewer roles,
+  adjudication, and CSV backfill. Use when Codex needs to label BindDrift
+  warnings, prepare evidence packets for warnings.jsonl/warnings.md/manual_review.csv
+  rows, run review of Rust-for-Linux API or contract drift warnings, or enforce
+  the repository review-guide labels and claim boundary.
 ---
 
 # BindDrift Review
