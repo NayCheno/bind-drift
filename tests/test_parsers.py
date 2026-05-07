@@ -453,6 +453,169 @@ where
     assert use["enclosing_type"] == "Boxed<T>"
 
 
+def test_rust_usage_tree_sitter_tracks_multiline_public_api_and_unsafe_block(tmp_path: Path):
+    rust = tmp_path / "device.rs"
+    rust.write_text(
+        """
+pub struct Device<T> {
+    raw: *mut bindings::device,
+    inner: Opaque<bindings::device>,
+}
+
+impl<T> Device<T>
+where
+    T: ?Sized,
+{
+    pub unsafe fn get(
+        &self,
+        cb: Option<unsafe extern "C" fn(*mut bindings::device)>,
+    ) -> Result<Option<Self>> {
+        // SAFETY: get_device returns a refcounted pointer for this wrapper.
+        let ptr = unsafe {
+            crate::bindings::get_device(self.raw)
+        };
+        from_err_ptr(ptr).map(|_| None)
+    }
+
+    pub fn into_raw(self) -> *mut bindings::device {
+        self.raw
+    }
+}
+""",
+        encoding="utf-8",
+    )
+
+    uses, apis, comments, lifetime_facts, error_mappings = _parse_rust_file(rust, "v-test")
+
+    api = next(api for api in apis if api["api_name"] == "Device<T>::get")
+    assert api["visibility"] == "pub"
+    assert api["receiver_type"] == "Device<T>"
+    assert api["return_type"] == "Result<Option<Self>>"
+    assert "unsafe extern" in api["params"]
+    get_use = next(use for use in uses if use["binding_symbol"] == "get_device")
+    assert get_use["line"] == 17
+    assert get_use["enclosing_unsafe_block"] == 1
+    assert get_use["enclosing_function"] == "Device<T>::get"
+    assert comments[0]["nearby_binding_symbol"] == "get_device"
+    assert {"RESULT_RETURN", "OPTION_RETURN", "ERR_PTR_MAPPING"} <= {mapping["mapping_type"] for mapping in error_mappings}
+    assert {"OPAQUE", "INTO_RAW"} <= {fact["fact_type"] for fact in lifetime_facts}
+
+
+def test_rust_usage_tree_sitter_records_trait_impl_public_surface(tmp_path: Path):
+    rust = tmp_path / "ops.rs"
+    rust.write_text(
+        """
+pub struct Device;
+impl FileOps for Device {
+    fn open(&self) -> Result {
+        // SAFETY: helper checks the current device.
+        unsafe { bindings::rust_helper_device_open() };
+        to_result(0)
+    }
+}
+""",
+        encoding="utf-8",
+    )
+
+    uses, apis, comments, _lifetime_facts, error_mappings = _parse_rust_file(rust, "v-test")
+
+    api = next(api for api in apis if api["api_name"] == "Device::open")
+    assert api["visibility"] == "trait"
+    assert api["receiver_type"] == "Device"
+    helper_use = next(use for use in uses if use["binding_symbol"] == "rust_helper_device_open")
+    assert helper_use["enclosing_impl"] == "Device"
+    assert helper_use["enclosing_function"] == "Device::open"
+    assert helper_use["enclosing_unsafe_block"] == 1
+    assert comments[0]["nearby_api"] == "Device::open"
+    assert any(mapping["mapping_type"] == "TO_RESULT_MAPPING" and mapping["nearby_api"] == "Device::open" for mapping in error_mappings)
+
+
+def test_rust_usage_tree_sitter_uses_node_precise_binding_uses(tmp_path: Path):
+    rust = tmp_path / "precise.rs"
+    rust.write_text(
+        """
+pub struct Device;
+impl Device {
+    pub fn check(&self) {
+        let _s = "bindings::not_a_use";
+        // SAFETY: first is initialized by the caller.
+        unsafe { bindings::first(); } bindings::second();
+        self.update_refcount();
+        self.inc_ref();
+    }
+}
+""",
+        encoding="utf-8",
+    )
+
+    uses, _apis, comments, lifetime_facts, _error_mappings = _parse_rust_file(rust, "v-test")
+
+    by_symbol = {use["binding_symbol"]: use for use in uses}
+    assert "not_a_use" not in by_symbol
+    assert by_symbol["first"]["enclosing_unsafe_block"] == 1
+    assert by_symbol["second"]["enclosing_unsafe_block"] == 0
+    assert comments[0]["nearby_binding_symbol"] == "first"
+    assert {"REFCOUNT_LIKE", "REFCOUNT_INC", "REFCOUNT_WRAPPER"} <= {fact["fact_type"] for fact in lifetime_facts}
+
+
+def test_rust_usage_tree_sitter_ignores_imports_and_keeps_safety_in_function(tmp_path: Path):
+    rust = tmp_path / "imports.rs"
+    rust.write_text(
+        """
+use crate::bindings::not_a_use;
+use crate::bindings::{also_not_a_use, third_not_a_use};
+
+pub struct Device;
+impl Device {
+    pub fn first(&self) {
+        unsafe { bindings::real_use(); }
+    }
+
+    pub fn second(&self) {
+        // SAFETY: this documents a local unsafe operation without a binding call.
+        unsafe { core::ptr::read_volatile(&0); }
+    }
+}
+""",
+        encoding="utf-8",
+    )
+
+    uses, _apis, comments, _lifetime_facts, _error_mappings = _parse_rust_file(rust, "v-test")
+
+    assert {use["binding_symbol"] for use in uses} == {"real_use"}
+    assert comments[0]["nearby_api"] == "Device::second"
+    assert comments[0]["nearby_binding_symbol"] is None
+
+
+def test_rust_usage_tree_sitter_does_not_promote_plain_docs_or_cross_function_mapping(tmp_path: Path):
+    rust = tmp_path / "docs.rs"
+    rust.write_text(
+        """
+pub struct Device;
+impl Device {
+    /// Returns the raw device pointer.
+    pub fn first(&self) -> Result {
+        unsafe { bindings::foo(); }
+        to_result(0)
+    }
+
+    pub fn second(&self) -> Result {
+        to_result(0)
+    }
+}
+""",
+        encoding="utf-8",
+    )
+
+    _uses, _apis, comments, _lifetime_facts, error_mappings = _parse_rust_file(rust, "v-test")
+
+    assert comments == []
+    first_mapping = next(mapping for mapping in error_mappings if mapping["mapping_type"] == "TO_RESULT_MAPPING" and mapping["nearby_api"] == "Device::first")
+    second_mapping = next(mapping for mapping in error_mappings if mapping["mapping_type"] == "TO_RESULT_MAPPING" and mapping["nearby_api"] == "Device::second")
+    assert first_mapping["nearby_binding_symbol"] == "foo"
+    assert second_mapping["nearby_binding_symbol"] is None
+
+
 def test_extractors_commit_empty_refresh_after_delete(tmp_path: Path):
     cfg = Config.from_args(repo_root=tmp_path)
     cfg.linux_tree.mkdir(parents=True)

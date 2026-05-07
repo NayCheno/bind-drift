@@ -10,7 +10,10 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
 authors = [{ name = "BindDrift Authors" }]
-dependencies = []
+dependencies = [
+    "tree-sitter>=0.25.2",
+    "tree-sitter-rust>=0.24.2",
+]
 
 [dependency-groups]
 dev = [
