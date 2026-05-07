@@ -456,7 +456,7 @@ because the gate records role separation, rank/score blindness, adjudication
 coverage, agreement rate, Cohen's kappa, label-leakage checks, and
 reviewer-disagreement examples.
 The overall warning-set precision is low, and BindDrift does not optimize for
-exhaustive bug finding across every promoted warning. The method targets
+exhaustive defect confirmation across every promoted warning. The method targets
 prioritization: top-K ranking metrics, baseline lift, and the false-positive
 taxonomy are the primary evidence for maintainer review workload reduction.
 
@@ -473,15 +473,18 @@ release-tag histories once full binding generation is available.
 ## 8. Related Work
 
 BindDrift is related to API evolution, cross-language binding generation,
-software maintenance mining, static bug finding for systems software, and
+software maintenance mining, static defect detection for systems software, and
 Rust-for-Linux empirical studies. Its distinguishing focus is the
 cross-language path from evolving C APIs through generated bindings and unsafe
 Rust wrappers into safe abstraction contracts.
 
 ## 9. Conclusion
 
-BindDrift makes Rust-for-Linux cross-language dependencies explicit and ranks
-API/contract drift warnings for review. The current artifact implements the full
+BindDrift prioritizes review targets for Rust-for-Linux cross-language API and
+contract drift. It makes cross-language dependencies explicit, separates drift
+facts from promoted warnings and adjudicated labels, and ranks API/contract
+drift warnings for maintainer review. The current artifact implements the full
 pipeline and reports measured pilot results while preserving the central claim
 boundary: BindDrift prioritizes evidence-backed review targets; it does not
-certify correctness or claim every warning is a confirmed defect.
+certify correctness, claim complete drift coverage, or claim every warning is a
+confirmed defect.

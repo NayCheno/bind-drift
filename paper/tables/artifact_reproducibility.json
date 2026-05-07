@@ -1,5 +1,5 @@
 {
-  "ccfb_submission_ready": true,
+  "ccfb_submission_ready": false,
   "checks": [
     {
       "details": {
@@ -1434,6 +1434,112 @@
     },
     {
       "details": {
+        "checks": {
+          "boundary_docs_forbidden_claims_absent": true,
+          "claim_boundary_docs_present": true,
+          "label_boundary_tables": true,
+          "oracle_dataflow_figure": true,
+          "paper_facing_docs_forbidden_claims_absent": true,
+          "paper_label_oracle_scope_phrases": true,
+          "paper_sections_claim_prioritization": true,
+          "scope_consistency": true,
+          "threat_boundary_documented": true
+        },
+        "doc_forbidden": {
+          "README.md": [],
+          "docs/artifact-guide.md": [],
+          "docs/scope.md": []
+        },
+        "doc_missing": {
+          "README.md": [],
+          "docs/artifact-guide.md": [],
+          "docs/scope.md": []
+        },
+        "forbidden_figure_edges": [],
+        "label_boundary_checks": {
+          "manual_table_has_separate_semantic_count": true,
+          "manual_table_has_separate_wrapper_count": true,
+          "semantic_table_has_separate_semantic_count": true,
+          "semantic_table_has_separate_wrapper_count": true
+        },
+        "oracle_figure_checks": {
+          "latex_figure_present": true,
+          "markdown_figure_present": true,
+          "no_oracle_edges_to_primary": true,
+          "oracle_not_in_primary_score": true
+        },
+        "paper_facing_forbidden": {
+          "README.md": [],
+          "docs/artifact-guide.md": [],
+          "docs/idea.md": [],
+          "docs/manual-review-guide.md": [],
+          "docs/review-guide.md": [],
+          "docs/scope.md": [],
+          "paper-latex/README.md": [],
+          "paper-latex/figures/architecture.tex": [],
+          "paper-latex/figures/evidence-chain.tex": [],
+          "paper-latex/figures/ranking-dataflow.tex": [],
+          "paper-latex/figures/warning-volume.tex": [],
+          "paper-latex/sections/00-abstract.tex": [],
+          "paper-latex/sections/01-introduction.tex": [],
+          "paper-latex/sections/02-background.tex": [],
+          "paper-latex/sections/03-problem.tex": [],
+          "paper-latex/sections/04-design.tex": [],
+          "paper-latex/sections/05-implementation.tex": [],
+          "paper-latex/sections/06-evaluation.tex": [],
+          "paper-latex/sections/07-case-studies.tex": [],
+          "paper-latex/sections/08-discussion.tex": [],
+          "paper-latex/sections/09-related-work.tex": [],
+          "paper-latex/sections/10-conclusion.tex": [],
+          "paper/draft.md": [],
+          "paper/figures/ranking-dataflow.md": []
+        },
+        "paper_missing": [],
+        "passes": true,
+        "section_checks": {
+          "paper-latex/sections/00-abstract.tex": {
+            "claim_is_prioritization": true,
+            "forbidden_found": [],
+            "passes": true
+          },
+          "paper-latex/sections/01-introduction.tex": {
+            "claim_is_prioritization": true,
+            "forbidden_found": [],
+            "passes": true
+          },
+          "paper-latex/sections/10-conclusion.tex": {
+            "claim_is_prioritization": true,
+            "forbidden_found": [],
+            "passes": true
+          },
+          "paper/draft.md::abstract": {
+            "claim_is_prioritization": true,
+            "forbidden_found": [],
+            "passes": true
+          },
+          "paper/draft.md::conclusion": {
+            "claim_is_prioritization": true,
+            "forbidden_found": [],
+            "passes": true
+          },
+          "paper/draft.md::introduction": {
+            "claim_is_prioritization": true,
+            "forbidden_found": [],
+            "passes": true
+          }
+        },
+        "threat_boundary_checks": {
+          "extractor_incompleteness": true,
+          "linux_specific": true,
+          "rust_for_linux_specific": true,
+          "semantic_label_subjectivity": true
+        }
+      },
+      "name": "m0_claim_boundary_gate",
+      "passes": true
+    },
+    {
+      "details": {
         "forbidden_claim_phrases": [
           "bug detector",
           "soundness proof",
@@ -1614,7 +1720,7 @@
     }
   ],
   "claim_policy": "ranking and semantic claims are downgraded when strict gates fail",
-  "final_submission_stage": true,
+  "final_submission_stage": false,
   "hard_gates": {
     "case_studies": {
       "absolute_local_paths": 0,
@@ -2817,28 +2923,15 @@
   "passes": true,
   "protocol_version": "ccfb-strict-v2",
   "run_manifest": "data/replay/latest/run_manifest.json",
-  "stage": "final",
+  "stage": "m0",
   "stage_required_checks": [
-    "arm64_external_validity_gate",
-    "binddrift_review_role_artifacts",
-    "case_study_gate",
     "evaluation_protocol_valid",
-    "m3_research_question_gate",
-    "m4_false_positive_gate",
-    "m7_latex_paper_gate",
-    "m8_paper_submission_gate",
-    "manual_review_quality_gate",
-    "no_local_absolute_paths",
-    "oracle_blind_narrative_gate",
+    "m0_claim_boundary_gate",
     "oracle_blind_primary_has_no_forbidden_components",
     "paper_claims_match_downgrades",
-    "pooled_review_coverage",
-    "ranking",
     "required_tables_exist",
-    "run_manifest_valid",
-    "semantic",
-    "strict_extractor_audit_gate"
+    "run_manifest_valid"
   ],
-  "status": "ccfb_ready",
+  "status": "stage_ready",
   "strict_ccfb": true
 }

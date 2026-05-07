@@ -4,7 +4,13 @@ import sys
 from pathlib import Path
 
 from binddrift.config import Config
-from binddrift.artifact.strict_validator import _blind_review_leakage, _table_index_sha256_gate, validate_artifact
+from binddrift.artifact.strict_validator import (
+    _blind_review_leakage,
+    _m0_claim_boundary_gate,
+    _oracle_blind_narrative_gate,
+    _table_index_sha256_gate,
+    validate_artifact,
+)
 
 
 def test_artifact_validator_reports_m0_stage_ready() -> None:
@@ -17,7 +23,43 @@ def test_artifact_validator_reports_m0_stage_ready() -> None:
     assert isinstance(result["hard_gates"]["semantic"]["passes"], bool)
     assert isinstance(result["hard_gates"]["case_studies"]["passes"], bool)
     assert result["hard_gates"]["strict_extractor_audit"]["passes"] is True
+    assert "m0_claim_boundary_gate" in result["stage_required_checks"]
+    m0 = next(check for check in result["checks"] if check["name"] == "m0_claim_boundary_gate")
+    assert m0["passes"] is True
+    assert all(m0["details"]["checks"].values())
     assert Path("paper/tables/artifact_reproducibility.json").exists()
+
+
+def test_artifact_validator_rejects_m0_readme_overclaim() -> None:
+    readme = Path("README.md")
+    original = readme.read_text(encoding="utf-8")
+    try:
+        readme.write_text(
+            original + "\nBindDrift detects bugs.\n",
+            encoding="utf-8",
+        )
+
+        result = _m0_claim_boundary_gate(Config.from_args(repo_root="."))
+
+        assert result["passes"] is False
+        assert "detects bugs" in result["doc_forbidden"]["README.md"]
+        assert "detects bugs" in result["paper_facing_forbidden"]["README.md"]
+    finally:
+        readme.write_text(original, encoding="utf-8")
+
+
+def test_artifact_validator_rejects_m0_body_overclaim() -> None:
+    discussion = Path("paper-latex/sections/08-discussion.tex")
+    original = discussion.read_text(encoding="utf-8")
+    try:
+        discussion.write_text(original + "\nBindDrift detects bugs.\n", encoding="utf-8")
+
+        result = _m0_claim_boundary_gate(Config.from_args(repo_root="."))
+
+        assert result["passes"] is False
+        assert result["paper_facing_forbidden"]["paper-latex/sections/08-discussion.tex"] == ["detects bugs"]
+    finally:
+        discussion.write_text(original, encoding="utf-8")
 
 
 def test_artifact_validator_reports_m2_ranking_ready() -> None:
@@ -68,7 +110,7 @@ def test_artifact_validator_rejects_m2_oracle_edges_into_primary_figure() -> Non
         narrative = next(check for check in result["checks"] if check["name"] == "oracle_blind_narrative_gate")
         assert narrative["passes"] is False
         assert narrative["details"]["checks"]["dataflow_figure_has_no_oracle_to_primary_edges"] is False
-        assert narrative["details"]["forbidden_figure_edges"] == ["L->K"]
+        assert "L->K" in narrative["details"]["forbidden_figure_edges"]
     finally:
         figure.write_text(original, encoding="utf-8")
 
@@ -86,6 +128,21 @@ def test_artifact_validator_rejects_m2_dashed_oracle_edges_into_primary_figure()
         assert narrative["passes"] is False
         assert narrative["details"]["checks"]["dataflow_figure_has_no_oracle_to_primary_edges"] is False
         assert narrative["details"]["forbidden_figure_edges"] == ["BO->S"]
+    finally:
+        figure.write_text(original, encoding="utf-8")
+
+
+def test_artifact_validator_rejects_m2_indirect_oracle_edges_into_primary_figure() -> None:
+    figure = Path("paper/figures/ranking-dataflow.md")
+    original = figure.read_text(encoding="utf-8")
+    try:
+        figure.write_text(original.replace("  C --> S\n", "  C --> S\n  BO --> C\n"), encoding="utf-8")
+
+        narrative = _oracle_blind_narrative_gate(Config.from_args(repo_root="."))
+
+        assert narrative["passes"] is False
+        assert narrative["checks"]["dataflow_figure_has_no_oracle_to_primary_edges"] is False
+        assert "BO->C->S" in narrative["forbidden_figure_edges"]
     finally:
         figure.write_text(original, encoding="utf-8")
 

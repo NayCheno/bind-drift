@@ -1,8 +1,26 @@
 # BindDrift
 
-BindDrift is a research prototype for detecting cross-language API and contract drift in Rust-for-Linux safe abstractions.
+BindDrift prioritizes review targets for Rust-for-Linux cross-language API and
+contract drift. It is a warning-prioritization research prototype: it surfaces
+evidence-backed warnings for maintainer review, but it does not prove Rust safe
+abstraction soundness, automatically detect bugs, or claim complete drift
+coverage.
 
 The artifact treats `vendor/linux` as an input Linux source tree. BindDrift code, experiment data, reports, and paper material live in the repository root.
+
+## Claim Boundary
+
+BindDrift outputs three distinct layers: low-level cross-version drift facts,
+promoted Rust-impact warnings, and adjudicated review labels. Warnings are
+review targets, not confirmed bugs. `TRUE_WRAPPER_FIX` and
+`TRUE_SEMANTIC_DRIFT` are reported separately, and wrapper-fix-backed evidence
+is auxiliary validation rather than semantic-drift ground truth.
+
+The primary paper ranking is `BindDrift-oracle-blind`. Build-breakage and
+wrapper-fix oracles are used only for labels and auxiliary validation; they do
+not enter the primary score or Top-K selection. The default scope is Linux
+mainline, x86_64, Rust-enabled builds, and the Rust-for-Linux `rust/bindings`,
+`rust/helpers`, and `rust/kernel` surfaces.
 
 ## Quick Start
 

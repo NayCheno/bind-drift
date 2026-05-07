@@ -4,6 +4,21 @@
 
 This guide is for an artifact evaluator or future maintainer. After reading it, they should be able to run the pilot workflow, inspect the generated database, and produce ranked warnings plus evaluation tables.
 
+## Claim Boundary
+
+BindDrift prioritizes review targets for Rust-for-Linux cross-language API and
+contract drift. The artifact produces low-level drift facts, promoted
+Rust-impact warnings, and adjudicated labels; these layers are intentionally
+separate. Warnings are review targets, not confirmed bugs, and the artifact does
+not prove Rust safe abstraction soundness or claim complete drift coverage.
+
+`TRUE_WRAPPER_FIX` and `TRUE_SEMANTIC_DRIFT` are reported separately.
+Build-breakage and wrapper-fix oracles are used only for labels and auxiliary
+validation; they do not enter the primary score or Top-K selection for
+`BindDrift-oracle-blind`. The default scope matches `docs/scope.md`: Linux mainline,
+x86_64, Rust-enabled builds, and the Rust-for-Linux `rust/bindings`,
+`rust/helpers`, and `rust/kernel` surfaces.
+
 ## Pilot Workflow
 
 Run the commands from the repository root:

@@ -50,6 +50,7 @@ STAGE_REQUIRED_CHECKS: dict[str, set[str]] = {
         "evaluation_protocol_valid",
         "required_tables_exist",
         "oracle_blind_primary_has_no_forbidden_components",
+        "m0_claim_boundary_gate",
         "paper_claims_match_downgrades",
     },
     "m1": {"no_local_absolute_paths", "arm64_external_validity_gate"},
@@ -157,6 +158,7 @@ def validate_artifact(
     _check("case_study_gate", checks, lambda: _case_study_gate(cfg))
     _check("strict_extractor_audit_gate", checks, lambda: _strict_extractor_gate(cfg))
     _check("m7_latex_paper_gate", checks, lambda: _m7_latex_paper_gate(cfg))
+    _check("m0_claim_boundary_gate", checks, lambda: _m0_claim_boundary_gate(cfg))
     _check("paper_claims_match_downgrades", checks, lambda: _paper_claims(cfg))
     _check("m8_paper_submission_gate", checks, lambda: _m8_paper_submission_gate(cfg))
     _check("arm64_external_validity_gate", checks, lambda: _arm64_external_validity_gate(cfg))
@@ -371,11 +373,24 @@ def _mermaid_node_id(text: str) -> str:
 def _forbidden_oracle_blind_figure_edges(edges: list[tuple[str, str]]) -> list[str]:
     auxiliary_nodes = {"BO", "WO", "L"}
     primary_nodes = {"S", "K"}
-    forbidden = []
+    adjacency: dict[str, list[str]] = {}
     for source, target in edges:
-        if source in auxiliary_nodes and target in primary_nodes:
-            forbidden.append(f"{source}->{target}")
-    return forbidden
+        adjacency.setdefault(source, []).append(target)
+
+    forbidden: set[str] = set()
+    for start in auxiliary_nodes:
+        stack = [(start, [start])]
+        while stack:
+            node, path = stack.pop()
+            for target in adjacency.get(node, []):
+                if target in path:
+                    continue
+                next_path = [*path, target]
+                if target in primary_nodes:
+                    forbidden.add("->".join(next_path))
+                    continue
+                stack.append((target, next_path))
+    return sorted(forbidden)
 
 
 def _pooled_review_coverage(cfg: Config) -> dict[str, Any]:
@@ -1454,6 +1469,195 @@ def _paper_claims(cfg: Config) -> dict[str, Any]:
         "forbidden_claim_phrases": forbidden,
         "forbidden_found": found,
         "required_missing": missing,
+    }
+
+
+def _m0_claim_boundary_gate(cfg: Config) -> dict[str, Any]:
+    canonical_claim = "binddrift prioritizes review targets for rust-for-linux cross-language api and contract drift"
+    boundary_docs = {
+        "README.md": cfg.repo_root / "README.md",
+        "docs/scope.md": cfg.repo_root / "docs/scope.md",
+        "docs/artifact-guide.md": cfg.repo_root / "docs/artifact-guide.md",
+    }
+    doc_texts = {
+        path: _normal_text(file.read_text(encoding="utf-8")) if file.exists() else ""
+        for path, file in boundary_docs.items()
+    }
+    common_required = [
+        canonical_claim,
+        "warnings are review targets",
+        "`true_wrapper_fix`",
+        "`true_semantic_drift`",
+        "build-breakage and wrapper-fix oracles",
+        "do not enter the primary score",
+        "linux mainline",
+        "x86_64",
+        "rust-enabled builds",
+        "`rust/bindings`",
+        "`rust/helpers`",
+        "`rust/kernel`",
+    ]
+    doc_missing = {
+        path: [phrase for phrase in common_required if phrase not in text]
+        for path, text in doc_texts.items()
+    }
+
+    draft = (cfg.repo_root / "paper/draft.md").read_text(encoding="utf-8")
+    latex_root = cfg.repo_root / "paper-latex" / "sections"
+    paper_sections = {
+        "paper/draft.md::abstract": _markdown_section(draft, "## Abstract", "## 1. Introduction"),
+        "paper/draft.md::introduction": _markdown_section(draft, "## 1. Introduction", "## 2. Background And Scope"),
+        "paper/draft.md::conclusion": _markdown_section(draft, "## 9. Conclusion", "__end_of_paper__"),
+        "paper-latex/sections/00-abstract.tex": (latex_root / "00-abstract.tex").read_text(encoding="utf-8"),
+        "paper-latex/sections/01-introduction.tex": (latex_root / "01-introduction.tex").read_text(encoding="utf-8"),
+        "paper-latex/sections/10-conclusion.tex": (latex_root / "10-conclusion.tex").read_text(encoding="utf-8"),
+    }
+    forbidden = [
+        "bug detector",
+        "bug finding",
+        "soundness verifier",
+        "complete static analyzer",
+        "complete detection",
+        "complete drift detection",
+        "detects bugs",
+        "detects bugs automatically",
+        "automatically detects bugs",
+        "detects real bugs automatically",
+        "proves soundness",
+        "proves rust abstraction unsoundness",
+        "proves rust-for-linux safe abstractions remain sound",
+        "finds all contract drift",
+        "guaranteed stale abstraction",
+    ]
+    doc_forbidden = {
+        path: [phrase for phrase in forbidden if phrase in text]
+        for path, text in doc_texts.items()
+    }
+    paper_facing_paths = {
+        "README.md": cfg.repo_root / "README.md",
+        "docs/artifact-guide.md": cfg.repo_root / "docs/artifact-guide.md",
+        "docs/idea.md": cfg.repo_root / "docs/idea.md",
+        "docs/manual-review-guide.md": cfg.repo_root / "docs/manual-review-guide.md",
+        "docs/review-guide.md": cfg.repo_root / "docs/review-guide.md",
+        "docs/scope.md": cfg.repo_root / "docs/scope.md",
+        "paper/draft.md": cfg.repo_root / "paper/draft.md",
+        "paper/figures/ranking-dataflow.md": cfg.repo_root / "paper" / "figures" / "ranking-dataflow.md",
+        "paper-latex/README.md": cfg.repo_root / "paper-latex" / "README.md",
+    }
+    paper_facing_paths.update(
+        {
+            repo_relative(cfg, path): path
+            for path in sorted((cfg.repo_root / "paper-latex").glob("sections/*.tex"))
+        }
+    )
+    paper_facing_paths.update(
+        {
+            repo_relative(cfg, path): path
+            for path in sorted((cfg.repo_root / "paper-latex").glob("figures/*.tex"))
+        }
+    )
+    paper_facing_forbidden = {
+        relpath: [phrase for phrase in forbidden if phrase in _normal_text(path.read_text(encoding="utf-8"))]
+        for relpath, path in paper_facing_paths.items()
+        if path.exists()
+    }
+    section_checks: dict[str, dict[str, Any]] = {}
+    for name, section in paper_sections.items():
+        text = _normal_text(section)
+        found = [phrase for phrase in forbidden if phrase in text]
+        section_checks[name] = {
+            "claim_is_prioritization": canonical_claim in text
+            or ("prioritizes" in text and "review targets" in text and "contract drift" in text),
+            "forbidden_found": found,
+            "passes": not found
+            and (
+                canonical_claim in text
+                or ("prioritizes" in text and "review targets" in text and "contract drift" in text)
+            ),
+        }
+
+    paper_text = _normal_text(
+        "\n".join(
+            [
+                draft,
+                *(path.read_text(encoding="utf-8") for path in sorted(latex_root.glob("*.tex"))),
+                (cfg.repo_root / "paper" / "figures" / "ranking-dataflow.md").read_text(encoding="utf-8"),
+                (cfg.repo_root / "paper-latex" / "figures" / "ranking-dataflow.tex").read_text(encoding="utf-8"),
+            ]
+        )
+    )
+    paper_required = [
+        "`true_wrapper_fix` is not counted as `true_semantic_drift`",
+        "build-breakage oracle and wrapper-fix oracle are auxiliary validation only",
+        "do not feed the primary score or top-k selection",
+        "tier 2 semantic findings are review targets",
+        "semantic labels have unavoidable subjectivity",
+        "regex parser incompleteness",
+        "x86_64",
+        "rust-for-linux",
+    ]
+    paper_missing = [phrase for phrase in paper_required if phrase not in paper_text]
+
+    figure = (cfg.repo_root / "paper" / "figures" / "ranking-dataflow.md").read_text(encoding="utf-8")
+    figure_text = _normal_text(figure)
+    forbidden_edges = _forbidden_oracle_blind_figure_edges(_mermaid_edges(figure))
+    latex_figure_text = _normal_text((cfg.repo_root / "paper-latex" / "figures" / "ranking-dataflow.tex").read_text(encoding="utf-8"))
+    oracle_figure_checks = {
+        "markdown_figure_present": "primary oracle-blind ranking" in figure_text
+        and "auxiliary validation oracles" in figure_text,
+        "latex_figure_present": "primary oracle-blind ranking" in latex_figure_text
+        and "auxiliary validation oracles" in latex_figure_text,
+        "no_oracle_edges_to_primary": not forbidden_edges,
+        "oracle_not_in_primary_score": "do not feed the primary score or top-k selection" in figure_text
+        and "do not feed the primary score or top-k selection" in latex_figure_text,
+    }
+
+    manual = _json(cfg, "paper/tables/manual_review_quality.json")
+    semantic = _json(cfg, "paper/tables/semantic_drift_review_summary.json")
+    manual_distribution = manual.get("label_distribution") or {}
+    semantic_distribution = semantic.get("label_distribution") or {}
+    label_boundary_checks = {
+        "manual_table_has_separate_wrapper_count": manual.get("true_wrapper_fix_count")
+        == manual_distribution.get("TRUE_WRAPPER_FIX"),
+        "manual_table_has_separate_semantic_count": manual.get("true_semantic_drift_count")
+        == manual_distribution.get("TRUE_SEMANTIC_DRIFT"),
+        "semantic_table_has_separate_wrapper_count": semantic.get("true_wrapper_fix_count")
+        == semantic_distribution.get("TRUE_WRAPPER_FIX"),
+        "semantic_table_has_separate_semantic_count": semantic.get("true_semantic_drift_count")
+        == semantic_distribution.get("TRUE_SEMANTIC_DRIFT"),
+    }
+
+    scope_text = doc_texts.get("docs/scope.md", "")
+    threat_boundary_checks = {
+        "extractor_incompleteness": "incomplete regex/ast extraction" in scope_text,
+        "linux_specific": "linux-specific" in scope_text,
+        "rust_for_linux_specific": "rust-for-linux-specific" in scope_text,
+        "semantic_label_subjectivity": "semantic-label subjectivity" in scope_text,
+    }
+
+    checks = {
+        "claim_boundary_docs_present": all(file.exists() for file in boundary_docs.values()),
+        "scope_consistency": all(not missing for missing in doc_missing.values()),
+        "boundary_docs_forbidden_claims_absent": all(not found for found in doc_forbidden.values()),
+        "paper_facing_docs_forbidden_claims_absent": all(not found for found in paper_facing_forbidden.values()),
+        "paper_sections_claim_prioritization": all(check["passes"] for check in section_checks.values()),
+        "paper_label_oracle_scope_phrases": not paper_missing,
+        "oracle_dataflow_figure": all(oracle_figure_checks.values()),
+        "label_boundary_tables": all(label_boundary_checks.values()),
+        "threat_boundary_documented": all(threat_boundary_checks.values()),
+    }
+    return {
+        "passes": all(checks.values()),
+        "checks": checks,
+        "doc_missing": doc_missing,
+        "doc_forbidden": doc_forbidden,
+        "paper_facing_forbidden": paper_facing_forbidden,
+        "section_checks": section_checks,
+        "paper_missing": paper_missing,
+        "oracle_figure_checks": oracle_figure_checks,
+        "forbidden_figure_edges": forbidden_edges,
+        "label_boundary_checks": label_boundary_checks,
+        "threat_boundary_checks": threat_boundary_checks,
     }
 
 

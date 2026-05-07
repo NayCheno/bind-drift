@@ -2,15 +2,15 @@
 
 ## 题目
 
-BindDrift: Detecting Cross-Language API and Contract Drift in Rust-for-Linux Safe Abstractions
+BindDrift: Prioritizing Cross-Language API and Contract Drift Review Targets in Rust-for-Linux
 
 ### 中文题目
 
-BindDrift：面向 Rust-for-Linux Safe Abstraction 的跨语言 API 与契约漂移检测
+BindDrift：面向 Rust-for-Linux Safe Abstraction 的跨语言 API 与契约漂移审查目标排序
 
 ## 一句话 Idea
 
-Linux C 侧 API 在演化时，可能改变函数签名、结构体布局、返回值约定、NULL / ERR_PTR 语义、ownership / refcount 语义、sleepability 或锁上下文要求，从而使 Rust-for-Linux 中由 bindgen 生成的 bindings 或人工编写的 safe abstractions 过期。BindDrift 自动构建 C symbol → generated binding → unsafe call → safe abstraction 的跨语言依赖图，并检测高风险 API / contract drift，给出可解释 warning 和优先级排序。
+Linux C 侧 API 在演化时，可能改变函数签名、结构体布局、返回值约定、NULL / ERR_PTR 语义、ownership / refcount 语义、sleepability 或锁上下文要求，从而使 Rust-for-Linux 中由 bindgen 生成的 bindings 或人工编写的 safe abstractions 过期。BindDrift 自动构建 C symbol → generated binding → unsafe call → safe abstraction 的跨语言依赖图，筛选高风险 API / contract drift evidence，给出可解释 review-target warning 和优先级排序。
 
 ## 最稳妥版本的核心定位
 
@@ -20,7 +20,7 @@ Linux C 侧 API 在演化时，可能改变函数签名、结构体布局、返�
 
 本项目宣称：
 
-自动发现 Linux C API 演化中可能导致 Rust bindings / safe abstractions 过期的 API drift 和 contract drift warning，并通过历史回放、build breakage、wrapper fix mining 和人工审查验证 warning 的有效性。
+优先排序 Linux C API 演化中可能导致 Rust bindings / safe abstractions 过期的 API drift 和 contract drift review-target warning，并通过历史回放、build breakage、wrapper fix mining 和人工审查验证 warning 的审查价值。
 
 这是 CCF-B 最稳妥版本。它把目标从“完整证明安全性”降到“高价值漂移检测与预警”，工程可做，评价可复现，论文 claim 也更容易被审稿人接受。
 
@@ -245,11 +245,11 @@ C drift severity
 
 ### 推荐论文 claim
 
-BindDrift is the first empirical and static-analysis framework that detects cross-language API and contract drift between evolving Linux C APIs and Rust-for-Linux bindings / safe abstractions. It builds a C-to-Rust dependency graph and prioritizes high-risk drifts that may stale Rust safety assumptions.
+BindDrift prioritizes review targets for Rust-for-Linux cross-language API and contract drift. It builds a C-to-Rust dependency graph and ranks high-risk drifts that may stale Rust safety assumptions.
 
 ### 不推荐 claim
 
-BindDrift proves Rust-for-Linux safe abstractions remain sound after every C API change.
+A claim that every C API change is fully checked for Rust abstraction correctness is out of scope.
 
 ## 预期实验结果形式
 
@@ -271,8 +271,8 @@ BindDrift proves Rust-for-Linux safe abstractions remain sound after every C API
 
 BindDrift 的 CCF-B 最稳妥版本是：
 
-一个面向 Rust-for-Linux 的跨语言 API / contract drift 检测框架。它追踪 Linux C API 从 header / helper / bindgen output 到 Rust unsafe wrapper 和 safe abstraction 的传播路径，检测 signature、layout、helper、macro、NULL / ERR_PTR、error code、ownership / refcount、sleepability 等高风险漂移，并通过历史回放、build breakage、wrapper fix mining 和人工审查验证其有效性。
+一个面向 Rust-for-Linux 的跨语言 API / contract drift review-target prioritization 框架。它追踪 Linux C API 从 header / helper / bindgen output 到 Rust unsafe wrapper 和 safe abstraction 的传播路径，筛选 signature、layout、helper、macro、NULL / ERR_PTR、error code、ownership / refcount、sleepability 等高风险漂移 evidence，并通过历史回放、build breakage、wrapper fix mining 和人工审查验证其审查价值。
 
 一句话卖点：
 
-Rust safe abstraction 的安全性依赖 C API contract；BindDrift 是第一个系统检测这种跨语言 contract drift 的工具。
+Rust safe abstraction 的安全性依赖 C API contract；BindDrift 系统化排序这种跨语言 contract drift 的审查目标。
