@@ -369,6 +369,9 @@ extern "C" {
 }
 pub const DMA_ATTR_NO_WARN: u32 =
     8;
+pub struct helper_only {
+    pub ignored: u32,
+}
 #[repr(C)]
 pub struct device {
     pub kobj: kobject,
@@ -377,6 +380,7 @@ pub struct device {
 const _: () = {
     assert_eq!(::core::mem::size_of::<device>(), 64usize);
     assert_eq!(::core::mem::align_of::<device>(), 8usize);
+    assert_eq!(unsafe { &(*(::core::ptr::null::<device>())).parent as *const _ as usize }, 16usize);
 };
 """,
         encoding="utf-8",
@@ -388,8 +392,151 @@ const _: () = {
     assert "Option<unsafe extern" in facts.functions[0]["params"]
     assert facts.consts[0]["value"] == "8"
     assert facts.structs[0]["rust_type"] == "device"
+    assert facts.structs[0]["visibility"] == "pub"
     assert len(facts.structs[0]["fields"]) > 0
-    assert len(facts.layouts) == 2
+    assert [item["rust_type"] for item in facts.structs] == ["device"]
+    assert any(field["name"] == "parent" and field["type"] == "*mut device" and field["visibility"] == "pub" for field in json.loads(facts.structs[0]["fields"]))
+    assert len(facts.layouts) == 3
+    assert any(layout["field_name"] == "parent" and layout["offset"] == 16 for layout in facts.layouts)
+
+
+def test_bindgen_parser_uses_tree_sitter_for_oneline_generated_items(tmp_path: Path):
+    generated = tmp_path / "bindings_generated.rs"
+    generated.write_text(
+        """
+extern "C" {
+    pub fn foo_with_cb(cb: ::core::option::Option<unsafe extern "C" fn(arg: *mut ::core::ffi::c_void)>) -> ::core::ffi::c_int;
+    pub fn variadic(fmt: *const ::core::ffi::c_char, ...);
+}
+pub const FOO_MASK: u64 = (1 << 4) | 2;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct ops { pub release: ::core::option::Option<unsafe extern "C" fn(ptr: *mut ::core::ffi::c_void)>, flags: u32, }
+const _: () = {
+    let ptr = ::core::ptr::null::<ops>();
+    assert_eq!(::core::ptr::addr_of!((*ptr).flags) as usize - ptr as usize, 8usize);
+};
+""",
+        encoding="utf-8",
+    )
+
+    facts = _parse_file(generated, "v-test")
+
+    assert facts.functions[0]["rust_symbol"] == "foo_with_cb"
+    assert facts.functions[0]["return_type"] == "::core::ffi::c_int"
+    assert "unsafe extern" in facts.functions[0]["params"]
+    assert json.loads(facts.functions[1]["params"])[-1]["type"] == "..."
+    assert facts.consts[0]["value"] == "(1 << 4) | 2"
+    fields = json.loads(facts.structs[0]["fields"])
+    assert [field["name"] for field in fields] == ["release", "flags"]
+    assert "unsafe extern" in fields[0]["type"]
+    assert fields[0]["visibility"] == "pub"
+    assert fields[1]["visibility"] == "private"
+    assert facts.layouts[0]["rust_type"] == "ops"
+    assert facts.layouts[0]["field_name"] == "flags"
+    assert facts.layouts[0]["offset"] == 8
+
+
+def test_bindgen_parser_handles_std_addr_of_offset_and_persists_visibility(tmp_path: Path):
+    from binddrift.extractors.bindgen import extract_bindings
+
+    cfg = Config.from_args(repo_root=tmp_path)
+    objtree = tmp_path / "obj"
+    bindings_dir = objtree / "rust/bindings"
+    bindings_dir.mkdir(parents=True)
+    (bindings_dir / "bindings_helpers_generated.rs").write_text("", encoding="utf-8")
+    (bindings_dir / "bindings_generated.rs").write_text(
+        """
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct std_ops {
+    pub a: u32,
+    b: u64,
+}
+const _: () = {
+    let ptr = std_ops::UNINIT.as_ptr();
+    assert_eq!(unsafe { ::std::ptr::addr_of!((*ptr).b) as usize - ptr as usize }, 8usize);
+};
+""",
+        encoding="utf-8",
+    )
+
+    parsed = _parse_file(bindings_dir / "bindings_generated.rs", "v-test")
+    assert parsed.structs[0]["visibility"] == "pub"
+    assert parsed.layouts[0]["rust_type"] == "std_ops"
+    assert parsed.layouts[0]["field_name"] == "b"
+    assert parsed.layouts[0]["offset"] == 8
+
+    result = extract_bindings(cfg, objtree=objtree, version_id="v-test")
+    assert result["binding_structs"] == 1
+    conn = connect(cfg.database)
+    row = conn.execute("SELECT fields FROM binding_structs WHERE version_id='v-test' AND rust_type='std_ops'").fetchone()
+    fields = json.loads(row["fields"])
+    assert fields[0]["visibility"] == "pub"
+    assert fields[1]["visibility"] == "private"
+
+
+def test_bindgen_parser_handles_real_bindgen_layout_snippets(tmp_path: Path):
+    generated = tmp_path / "bindings_generated.rs"
+    generated.write_text(
+        """
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct sample {
+    pub a: u8,
+    pub b: u64,
+}
+
+#[test]
+fn bindgen_test_layout_sample_056() {
+    assert_eq!(
+        ::std::mem::size_of::<sample>(),
+        16usize,
+        concat!("Size of: ", stringify!(sample))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<sample>(),
+        8usize,
+        concat!("Alignment of ", stringify!(sample))
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<sample>())).b as *const _ as usize },
+        8usize,
+        concat!("Offset of field: ", stringify!(sample), "::", stringify!(b))
+    );
+}
+
+#[test]
+fn bindgen_test_layout_sample_065() {
+    let uninit = ::std::mem::MaybeUninit::<sample>::uninit();
+    let ptr = uninit.as_ptr();
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).b) as usize - ptr as usize },
+        8usize,
+        concat!("Offset of field: ", stringify!(sample), "::", stringify!(b))
+    );
+}
+
+const _: [(); 16usize] = [(); ::std::mem::size_of::<sample>()];
+const _: [(); 8usize] = [(); ::std::mem::align_of::<sample>()];
+const _: [(); 8usize] = [(); ::std::mem::offset_of!(sample, b)];
+const _: () = {
+    ["Size of sample"][::std::mem::size_of::<sample>() - 16usize];
+    ["Alignment of sample"][::std::mem::align_of::<sample>() - 8usize];
+    ["Offset of field: sample::b"][::std::mem::offset_of!(sample, b) - 8usize];
+};
+""",
+        encoding="utf-8",
+    )
+
+    facts = _parse_file(generated, "v-test")
+    size_rows = [row for row in facts.layouts if row["rust_type"] == "sample" and row["size"] == 16]
+    align_rows = [row for row in facts.layouts if row["rust_type"] == "sample" and row["align"] == 8]
+    offset_rows = [row for row in facts.layouts if row["rust_type"] == "sample" and row["field_name"] == "b" and row["offset"] == 8]
+
+    assert size_rows
+    assert align_rows
+    assert offset_rows
 
 
 def test_rust_usage_parser_finds_lifetime_and_error_mapping(tmp_path: Path):
